@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Login Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <form method="POST">
+        <h2>Acceso Inmobiliaria</h2>
+        <input name="usuario" placeholder="Usuario" required>
+        <input type="password" name="password" placeholder="Contraseña" required>
+        <button>Entrar al Sistema</button>
+        {% if error %}
+            <p style="color:red; margin-top:15px;">{{ error }}</p>
+        {% endif %}
+    </form>
+</body>
+</html>
