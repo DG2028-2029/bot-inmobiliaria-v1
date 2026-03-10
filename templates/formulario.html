@@ -2,13 +2,15 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Registro Lead</title>
+    <title>{{ cliente.nombre }} | Registro</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
 </head>
 <body>
     {% if not enviado %}
     <form method="POST">
-        <h2>Nuevo Cliente</h2>
+        <h2>{{ cliente.nombre }}</h2>
+        <p style="text-align: center; color: #666;">Por favor, llena tus datos para contactarte.</p>
+        
         <input name="nombre" placeholder="Nombre" required>
         <input name="telefono" placeholder="Teléfono" required>
         <input name="zona" placeholder="Zona de interés" required>
@@ -18,9 +20,9 @@
     </form>
     {% else %}
     <div class="mensaje-exito" style="background:white; padding:40px; border-radius:15px; text-align:center;">
-        <h3>¡Recibido!</h3>
+        <h3>¡Recibido por {{ cliente.nombre }}!</h3>
         <p>Nos pondremos en contacto pronto.</p>
-        <a href="{{ link_whatsapp }}" target="_blank" style="background:#25D366; color:white; padding:10px 20px; text-decoration:none; border-radius:5px;">WhatsApp</a>
+        <a href="{{ link_whatsapp }}" target="_blank" style="background:#25D366; color:white; padding:10px 20px; text-decoration:none; border-radius:5px; display: inline-block; margin-top: 10px;">WhatsApp</a>
     </div>
     {% endif %}
 </body>
