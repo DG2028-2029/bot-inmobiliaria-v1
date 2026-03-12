@@ -1,5 +1,6 @@
 from flask import Flask, request, render_template, redirect, session, url_for
-import csv, os
+from supabase import create_client
+import os
 from datetime import datetime
 import config
 from config_clientes import CLIENTES
@@ -7,22 +8,13 @@ from config_clientes import CLIENTES
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY 
 
-def get_ruta_csv(nombre_archivo):
-    # Esto limpia el nombre para que funcione bien en el servidor Render
-    nombre_limpio = os.path.basename(nombre_archivo)
-    return os.path.join("/tmp", nombre_limpio)
+# --- CONEXIÓN A SUPABASE ---
+# Lee las llaves que configuramos en el apartado Environment de Render
+url = os.environ.get("SUPABASE_URL")
+key = os.environ.get("SUPABASE_KEY")
+supabase = create_client(url, key)
 
-def get_cliente(cliente_id):
-    return CLIENTES.get(cliente_id.lower())
-
-def asegurar_csv(path):
-    ruta = get_ruta_csv(path)
-    if not os.path.exists(ruta):
-        with open(ruta, "w", newline="", encoding="utf-8") as f:
-            csv.writer(f).writerow(["Fecha","Nombre","Telefono","Zona","Presupuesto","Clasificacion","Score","Temperatura","Estado","Mensaje"])
-    return ruta
-
-# --- LÓGICA DE CLASIFICACIÓN ---
+# --- LÓGICA DE NEGOCIO (Clasificación y Score) ---
 def clasificar_lead(p):
     try:
         p = float(p)
@@ -34,7 +26,7 @@ def clasificar_lead(p):
 def calcular_score(d):
     score = 0
     try:
-        p = float(d["presupuesto"])
+        p = float(d.get("presupuesto", 0))
         score += min(35, p / 30000)
     except: pass
     if d.get("zona"): score += 15
@@ -51,14 +43,14 @@ def temperatura_lead(score):
     elif score >= 40: return "🟡 MEDIO"
     else: return "❄️ FRÍO"
 
-# --- RUTAS DINÁMICAS ---
+# --- RUTAS ---
 @app.route("/")
 def index():
-    return "Sistema Inmobiliario Activo. 🚀"
+    return "Sistema Inmobiliario Cloud Activo. 🚀"
 
 @app.route("/cliente/<cliente_id>", methods=["GET","POST"])
 def formulario(cliente_id):
-    cliente = get_cliente(cliente_id)
+    cliente = CLIENTES.get(cliente_id.lower())
     if not cliente: return "Error: Este vendedor no existe", 404
     
     if request.method == "POST":
@@ -67,16 +59,30 @@ def formulario(cliente_id):
             "telefono": request.form.get("telefono"), 
             "zona": request.form.get("zona"), 
             "presupuesto": request.form.get("presupuesto"), 
-            "mensaje": request.form.get("mensaje")
+            "mensaje": request.form.get("mensaje"),
+            "cliente_id": cliente_id.lower()
         }
         
-        clasif = clasificar_lead(d["presupuesto"])
+        # Cálculos automáticos
         score = calcular_score(d)
-        temp = temperatura_lead(score)
         
-        ruta_csv = asegurar_csv(cliente["archivo_csv"])
-        with open(ruta_csv, "a", newline="", encoding="utf-8") as f:
-            csv.writer(f).writerow([datetime.now().strftime("%Y-%m-%d %H:%M"), d["nombre"], d["telefono"], d["zona"], d["presupuesto"], clasif, score, temp, "Nuevo", d["mensaje"]])
+        # Preparamos los datos para Supabase
+        datos_supabase = {
+            "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "nombre": d["nombre"],
+            "telefono": d["telefono"],
+            "zona": d["zona"],
+            "presupuesto": d["presupuesto"],
+            "clasificacion": clasificar_lead(d["presupuesto"]),
+            "score": score,
+            "temperatura": temperatura_lead(score),
+            "estado": "Nuevo",
+            "mensaje": d["mensaje"],
+            "cliente_id": d["cliente_id"]
+        }
+        
+        # GUARDADO EN LA NUBE (Sustituye al CSV)
+        supabase.table("leads").insert(datos_supabase).execute()
         
         return render_template("formulario.html", enviado=True, link_whatsapp=f"https://wa.me/{cliente['whatsapp']}", cliente=cliente)
     
@@ -84,14 +90,14 @@ def formulario(cliente_id):
 
 @app.route("/login/<cliente_id>", methods=["GET","POST"])
 def login(cliente_id):
-    cliente = get_cliente(cliente_id)
+    cliente = CLIENTES.get(cliente_id.lower())
     if not cliente: return "Vendedor no existe", 404
     
     if request.method == "POST":
         if request.form.get("usuario") == cliente["usuario"] and request.form.get("password") == cliente["password"]:
             session["cliente"] = cliente_id
             return redirect(url_for('historial', cliente_id=cliente_id))
-        return render_template("login.html", error="Credenciales incorrectas")
+        return render_template("login.html", error="Credenciales incorrectas", cliente=cliente)
     
     return render_template("login.html", cliente=cliente)
 
@@ -100,14 +106,21 @@ def historial(cliente_id):
     if session.get("cliente") != cliente_id:
         return redirect(url_for('login', cliente_id=cliente_id))
     
-    cliente = get_cliente(cliente_id)
-    ruta_csv = get_ruta_csv(cliente["archivo_csv"])
+    cliente = CLIENTES.get(cliente_id.lower())
     
-    leads = []
-    if os.path.exists(ruta_csv):
-        with open(ruta_csv, newline="", encoding="utf-8") as f:
-            leads = list(csv.reader(f))[1:]
-            leads.reverse() # Para que vean primero lo más nuevo
+    # BUSCADOR PROFESIONAL
+    q = request.args.get('q', '') 
+    
+    # Consultamos a Supabase filtrando por este cliente específico
+    query = supabase.table("leads").select("*").eq("cliente_id", cliente_id.lower())
+    
+    # Si el usuario escribió algo en el buscador, filtramos por nombre
+    if q:
+        query = query.ilike("nombre", f"%{q}%")
+    
+    # Traemos los datos ordenados por los más recientes
+    resultado = query.order("id", desc=True).execute()
+    leads = resultado.data
             
     return render_template("historial.html", leads=leads, cliente=cliente)
 
