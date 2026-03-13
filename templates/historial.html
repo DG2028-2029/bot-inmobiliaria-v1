@@ -45,7 +45,7 @@
     <form method="GET" style="display: flex; width: 100%; gap: 10px;">
         <input type="text" name="q" placeholder="Buscar por nombre del cliente..." value="{{ request.args.get('q', '') }}">
         <button type="submit" class="btn-search">🔍 Buscar</button>
-        <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="btn-clear">Limpiar</a>
+        <a href="{{ url_for('historial', cliente_id=request.view_args['cliente_id']) }}" class="btn-clear">Limpiar</a>
     </form>
 </div>
 
