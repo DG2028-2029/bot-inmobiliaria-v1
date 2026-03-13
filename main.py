@@ -9,15 +9,14 @@ app = Flask(__name__)
 app.secret_key = config.SECRET_KEY 
 
 # --- CONEXIÓN A SUPABASE ---
-# Lee las llaves que configuramos en el apartado Environment de Render
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
 
-# --- LÓGICA DE NEGOCIO (Clasificación y Score) ---
+# --- LÓGICA DE NEGOCIO ---
 def clasificar_lead(p):
     try:
-        p = float(p)
+        p = float(p.replace('$', '').replace(',', '')) if isinstance(p, str) else float(p)
         if p >= 300000: return "ALTO VALOR 💎"
         elif p >= 150000: return "VALOR MEDIO 🟡"
         else: return "BAJO VALOR ⚪"
@@ -63,10 +62,7 @@ def formulario(cliente_id):
             "cliente_id": cliente_id.lower()
         }
         
-        # Cálculos automáticos
         score = calcular_score(d)
-        
-        # Preparamos los datos para Supabase
         datos_supabase = {
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "nombre": d["nombre"],
@@ -81,9 +77,7 @@ def formulario(cliente_id):
             "cliente_id": d["cliente_id"]
         }
         
-        # GUARDADO EN LA NUBE (Sustituye al CSV)
         supabase.table("leads").insert(datos_supabase).execute()
-        
         return render_template("formulario.html", enviado=True, link_whatsapp=f"https://wa.me/{cliente['whatsapp']}", cliente=cliente)
     
     return render_template("formulario.html", enviado=False, cliente=cliente)
@@ -95,30 +89,25 @@ def login(cliente_id):
     
     if request.method == "POST":
         if request.form.get("usuario") == cliente["usuario"] and request.form.get("password") == cliente["password"]:
-            session["cliente"] = cliente_id
-            return redirect(url_for('historial', cliente_id=cliente_id))
+            session["cliente"] = cliente_id.lower()
+            return redirect(url_for('historial', cliente_id=cliente_id.lower()))
         return render_template("login.html", error="Credenciales incorrectas", cliente=cliente)
     
     return render_template("login.html", cliente=cliente)
 
 @app.route("/historial/<cliente_id>")
 def historial(cliente_id):
-    if session.get("cliente") != cliente_id:
+    if session.get("cliente") != cliente_id.lower():
         return redirect(url_for('login', cliente_id=cliente_id))
     
     cliente = CLIENTES.get(cliente_id.lower())
-    
-    # BUSCADOR PROFESIONAL
     q = request.args.get('q', '') 
     
-    # Consultamos a Supabase filtrando por este cliente específico
     query = supabase.table("leads").select("*").eq("cliente_id", cliente_id.lower())
     
-    # Si el usuario escribió algo en el buscador, filtramos por nombre
     if q:
         query = query.ilike("nombre", f"%{q}%")
     
-    # Traemos los datos ordenados por los más recientes
     resultado = query.order("id", desc=True).execute()
     leads = resultado.data
             
