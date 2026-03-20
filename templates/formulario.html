@@ -11,12 +11,20 @@
         <h2>{{ cliente.nombre }}</h2>
         <p style="text-align: center; color: #666;">Por favor, llena tus datos para contactarte.</p>
         
-        <input name="nombre" placeholder="Nombre" required>
-        <input name="telefono" placeholder="Teléfono" required>
+        <input name="nombre" placeholder="Nombre completo" required>
+        <input name="telefono" type="tel" placeholder="Teléfono" required>
         <input name="zona" placeholder="Zona de interés" required>
         <input name="presupuesto" type="number" placeholder="Presupuesto USD" required>
         <textarea name="mensaje" placeholder="¿Qué propiedad busca?" rows="3" required></textarea>
-        <button>Enviar Información</button>
+        
+        <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; text-align: left;">
+            <input type="checkbox" name="terminos" id="terminos" required style="width: 20px; margin: 0;">
+            <label for="terminos" style="font-size: 11px; color: #555;">
+                Acepto el tratamiento de mis datos personales según la política de privacidad.
+            </label>
+        </div>
+
+        <button type="submit">Enviar Información</button>
     </form>
     {% else %}
     <div class="mensaje-exito" style="background:white; padding:40px; border-radius:15px; text-align:center;">
