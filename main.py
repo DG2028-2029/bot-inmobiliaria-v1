@@ -53,6 +53,11 @@ def formulario(cliente_id):
     if not cliente: return "Error: Este vendedor no existe", 404
     
     if request.method == "POST":
+        # Validación de la casilla legal
+        terminos = request.form.get("terminos")
+        if not terminos:
+            return "Error: Debe aceptar los términos y condiciones para enviar sus datos.", 400
+
         d = {
             "nombre": request.form.get("nombre"), 
             "telefono": request.form.get("telefono"), 
