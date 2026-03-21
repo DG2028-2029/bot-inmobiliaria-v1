@@ -16,6 +16,7 @@ supabase = create_client(url, key)
 # --- LÓGICA DE NEGOCIO ---
 def clasificar_lead(p):
     try:
+        # Limpieza de strings para presupuesto
         p = float(p.replace('$', '').replace(',', '')) if isinstance(p, str) else float(p)
         if p >= 300000: return "ALTO VALOR 💎"
         elif p >= 150000: return "VALOR MEDIO 🟡"
@@ -28,12 +29,19 @@ def calcular_score(d):
         p = float(d.get("presupuesto", 0))
         score += min(35, p / 30000)
     except: pass
-    if d.get("zona_interes"): score += 15 # <--- CAMBIO AQUÍ (antes decía zona)
+    
+    # Corregido: d usa la llave "zona_interes" definida en el formulario
+    if d.get("zona_interes"): 
+        score += 15 
+        
     msg = d.get("mensaje", "").lower()
     palabras = msg.split()
     if len(palabras) >= 20: score += 20
     elif len(palabras) >= 10: score += 10
-    if any(x in msg for x in ["comprar","invertir","cerrar","urgente","este mes"]): score += 20
+    
+    if any(x in msg for x in ["comprar","invertir","cerrar","urgente","este mes"]): 
+        score += 20
+        
     return min(int(score), 100)
 
 def temperatura_lead(score):
@@ -50,38 +58,48 @@ def index():
 @app.route("/cliente/<cliente_id>", methods=["GET","POST"])
 def formulario(cliente_id):
     cliente = CLIENTES.get(cliente_id.lower())
-    if not cliente: return "Error: Este vendedor no existe", 404
+    if not cliente: 
+        return "Error: Este vendedor no existe", 404
     
     if request.method == "POST":
+        # Validación de la casilla legal del HTML
         terminos = request.form.get("terminos")
         if not terminos:
             return "Error: Debe aceptar los términos y condiciones.", 400
 
+        # Captura de datos del formulario (mapeo interno)
         d = {
             "nombre": request.form.get("nombre"), 
             "telefono": request.form.get("telefono"), 
-            "zona_interes": request.form.get("zona"), # <--- CAMBIO AQUÍ
+            "zona_interes": request.form.get("zona"), 
             "presupuesto": request.form.get("presupuesto"), 
             "mensaje": request.form.get("mensaje"),
-            "vendedor": cliente_id.lower() # <--- CAMBIO AQUÍ (antes cliente_id)
+            "vendedor": cliente_id.lower() 
         }
         
         score = calcular_score(d)
+        
+        # Preparación de datos para la tabla de Supabase (nombres exactos de columnas)
         datos_supabase = {
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "nombre": d["nombre"],
             "telefono": d["telefono"],
-            "zona_interes": d["zona_interes"], # <--- CAMBIO AQUÍ (debe ser igual a tu columna)
+            "zona_interes": d["zona_interes"], 
             "presupuesto": d["presupuesto"],
             "clasificacion": clasificar_lead(d["presupuesto"]),
             "score": score,
             "temperatura": temperatura_lead(score),
             "estado": "Nuevo",
             "mensaje": d["mensaje"],
-            "vendedor": d["vendedor"] # <--- CAMBIO AQUÍ (debe ser igual a tu columna)
+            "vendedor": d["vendedor"]
         }
         
-        supabase.table("leads").insert(datos_supabase).execute()
+        try:
+            supabase.table("leads").insert(datos_supabase).execute()
+        except Exception as e:
+            print(f"Error al insertar en Supabase: {e}")
+            return "Error al guardar la información", 500
+
         return render_template("formulario.html", enviado=True, link_whatsapp=f"https://wa.me/{cliente['whatsapp']}", cliente=cliente)
     
     return render_template("formulario.html", enviado=False, cliente=cliente)
@@ -101,13 +119,14 @@ def login(cliente_id):
 
 @app.route("/historial/<cliente_id>")
 def historial(cliente_id):
+    # Verificación de seguridad de sesión
     if session.get("cliente") != cliente_id.lower():
         return redirect(url_for('login', cliente_id=cliente_id))
     
     cliente = CLIENTES.get(cliente_id.lower())
     q = request.args.get('q', '') 
     
-    # <--- CAMBIO AQUÍ: eq("vendedor", ...) para filtrar bien
+    # Filtrar leads por la columna 'vendedor'
     query = supabase.table("leads").select("*").eq("vendedor", cliente_id.lower())
     
     if q:
