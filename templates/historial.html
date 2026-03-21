@@ -2,11 +2,19 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard de Leads</title>
+    <title>Dashboard de Leads | {{ cliente.nombre }}</title>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background: #f1f2f6; padding: 20px; }
         h2 { margin-bottom: 20px; }
         
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
         /* Estilo de la barra de búsqueda */
         .search-container {
             background: white;
@@ -26,6 +34,19 @@
         }
         .btn-search { background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
         .btn-clear { background: #bdc3c7; color: black; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-size: 14px; }
+        
+        /* Botón de Excel Profesional */
+        .btn-excel { 
+            background: #27ae60; 
+            color: white; 
+            border: none; 
+            padding: 12px 25px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn-excel:hover { background: #219150; }
 
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: center; }
@@ -39,23 +60,26 @@
 </head>
 <body>
 
-<h2>📊 Dashboard de Leads</h2>
+<div class="header-container">
+    <h2>📊 Dashboard de Leads: {{ cliente.nombre }}</h2>
+    <button onclick="descargarExcel()" class="btn-excel">📥 Descargar Reporte Excel</button>
+</div>
 
 <div class="search-container">
     <form method="GET" style="display: flex; width: 100%; gap: 10px;">
         <input type="text" name="q" placeholder="Buscar por nombre del cliente..." value="{{ request.args.get('q', '') }}">
         <button type="submit" class="btn-search">🔍 Buscar</button>
-        <a href="{{ url_for('historial', cliente_id=request.view_args['cliente_id']) }}" class="btn-clear">Limpiar</a>
+        <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="btn-clear">Limpiar</a>
     </form>
 </div>
 
-<table>
+<table id="tabla-leads">
     <thead>
         <tr>
             <th>Fecha</th>
             <th>Nombre</th>
             <th>Teléfono</th>
-            <th>Zona</th>
+            <th>Zona Interés</th>
             <th>Presupuesto</th>
             <th>Clasificación</th>
             <th>Score</th>
@@ -69,8 +93,7 @@
             <td>{{ lead.fecha }}</td>
             <td>{{ lead.nombre }}</td>
             <td><a href="https://wa.me/{{ lead.telefono }}" target="_blank">{{ lead.telefono }}</a></td>
-            <td>{{ lead.zona }}</td>
-            <td>${{ lead.presupuesto }}</td>
+            <td>{{ lead.zona_interes }}</td> <td>${{ lead.presupuesto }}</td>
             <td class="{% if 'ALTO' in lead.clasificacion %}alto{% elif 'MEDIO' in lead.clasificacion %}medio{% else %}bajo{% endif %}">
                 {{ lead.clasificacion }}
             </td>
@@ -80,11 +103,22 @@
         </tr>
         {% else %}
         <tr>
-            <td colspan="9">No se encontraron prospectos.</td>
+            <td colspan="9">No se encontraron prospectos para este vendedor.</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+
+<script>
+function descargarExcel() {
+    // 1. Selecciona la tabla
+    var table = document.getElementById("tabla-leads");
+    // 2. Convierte la tabla a un libro de Excel
+    var wb = XLSX.utils.table_to_book(table, {sheet: "Prospectos"});
+    // 3. Descarga el archivo con nombre profesional
+    XLSX.writeFile(wb, "Reporte_Leads_{{ cliente.nombre }}_" + new Date().toLocaleDateString() + ".xlsx");
+}
+</script>
 
 </body>
 </html>
