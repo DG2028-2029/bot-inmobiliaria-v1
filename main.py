@@ -28,7 +28,7 @@ def calcular_score(d):
         p = float(d.get("presupuesto", 0))
         score += min(35, p / 30000)
     except: pass
-    if d.get("zona"): score += 15
+    if d.get("zona_interes"): score += 15 # <--- CAMBIO AQUÍ (antes decía zona)
     msg = d.get("mensaje", "").lower()
     palabras = msg.split()
     if len(palabras) >= 20: score += 20
@@ -53,18 +53,17 @@ def formulario(cliente_id):
     if not cliente: return "Error: Este vendedor no existe", 404
     
     if request.method == "POST":
-        # Validación de la casilla legal
         terminos = request.form.get("terminos")
         if not terminos:
-            return "Error: Debe aceptar los términos y condiciones para enviar sus datos.", 400
+            return "Error: Debe aceptar los términos y condiciones.", 400
 
         d = {
             "nombre": request.form.get("nombre"), 
             "telefono": request.form.get("telefono"), 
-            "zona": request.form.get("zona"), 
+            "zona_interes": request.form.get("zona"), # <--- CAMBIO AQUÍ
             "presupuesto": request.form.get("presupuesto"), 
             "mensaje": request.form.get("mensaje"),
-            "cliente_id": cliente_id.lower()
+            "vendedor": cliente_id.lower() # <--- CAMBIO AQUÍ (antes cliente_id)
         }
         
         score = calcular_score(d)
@@ -72,14 +71,14 @@ def formulario(cliente_id):
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "nombre": d["nombre"],
             "telefono": d["telefono"],
-            "zona": d["zona"],
+            "zona_interes": d["zona_interes"], # <--- CAMBIO AQUÍ (debe ser igual a tu columna)
             "presupuesto": d["presupuesto"],
             "clasificacion": clasificar_lead(d["presupuesto"]),
             "score": score,
             "temperatura": temperatura_lead(score),
             "estado": "Nuevo",
             "mensaje": d["mensaje"],
-            "cliente_id": d["cliente_id"]
+            "vendedor": d["vendedor"] # <--- CAMBIO AQUÍ (debe ser igual a tu columna)
         }
         
         supabase.table("leads").insert(datos_supabase).execute()
@@ -108,7 +107,8 @@ def historial(cliente_id):
     cliente = CLIENTES.get(cliente_id.lower())
     q = request.args.get('q', '') 
     
-    query = supabase.table("leads").select("*").eq("cliente_id", cliente_id.lower())
+    # <--- CAMBIO AQUÍ: eq("vendedor", ...) para filtrar bien
+    query = supabase.table("leads").select("*").eq("vendedor", cliente_id.lower())
     
     if q:
         query = query.ilike("nombre", f"%{q}%")
