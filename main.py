@@ -14,7 +14,7 @@ url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
 
-# --- LÓGICA DE NEGOCIO (Sin cambios) ---
+# --- LÓGICA DE NEGOCIO ---
 def clasificar_lead(p):
     try:
         p = float(p.replace('$', '').replace(',', '')) if isinstance(p, str) else float(p)
@@ -53,26 +53,27 @@ def temperatura_lead(score):
 @app.route("/idioma/<lang>/<proximo>/<cliente_id>")
 def cambiar_idioma(lang, proximo, cliente_id):
     session['idioma'] = lang
-    return redirect(url_for(proximo, cliente_id=cliente_id))
+    # Intentamos redirigir a la función, si falla, vamos a bienvenida
+    try:
+        return redirect(url_for(proximo, cliente_id=cliente_id))
+    except:
+        return redirect(url_for('bienvenida', cliente_id=cliente_id))
 
 # --- RUTAS ---
 @app.route("/")
 def index():
     return "Sistema Inmobiliario Cloud Activo. 🚀"
 
-# --- NUEVA RUTA DE BIENVENIDA (PASARELA DE IDIOMAS) ---
 @app.route("/cliente/<cliente_id>")
 def bienvenida(cliente_id):
     cliente = CLIENTES.get(cliente_id.lower())
     if not cliente: return "Error: Vendedor no existe", 404
     
-    # Siempre mostramos español por defecto en la bienvenida
     lang = session.get('idioma', 'es')
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     
     return render_template("bienvenida.html", cliente=cliente, textos=textos)
 
-# --- RUTA DEL FORMULARIO ACTUALIZADA ---
 @app.route("/form/<cliente_id>", methods=["GET","POST"])
 def formulario(cliente_id):
     cliente = CLIENTES.get(cliente_id.lower())
@@ -84,7 +85,7 @@ def formulario(cliente_id):
     if request.method == "POST":
         terminos = request.form.get("terminos")
         if not terminos:
-            return "Error: Debe aceptar los términos y condiciones.", 400
+            return "Error: Debe aceptar los términos.", 400
 
         d = {
             "nombre": request.form.get("nombre"), 
@@ -113,8 +114,7 @@ def formulario(cliente_id):
         try:
             supabase.table("leads").insert(datos_supabase).execute()
         except Exception as e:
-            print(f"Error: {e}")
-            return "Error al guardar", 500
+            return f"Error: {e}", 500
 
         return render_template("formulario.html", enviado=True, link_whatsapp=f"https://wa.me/{cliente['whatsapp']}", cliente=cliente, textos=textos)
     
@@ -155,4 +155,5 @@ def historial(cliente_id):
     return render_template("historial.html", leads=leads, cliente=cliente, textos=textos)
 
 if __name__ == "__main__":
-    app.run()
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
