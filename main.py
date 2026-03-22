@@ -4,7 +4,6 @@ import os
 from datetime import datetime
 import config
 from config_clientes import CLIENTES
-# --- NUEVA IMPORTACIÓN ---
 from traducciones import DICCIONARIO 
 
 app = Flask(__name__)
@@ -15,7 +14,7 @@ url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
 
-# --- LÓGICA DE NEGOCIO ---
+# --- LÓGICA DE NEGOCIO (Sin cambios) ---
 def clasificar_lead(p):
     try:
         p = float(p.replace('$', '').replace(',', '')) if isinstance(p, str) else float(p)
@@ -50,7 +49,7 @@ def temperatura_lead(score):
     elif score >= 40: return "🟡 MEDIO"
     else: return "❄️ FRÍO"
 
-# --- NUEVA RUTA: SELECCIÓN DE IDIOMA ---
+# --- RUTA: CAMBIAR IDIOMA ---
 @app.route("/idioma/<lang>/<proximo>/<cliente_id>")
 def cambiar_idioma(lang, proximo, cliente_id):
     session['idioma'] = lang
@@ -61,14 +60,25 @@ def cambiar_idioma(lang, proximo, cliente_id):
 def index():
     return "Sistema Inmobiliario Cloud Activo. 🚀"
 
-@app.route("/cliente/<cliente_id>", methods=["GET","POST"])
+# --- NUEVA RUTA DE BIENVENIDA (PASARELA DE IDIOMAS) ---
+@app.route("/cliente/<cliente_id>")
+def bienvenida(cliente_id):
+    cliente = CLIENTES.get(cliente_id.lower())
+    if not cliente: return "Error: Vendedor no existe", 404
+    
+    # Siempre mostramos español por defecto en la bienvenida
+    lang = session.get('idioma', 'es')
+    textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
+    
+    return render_template("bienvenida.html", cliente=cliente, textos=textos)
+
+# --- RUTA DEL FORMULARIO ACTUALIZADA ---
+@app.route("/form/<cliente_id>", methods=["GET","POST"])
 def formulario(cliente_id):
     cliente = CLIENTES.get(cliente_id.lower())
-    if not cliente: 
-        return "Error: Este vendedor no existe", 404
+    if not cliente: return "Error: Vendedor no existe", 404
     
-    # --- LÓGICA DE TRADUCCIÓN ---
-    lang = session.get('idioma', 'es') # Español por defecto
+    lang = session.get('idioma', 'es')
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     
     if request.method == "POST":
@@ -86,7 +96,6 @@ def formulario(cliente_id):
         }
         
         score = calcular_score(d)
-        
         datos_supabase = {
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "nombre": d["nombre"],
@@ -104,8 +113,8 @@ def formulario(cliente_id):
         try:
             supabase.table("leads").insert(datos_supabase).execute()
         except Exception as e:
-            print(f"Error al insertar en Supabase: {e}")
-            return "Error al guardar la información", 500
+            print(f"Error: {e}")
+            return "Error al guardar", 500
 
         return render_template("formulario.html", enviado=True, link_whatsapp=f"https://wa.me/{cliente['whatsapp']}", cliente=cliente, textos=textos)
     
@@ -116,7 +125,6 @@ def login(cliente_id):
     cliente = CLIENTES.get(cliente_id.lower())
     if not cliente: return "Vendedor no existe", 404
     
-    # --- LÓGICA DE TRADUCCIÓN ---
     lang = session.get('idioma', 'es')
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     
@@ -134,16 +142,12 @@ def historial(cliente_id):
         return redirect(url_for('login', cliente_id=cliente_id))
     
     cliente = CLIENTES.get(cliente_id.lower())
-    
-    # --- LÓGICA DE TRADUCCIÓN ---
     lang = session.get('idioma', 'es')
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     
     q = request.args.get('q', '') 
     query = supabase.table("leads").select("*").eq("vendedor", cliente_id.lower())
-    
-    if q:
-        query = query.ilike("nombre", f"%{q}%")
+    if q: query = query.ilike("nombre", f"%{q}%")
     
     resultado = query.order("id", desc=True).execute()
     leads = resultado.data
