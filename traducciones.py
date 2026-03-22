@@ -11,7 +11,12 @@ DICCIONARIO = {
         'mensaje_exito': '¡Recibido!',
         'subtitulo_exito': 'Nos pondremos en contacto pronto.',
         'login_titulo': 'Acceso Inmobiliaria',
-        'historial_titulo': 'Dashboard de Leads'
+        'historial_titulo': 'Dashboard de Leads',
+        'acepto_terminos': 'Acepto el tratamiento de mis datos personales según la política de privacidad.',
+        'selecciona_idioma': 'Selecciona tu idioma',
+        'btn_es': 'Español',
+        'btn_en': 'Inglés',
+        'btn_fr': 'Francés'
     },
     'en': {
         'titulo_form': 'Please fill in your details to contact you.',
@@ -24,7 +29,12 @@ DICCIONARIO = {
         'mensaje_exito': 'Received!',
         'subtitulo_exito': 'We will contact you soon.',
         'login_titulo': 'Real Estate Access',
-        'historial_titulo': 'Leads Dashboard'
+        'historial_titulo': 'Leads Dashboard',
+        'acepto_terminos': 'I accept the processing of my personal data according to the privacy policy.',
+        'selecciona_idioma': 'Select your language',
+        'btn_es': 'Spanish',
+        'btn_en': 'English',
+        'btn_fr': 'French'
     },
     'fr': {
         'titulo_form': 'Veuillez remplir vos coordonnées.',
@@ -37,6 +47,11 @@ DICCIONARIO = {
         'mensaje_exito': 'Reçu!',
         'subtitulo_exito': 'Nous vous contacterons bientôt.',
         'login_titulo': 'Accès Immobilier',
-        'historial_titulo': 'Tableau de bord des prospects'
+        'historial_titulo': 'Tableau de bord des prospects',
+        'acepto_terminos': "J'accepte le traitement de mes données personnelles conformément à la politique de confidentialité.",
+        'selecciona_idioma': 'Choisissez votre langue',
+        'btn_es': 'Espagnol',
+        'btn_en': 'Anglais',
+        'btn_fr': 'Français'
     }
 }
