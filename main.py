@@ -4,6 +4,8 @@ import os
 from datetime import datetime
 import config
 from config_clientes import CLIENTES
+# --- NUEVA IMPORTACIÓN ---
+from traducciones import DICCIONARIO 
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY 
@@ -16,7 +18,6 @@ supabase = create_client(url, key)
 # --- LÓGICA DE NEGOCIO ---
 def clasificar_lead(p):
     try:
-        # Limpieza de strings para presupuesto
         p = float(p.replace('$', '').replace(',', '')) if isinstance(p, str) else float(p)
         if p >= 300000: return "ALTO VALOR 💎"
         elif p >= 150000: return "VALOR MEDIO 🟡"
@@ -30,7 +31,6 @@ def calcular_score(d):
         score += min(35, p / 30000)
     except: pass
     
-    # Corregido: d usa la llave "zona_interes" definida en el formulario
     if d.get("zona_interes"): 
         score += 15 
         
@@ -50,6 +50,12 @@ def temperatura_lead(score):
     elif score >= 40: return "🟡 MEDIO"
     else: return "❄️ FRÍO"
 
+# --- NUEVA RUTA: SELECCIÓN DE IDIOMA ---
+@app.route("/idioma/<lang>/<proximo>/<cliente_id>")
+def cambiar_idioma(lang, proximo, cliente_id):
+    session['idioma'] = lang
+    return redirect(url_for(proximo, cliente_id=cliente_id))
+
 # --- RUTAS ---
 @app.route("/")
 def index():
@@ -61,13 +67,15 @@ def formulario(cliente_id):
     if not cliente: 
         return "Error: Este vendedor no existe", 404
     
+    # --- LÓGICA DE TRADUCCIÓN ---
+    lang = session.get('idioma', 'es') # Español por defecto
+    textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
+    
     if request.method == "POST":
-        # Validación de la casilla legal del HTML
         terminos = request.form.get("terminos")
         if not terminos:
             return "Error: Debe aceptar los términos y condiciones.", 400
 
-        # Captura de datos del formulario (mapeo interno)
         d = {
             "nombre": request.form.get("nombre"), 
             "telefono": request.form.get("telefono"), 
@@ -79,7 +87,6 @@ def formulario(cliente_id):
         
         score = calcular_score(d)
         
-        # Preparación de datos para la tabla de Supabase (nombres exactos de columnas)
         datos_supabase = {
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "nombre": d["nombre"],
@@ -100,33 +107,39 @@ def formulario(cliente_id):
             print(f"Error al insertar en Supabase: {e}")
             return "Error al guardar la información", 500
 
-        return render_template("formulario.html", enviado=True, link_whatsapp=f"https://wa.me/{cliente['whatsapp']}", cliente=cliente)
+        return render_template("formulario.html", enviado=True, link_whatsapp=f"https://wa.me/{cliente['whatsapp']}", cliente=cliente, textos=textos)
     
-    return render_template("formulario.html", enviado=False, cliente=cliente)
+    return render_template("formulario.html", enviado=False, cliente=cliente, textos=textos)
 
 @app.route("/login/<cliente_id>", methods=["GET","POST"])
 def login(cliente_id):
     cliente = CLIENTES.get(cliente_id.lower())
     if not cliente: return "Vendedor no existe", 404
     
+    # --- LÓGICA DE TRADUCCIÓN ---
+    lang = session.get('idioma', 'es')
+    textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
+    
     if request.method == "POST":
         if request.form.get("usuario") == cliente["usuario"] and request.form.get("password") == cliente["password"]:
             session["cliente"] = cliente_id.lower()
             return redirect(url_for('historial', cliente_id=cliente_id.lower()))
-        return render_template("login.html", error="Credenciales incorrectas", cliente=cliente)
+        return render_template("login.html", error="Credenciales incorrectas", cliente=cliente, textos=textos)
     
-    return render_template("login.html", cliente=cliente)
+    return render_template("login.html", cliente=cliente, textos=textos)
 
 @app.route("/historial/<cliente_id>")
 def historial(cliente_id):
-    # Verificación de seguridad de sesión
     if session.get("cliente") != cliente_id.lower():
         return redirect(url_for('login', cliente_id=cliente_id))
     
     cliente = CLIENTES.get(cliente_id.lower())
-    q = request.args.get('q', '') 
     
-    # Filtrar leads por la columna 'vendedor'
+    # --- LÓGICA DE TRADUCCIÓN ---
+    lang = session.get('idioma', 'es')
+    textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
+    
+    q = request.args.get('q', '') 
     query = supabase.table("leads").select("*").eq("vendedor", cliente_id.lower())
     
     if q:
@@ -135,7 +148,7 @@ def historial(cliente_id):
     resultado = query.order("id", desc=True).execute()
     leads = resultado.data
             
-    return render_template("historial.html", leads=leads, cliente=cliente)
+    return render_template("historial.html", leads=leads, cliente=cliente, textos=textos)
 
 if __name__ == "__main__":
     app.run()
