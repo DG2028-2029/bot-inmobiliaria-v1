@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard de Leads | {{ cliente.nombre }}</title>
+    <title>{{ textos.historial_titulo }} | {{ cliente.nombre }}</title>
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background: #f1f2f6; padding: 20px; }
@@ -15,7 +15,19 @@
             margin-bottom: 20px;
         }
 
-        /* Estilo de la barra de búsqueda */
+        /* Estilo para las banderas */
+        .selector-idioma {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        .bandera {
+            font-size: 22px;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        .bandera:hover { transform: scale(1.2); }
+
         .search-container {
             background: white;
             padding: 15px;
@@ -35,7 +47,6 @@
         .btn-search { background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
         .btn-clear { background: #bdc3c7; color: black; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-size: 14px; }
         
-        /* Botón de Excel Profesional */
         .btn-excel { 
             background: #27ae60; 
             color: white; 
@@ -52,7 +63,6 @@
         th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: center; }
         th { background: #2c3e50; color: white; }
         
-        /* Colores de Clasificación */
         .alto { color: #e74c3c; font-weight: bold; }
         .medio { color: #f39c12; font-weight: bold; }
         .bajo { color: #7f8c8d; font-weight: bold; }
@@ -60,31 +70,37 @@
 </head>
 <body>
 
+<div class="selector-idioma">
+    <a href="{{ url_for('cambiar_idioma', lang='es', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇬🇹</a>
+    <a href="{{ url_for('cambiar_idioma', lang='en', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇺🇸</a>
+    <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇫🇷</a>
+</div>
+
 <div class="header-container">
-    <h2>📊 Dashboard de Leads: {{ cliente.nombre }}</h2>
-    <button onclick="descargarExcel()" class="btn-excel">📥 Descargar Reporte Excel</button>
+    <h2>📊 {{ textos.historial_titulo }}: {{ cliente.nombre }}</h2>
+    <button onclick="descargarExcel()" class="btn-excel">📥 {{ 'Descargar Excel' if session.get('idioma') == 'es' else 'Download Excel' if session.get('idioma') == 'en' else 'Télécharger Excel' }}</button>
 </div>
 
 <div class="search-container">
     <form method="GET" style="display: flex; width: 100%; gap: 10px;">
-        <input type="text" name="q" placeholder="Buscar por nombre del cliente..." value="{{ request.args.get('q', '') }}">
-        <button type="submit" class="btn-search">🔍 Buscar</button>
-        <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="btn-clear">Limpiar</a>
+        <input type="text" name="q" placeholder="{{ 'Buscar por nombre...' if session.get('idioma') == 'es' else 'Search by name...' if session.get('idioma') == 'en' else 'Chercher par nom...' }}" value="{{ request.args.get('q', '') }}">
+        <button type="submit" class="btn-search">🔍</button>
+        <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="btn-clear">{{ 'Limpiar' if session.get('idioma') == 'es' else 'Clear' if session.get('idioma') == 'en' else 'Effacer' }}</a>
     </form>
 </div>
 
 <table id="tabla-leads">
     <thead>
         <tr>
-            <th>Fecha</th>
-            <th>Nombre</th>
-            <th>Teléfono</th>
-            <th>Zona Interés</th>
-            <th>Presupuesto</th>
-            <th>Clasificación</th>
+            <th>{{ 'Fecha' if session.get('idioma') == 'es' else 'Date' if session.get('idioma') == 'en' else 'Date' }}</th>
+            <th>{{ textos.placeholder_nombre }}</th>
+            <th>{{ textos.placeholder_tel }}</th>
+            <th>{{ textos.placeholder_zona }}</th>
+            <th>{{ textos.placeholder_presupuesto }}</th>
+            <th>{{ 'Clasificación' if session.get('idioma') == 'es' else 'Classification' if session.get('idioma') == 'en' else 'Classification' }}</th>
             <th>Score</th>
-            <th>Temperatura</th>
-            <th>Mensaje</th>
+            <th>{{ 'Temperatura' if session.get('idioma') == 'es' else 'Temperature' if session.get('idioma') == 'en' else 'Température' }}</th>
+            <th>{{ 'Mensaje' if session.get('idioma') == 'es' else 'Message' if session.get('idioma') == 'en' else 'Message' }}</th>
         </tr>
     </thead>
     <tbody>
@@ -93,7 +109,8 @@
             <td>{{ lead.fecha }}</td>
             <td>{{ lead.nombre }}</td>
             <td><a href="https://wa.me/{{ lead.telefono }}" target="_blank">{{ lead.telefono }}</a></td>
-            <td>{{ lead.zona_interes }}</td> <td>${{ lead.presupuesto }}</td>
+            <td>{{ lead.zona_interes }}</td> 
+            <td>${{ lead.presupuesto }}</td>
             <td class="{% if 'ALTO' in lead.clasificacion %}alto{% elif 'MEDIO' in lead.clasificacion %}medio{% else %}bajo{% endif %}">
                 {{ lead.clasificacion }}
             </td>
@@ -103,7 +120,7 @@
         </tr>
         {% else %}
         <tr>
-            <td colspan="9">No se encontraron prospectos para este vendedor.</td>
+            <td colspan="9">{{ 'No hay prospectos.' if session.get('idioma') == 'es' else 'No leads found.' if session.get('idioma') == 'en' else 'Aucun prospect trouvé.' }}</td>
         </tr>
         {% endfor %}
     </tbody>
@@ -111,11 +128,8 @@
 
 <script>
 function descargarExcel() {
-    // 1. Selecciona la tabla
     var table = document.getElementById("tabla-leads");
-    // 2. Convierte la tabla a un libro de Excel
     var wb = XLSX.utils.table_to_book(table, {sheet: "Prospectos"});
-    // 3. Descarga el archivo con nombre profesional
     XLSX.writeFile(wb, "Reporte_Leads_{{ cliente.nombre }}_" + new Date().toLocaleDateString() + ".xlsx");
 }
 </script>
