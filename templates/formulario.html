@@ -4,18 +4,43 @@
     <meta charset="UTF-8">
     <title>{{ cliente.nombre }} | Registro</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <style>
+        /* Estilo rápido para las banderas */
+        .selector-idioma {
+            text-align: center;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .bandera {
+            font-size: 24px;
+            text-decoration: none;
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+        .bandera:hover {
+            transform: scale(1.3);
+        }
+    </style>
 </head>
 <body>
+    <div class="selector-idioma">
+        <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente.usuario) }}" class="bandera" title="Español">🇬🇹</a>
+        <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente.usuario) }}" class="bandera" title="English">🇺🇸</a>
+        <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente.usuario) }}" class="bandera" title="Français">🇫🇷</a>
+    </div>
+
     {% if not enviado %}
     <form method="POST">
         <h2>{{ cliente.nombre }}</h2>
-        <p style="text-align: center; color: #666;">Por favor, llena tus datos para contactarte.</p>
+        <p style="text-align: center; color: #666;">{{ textos.titulo_form }}</p>
         
-        <input name="nombre" placeholder="Nombre completo" required>
-        <input name="telefono" type="tel" placeholder="Teléfono" required>
-        <input name="zona" placeholder="Zona de interés" required>
-        <input name="presupuesto" type="number" placeholder="Presupuesto USD" required>
-        <textarea name="mensaje" placeholder="¿Qué propiedad busca?" rows="3" required></textarea>
+        <input name="nombre" placeholder="{{ textos.placeholder_nombre }}" required>
+        <input name="telefono" type="tel" placeholder="{{ textos.placeholder_tel }}" required>
+        <input name="zona" placeholder="{{ textos.placeholder_zona }}" required>
+        <input name="presupuesto" type="number" placeholder="{{ textos.placeholder_presupuesto }}" required>
+        <textarea name="mensaje" placeholder="{{ textos.placeholder_propiedad }}" rows="3" required></textarea>
         
         <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; text-align: left;">
             <input type="checkbox" name="terminos" id="terminos" required style="width: 20px; margin: 0;">
@@ -24,12 +49,12 @@
             </label>
         </div>
 
-        <button type="submit">Enviar Información</button>
+        <button type="submit">{{ textos.boton_enviar }}</button>
     </form>
     {% else %}
     <div class="mensaje-exito" style="background:white; padding:40px; border-radius:15px; text-align:center;">
-        <h3>¡Recibido por {{ cliente.nombre }}!</h3>
-        <p>Nos pondremos en contacto pronto.</p>
+        <h3>{{ textos.mensaje_exito }} ({{ cliente.nombre }})</h3>
+        <p>{{ textos.subtitulo_exito }}</p>
         <a href="{{ link_whatsapp }}" target="_blank" style="background:#25D366; color:white; padding:10px 20px; text-decoration:none; border-radius:5px; display: inline-block; margin-top: 10px;">WhatsApp</a>
     </div>
     {% endif %}
