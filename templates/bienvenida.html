@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ cliente.nombre }} | Welcome</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <style>
+        .bienvenida-container {
+            max-width: 400px;
+            margin: 80px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .btn-lang {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #333;
+            font-size: 18px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-lang:hover {
+            background: #f1f2f6;
+            border-color: #2c3e50;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body style="background: #f1f2f6;">
+    <div class="bienvenida-container">
+        <h2 style="margin-bottom: 5px;">{{ cliente.nombre }}</h2>
+        <p style="color: #666; margin-bottom: 25px;">{{ textos.selecciona_idioma }}</p>
+        
+        <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">🇬🇹 {{ textos.btn_es }}</a>
+        <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">🇺🇸 {{ textos.btn_en }}</a>
+        <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">🇫🇷 {{ textos.btn_fr }}</a>
+    </div>
+</body>
+</html>
