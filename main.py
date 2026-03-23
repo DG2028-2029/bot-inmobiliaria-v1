@@ -1,6 +1,9 @@
 from flask import Flask, request, render_template, redirect, session, url_for
 from supabase import create_client
 import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 import config
 from config_clientes import CLIENTES
@@ -13,6 +16,55 @@ app.secret_key = config.SECRET_KEY
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
+
+# --- LÓGICA DE CORREO MULTILINGÜE ---
+def enviar_email_notificacion(cliente_config, datos_lead, lang):
+    """Envía un correo al vendedor con los datos del lead en el idioma seleccionado."""
+    try:
+        # Diccionario interno para el asunto del correo según el idioma del lead
+        asuntos = {
+            'es': '¡Nuevo Lead Recibido! 💎',
+            'en': 'New Lead Received! 💎',
+            'fr': 'Nouveau Prospect Reçu ! 💎',
+            'de': 'Neuer Lead erhalten! 💎',
+            'pt': 'Novo Lead Recebido! 💎',
+            'zh': '收到新潜客！ 💎'
+        }
+        
+        asunto = asuntos.get(lang, asuntos['es'])
+        
+        # Crear el mensaje
+        msg = MIMEMultipart()
+        msg['From'] = cliente_config['email_origen']
+        msg['To'] = cliente_config['email_destino']
+        msg['Subject'] = asunto
+
+        cuerpo = f"""
+        Has recibido un nuevo interesado desde el formulario ({lang}):
+        
+        Nombre: {datos_lead['nombre']}
+        Teléfono: {datos_lead['telefono']}
+        Zona: {datos_lead['zona_interes']}
+        Presupuesto: ${datos_lead['presupuesto']}
+        Mensaje: {datos_lead['mensaje']}
+        
+        Clasificación: {datos_lead['clasificacion']}
+        Score: {datos_lead['score']}/100
+        Temperatura: {datos_lead['temperatura']}
+        """
+        
+        msg.attach(MIMEText(cuerpo, 'plain'))
+
+        # Conexión segura con Gmail
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(cliente_config['email_origen'], cliente_config['email_password'])
+        server.send_message(msg)
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"Error enviando correo: {e}")
+        return False
 
 # --- LÓGICA DE NEGOCIO ---
 def clasificar_lead(p):
@@ -49,17 +101,15 @@ def temperatura_lead(score):
     elif score >= 40: return "🟡 MEDIO"
     else: return "❄️ FRÍO"
 
-# --- RUTA: CAMBIAR IDIOMA ---
+# --- RUTAS ---
 @app.route("/idioma/<lang>/<proximo>/<cliente_id>")
 def cambiar_idioma(lang, proximo, cliente_id):
     session['idioma'] = lang
-    # Intentamos redirigir a la función, si falla, vamos a bienvenida
     try:
         return redirect(url_for(proximo, cliente_id=cliente_id))
     except:
         return redirect(url_for('bienvenida', cliente_id=cliente_id))
 
-# --- RUTAS ---
 @app.route("/")
 def index():
     return "Sistema Inmobiliario Cloud Activo. 🚀"
@@ -112,7 +162,13 @@ def formulario(cliente_id):
         }
         
         try:
+            # 1. Guardar en Base de Datos
             supabase.table("leads").insert(datos_supabase).execute()
+            
+            # 2. Lógica Premium: Enviar Correo si está activo
+            if cliente.get("premium_email") == True:
+                enviar_email_notificacion(cliente, datos_supabase, lang)
+
         except Exception as e:
             return f"Error: {e}", 500
 
