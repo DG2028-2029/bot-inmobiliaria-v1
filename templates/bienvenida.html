@@ -7,9 +7,9 @@
     <style>
         .bienvenida-container {
             max-width: 400px;
-            margin: 80px auto;
+            margin: 40px auto; /* Bajé un poco el margen superior */
             background: white;
-            padding: 30px;
+            padding: 25px;
             border-radius: 15px;
             text-align: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
@@ -17,13 +17,13 @@
         .btn-lang {
             display: block;
             width: 100%;
-            padding: 15px;
-            margin: 10px 0;
+            padding: 12px; /* Reduje un poco el padding para que quepan los 6 */
+            margin: 8px 0;
             border: 1px solid #ddd;
             border-radius: 8px;
             text-decoration: none;
             color: #333;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             transition: 0.3s;
         }
@@ -37,11 +37,14 @@
 <body style="background: #f1f2f6;">
     <div class="bienvenida-container">
         <h2 style="margin-bottom: 5px;">{{ cliente.nombre }}</h2>
-        <p style="color: #666; margin-bottom: 25px;">{{ textos.selecciona_idioma }}</p>
+        <p style="color: #666; margin-bottom: 20px;">{{ textos.selecciona_idioma }}</p>
         
         <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">🇬🇹 {{ textos.btn_es }}</a>
         <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">🇺🇸 {{ textos.btn_en }}</a>
         <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">🇫🇷 {{ textos.btn_fr }}</a>
+        <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">🇩🇪 {{ textos.btn_de }}</a>
+        <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">🇧🇷 {{ textos.btn_pt }}</a>
+        <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">🇨🇳 {{ textos.btn_zh }}</a>
     </div>
 </body>
 </html>
