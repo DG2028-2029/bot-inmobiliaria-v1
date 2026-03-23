@@ -16,7 +16,10 @@ DICCIONARIO = {
         'selecciona_idioma': 'Selecciona tu idioma',
         'btn_es': 'Español',
         'btn_en': 'Inglés',
-        'btn_fr': 'Francés'
+        'btn_fr': 'Francés',
+        'btn_de': 'Alemán',
+        'btn_pt': 'Portugués',
+        'btn_zh': 'Chino'
     },
     'en': {
         'titulo_form': 'Please fill in your details to contact you.',
@@ -34,7 +37,10 @@ DICCIONARIO = {
         'selecciona_idioma': 'Select your language',
         'btn_es': 'Spanish',
         'btn_en': 'English',
-        'btn_fr': 'French'
+        'btn_fr': 'French',
+        'btn_de': 'German',
+        'btn_pt': 'Portuguese',
+        'btn_zh': 'Chinese'
     },
     'fr': {
         'titulo_form': 'Veuillez remplir vos coordonnées.',
@@ -52,6 +58,72 @@ DICCIONARIO = {
         'selecciona_idioma': 'Choisissez votre langue',
         'btn_es': 'Espagnol',
         'btn_en': 'Anglais',
-        'btn_fr': 'Français'
+        'btn_fr': 'Français',
+        'btn_de': 'Allemand',
+        'btn_pt': 'Portugais',
+        'btn_zh': 'Chinois'
+    },
+    'de': {
+        'titulo_form': 'Bitte füllen Sie Ihre Daten aus.',
+        'placeholder_nombre': 'Vollständiger Name',
+        'placeholder_tel': 'Telefonnummer',
+        'placeholder_zona': 'Interessengebiet',
+        'placeholder_presupuesto': 'Budget USD',
+        'placeholder_propiedad': 'Welche Immobilie suchen Sie?',
+        'boton_enviar': 'Infos Senden',
+        'mensaje_exito': 'Empfangen!',
+        'subtitulo_exito': 'Wir werden uns bald melden.',
+        'login_titulo': 'Immobilien Zugang',
+        'historial_titulo': 'Leads Dashboard',
+        'acepto_terminos': 'Ich akzeptiere die Verarbeitung meiner Daten gemäß der Datenschutzrichtlinie.',
+        'selecciona_idioma': 'Wählen Sie Ihre Sprache',
+        'btn_es': 'Spanisch',
+        'btn_en': 'Englisch',
+        'btn_fr': 'Französisch',
+        'btn_de': 'Deutsch',
+        'btn_pt': 'Portugiesisch',
+        'btn_zh': 'Chinesisch'
+    },
+    'pt': {
+        'titulo_form': 'Por favor, preencha seus dados para contato.',
+        'placeholder_nombre': 'Nome completo',
+        'placeholder_tel': 'Telefone',
+        'placeholder_zona': 'Zona de interesse',
+        'placeholder_presupuesto': 'Orçamento USD',
+        'placeholder_propiedad': 'Que tipo de imóvel procura?',
+        'boton_enviar': 'Enviar Informações',
+        'mensaje_exito': 'Recebido!',
+        'subtitulo_exito': 'Entraremos em contato em breve.',
+        'login_titulo': 'Acesso Imobiliário',
+        'historial_titulo': 'Painel de Leads',
+        'acepto_terminos': 'Aceito o tratamento dos meus dados conforme a política de privacidade.',
+        'selecciona_idioma': 'Selecione seu idioma',
+        'btn_es': 'Espanhol',
+        'btn_en': 'Inglês',
+        'btn_fr': 'Francês',
+        'btn_de': 'Alemão',
+        'btn_pt': 'Português',
+        'btn_zh': 'Chinês'
+    },
+    'zh': {
+        'titulo_form': '请填写您的联系方式',
+        'placeholder_nombre': '全名',
+        'placeholder_tel': '电话号码',
+        'placeholder_zona': '感兴趣的区域',
+        'placeholder_presupuesto': '预算 (美元)',
+        'placeholder_propiedad': '您在寻找什么样的房产？',
+        'boton_enviar': '发送信息',
+        'mensaje_exito': '已收到！',
+        'subtitulo_exito': '我们会尽快与您联系。',
+        'login_titulo': '房地产访问',
+        'historial_titulo': '潜客仪表板',
+        'acepto_terminos': '我接受根据隐私政策处理我的个人数据。',
+        'selecciona_idioma': '选择您的语言',
+        'btn_es': '西班牙语',
+        'btn_en': '英语',
+        'btn_fr': '法语',
+        'btn_de': '德语',
+        'btn_pt': '葡萄牙语',
+        'btn_zh': '中文'
     }
 }
