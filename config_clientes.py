@@ -3,7 +3,7 @@ CLIENTES = {
         "nombre": "Roberto Inmobiliaria",
         "premium_email": False, 
         "email_origen": "diegogironlay@gmail.com",
-        "email_password": "iizwmmstyyaqymcd",
+        "email_password": "qfldmaamrwojlzvm",
         "email_destino": "diegolay201028@gmail.com",
         "whatsapp": "50230840598",
         "usuario": "roberto",
