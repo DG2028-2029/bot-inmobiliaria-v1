@@ -21,7 +21,6 @@ supabase = create_client(url, key)
 def enviar_email_notificacion(cliente_config, datos_lead, lang):
     """Envía un correo al vendedor con los datos del lead en el idioma seleccionado."""
     try:
-        # Diccionario interno para el asunto del correo según el idioma del lead
         asuntos = {
             'es': '¡Nuevo Lead Recibido! 💎',
             'en': 'New Lead Received! 💎',
@@ -33,7 +32,6 @@ def enviar_email_notificacion(cliente_config, datos_lead, lang):
         
         asunto = asuntos.get(lang, asuntos['es'])
         
-        # Crear el mensaje
         msg = MIMEMultipart()
         msg['From'] = cliente_config['email_origen']
         msg['To'] = cliente_config['email_destino']
@@ -55,7 +53,6 @@ def enviar_email_notificacion(cliente_config, datos_lead, lang):
         
         msg.attach(MIMEText(cuerpo, 'plain'))
 
-        # Conexión segura con Gmail
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(cliente_config['email_origen'], cliente_config['email_password'])
@@ -69,7 +66,10 @@ def enviar_email_notificacion(cliente_config, datos_lead, lang):
 # --- LÓGICA DE NEGOCIO ---
 def clasificar_lead(p):
     try:
-        p = float(p.replace('$', '').replace(',', '')) if isinstance(p, str) else float(p)
+        if isinstance(p, str):
+            p = float(p.replace('$', '').replace(',', ''))
+        else:
+            p = float(p)
         if p >= 300000: return "ALTO VALOR 💎"
         elif p >= 150000: return "VALOR MEDIO 🟡"
         else: return "BAJO VALOR ⚪"
@@ -133,6 +133,7 @@ def formulario(cliente_id):
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     
     if request.method == "POST":
+        # Verificamos que el usuario aceptó términos
         terminos = request.form.get("terminos")
         if not terminos:
             return "Error: Debe aceptar los términos.", 400
@@ -162,15 +163,17 @@ def formulario(cliente_id):
         }
         
         try:
-            # 1. Guardar en Base de Datos
+            # 1. Guardar en Supabase
             supabase.table("leads").insert(datos_supabase).execute()
             
-            # 2. Lógica Premium: Enviar Correo si está activo
+            # 2. Enviar Correo
             if cliente.get("premium_email") == True:
                 enviar_email_notificacion(cliente, datos_supabase, lang)
 
         except Exception as e:
-            return f"Error: {e}", 500
+            # Si hay error (como el RLS que mencionamos), lo veremos aquí
+            print(f"Error detallado: {e}")
+            return f"Error al guardar: {e}", 500
 
         return render_template("formulario.html", enviado=True, link_whatsapp=f"https://wa.me/{cliente['whatsapp']}", cliente=cliente, textos=textos)
     
