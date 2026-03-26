@@ -38,7 +38,7 @@ def enviar_email_notificacion(cliente_config, datos_lead, lang):
         msg['Subject'] = asunto
 
         cuerpo = f"""
-        Has recibido un nuevo interesado desde el formulario ({lang}):
+        Has recibido un nuevo interesado ({lang}):
         
         Nombre: {datos_lead['nombre']}
         Teléfono: {datos_lead['telefono']}
@@ -53,7 +53,8 @@ def enviar_email_notificacion(cliente_config, datos_lead, lang):
         
         msg.attach(MIMEText(cuerpo, 'plain'))
 
-        server = smtplib.SMTP('smtp.gmail.com', 587)
+        # AÑADIMOS TIMEOUT PARA EVITAR QUE RENDER SE CONGELE
+        server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
         server.starttls()
         server.login(cliente_config['email_origen'], cliente_config['email_password'])
         server.send_message(msg)
@@ -66,12 +67,10 @@ def enviar_email_notificacion(cliente_config, datos_lead, lang):
 # --- LÓGICA DE NEGOCIO ---
 def clasificar_lead(p):
     try:
-        if isinstance(p, str):
-            p = float(p.replace('$', '').replace(',', ''))
-        else:
-            p = float(p)
-        if p >= 300000: return "ALTO VALOR 💎"
-        elif p >= 150000: return "VALOR MEDIO 🟡"
+        p_str = str(p).replace('$', '').replace(',', '')
+        p_val = float(p_str)
+        if p_val >= 300000: return "ALTO VALOR 💎"
+        elif p_val >= 150000: return "VALOR MEDIO 🟡"
         else: return "BAJO VALOR ⚪"
     except: return "NO DEFINIDO"
 
@@ -81,18 +80,12 @@ def calcular_score(d):
         p = float(d.get("presupuesto", 0))
         score += min(35, p / 30000)
     except: pass
-    
-    if d.get("zona_interes"): 
-        score += 15 
-        
+    if d.get("zona_interes"): score += 15 
     msg = d.get("mensaje", "").lower()
     palabras = msg.split()
     if len(palabras) >= 20: score += 20
     elif len(palabras) >= 10: score += 10
-    
-    if any(x in msg for x in ["comprar","invertir","cerrar","urgente","este mes"]): 
-        score += 20
-        
+    if any(x in msg for x in ["comprar","invertir","cerrar","urgente","este mes"]): score += 20
     return min(int(score), 100)
 
 def temperatura_lead(score):
@@ -101,7 +94,7 @@ def temperatura_lead(score):
     elif score >= 40: return "🟡 MEDIO"
     else: return "❄️ FRÍO"
 
-# --- RUTAS ---
+# --- RUTAS PRINCIPALES ---
 @app.route("/idioma/<lang>/<proximo>/<cliente_id>")
 def cambiar_idioma(lang, proximo, cliente_id):
     session['idioma'] = lang
@@ -118,24 +111,19 @@ def index():
 def bienvenida(cliente_id):
     cliente = CLIENTES.get(cliente_id.lower())
     if not cliente: return "Error: Vendedor no existe", 404
-    
     lang = session.get('idioma', 'es')
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
-    
     return render_template("bienvenida.html", cliente=cliente, textos=textos)
 
 @app.route("/form/<cliente_id>", methods=["GET","POST"])
 def formulario(cliente_id):
     cliente = CLIENTES.get(cliente_id.lower())
     if not cliente: return "Error: Vendedor no existe", 404
-    
     lang = session.get('idioma', 'es')
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     
     if request.method == "POST":
-        # Verificamos que el usuario aceptó términos
-        terminos = request.form.get("terminos")
-        if not terminos:
+        if not request.form.get("terminos"):
             return "Error: Debe aceptar los términos.", 400
 
         d = {
@@ -166,19 +154,19 @@ def formulario(cliente_id):
             # 1. Guardar en Supabase
             supabase.table("leads").insert(datos_supabase).execute()
             
-            # 2. Enviar Correo
+            # 2. Enviar Correo (si falla el correo, el usuario igual ve el éxito)
             if cliente.get("premium_email") == True:
                 enviar_email_notificacion(cliente, datos_supabase, lang)
 
+            return render_template("formulario.html", enviado=True, link_whatsapp=f"https://wa.me/{cliente['whatsapp']}", cliente=cliente, textos=textos)
+
         except Exception as e:
-            # Si hay error (como el RLS que mencionamos), lo veremos aquí
             print(f"Error detallado: {e}")
             return f"Error al guardar: {e}", 500
-
-        return render_template("formulario.html", enviado=True, link_whatsapp=f"https://wa.me/{cliente['whatsapp']}", cliente=cliente, textos=textos)
     
     return render_template("formulario.html", enviado=False, cliente=cliente, textos=textos)
 
+# --- RUTAS DE ADMINISTRACIÓN (LOGIN E HISTORIAL) ---
 @app.route("/login/<cliente_id>", methods=["GET","POST"])
 def login(cliente_id):
     cliente = CLIENTES.get(cliente_id.lower())
