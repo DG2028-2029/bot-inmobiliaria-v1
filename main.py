@@ -155,7 +155,7 @@ def formulario(cliente_id):
             # 1. Guardar en Supabase (Prioridad)
             supabase.table("leads").insert(datos_supabase).execute()
             
-            # 2. Intentar enviar correo (Si falla, no bloquea al usuario)
+            # 2. Intentar enviar correo (Solo si premium_email es True)
             if cliente.get("premium_email") == True:
                 enviar_email_notificacion(cliente, datos_supabase, lang)
 
