@@ -17,9 +17,9 @@ url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
 
-# --- LÓGICA DE CORREO MULTILINGÜE ---
+# --- LÓGICA DE CORREO MEJORADA ---
 def enviar_email_notificacion(cliente_config, datos_lead, lang):
-    """Envía un correo al vendedor con los datos del lead en el idioma seleccionado."""
+    """Envía un correo al vendedor sin bloquear el flujo principal."""
     try:
         asuntos = {
             'es': '¡Nuevo Lead Recibido! 💎',
@@ -53,7 +53,7 @@ def enviar_email_notificacion(cliente_config, datos_lead, lang):
         
         msg.attach(MIMEText(cuerpo, 'plain'))
 
-        # AÑADIMOS TIMEOUT PARA EVITAR QUE RENDER SE CONGELE
+        # CONEXIÓN SEGURA CON TIMEOUT
         server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
         server.starttls()
         server.login(cliente_config['email_origen'], cliente_config['email_password'])
@@ -61,7 +61,7 @@ def enviar_email_notificacion(cliente_config, datos_lead, lang):
         server.quit()
         return True
     except Exception as e:
-        print(f"Error enviando correo: {e}")
+        print(f"❌ Error enviando correo: {e}")
         return False
 
 # --- LÓGICA DE NEGOCIO ---
@@ -77,7 +77,8 @@ def clasificar_lead(p):
 def calcular_score(d):
     score = 0
     try:
-        p = float(d.get("presupuesto", 0))
+        p_str = str(d.get("presupuesto", 0)).replace('$', '').replace(',', '')
+        p = float(p_str)
         score += min(35, p / 30000)
     except: pass
     if d.get("zona_interes"): score += 15 
@@ -94,7 +95,7 @@ def temperatura_lead(score):
     elif score >= 40: return "🟡 MEDIO"
     else: return "❄️ FRÍO"
 
-# --- RUTAS PRINCIPALES ---
+# --- RUTAS ---
 @app.route("/idioma/<lang>/<proximo>/<cliente_id>")
 def cambiar_idioma(lang, proximo, cliente_id):
     session['idioma'] = lang
@@ -151,27 +152,25 @@ def formulario(cliente_id):
         }
         
         try:
-            # 1. Guardar en Supabase
+            # 1. Guardar en Supabase (Prioridad)
             supabase.table("leads").insert(datos_supabase).execute()
             
-            # 2. Enviar Correo (si falla el correo, el usuario igual ve el éxito)
+            # 2. Intentar enviar correo (Si falla, no bloquea al usuario)
             if cliente.get("premium_email") == True:
                 enviar_email_notificacion(cliente, datos_supabase, lang)
 
             return render_template("formulario.html", enviado=True, link_whatsapp=f"https://wa.me/{cliente['whatsapp']}", cliente=cliente, textos=textos)
 
         except Exception as e:
-            print(f"Error detallado: {e}")
-            return f"Error al guardar: {e}", 500
+            print(f"Error crítico: {e}")
+            return f"Error en el sistema: {e}", 500
     
     return render_template("formulario.html", enviado=False, cliente=cliente, textos=textos)
 
-# --- RUTAS DE ADMINISTRACIÓN (LOGIN E HISTORIAL) ---
 @app.route("/login/<cliente_id>", methods=["GET","POST"])
 def login(cliente_id):
     cliente = CLIENTES.get(cliente_id.lower())
     if not cliente: return "Vendedor no existe", 404
-    
     lang = session.get('idioma', 'es')
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     
@@ -198,7 +197,6 @@ def historial(cliente_id):
     
     resultado = query.order("id", desc=True).execute()
     leads = resultado.data
-            
     return render_template("historial.html", leads=leads, cliente=cliente, textos=textos)
 
 if __name__ == "__main__":
