@@ -1,10 +1,7 @@
 CLIENTES = {
     "roberto": {
         "nombre": "Roberto Inmobiliaria",
-        "premium_email": False,  # <-- DESACTIVADO para evitar trabas
-        "email_origen": "diegogironlay@gmail.com",
-        "email_password": "gvpdihhiutatqlwg",
-        "email_destino": "diegolay201028@gmail.com",
+        "premium_email": False,  
         "whatsapp": "50230840598",
         "usuario": "roberto",
         "password": "1234",
@@ -14,9 +11,6 @@ CLIENTES = {
     "juan": {
         "nombre": "Juan Realty",
         "premium_email": False,
-        "email_origen": "juan@gmail.com",
-        "email_password": "PASSWORD_APP_GMAIL",
-        "email_destino": "juan@gmail.com",
         "whatsapp": "50231111111",
         "usuario": "juan",
         "password": "5678",
