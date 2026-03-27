@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, redirect, session, url_for
 from supabase import create_client
 import os
 import smtplib
+import threading
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
@@ -17,7 +18,7 @@ url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
 
-# --- LÓGICA DE CORREO MEJORADA ---
+# --- LÓGICA DE CORREO EN SEGUNDO PLANO ---
 def enviar_email_notificacion(cliente_config, datos_lead, lang):
     """Envía un correo al vendedor sin bloquear el flujo principal."""
     try:
@@ -38,7 +39,7 @@ def enviar_email_notificacion(cliente_config, datos_lead, lang):
         msg['Subject'] = asunto
 
         cuerpo = f"""
-        Has recibido un nuevo interesado ({lang}):
+        Has recibido un nuevo interesado ({lang.upper()}):
         
         Nombre: {datos_lead['nombre']}
         Teléfono: {datos_lead['telefono']}
@@ -53,16 +54,14 @@ def enviar_email_notificacion(cliente_config, datos_lead, lang):
         
         msg.attach(MIMEText(cuerpo, 'plain'))
 
-        # CONEXIÓN SEGURA CON TIMEOUT
         server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
         server.starttls()
         server.login(cliente_config['email_origen'], cliente_config['email_password'])
         server.send_message(msg)
         server.quit()
-        return True
+        print(f"✅ Correo enviado con éxito ({lang})")
     except Exception as e:
         print(f"❌ Error enviando correo: {e}")
-        return False
 
 # --- LÓGICA DE NEGOCIO ---
 def clasificar_lead(p):
@@ -152,12 +151,12 @@ def formulario(cliente_id):
         }
         
         try:
-            # 1. Guardar en Supabase (Prioridad)
             supabase.table("leads").insert(datos_supabase).execute()
             
-            # 2. Intentar enviar correo (Solo si premium_email es True)
+            # Envío de correo en segundo plano (No bloquea la respuesta)
             if cliente.get("premium_email") == True:
-                enviar_email_notificacion(cliente, datos_supabase, lang)
+                thread = threading.Thread(target=enviar_email_notificacion, args=(cliente, datos_supabase, lang))
+                thread.start()
 
             return render_template("formulario.html", enviado=True, link_whatsapp=f"https://wa.me/{cliente['whatsapp']}", cliente=cliente, textos=textos)
 
