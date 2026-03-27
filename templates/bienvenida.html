@@ -2,49 +2,87 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ cliente.nombre }} | Welcome</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
     <style>
+        body {
+            background: #f1f2f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
         .bienvenida-container {
             max-width: 400px;
-            margin: 40px auto; /* Bajé un poco el margen superior */
+            width: 90%;
             background: white;
-            padding: 25px;
-            border-radius: 15px;
+            padding: 30px;
+            border-radius: 20px;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
+        .logo-placeholder {
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
+        h2 { color: #2c3e50; margin-bottom: 5px; }
+        p { color: #7f8c8d; margin-bottom: 25px; }
+        
         .btn-lang {
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
             width: 100%;
-            padding: 12px; /* Reduje un poco el padding para que quepan los 6 */
-            margin: 8px 0;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #eee;
+            border-radius: 12px;
             text-decoration: none;
             color: #333;
             font-size: 16px;
-            font-weight: bold;
-            transition: 0.3s;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            background: #fff;
         }
         .btn-lang:hover {
-            background: #f1f2f6;
-            border-color: #2c3e50;
-            transform: translateY(-2px);
+            background: #f8f9fa;
+            border-color: #3498db;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .flag {
+            font-size: 22px;
+            margin-right: 15px;
         }
     </style>
 </head>
-<body style="background: #f1f2f6;">
+<body>
     <div class="bienvenida-container">
-        <h2 style="margin-bottom: 5px;">{{ cliente.nombre }}</h2>
-        <p style="color: #666; margin-bottom: 20px;">{{ textos.selecciona_idioma }}</p>
+        <div class="logo-placeholder">🏠</div>
+        <h2>{{ cliente.nombre }}</h2>
+        <p>{{ textos.selecciona_idioma }}</p>
         
-        <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">🇬🇹 {{ textos.btn_es }}</a>
-        <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">🇺🇸 {{ textos.btn_en }}</a>
-        <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">🇫🇷 {{ textos.btn_fr }}</a>
-        <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">🇩🇪 {{ textos.btn_de }}</a>
-        <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">🇧🇷 {{ textos.btn_pt }}</a>
-        <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">🇨🇳 {{ textos.btn_zh }}</a>
+        <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
+            <span class="flag">🇪🇸</span> {{ textos.btn_es }}
+        </a>
+        <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
+            <span class="flag">🇺🇸</span> {{ textos.btn_en }}
+        </a>
+        <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
+            <span class="flag">🇫🇷</span> {{ textos.btn_fr }}
+        </a>
+        <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
+            <span class="flag">🇩🇪</span> {{ textos.btn_de }}
+        </a>
+        <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
+            <span class="flag">🇵🇹</span> {{ textos.btn_pt }}
+        </a>
+        <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
+            <span class="flag">🇨🇳</span> {{ textos.btn_zh }}
+        </a>
     </div>
 </body>
 </html>
