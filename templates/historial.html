@@ -27,7 +27,7 @@
         .bajo { color: #7f8c8d; font-weight: bold; background: #f8f9fa; border-radius: 4px; padding: 4px 8px; }
         
         /* Estilo para la temperatura */
-        .temp-emoji { font-size: 1.2em; }
+        .temp-emoji { font-size: 1.2em; font-weight: bold; }
         tr:hover { background-color: #f8f9fa; }
     </style>
 </head>
@@ -79,11 +79,17 @@
             <td>${{ "{:,.2f}".format(lead.presupuesto|float) if lead.presupuesto else "0.00" }}</td>
             <td>
                 <span class="{% if 'ALTO' in lead.clasificacion %}alto{% elif 'MEDIO' in lead.clasificacion %}medio{% else %}bajo{% endif %}">
-                    {{ lead.clasificacion }}
+                    {# Buscamos la traducción de la clasificación usando la clave class_ #}
+                    {{ textos['class_' + lead.clasificacion] if ('class_' + lead.clasificacion) in textos else lead.clasificacion }}
                 </span>
             </td>
             <td><progress value="{{ lead.score }}" max="100"></progress> <br> {{ lead.score }}/100</td>
-            <td><span class="temp-emoji">{{ lead.temperatura }}</span></td>
+            <td>
+                <span class="temp-emoji">
+                    {# Buscamos la traducción de la temperatura usando la clave temp_ #}
+                    {{ textos['temp_' + lead.temperatura] if ('temp_' + lead.temperatura) in textos else lead.temperatura }}
+                </span>
+            </td>
             <td style="font-size: 12px; color: #666; max-width: 200px;">{{ lead.mensaje }}</td>
         </tr>
         {% else %}
