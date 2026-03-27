@@ -5,22 +5,30 @@
     <title>{{ textos.historial_titulo }} | {{ cliente.nombre }}</title>
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background: #f1f2f6; padding: 20px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f2f6; padding: 20px; }
         .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .selector-idioma { display: flex; gap: 15px; margin-bottom: 10px; }
-        .bandera { font-size: 22px; text-decoration: none; transition: 0.2s; }
-        .bandera:hover { transform: scale(1.2); }
-        .search-container { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; gap: 10px; align-items: center; }
-        .search-container input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        .btn-search { background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
-        .btn-clear { background: #bdc3c7; color: black; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-size: 14px; }
-        .btn-excel { background: #27ae60; color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: center; }
-        th { background: #2c3e50; color: white; }
-        .alto { color: #e74c3c; font-weight: bold; }
-        .medio { color: #f39c12; font-weight: bold; }
-        .bajo { color: #7f8c8d; font-weight: bold; }
+        .selector-idioma { display: flex; gap: 15px; margin-bottom: 15px; }
+        .bandera { font-size: 24px; text-decoration: none; transition: 0.2s; }
+        .bandera:hover { transform: scale(1.3); }
+        .search-container { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; gap: 10px; align-items: center; }
+        .search-container input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .btn-search { background: #2c3e50; color: white; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-clear { background: #bdc3c7; color: #333; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; display: flex; align-items: center; }
+        .btn-excel { background: #27ae60; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); transition: 0.3s; }
+        .btn-excel:hover { background: #219150; transform: translateY(-2px); }
+        
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        th { background: #2c3e50; color: white; padding: 15px; font-size: 13px; text-transform: uppercase; }
+        td { padding: 15px; border-bottom: 1px solid #eee; text-align: center; font-size: 14px; }
+        
+        /* Colores de Clasificación */
+        .alto { color: #e74c3c; font-weight: bold; background: #fdf2f2; border-radius: 4px; padding: 4px 8px; }
+        .medio { color: #f39c12; font-weight: bold; background: #fffaf0; border-radius: 4px; padding: 4px 8px; }
+        .bajo { color: #7f8c8d; font-weight: bold; background: #f8f9fa; border-radius: 4px; padding: 4px 8px; }
+        
+        /* Estilo para la temperatura */
+        .temp-emoji { font-size: 1.2em; }
+        tr:hover { background-color: #f8f9fa; }
     </style>
 </head>
 <body>
@@ -65,20 +73,22 @@
         {% for lead in leads %}
         <tr>
             <td>{{ lead.fecha }}</td>
-            <td>{{ lead.nombre }}</td>
-            <td><a href="https://wa.me/{{ lead.telefono }}" target="_blank">{{ lead.telefono }}</a></td>
+            <td><strong>{{ lead.nombre }}</strong></td>
+            <td><a href="https://wa.me/{{ lead.telefono }}" target="_blank" style="color: #27ae60; text-decoration: none; font-weight: bold;">📱 {{ lead.telefono }}</a></td>
             <td>{{ lead.zona_interes }}</td> 
-            <td>${{ lead.presupuesto }}</td>
-            <td class="{% if 'ALTO' in lead.clasificacion %}alto{% elif 'MEDIO' in lead.clasificacion %}medio{% else %}bajo{% endif %}">
-                {{ lead.clasificacion }}
+            <td>${{ "{:,.2f}".format(lead.presupuesto|float) if lead.presupuesto else "0.00" }}</td>
+            <td>
+                <span class="{% if 'ALTO' in lead.clasificacion %}alto{% elif 'MEDIO' in lead.clasificacion %}medio{% else %}bajo{% endif %}">
+                    {{ lead.clasificacion }}
+                </span>
             </td>
-            <td>{{ lead.score }}/100</td>
-            <td><strong>{{ lead.temperatura }}</strong></td>
-            <td>{{ lead.mensaje }}</td>
+            <td><progress value="{{ lead.score }}" max="100"></progress> <br> {{ lead.score }}/100</td>
+            <td><span class="temp-emoji">{{ lead.temperatura }}</span></td>
+            <td style="font-size: 12px; color: #666; max-width: 200px;">{{ lead.mensaje }}</td>
         </tr>
         {% else %}
         <tr>
-            <td colspan="9">{{ textos.no_leads }}</td>
+            <td colspan="9" style="padding: 40px; color: #999;">{{ textos.no_leads }}</td>
         </tr>
         {% endfor %}
     </tbody>
@@ -88,7 +98,7 @@
 function descargarExcel() {
     var table = document.getElementById("tabla-leads");
     var wb = XLSX.utils.table_to_book(table, {sheet: "Prospectos"});
-    XLSX.writeFile(wb, "Reporte_Leads_{{ cliente.nombre }}_" + new Date().toLocaleDateString() + ".xlsx");
+    XLSX.writeFile(wb, "Reporte_Leads_{{ cliente.nombre }}_" + new Date().toISOString().split('T')[0] + ".xlsx");
 }
 </script>
 
