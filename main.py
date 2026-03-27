@@ -1,10 +1,6 @@
 from flask import Flask, request, render_template, redirect, session, url_for
 from supabase import create_client
 import os
-import smtplib
-import threading
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 import config
 from config_clientes import CLIENTES
@@ -18,53 +14,9 @@ url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
 
-# --- LÓGICA DE CORREO EN SEGUNDO PLANO ---
-def enviar_email_notificacion(cliente_config, datos_lead, lang):
-    """Envía un correo al vendedor sin bloquear el flujo principal."""
-    try:
-        asuntos = {
-            'es': '¡Nuevo Lead Recibido! 💎',
-            'en': 'New Lead Received! 💎',
-            'fr': 'Nouveau Prospect Reçu ! 💎',
-            'de': 'Neuer Lead erhalten! 💎',
-            'pt': 'Novo Lead Recebido! 💎',
-            'zh': '收到新潜客！ 💎'
-        }
-        
-        asunto = asuntos.get(lang, asuntos['es'])
-        
-        msg = MIMEMultipart()
-        msg['From'] = cliente_config['email_origen']
-        msg['To'] = cliente_config['email_destino']
-        msg['Subject'] = asunto
-
-        cuerpo = f"""
-        Has recibido un nuevo interesado ({lang.upper()}):
-        
-        Nombre: {datos_lead['nombre']}
-        Teléfono: {datos_lead['telefono']}
-        Zona: {datos_lead['zona_interes']}
-        Presupuesto: ${datos_lead['presupuesto']}
-        Mensaje: {datos_lead['mensaje']}
-        
-        Clasificación: {datos_lead['clasificacion']}
-        Score: {datos_lead['score']}/100
-        Temperatura: {datos_lead['temperatura']}
-        """
-        
-        msg.attach(MIMEText(cuerpo, 'plain'))
-
-        server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
-        server.starttls()
-        server.login(cliente_config['email_origen'], cliente_config['email_password'])
-        server.send_message(msg)
-        server.quit()
-        print(f"✅ Correo enviado con éxito ({lang})")
-    except Exception as e:
-        print(f"❌ Error enviando correo: {e}")
-
 # --- LÓGICA DE NEGOCIO ---
 def clasificar_lead(p):
+    """Clasifica el lead según el presupuesto."""
     try:
         p_str = str(p).replace('$', '').replace(',', '')
         p_val = float(p_str)
@@ -74,21 +26,28 @@ def clasificar_lead(p):
     except: return "NO DEFINIDO"
 
 def calcular_score(d):
+    """Calcula la relevancia del lead de 0 a 100."""
     score = 0
     try:
         p_str = str(d.get("presupuesto", 0)).replace('$', '').replace(',', '')
         p = float(p_str)
         score += min(35, p / 30000)
     except: pass
+    
     if d.get("zona_interes"): score += 15 
+    
     msg = d.get("mensaje", "").lower()
     palabras = msg.split()
     if len(palabras) >= 20: score += 20
     elif len(palabras) >= 10: score += 10
-    if any(x in msg for x in ["comprar","invertir","cerrar","urgente","este mes"]): score += 20
+    
+    if any(x in msg for x in ["comprar","invertir","cerrar","urgente","este mes"]): 
+        score += 20
+        
     return min(int(score), 100)
 
 def temperatura_lead(score):
+    """Asigna un estado visual según el score."""
     if score >= 80: return "🔥 MUY CALIENTE"
     elif score >= 60: return "🔥 CALIENTE"
     elif score >= 40: return "🟡 MEDIO"
@@ -151,13 +110,11 @@ def formulario(cliente_id):
         }
         
         try:
+            # Registro en Supabase
             supabase.table("leads").insert(datos_supabase).execute()
             
-            # Envío de correo en segundo plano (No bloquea la respuesta)
-            if cliente.get("premium_email") == True:
-                thread = threading.Thread(target=enviar_email_notificacion, args=(cliente, datos_supabase, lang))
-                thread.start()
-
+            # Nota: Lógica de email eliminada por solicitud del usuario para mayor estabilidad.
+            
             return render_template("formulario.html", enviado=True, link_whatsapp=f"https://wa.me/{cliente['whatsapp']}", cliente=cliente, textos=textos)
 
         except Exception as e:
