@@ -2,10 +2,10 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>{{ textos.login_titulo }}</title>
+    <title>{{ textos.login_titulo }} | {{ cliente.nombre }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
     <style>
-        /* Estilo para las banderas (igual que en el formulario) */
+        /* Mantenemos tu estilo exacto para las banderas */
         .selector-idioma {
             text-align: center;
             margin-bottom: 20px;
@@ -26,18 +26,22 @@
 </head>
 <body>
     <div class="selector-idioma">
-        <a href="{{ url_for('cambiar_idioma', lang='es', proximo='login', cliente_id=cliente.usuario) }}" class="bandera" title="Español">🇬🇹</a>
+        <a href="{{ url_for('cambiar_idioma', lang='es', proximo='login', cliente_id=cliente.usuario) }}" class="bandera" title="Español">🇪🇸</a>
         <a href="{{ url_for('cambiar_idioma', lang='en', proximo='login', cliente_id=cliente.usuario) }}" class="bandera" title="English">🇺🇸</a>
         <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='login', cliente_id=cliente.usuario) }}" class="bandera" title="Français">🇫🇷</a>
+        <a href="{{ url_for('cambiar_idioma', lang='de', proximo='login', cliente_id=cliente.usuario) }}" class="bandera" title="Deutsch">🇩🇪</a>
+        <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='login', cliente_id=cliente.usuario) }}" class="bandera" title="Português">🇵🇹</a>
+        <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='login', cliente_id=cliente.usuario) }}" class="bandera" title="中文">🇨🇳</a>
     </div>
 
     <form method="POST">
         <h2>{{ textos.login_titulo }}</h2>
         
-        <input name="usuario" placeholder="{{ 'Usuario' if session.get('idioma') == 'es' else 'Username' if session.get('idioma') == 'en' else 'Nom d\'utilisateur' }}" required>
-        <input type="password" name="password" placeholder="{{ 'Contraseña' if session.get('idioma') == 'es' else 'Password' if session.get('idioma') == 'en' else 'Mot de passe' }}" required>
+        <input name="usuario" placeholder="{{ textos.placeholder_nombre if textos.placeholder_nombre else 'Usuario' }}" required>
         
-        <button>{{ textos.login_boton if textos.login_boton else 'Entrar' }}</button>
+        <input type="password" name="password" placeholder="******" required>
+        
+        <button type="submit">{{ textos.login_boton if textos.login_boton else 'Entrar' }}</button>
         
         {% if error %}
             <p style="color:red; margin-top:15px;">{{ error }}</p>
