@@ -3,86 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ cliente.nombre }} | Welcome</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <title>{{ cliente.nombre }} | Select Language</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --bg: #f8f9fa;
+        }
+
         body {
-            background: #f1f2f6;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            /* Degradado de fondo profesional */
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            margin: 0;
+            min-height: 100vh;
         }
-        .bienvenida-container {
-            max-width: 400px;
-            width: 90%;
+
+        .card {
             background: white;
-            padding: 30px;
-            border-radius: 20px;
+            width: 90%;
+            max-width: 420px;
+            padding: 40px 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
-        .logo-placeholder {
+
+        .logo-icon {
             font-size: 50px;
-            margin-bottom: 10px;
+            background: #f1f2f6;
+            width: 80px;
+            height: 80px;
+            line-height: 80px;
+            border-radius: 20px;
+            margin: 0 auto 20px;
         }
-        h2 { color: #2c3e50; margin-bottom: 5px; }
-        p { color: #7f8c8d; margin-bottom: 25px; }
-        
+
+        h2 {
+            color: var(--primary);
+            font-size: 24px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 15px;
+        }
+
+        .languages-grid {
+            display: grid;
+            gap: 12px;
+        }
+
         .btn-lang {
             display: flex;
             align-items: center;
-            justify-content: flex-start;
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            border: 1px solid #eee;
-            border-radius: 12px;
+            padding: 16px 20px;
+            background: #ffffff;
+            border: 1.5px solid #edf2f7;
+            border-radius: 16px;
             text-decoration: none;
-            color: #333;
-            font-size: 16px;
+            color: var(--primary);
             font-weight: 600;
+            font-size: 16px;
             transition: all 0.3s ease;
-            background: #fff;
         }
+
         .btn-lang:hover {
-            background: #f8f9fa;
-            border-color: #3498db;
-            transform: translateX(5px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-color: var(--accent);
+            background: #f0f7ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
         }
-        .flag {
-            font-size: 22px;
+
+        .flag-icon {
+            font-size: 24px;
             margin-right: 15px;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
+        }
+
+        .footer-text {
+            margin-top: 25px;
+            font-size: 12px;
+            color: #bdc3c7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
     </style>
 </head>
 <body>
-    <div class="bienvenida-container">
-        <div class="logo-placeholder">🏠</div>
+
+    <div class="card">
+        <div class="logo-icon">🏢</div>
         <h2>{{ cliente.nombre }}</h2>
-        <p>{{ textos.selecciona_idioma }}</p>
-        
-        <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
-            <span class="flag">🇪🇸</span> {{ textos.btn_es }}
-        </a>
-        <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
-            <span class="flag">🇺🇸</span> {{ textos.btn_en }}
-        </a>
-        <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
-            <span class="flag">🇫🇷</span> {{ textos.btn_fr }}
-        </a>
-        <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
-            <span class="flag">🇩🇪</span> {{ textos.btn_de }}
-        </a>
-        <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
-            <span class="flag">🇵🇹</span> {{ textos.btn_pt }}
-        </a>
-        <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
-            <span class="flag">🇨🇳</span> {{ textos.btn_zh }}
-        </a>
+        <p class="subtitle">{{ textos.selecciona_idioma }}</p>
+
+        <div class="languages-grid">
+            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
+                <span class="flag-icon">🇪🇸</span> {{ textos.btn_es }}
+            </a>
+            
+            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
+                <span class="flag-icon">🇺🇸</span> {{ textos.btn_en }}
+            </a>
+
+            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
+                <span class="flag-icon">🇫🇷</span> {{ textos.btn_fr }}
+            </a>
+
+            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
+                <span class="flag-icon">🇩🇪</span> {{ textos.btn_de }}
+            </a>
+
+            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
+                <span class="flag-icon">🇵🇹</span> {{ textos.btn_pt }}
+            </a>
+
+            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
+                <span class="flag-icon">🇨🇳</span> {{ textos.btn_zh }}
+            </a>
+        </div>
+
+        <div class="footer-text">Real Estate System v2.0</div>
     </div>
+
 </body>
 </html>
