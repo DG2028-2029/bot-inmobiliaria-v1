@@ -1,4 +1,3 @@
-# traducciones.py
 DICCIONARIO = {
     'es': {
         'titulo_form': 'Por favor, llena tus datos para contactarte.',
@@ -104,7 +103,7 @@ DICCIONARIO = {
         'subtitulo_exito': 'Entraremos em contato em breve.',
         'login_titulo': 'Acesso Imobiliário',
         'historial_titulo': 'Painel de Leads',
-        'acepto_terminos': 'Aceito o tratamento dos meus dados.',
+        'acepto_terminos': 'Aceito o tratamento dos meus datos.',
         'selecciona_idioma': 'Selecione seu idioma',
         'col_fecha': 'Data',
         'col_clasificacion': 'Classificação',
@@ -127,7 +126,7 @@ DICCIONARIO = {
         'subtitulo_exito': '我们会尽快与您联系。',
         'login_titulo': '房地产访问',
         'historial_titulo': '潜客仪表板',
-        'acepto_terminos': '我接受根据隐私政策处理我的个人数据。',
+        'acepto_terminos': '我接受隐私政策。',
         'selecciona_idioma': '选择您的语言',
         'col_fecha': '日期',
         'col_clasificacion': '分类',
