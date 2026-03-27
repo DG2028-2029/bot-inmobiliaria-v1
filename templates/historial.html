@@ -6,63 +6,18 @@
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background: #f1f2f6; padding: 20px; }
-        h2 { margin-bottom: 20px; }
-        
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        /* Estilo para las banderas */
-        .selector-idioma {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 10px;
-        }
-        .bandera {
-            font-size: 22px;
-            text-decoration: none;
-            transition: 0.2s;
-        }
+        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .selector-idioma { display: flex; gap: 15px; margin-bottom: 20px; background: white; padding: 10px; border-radius: 8px; width: fit-content; }
+        .bandera { font-size: 24px; text-decoration: none; transition: 0.2s; }
         .bandera:hover { transform: scale(1.2); }
-
-        .search-container {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .search-container input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
+        .search-container { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .search-container input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
         .btn-search { background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
         .btn-clear { background: #bdc3c7; color: black; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-size: 14px; }
-        
-        .btn-excel { 
-            background: #27ae60; 
-            color: white; 
-            border: none; 
-            padding: 12px 25px; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-weight: bold;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .btn-excel:hover { background: #219150; }
-
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn-excel { background: #27ae60; color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
         th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: center; }
         th { background: #2c3e50; color: white; }
-        
         .alto { color: #e74c3c; font-weight: bold; }
         .medio { color: #f39c12; font-weight: bold; }
         .bajo { color: #7f8c8d; font-weight: bold; }
@@ -71,36 +26,39 @@
 <body>
 
 <div class="selector-idioma">
-    <a href="{{ url_for('cambiar_idioma', lang='es', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇬🇹</a>
+    <a href="{{ url_for('cambiar_idioma', lang='es', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇪🇸</a>
     <a href="{{ url_for('cambiar_idioma', lang='en', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇺🇸</a>
     <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇫🇷</a>
+    <a href="{{ url_for('cambiar_idioma', lang='de', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇩🇪</a>
+    <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇵🇹</a>
+    <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇨🇳</a>
 </div>
 
 <div class="header-container">
     <h2>📊 {{ textos.historial_titulo }}: {{ cliente.nombre }}</h2>
-    <button onclick="descargarExcel()" class="btn-excel">📥 {{ 'Descargar Excel' if session.get('idioma') == 'es' else 'Download Excel' if session.get('idioma') == 'en' else 'Télécharger Excel' }}</button>
+    <button onclick="descargarExcel()" class="btn-excel">📥 {{ textos.btn_descargar }}</button>
 </div>
 
 <div class="search-container">
     <form method="GET" style="display: flex; width: 100%; gap: 10px;">
-        <input type="text" name="q" placeholder="{{ 'Buscar por nombre...' if session.get('idioma') == 'es' else 'Search by name...' if session.get('idioma') == 'en' else 'Chercher par nom...' }}" value="{{ request.args.get('q', '') }}">
+        <input type="text" name="q" placeholder="{{ textos.btn_buscar }}" value="{{ request.args.get('q', '') }}">
         <button type="submit" class="btn-search">🔍</button>
-        <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="btn-clear">{{ 'Limpiar' if session.get('idioma') == 'es' else 'Clear' if session.get('idioma') == 'en' else 'Effacer' }}</a>
+        <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="btn-clear">{{ textos.btn_limpiar }}</a>
     </form>
 </div>
 
 <table id="tabla-leads">
     <thead>
         <tr>
-            <th>{{ 'Fecha' if session.get('idioma') == 'es' else 'Date' if session.get('idioma') == 'en' else 'Date' }}</th>
+            <th>{{ textos.col_fecha }}</th>
             <th>{{ textos.placeholder_nombre }}</th>
             <th>{{ textos.placeholder_tel }}</th>
             <th>{{ textos.placeholder_zona }}</th>
             <th>{{ textos.placeholder_presupuesto }}</th>
-            <th>{{ 'Clasificación' if session.get('idioma') == 'es' else 'Classification' if session.get('idioma') == 'en' else 'Classification' }}</th>
+            <th>{{ textos.col_clasificacion }}</th>
             <th>Score</th>
-            <th>{{ 'Temperatura' if session.get('idioma') == 'es' else 'Temperature' if session.get('idioma') == 'en' else 'Température' }}</th>
-            <th>{{ 'Mensaje' if session.get('idioma') == 'es' else 'Message' if session.get('idioma') == 'en' else 'Message' }}</th>
+            <th>{{ textos.col_temperatura }}</th>
+            <th>{{ textos.col_mensaje }}</th>
         </tr>
     </thead>
     <tbody>
@@ -120,7 +78,7 @@
         </tr>
         {% else %}
         <tr>
-            <td colspan="9">{{ 'No hay prospectos.' if session.get('idioma') == 'es' else 'No leads found.' if session.get('idioma') == 'en' else 'Aucun prospect trouvé.' }}</td>
+            <td colspan="9">{{ textos.no_leads }}</td>
         </tr>
         {% endfor %}
     </tbody>
