@@ -4,10 +4,10 @@ import os
 from datetime import datetime
 import config
 from config_clientes import CLIENTES
-from traducciones import DICCIONARIO 
+from traducciones import DICCIONARIO
 
 app = Flask(__name__)
-app.secret_key = config.SECRET_KEY 
+app.secret_key = config.SECRET_KEY
 
 # --- CONEXIÓN A SUPABASE ---
 url = os.environ.get("SUPABASE_URL")
@@ -112,8 +112,6 @@ def formulario(cliente_id):
         try:
             # Registro en Supabase
             supabase.table("leads").insert(datos_supabase).execute()
-            
-            # Nota: Lógica de email eliminada por solicitud del usuario para mayor estabilidad.
             
             return render_template("formulario.html", enviado=True, link_whatsapp=f"https://wa.me/{cliente['whatsapp']}", cliente=cliente, textos=textos)
 
