@@ -1,7 +1,7 @@
 CLIENTES = {
     "roberto": {
         "nombre": "Roberto Inmobiliaria",
-        "premium_email": True, 
+        "premium_email": False,  # <-- DESACTIVADO para evitar trabas
         "email_origen": "diegogironlay@gmail.com",
         "email_password": "gvpdihhiutatqlwg",
         "email_destino": "diegolay201028@gmail.com",
