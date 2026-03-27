@@ -16,14 +16,14 @@ supabase = create_client(url, key)
 
 # --- LÓGICA DE NEGOCIO ---
 def clasificar_lead(p):
-    """Clasifica el lead según el presupuesto."""
+    """Clasifica el lead guardando una clave para traducción."""
     try:
         p_str = str(p).replace('$', '').replace(',', '')
         p_val = float(p_str)
-        if p_val >= 300000: return "ALTO VALOR 💎"
-        elif p_val >= 150000: return "VALOR MEDIO 🟡"
-        else: return "BAJO VALOR ⚪"
-    except: return "NO DEFINIDO"
+        if p_val >= 300000: return "ALTO"
+        elif p_val >= 150000: return "MEDIO"
+        else: return "BAJO"
+    except: return "ND"
 
 def calcular_score(d):
     """Calcula la relevancia del lead de 0 a 100."""
@@ -47,11 +47,11 @@ def calcular_score(d):
     return min(int(score), 100)
 
 def temperatura_lead(score):
-    """Asigna un estado visual según el score."""
-    if score >= 80: return "🔥 MUY CALIENTE"
-    elif score >= 60: return "🔥 CALIENTE"
-    elif score >= 40: return "🟡 MEDIO"
-    else: return "❄️ FRÍO"
+    """Asigna una clave interna de temperatura según el score."""
+    if score >= 80: return "MUY_CALIENTE"
+    elif score >= 60: return "CALIENTE"
+    elif score >= 40: return "MEDIO"
+    else: return "FRIO"
 
 # --- RUTAS ---
 @app.route("/idioma/<lang>/<proximo>/<cliente_id>")
