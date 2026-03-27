@@ -79,14 +79,14 @@
             <td>${{ "{:,.2f}".format(lead.presupuesto|float) if lead.presupuesto else "0.00" }}</td>
             <td>
                 <span class="{% if 'ALTO' in lead.clasificacion %}alto{% elif 'MEDIO' in lead.clasificacion %}medio{% else %}bajo{% endif %}">
-                    {# Buscamos la traducción de la clasificación usando la clave class_ #}
+                    {# Buscamos la traducción usando la clave class_ + el valor guardado (ALTO, MEDIO, BAJO) #}
                     {{ textos['class_' + lead.clasificacion] if ('class_' + lead.clasificacion) in textos else lead.clasificacion }}
                 </span>
             </td>
             <td><progress value="{{ lead.score }}" max="100"></progress> <br> {{ lead.score }}/100</td>
             <td>
                 <span class="temp-emoji">
-                    {# Buscamos la traducción de la temperatura usando la clave temp_ #}
+                    {# Buscamos la traducción usando la clave temp_ + el valor guardado (MUY_CALIENTE, etc) #}
                     {{ textos['temp_' + lead.temperatura] if ('temp_' + lead.temperatura) in textos else lead.temperatura }}
                 </span>
             </td>
