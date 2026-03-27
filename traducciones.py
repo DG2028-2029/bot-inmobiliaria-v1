@@ -10,6 +10,7 @@ DICCIONARIO = {
         'mensaje_exito': '¡Recibido!',
         'subtitulo_exito': 'Nos pondremos en contacto pronto.',
         'login_titulo': 'Acceso Inmobiliaria',
+        'login_boton': 'Entrar',
         'historial_titulo': 'Dashboard de Leads',
         'acepto_terminos': 'Acepto el tratamiento de mis datos personales según la política de privacidad.',
         'selecciona_idioma': 'Selecciona tu idioma',
@@ -20,7 +21,8 @@ DICCIONARIO = {
         'btn_descargar': 'Descargar Excel',
         'btn_buscar': 'Buscar por nombre...',
         'btn_limpiar': 'Limpiar',
-        'no_leads': 'No hay prospectos.'
+        'no_leads': 'No hay prospectos.',
+        'btn_es': 'Español', 'btn_en': 'English', 'btn_fr': 'Français', 'btn_de': 'Deutsch', 'btn_pt': 'Português', 'btn_zh': '中文'
     },
     'en': {
         'titulo_form': 'Please fill in your details to contact you.',
@@ -33,6 +35,7 @@ DICCIONARIO = {
         'mensaje_exito': 'Received!',
         'subtitulo_exito': 'We will contact you soon.',
         'login_titulo': 'Real Estate Access',
+        'login_boton': 'Login',
         'historial_titulo': 'Leads Dashboard',
         'acepto_terminos': 'I accept the processing of my personal data according to the privacy policy.',
         'selecciona_idioma': 'Select your language',
@@ -43,7 +46,8 @@ DICCIONARIO = {
         'btn_descargar': 'Download Excel',
         'btn_buscar': 'Search by name...',
         'btn_limpiar': 'Clear',
-        'no_leads': 'No leads found.'
+        'no_leads': 'No leads found.',
+        'btn_es': 'Spanish', 'btn_en': 'English', 'btn_fr': 'French', 'btn_de': 'German', 'btn_pt': 'Portuguese', 'btn_zh': 'Chinese'
     },
     'fr': {
         'titulo_form': 'Veuillez remplir vos coordonnées.',
@@ -56,8 +60,9 @@ DICCIONARIO = {
         'mensaje_exito': 'Reçu!',
         'subtitulo_exito': 'Nous vous contacterons bientôt.',
         'login_titulo': 'Accès Immobilier',
-        'historial_titulo': 'Tableau de bord des prospects',
-        'acepto_terminos': "J'accepte le traitement de mes données conformément à la confidentialité.",
+        'login_boton': 'Connexion',
+        'historial_titulo': 'Tableau de bord',
+        'acepto_terminos': "J'accepte le traitement de mes données.",
         'selecciona_idioma': 'Choisissez votre langue',
         'col_fecha': 'Date',
         'col_clasificacion': 'Classification',
@@ -66,7 +71,8 @@ DICCIONARIO = {
         'btn_descargar': 'Télécharger Excel',
         'btn_buscar': 'Chercher par nom...',
         'btn_limpiar': 'Effacer',
-        'no_leads': 'Aucun prospect trouvé.'
+        'no_leads': 'Aucun prospect.',
+        'btn_es': 'Espagnol', 'btn_en': 'Anglais', 'btn_fr': 'Français', 'btn_de': 'Allemand', 'btn_pt': 'Portugais', 'btn_zh': 'Chinois'
     },
     'de': {
         'titulo_form': 'Bitte füllen Sie Ihre Daten aus.',
@@ -77,22 +83,24 @@ DICCIONARIO = {
         'placeholder_propiedad': 'Welche Immobilie suchen Sie?',
         'boton_enviar': 'Infos Senden',
         'mensaje_exito': 'Empfangen!',
-        'subtitulo_exito': 'Wir werden uns bald melden.',
+        'subtitulo_exito': 'Wir melden uns bald.',
         'login_titulo': 'Immobilien Zugang',
+        'login_boton': 'Anmelden',
         'historial_titulo': 'Leads Dashboard',
-        'acepto_terminos': 'Ich akzeptiere die Verarbeitung meiner Daten.',
+        'acepto_terminos': 'Ich akzeptiere die Datenverarbeitung.',
         'selecciona_idioma': 'Wählen Sie Ihre Sprache',
         'col_fecha': 'Datum',
         'col_clasificacion': 'Klassifizierung',
         'col_temperatura': 'Temperatur',
         'col_mensaje': 'Nachricht',
         'btn_descargar': 'Excel Herunterladen',
-        'btn_buscar': 'Nach Name suchen...',
+        'btn_buscar': 'Suchen...',
         'btn_limpiar': 'Löschen',
-        'no_leads': 'Keine Leads gefunden.'
+        'no_leads': 'Keine Leads.',
+        'btn_es': 'Spanisch', 'btn_en': 'Englisch', 'btn_fr': 'Französisch', 'btn_de': 'Deutsch', 'btn_pt': 'Portugiesisch', 'btn_zh': 'Chinesisch'
     },
     'pt': {
-        'titulo_form': 'Por favor, preencha seus dados para contato.',
+        'titulo_form': 'Preencha seus dados para contato.',
         'placeholder_nombre': 'Nome completo',
         'placeholder_tel': 'Telefone',
         'placeholder_zona': 'Zona de interesse',
@@ -100,19 +108,21 @@ DICCIONARIO = {
         'placeholder_propiedad': 'Que tipo de imóvel procura?',
         'boton_enviar': 'Enviar Informações',
         'mensaje_exito': 'Recebido!',
-        'subtitulo_exito': 'Entraremos em contato em breve.',
+        'subtitulo_exito': 'Entraremos em contato.',
         'login_titulo': 'Acesso Imobiliário',
+        'login_boton': 'Entrar',
         'historial_titulo': 'Painel de Leads',
-        'acepto_terminos': 'Aceito o tratamento dos meus datos.',
+        'acepto_terminos': 'Aceito o tratamento de dados.',
         'selecciona_idioma': 'Selecione seu idioma',
         'col_fecha': 'Data',
         'col_clasificacion': 'Classificação',
         'col_temperatura': 'Temperatura',
         'col_mensaje': 'Mensagem',
         'btn_descargar': 'Baixar Excel',
-        'btn_buscar': 'Buscar por nome...',
+        'btn_buscar': 'Buscar...',
         'btn_limpiar': 'Limpar',
-        'no_leads': 'Nenhum lead encontrado.'
+        'no_leads': 'Nenhum lead.',
+        'btn_es': 'Espanhol', 'btn_en': 'Inglês', 'btn_fr': 'Francês', 'btn_de': 'Alemão', 'btn_pt': 'Português', 'btn_zh': 'Chinês'
     },
     'zh': {
         'titulo_form': '请填写您的联系方式',
@@ -125,6 +135,7 @@ DICCIONARIO = {
         'mensaje_exito': '已收到！',
         'subtitulo_exito': '我们会尽快与您联系。',
         'login_titulo': '房地产访问',
+        'login_boton': '登录',
         'historial_titulo': '潜客仪表板',
         'acepto_terminos': '我接受隐私政策。',
         'selecciona_idioma': '选择您的语言',
@@ -135,6 +146,7 @@ DICCIONARIO = {
         'btn_descargar': '下载 Excel',
         'btn_buscar': '按姓名搜索...',
         'btn_limpiar': '清除',
-        'no_leads': '未找到潜客。'
+        'no_leads': '未找到潜客。',
+        'btn_es': '西班牙语', 'btn_en': '英语', 'btn_fr': '法语', 'btn_de': '德语', 'btn_pt': '葡萄牙语', 'btn_zh': '中文'
     }
 }
