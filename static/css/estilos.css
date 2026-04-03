@@ -1,7 +1,6 @@
 /* DISEÑO PROFESIONAL INMOBILIARIO */
 body {
     font-family: 'Poppins', 'Segoe UI', sans-serif;
-    /* Fondo elegante azul marino oscuro */
     background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
     display: flex;
     justify-content: center;
@@ -9,9 +8,9 @@ body {
     height: 100vh;
     margin: 0;
     color: #333;
+    position: relative; /* Necesario para ubicar el selector */
 }
 
-/* Tarjeta principal (el contenedor del form) */
 form {
     background: #fff;
     padding: 40px;
@@ -21,54 +20,38 @@ form {
     max-width: 380px;
     text-align: center;
     transition: transform 0.3s;
+    z-index: 1;
 }
 
-form:hover {
-    transform: translateY(-5px);
-}
+form:hover { transform: translateY(-5px); }
 
-/* Títulos */
-h2 {
-    color: #1e3c72; /* Azul oscuro corporativo */
-    margin-top: 0;
-    font-weight: 700;
-    margin-bottom: 25px;
-}
+h2 { color: #1e3c72; margin-top: 0; font-weight: 700; margin-bottom: 25px; }
+h3 { color: #28a745; margin-top: 0; }
 
-h3 {
-    color: #28a745;
-    margin-top: 0;
-}
-
-/* Estilo para los campos de texto e inputs */
 input, textarea {
     width: 100%;
     padding: 12px 15px;
     margin-bottom: 18px;
     border: 1px solid #d1d1d1;
     border-radius: 5px;
-    box-sizing: border-box; /* Importante para el padding */
+    box-sizing: border-box;
     font-family: inherit;
     font-size: 14px;
     transition: border-color 0.3s;
 }
 
 input:focus, textarea:focus {
-    border-color: #d4af37; /* Dorado cuando está seleccionado */
+    border-color: #d4af37;
     outline: none;
     box-shadow: 0 0 5px rgba(212, 175, 55, 0.4);
 }
 
-textarea {
-    resize: none;
-    height: 100px;
-}
+textarea { resize: none; height: 100px; }
 
-/* Botón Profesional Dorado/Bronce (Inmobiliaria de Lujo) */
 button {
     width: 100%;
     padding: 12px;
-    background-color: #d4af37; /* Dorado Inmobiliario */
+    background-color: #d4af37;
     color: white;
     border: none;
     border-radius: 5px;
@@ -78,20 +61,14 @@ button {
     transition: background-color 0.3s, transform 0.1s;
 }
 
-button:hover {
-    background-color: #b59410;
-}
+button:hover { background-color: #b59410; }
+button:active { transform: scale(0.98); }
 
-button:active {
-    transform: scale(0.98);
-}
-
-/* Enlaces (como el de WhatsApp) */
 a {
     display: inline-block;
     margin-top: 20px;
     padding: 10px 20px;
-    background-color: #25D366; /* Verde WhatsApp */
+    background-color: #25D366;
     color: white;
     text-decoration: none;
     border-radius: 5px;
@@ -99,13 +76,76 @@ a {
     transition: background 0.3s;
 }
 
-a:hover {
-    background-color: #1a9e4d;
+p { margin-top: 15px; font-size: 14px; text-align: center; }
+
+/* --- NUEVO SELECTOR IDIOMA AESTHETIC (OPCIÓN C) --- */
+.lang-container {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    z-index: 100;
 }
 
-/* Mensaje de error o éxito */
-p {
-    margin-top: 15px;
-    font-size: 14px;
-    text-align: center;
+.lang-selected {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 10px 20px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    color: white;
 }
+
+.lang-selected:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+.lang-dropdown {
+    position: absolute;
+    top: 55px;
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    width: 170px;
+    padding: 10px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(15px);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.lang-container:hover .lang-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.lang-dropdown a {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    margin: 0;
+    background: transparent;
+    color: #333;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.lang-dropdown a:hover {
+    background: #f4f7fa;
+    color: #1e3c72;
+    padding-left: 20px;
+}
+
+.lang-dropdown span { margin-right: 12px; font-size: 1.2rem; }
