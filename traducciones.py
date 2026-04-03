@@ -16,16 +16,16 @@ DICCIONARIO = {
         'selecciona_idioma': 'Selecciona tu idioma',
         'col_fecha': 'Fecha',
         'col_clasificacion': 'Clasificación',
-        'col_temperatura': 'Temperatura',
+        'col_temperatura': 'Prioridad',
         'col_mensaje': 'Mensaje',
         'btn_descargar': 'Descargar Excel',
         'btn_buscar': 'Buscar por nombre...',
         'btn_limpiar': 'Limpiar',
         'no_leads': 'No hay prospectos.',
         'btn_es': 'Español', 'btn_en': 'English', 'btn_fr': 'Français', 'btn_de': 'Deutsch', 'btn_pt': 'Português', 'btn_zh': '中文',
-        # --- NUEVAS CLAVES AGREGADAS ---
+        # --- CLAVES SINCRONIZADAS CON MAIN.PY ---
         'temp_MUY_CALIENTE': '🔥 MUY CALIENTE', 'temp_CALIENTE': '🔥 CALIENTE', 'temp_MEDIO': '🟡 MEDIO', 'temp_FRIO': '❄️ FRÍO',
-        'class_ALTO': 'ALTO VALOR 💎', 'class_MEDIO': 'VALOR MEDIO 🟡', 'class_BAJO': 'BAJO VALOR ⚪', 'class_ND': 'NO DEFINIDO'
+        'class_ALTO VALOR': 'ALTO VALOR 💎', 'class_PROSPECTO': 'PROSPECTO 🟡', 'class_SEGUIMIENTO': 'SEGUIMIENTO ⚪', 'class_ND': 'NO DEFINIDO'
     },
     'en': {
         'titulo_form': 'Please fill in your details to contact you.',
@@ -40,20 +40,19 @@ DICCIONARIO = {
         'login_titulo': 'Real Estate Access',
         'login_boton': 'Login',
         'historial_titulo': 'Leads Dashboard',
-        'acepto_terminos': 'I accept the processing of my personal data according to the privacy policy.',
+        'acepto_terminos': 'I accept the processing of my personal data.',
         'selecciona_idioma': 'Select your language',
         'col_fecha': 'Date',
         'col_clasificacion': 'Classification',
-        'col_temperatura': 'Temperature',
+        'col_temperatura': 'Priority',
         'col_mensaje': 'Message',
         'btn_descargar': 'Download Excel',
         'btn_buscar': 'Search by name...',
         'btn_limpiar': 'Clear',
         'no_leads': 'No leads found.',
         'btn_es': 'Spanish', 'btn_en': 'English', 'btn_fr': 'French', 'btn_de': 'German', 'btn_pt': 'Portuguese', 'btn_zh': 'Chinese',
-        # --- NUEVAS CLAVES AGREGADAS ---
         'temp_MUY_CALIENTE': '🔥 VERY HOT', 'temp_CALIENTE': '🔥 HOT', 'temp_MEDIO': '🟡 MEDIUM', 'temp_FRIO': '❄️ COLD',
-        'class_ALTO': 'HIGH VALUE 💎', 'class_MEDIO': 'MEDIUM VALUE 🟡', 'class_BAJO': 'LOW VALUE ⚪', 'class_ND': 'UNDEFINED'
+        'class_ALTO VALOR': 'HIGH VALUE 💎', 'class_PROSPECTO': 'PROSPECT 🟡', 'class_SEGUIMIENTO': 'FOLLOW-UP ⚪', 'class_ND': 'UNDEFINED'
     },
     'fr': {
         'titulo_form': 'Veuillez remplir vos coordonnées.',
@@ -61,7 +60,7 @@ DICCIONARIO = {
         'placeholder_tel': 'Téléphone',
         'placeholder_zona': "Zone d'intérêt",
         'placeholder_presupuesto': 'Budget USD',
-        'placeholder_propiedad': 'Quelle propiedad recherchez-vous?',
+        'placeholder_propiedad': 'Quelle propriété recherchez-vous?',
         'boton_enviar': 'Envoyer les informations',
         'mensaje_exito': 'Reçu!',
         'subtitulo_exito': 'Nous vous contacterons bientôt.',
@@ -72,16 +71,14 @@ DICCIONARIO = {
         'selecciona_idioma': 'Choisissez votre langue',
         'col_fecha': 'Date',
         'col_clasificacion': 'Classification',
-        'col_temperatura': 'Température',
+        'col_temperatura': 'Priorité',
         'col_mensaje': 'Message',
         'btn_descargar': 'Télécharger Excel',
         'btn_buscar': 'Chercher par nom...',
         'btn_limpiar': 'Effacer',
         'no_leads': 'Aucun prospect.',
-        'btn_es': 'Espagnol', 'btn_en': 'Anglais', 'btn_fr': 'Français', 'btn_de': 'Allemand', 'btn_pt': 'Portugais', 'btn_zh': 'Chinois',
-        # --- NUEVAS CLAVES AGREGADAS ---
         'temp_MUY_CALIENTE': '🔥 TRÈS CHAUD', 'temp_CALIENTE': '🔥 CHAUD', 'temp_MEDIO': '🟡 MOYEN', 'temp_FRIO': '❄️ FROID',
-        'class_ALTO': 'HAUTE VALEUR 💎', 'class_MEDIO': 'VALEUR MOYENNE 🟡', 'class_BAJO': 'BASSE VALEUR ⚪', 'class_ND': 'NON DÉFINI'
+        'class_ALTO VALOR': 'HAUTE VALEUR 💎', 'class_PROSPECTO': 'PROSPECT 🟡', 'class_SEGUIMIENTO': 'SUIVI ⚪', 'class_ND': 'NON DÉFINI'
     },
     'de': {
         'titulo_form': 'Bitte füllen Sie Ihre Daten aus.',
@@ -100,16 +97,14 @@ DICCIONARIO = {
         'selecciona_idioma': 'Wählen Sie Ihre Sprache',
         'col_fecha': 'Datum',
         'col_clasificacion': 'Klassifizierung',
-        'col_temperatura': 'Temperatur',
+        'col_temperatura': 'Priorität',
         'col_mensaje': 'Nachricht',
         'btn_descargar': 'Excel Herunterladen',
         'btn_buscar': 'Suchen...',
         'btn_limpiar': 'Löschen',
         'no_leads': 'Keine Leads.',
-        'btn_es': 'Spanisch', 'btn_en': 'Englisch', 'btn_fr': 'Französisch', 'btn_de': 'Deutsch', 'btn_pt': 'Portugiesisch', 'btn_zh': 'Chinesisch',
-        # --- NUEVAS CLAVES AGREGADAS ---
         'temp_MUY_CALIENTE': '🔥 SEHR HEISS', 'temp_CALIENTE': '🔥 HEISS', 'temp_MEDIO': '🟡 MITTEL', 'temp_FRIO': '❄️ KALT',
-        'class_ALTO': 'HOHER WERT 💎', 'class_MEDIO': 'MITTLERER WERT 🟡', 'class_BAJO': 'NIEDRIGER WERT ⚪', 'class_ND': 'UNDEFINIERT'
+        'class_ALTO VALOR': 'HOHER WERT 💎', 'class_PROSPECTO': 'PROSPEKT 🟡', 'class_SEGUIMIENTO': 'NACHVERFOLGUNG ⚪', 'class_ND': 'UNDEFINIERT'
     },
     'pt': {
         'titulo_form': 'Preencha seus dados para contato.',
@@ -127,17 +122,15 @@ DICCIONARIO = {
         'acepto_terminos': 'Aceito o tratamento de dados.',
         'selecciona_idioma': 'Selecione seu idioma',
         'col_fecha': 'Data',
-        'col_clasificacion': 'Classificación',
-        'col_temperatura': 'Temperatura',
+        'col_clasificacion': 'Classificação',
+        'col_temperatura': 'Prioridade',
         'col_mensaje': 'Mensagem',
         'btn_descargar': 'Baixar Excel',
         'btn_buscar': 'Buscar...',
         'btn_limpiar': 'Limpar',
         'no_leads': 'Nenhum lead.',
-        'btn_es': 'Espanhol', 'btn_en': 'Inglês', 'btn_fr': 'Francês', 'btn_de': 'Alemão', 'btn_pt': 'Português', 'btn_zh': 'Chinês',
-        # --- NUEVAS CLAVES AGREGADAS ---
         'temp_MUY_CALIENTE': '🔥 MUITO QUENTE', 'temp_CALIENTE': '🔥 QUENTE', 'temp_MEDIO': '🟡 MÉDIO', 'temp_FRIO': '❄️ FRIO',
-        'class_ALTO': 'ALTO VALOR 💎', 'class_MEDIO': 'VALOR MÉDIO 🟡', 'class_BAJO': 'BAIXO VALOR ⚪', 'class_ND': 'NÃO DEFINIDO'
+        'class_ALTO VALOR': 'ALTO VALOR 💎', 'class_PROSPECTO': 'PROSPECTO 🟡', 'class_SEGUIMIENTO': 'ACOMPANHAMENTO ⚪', 'class_ND': 'NÃO DEFINIDO'
     },
     'zh': {
         'titulo_form': '请填写您的联系方式',
@@ -156,15 +149,13 @@ DICCIONARIO = {
         'selecciona_idioma': '选择您的语言',
         'col_fecha': '日期',
         'col_clasificacion': '分类',
-        'col_temperatura': '温度',
+        'col_temperatura': '优先级',
         'col_mensaje': '信息',
         'btn_descargar': '下载 Excel',
         'btn_buscar': '按姓名搜索...',
         'btn_limpiar': '清除',
         'no_leads': '未找到潜客。',
-        'btn_es': '西班牙语', 'btn_en': '英语', 'btn_fr': '法语', 'btn_de': '德语', 'btn_pt': '葡萄牙语', 'btn_zh': '中文',
-        # --- NUEVAS CLAVES AGREGADAS ---
         'temp_MUY_CALIENTE': '🔥 非常热', 'temp_CALIENTE': '🔥 热', 'temp_MEDIO': '🟡 中等', 'temp_FRIO': '❄️ 冷',
-        'class_ALTO': '高价值 💎', 'class_MEDIO': '中等价值 🟡', 'class_BAJO': '低价值 ⚪', 'class_ND': '未定义'
+        'class_ALTO VALOR': '高价值 💎', 'class_PROSPECTO': '潜在客户 🟡', 'class_SEGUIMIENTO': '跟进中 ⚪', 'class_ND': '未定义'
     }
 }
