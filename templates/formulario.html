@@ -2,14 +2,15 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ cliente.nombre }} | Registro</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
 </head>
 <body>
     <div class="lang-container">
         <div class="lang-selected">
-            <span style="font-size: 20px;">🌐</span>
-            <span style="font-size: 13px; font-weight: 600; text-transform: uppercase;">{{ session.get('lang', 'ES') }}</span>
+            <span>🌐</span>
+            <span style="text-transform: uppercase;">{{ session.get('lang', 'ES') }}</span>
         </div>
         <div class="lang-dropdown">
             <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente.usuario) }}"><span>🇪🇸</span> Español</a>
@@ -42,10 +43,10 @@
         <button type="submit">{{ textos.boton_enviar }}</button>
     </form>
     {% else %}
-    <div class="mensaje-exito" style="background:white; padding:40px; border-radius:15px; text-align:center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-width: 380px;">
+    <div class="mensaje-exito">
         <h3 style="color: #28a745; margin-bottom: 10px;">{{ textos.mensaje_exito }}</h3>
         <p style="color: #666;">{{ textos.subtitulo_exito }}</p>
-        <a href="{{ link_whatsapp }}" target="_blank" style="background:#25D366; color:white; padding:12px 25px; text-decoration:none; border-radius:8px; display: inline-block; margin-top: 20px; font-weight: bold;">
+        <a href="{{ link_whatsapp }}" target="_blank" style="background:#25D366; color:white; padding:12px 25px; text-decoration:none; border-radius:8px; display: inline-block; margin-top: 20px; font-weight: bold; width: 80%;">
             WhatsApp
         </a>
     </div>
