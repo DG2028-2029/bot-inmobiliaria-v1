@@ -9,10 +9,9 @@ body {
     margin: 0;
     color: #333;
     position: relative; 
-    overflow: hidden; /* Evita scrolls innecesarios */
+    overflow: hidden;
 }
 
-/* Tarjeta principal */
 form, .mensaje-exito {
     background: #fff;
     padding: 40px;
@@ -79,6 +78,9 @@ button:active { transform: scale(0.97); }
     top: 25px;
     right: 25px;
     z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
 .lang-selected {
@@ -146,7 +148,33 @@ button:active { transform: scale(0.97); }
 
 .lang-dropdown span { margin-right: 12px; font-size: 1.1rem; }
 
-/* Eliminar cualquier rastro de los botones verdes antiguos */
+/* --- INDICACIÓN VISUAL (TEXTO + FLECHA) --- */
+.lang-hint {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none; /* No interfiere con el click */
+    animation: fadeIn 1s ease-in;
+}
+
+.lang-hint span {
+    display: inline-block;
+    animation: arrowMove 1.5s infinite ease-in-out;
+}
+
+@keyframes arrowMove {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(5px); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 .selector-idioma, .selector-idioma-form, .bandera {
     display: none !important;
 }
