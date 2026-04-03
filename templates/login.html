@@ -2,14 +2,15 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ textos.login_titulo }} | {{ cliente.nombre }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
 </head>
 <body>
     <div class="lang-container">
         <div class="lang-selected">
-            <span style="font-size: 20px;">🌐</span>
-            <span style="font-size: 13px; font-weight: 600; text-transform: uppercase;">{{ session.get('lang', 'ES') }}</span>
+            <span>🌐</span>
+            <span style="text-transform: uppercase;">{{ session.get('lang', 'ES') }}</span>
         </div>
         <div class="lang-dropdown">
             <a href="{{ url_for('cambiar_idioma', lang='es', proximo='login', cliente_id=cliente.usuario) }}"><span>🇪🇸</span> Español</a>
@@ -24,14 +25,14 @@
     <form method="POST">
         <h2>{{ textos.login_titulo }}</h2>
         
-        <input name="usuario" placeholder="{{ textos.placeholder_nombre if textos.placeholder_nombre else 'Usuario' }}" required>
+        <input name="usuario" placeholder="{{ textos.placeholder_nombre if textos.placeholder_nombre else 'Usuario' }}" required autofocus>
         
         <input type="password" name="password" placeholder="******" required>
         
         <button type="submit">{{ textos.login_boton if textos.login_boton else 'Entrar' }}</button>
         
         {% if error %}
-            <p style="color:red; margin-top:15px;">{{ error }}</p>
+            <p style="color:#e74c3c; font-weight: 500; margin-top:15px;">{{ error }}</p>
         {% endif %}
     </form>
 </body>
