@@ -11,78 +11,92 @@ from traducciones import DICCIONARIO
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
 
-# --- INFRAESTRUCTURA DE DATOS ---
+# --- INFRAESTRUCTURA DE DATOS ESCALABLE ---
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
 
-# --- MOTOR DE INTELIGENCIA ULTRA (ALTA CONVERSIÓN) ---
+# --- MOTOR DE INTELIGENCIA DE NEGOCIOS (OMNI-ENGINE V4) ---
 
 def calcular_entropia_mensaje(texto):
-    """Analiza la riqueza del mensaje para detectar interés real vs spam."""
+    """Mide la riqueza léxica. Separa leads automáticos de interesados reales."""
     if not texto or len(texto) < 10: return 0
     palabras = texto.lower().split()
     unicas = set(palabras)
+    # Si usa muchas palabras diferentes, es un mensaje con mucha sustancia.
     return (len(unicas) / len(palabras)) if palabras else 0
 
-def motor_scoring_pro(d):
+def motor_scoring_global(d):
     """
-    Algoritmo de Calificación Global V3.
-    Mide Solvencia (35%), Intención (35%), Calidad (20%) y Prestigio (10%).
+    Algoritmo de Calificación Universal.
+    Independiente de moneda o país.
+    Mide: Capacidad (30%), Intención (40%), Esfuerzo (20%), Contexto (10%).
     """
     score = 0
     msg = d.get("mensaje", "").strip()
     msg_l = msg.lower()
+    zona = d.get("zona_interes", "").lower()
     
-    # 1. CAPACIDAD FINANCIERA (35 pts)
+    # 1. ANÁLISIS DE CAPACIDAD FINANCIERA (Normalización de Moneda)
     try:
+        # Extrae solo los números, ignorando $, €, Q, o comas.
         p_val = float(re.sub(r'[^\d.]', '', str(d.get("presupuesto", 0))))
-        if p_val >= 1000000: score += 35
-        elif p_val >= 500000: score += 25
-        elif p_val >= 150000: score += 10
+        
+        # Escala de inversión profesional (Agnóstica al mercado)
+        if p_val >= 1000000: score += 30      # Inversionista Global
+        elif p_val >= 500000: score += 25     # Cliente Premium
+        elif p_val >= 150000: score += 15     # Mercado Estándar
+        elif p_val > 0: score += 5
     except: pass
 
-    # 2. INTENCIÓN PSICOLÓGICA MULTILINGÜE (35 pts)
+    # 2. INTENCIÓN PSICOLÓGICA Y SEMÁNTICA (40 pts)
+    # Buscamos 'Triggers' de cierre en múltiples idiomas
     triggers = [
-        "comprar", "invertir", "contado", "urgente", "pago", "ya", "cita", # ES
-        "buy", "invest", "now", "urgent", "cash", "closing", "ready",      # EN
-        "acheter", "maintenant", "urgent", "viste", "rdv",                 # FR
-        "kaufen", "jetzt", "sofort", "dringend", "termin",                 # DE
-        "购买", "现在", "紧急", "预约", "现金"                               # ZH
+        "comprar", "invertir", "contado", "urgente", "pago", "visita", "ahora", # ES
+        "buy", "invest", "cash", "closing", "ready", "now", "tour",             # EN
+        "acheter", "maintenant", "urgent", "viste", "rdv", "paiement",         # FR
+        "kaufen", "jetzt", "sofort", "dringend", "termin",                     # DE
+        "购买", "现在", "紧急", "预约", "现金", "投资"                             # ZH
     ]
-    if any(k in msg_l for k in triggers):
-        score += 35
-    elif len(msg.split()) > 12:
-        score += 15
+    
+    # Detección inteligente de intención
+    hits = sum(1 for t in triggers if t in msg_l)
+    if hits >= 2: score += 40
+    elif hits == 1: score += 25
+    elif len(msg.split()) > 15: score += 15 # No hay triggers pero hay explicación larga
 
-    # 3. CALIDAD Y ESFUERZO (20 pts)
+    # 3. MÉTRICA DE ESFUERZO (20 pts)
+    # Cuanto más escribe el cliente, más probable es el cierre.
     entropia = calcular_entropia_mensaje(msg)
-    if entropia > 0.7: score += 15
-    if len(d.get("nombre", "").split()) >= 2: score += 5
+    if entropia > 0.8 and len(msg) > 100: score += 20
+    elif len(msg) > 50: score += 10
+    
+    if len(d.get("nombre", "").split()) >= 2: score += 5 # Formalidad en el nombre
 
-    # 4. RELEVANCIA LUXURY (10 pts)
-    luxury = ["luxury", "lujo", "penthouse", "exclusive", "roi", "yield"]
-    if any(l in msg_l or l in d.get("zona_interes", "").lower() for l in luxury):
+    # 4. RELEVANCIA DE CONTEXTO (10 pts)
+    # Detecta si el cliente conoce el mercado o busca lujo
+    keywords_premium = ["lujo", "luxury", "penthouse", "roi", "rentabilidad", "yield", "exclusive"]
+    if any(k in msg_l or k in zona for k in keywords_premium):
         score += 10
 
     return min(int(score), 100)
 
-def obtener_etiquetas_crm(score):
-    """Categorización Premium para el historial."""
-    if score >= 85: return "💎 ALTO VALOR", "MUY_CALIENTE"
-    elif score >= 60: return "🔥 PROSPECTO", "CALIENTE"
-    elif score >= 35: return "🟡 SEGUIMIENTO", "MEDIO"
-    return "❄️ FRÍO", "FRIO"
+def calificar_lead_profesional(score):
+    """Asignación de estatus de grado CRM."""
+    if score >= 85: return "💎 VIP / INVERSIONISTA", "MUY_CALIENTE"
+    elif score >= 65: return "🔥 PROSPECTO A", "CALIENTE"
+    elif score >= 40: return "🟡 SEGUIMIENTO B", "MEDIO"
+    return "❄️ LEAD FRÍO", "FRIO"
 
-# --- RUTAS DE LA APLICACIÓN ---
+# --- CONTROLADORES DE RUTA (BUSINESS LOGIC) ---
 
 @app.route("/cliente/<cliente_id>")
 def seleccion_idioma(cliente_id):
-    """ESTA ES LA RUTA QUE TE DABA EL ERROR 404. Ahora es la entrada principal."""
-    vendedor = CLIENTES.get(cliente_id.lower())
-    if not vendedor: return "Vendedor no registrado", 403
+    """Puerta de enlace global con detección automática de idioma."""
+    id_clean = cliente_id.lower()
+    vendedor = CLIENTES.get(id_clean)
+    if not vendedor: return "Error 403: Acceso denegado a la plataforma.", 403
     
-    # Detectamos idioma del navegador si no hay sesión
     lang = session.get('idioma', request.accept_languages.best_match(['es', 'en', 'fr', 'de']) or 'es')
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     
@@ -90,69 +104,76 @@ def seleccion_idioma(cliente_id):
 
 @app.route("/form/<cliente_id>", methods=["GET","POST"])
 def formulario(cliente_id):
-    vendedor = CLIENTES.get(cliente_id.lower())
-    if not vendedor: return "Vendedor no registrado", 404
+    id_clean = cliente_id.lower()
+    vendedor = CLIENTES.get(id_clean)
+    if not vendedor: return "Error 404: Vendedor no configurado.", 404
     
     lang = session.get('idioma', 'es')
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     
     if request.method == "POST":
         d = {
-            "nombre": request.form.get("nombre"), 
-            "telefono": request.form.get("telefono"), 
-            "zona_interes": request.form.get("zona"), 
-            "presupuesto": request.form.get("presupuesto"), 
-            "mensaje": request.form.get("mensaje"),
-            "vendedor": cliente_id.lower() 
+            "nombre": request.form.get("nombre").strip(), 
+            "telefono": request.form.get("telefono").strip(), 
+            "zona_interes": request.form.get("zona").strip(), 
+            "presupuesto": request.form.get("presupuesto").strip(), 
+            "mensaje": request.form.get("mensaje").strip(),
+            "vendedor": id_clean 
         }
         
-        score = motor_scoring_pro(d)
-        clasificacion, temperatura = obtener_etiquetas_crm(score)
+        # Procesamiento con el motor V4
+        score_final = motor_scoring_global(d)
+        clasificacion, temperatura = calificar_lead_profesional(score_final)
         
         lead_data = {
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
             **d,
             "clasificacion": clasificacion,
-            "score": score,
+            "score": score_final,
             "temperatura": temperatura,
             "estado": "Nuevo"
         }
         
         try:
             supabase.table("leads").insert(lead_data).execute()
-            return render_template("formulario.html", enviado=True, link_whatsapp=f"https://wa.me/{vendedor['whatsapp']}", cliente=vendedor, textos=textos)
+            # Link dinámico de WhatsApp para respuesta inmediata
+            ws_link = f"https://wa.me/{vendedor['whatsapp']}"
+            return render_template("formulario.html", enviado=True, link_whatsapp=ws_link, cliente=vendedor, textos=textos)
         except Exception as e:
-            return f"Database Error: {e}", 500
+            return f"System Synch Error: {e}", 500
 
     return render_template("formulario.html", enviado=False, cliente=vendedor, textos=textos)
 
 @app.route("/historial/<cliente_id>")
 def historial(cliente_id):
-    if session.get("cliente") != cliente_id.lower():
-        return redirect(url_for('login', cliente_id=cliente_id))
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return redirect(url_for('login', cliente_id=id_clean))
     
-    vendedor = CLIENTES.get(cliente_id.lower())
-    lang = session.get('idioma', 'es')
-    textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
+    vendedor = CLIENTES.get(id_clean)
+    textos = DICCIONARIO.get(session.get('idioma', 'es'), DICCIONARIO['es'])
     
-    query = supabase.table("leads").select("*").eq("vendedor", cliente_id.lower())
+    query = supabase.table("leads").select("*").eq("vendedor", id_clean)
+    
+    # Filtro de búsqueda profesional
     q = request.args.get('q', '')
     if q: query = query.ilike("nombre", f"%{q}%")
     
+    # El ranking PRIORIZA el dinero y la intención (Score)
     resultado = query.order("score", desc=True).execute()
     return render_template("historial.html", leads=resultado.data, cliente=vendedor, textos=textos)
 
 @app.route("/login/<cliente_id>", methods=["GET","POST"])
 def login(cliente_id):
-    vendedor = CLIENTES.get(cliente_id.lower())
-    lang = session.get('idioma', 'es')
-    textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
+    id_clean = cliente_id.lower()
+    vendedor = CLIENTES.get(id_clean)
+    textos = DICCIONARIO.get(session.get('idioma', 'es'), DICCIONARIO['es'])
     
     if request.method == "POST":
         if request.form.get("usuario") == vendedor["usuario"] and request.form.get("password") == vendedor["password"]:
-            session["cliente"] = cliente_id.lower()
-            return redirect(url_for('historial', cliente_id=cliente_id.lower()))
-        return render_template("login.html", error="Auth Error", cliente=vendedor, textos=textos)
+            session["cliente"] = id_clean
+            return redirect(url_for('historial', cliente_id=id_clean))
+        return render_template("login.html", error="Credenciales Invalidas", cliente=vendedor, textos=textos)
     return render_template("login.html", cliente=vendedor, textos=textos)
 
 @app.route("/idioma/<lang>/<proximo>/<cliente_id>")
@@ -162,7 +183,7 @@ def cambiar_idioma(lang, proximo, cliente_id):
 
 @app.route("/")
 def index():
-    return "Neural Property Engine v3.0 Online. 🌐🚀"
+    return "PropTech Global Engine V4.0 [Active Mode] 🌐🚀"
 
 if __name__ == "__main__":
     app.run(debug=True)
