@@ -15,83 +15,79 @@ url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
 
-# --- MOTOR DE INTELIGENCIA DE NEGOCIOS (OMNI-ALGORITHM) ---
+# --- MOTOR DE INTELIGENCIA DE NEGOCIOS GLOBAL (OMNI-ALGORITHM V2) ---
 
-def motor_scoring_profesional(d):
+def motor_scoring_global(d):
     """
-    Algoritmo de calificación de 4 niveles.
-    Mide: Capacidad (30%), Urgencia (30%), Calidad de Datos (20%), Relevancia (20%).
+    Algoritmo avanzado de calificación.
+    Mide: Capacidad (30%), Intención Semántica (30%), Esfuerzo/Calidad (25%), Coherencia (15%).
     """
     score = 0
-    msg = d.get("mensaje", "").strip().lower()
+    msg = d.get("mensaje", "").strip()
+    msg_lower = msg.lower()
     nombre = d.get("nombre", "").strip()
     
-    # 1. ANÁLISIS DE CAPACIDAD FINANCIERA (Filtro de Inversión)
+    # 1. CAPACIDAD FINANCIERA UNIVERSAL (30 pts)
+    # Extraemos el valor numérico sin importar el formato de moneda ($/€/Q/¥)
     try:
-        # Limpieza profunda de caracteres monetarios globales
         p_clean = re.sub(r'[^\d.]', '', str(d.get("presupuesto", 0)))
         p_val = float(p_clean)
         
-        if p_val >= 1000000: score += 30      # Inversionista institucional
-        elif p_val >= 500000: score += 25     # High Net Worth
-        elif p_val >= 200000: score += 15     # Cliente Prime
-        elif p_val >= 100000: score += 5      # Entrada de mercado
-    except:
-        pass
+        # Escala de inversión global (Normalizada a USD para el cálculo)
+        if p_val >= 1000000: score += 30
+        elif p_val >= 500000: score += 25
+        elif p_val >= 150000: score += 15
+        else: score += 5
+    except: pass
 
-    # 2. DETECTOR DE INTENCIÓN PSICOLÓGICA MULTILINGÜE
-    # Analiza verbos de acción en los idiomas configurados (ES, EN, FR, DE, PT, ZH)
-    keywords_cierre = [
-        "comprar", "invertir", "ahora", "urgente", "visita", "contado", "pago", "ya", # ES
-        "buy", "invest", "now", "urgent", "visit", "cash", "closing", "ready",       # EN
-        "acheter", "maintenant", "urgent", "viste", "rdv",                            # FR
-        "kaufen", "jetzt", "sofort", "dringend", "termin",                            # DE
-        "comprar", "agora", "urgente", "visita", "imediato",                          # PT
-        "购买", "现在", "紧急", "预约", "现金"                                          # ZH
+    # 2. INTENCIÓN PSICOLÓGICA MULTILINGÜE (30 pts)
+    # Patrones de alta conversión en los principales idiomas globales
+    keywords_urgencia = [
+        "comprar", "invertir", "contado", "urgente", "pago", "ya", "cita",  # ES
+        "buy", "invest", "now", "urgent", "cash", "closing", "ready",       # EN
+        "acheter", "maintenant", "urgent", "viste", "rdv",                  # FR
+        "kaufen", "jetzt", "sofort", "dringend", "termin",                  # DE
+        "comprar", "agora", "urgente", "imediato",                          # PT
+        "购买", "现在", "紧急", "预约", "现金"                                # ZH
     ]
     
-    # Si detecta intención de cierre, asigna puntaje máximo de urgencia
-    if any(k in msg for k in keywords_cierre):
+    # Si detecta intención directa de cierre
+    if any(k in msg_lower for k in keywords_urgencia):
         score += 30
     elif len(msg.split()) > 10:
-        score += 15 # El cliente se tomó el tiempo de explicar su necesidad
+        score += 10 # Al menos explica su situación
 
-    # 3. VALIDACIÓN DE CALIDAD DE PERFIL (Anti-Spam/Bot)
-    # Un cliente profesional escribe nombre y apellido, y deja un mensaje coherente.
-    if len(nombre.split()) >= 2: score += 10  # Verificación de identidad
+    # 3. EL "ENGAGEMENT SCORE" (ESFUERZO DEL LEAD) (25 pts)
+    # El mayor indicador de interés real es cuánto tiempo/esfuerzo dedica el cliente.
+    # Un bot o alguien poco interesado escribe poco.
     
-    # Medidor de "Sustancia" (Longitud del mensaje)
-    if len(msg) > 150: score += 10            # Lead de alta descripción
-    elif len(msg) > 50: score += 5
+    if len(nombre.split()) >= 2: score += 5   # Dio nombre y apellido (Formalidad)
+    
+    char_count = len(msg)
+    if char_count > 250: score += 20          # Explicación detallada (Interés máximo)
+    elif char_count > 100: score += 15
+    elif char_count > 40: score += 5
 
-    # 4. RELEVANCIA GEOGRÁFICA Y DE PRODUCTO
-    # Zonas de alto valor y términos de propiedad específicos
-    premium_patterns = ["10", "14", "15", "16", "cayala", "muxbal", "antigua", "penthouse", "lujo", "luxury"]
+    # 4. RELEVANCIA Y COHERENCIA DE DATOS (15 pts)
+    # Términos de lujo/propiedad que indican un perfil serio a nivel mundial
+    luxury_patterns = ["luxury", "lujo", "penthouse", "exclusive", "exclusivo", "investment", "roi", "yield"]
     zona = d.get("zona_interes", "").lower()
     
-    if any(p in zona or p in msg for p in premium_patterns):
-        score += 20
+    if any(p in msg_lower or p in zona for p in luxury_patterns):
+        score += 15
     elif len(zona) > 2:
-        score += 10
+        score += 5
 
     return min(int(score), 100)
 
-def obtener_metadatos_lead(score):
-    """Genera las etiquetas profesionales para el CRM basadas en el scoring."""
-    # Clasificación de Negocio
-    if score >= 85: clas = "ALTO VALOR"
-    elif score >= 55: clas = "PROSPECTO"
-    else: clas = "SEGUIMIENTO"
-    
-    # Estado de la Venta (Temperatura)
-    if score >= 85: temp = "MUY_CALIENTE"
-    elif score >= 65: temp = "CALIENTE"
-    elif score >= 40: temp = "MEDIO"
-    else: temp = "FRIO"
-    
-    return clas, temp
+def obtener_etiquetas_crm(score):
+    """Categorización para el Dashboard del vendedor."""
+    if score >= 85: return "ALTO VALOR", "MUY_CALIENTE"
+    elif score >= 60: return "PROSPECTO", "CALIENTE"
+    elif score >= 35: return "SEGUIMIENTO", "MEDIO"
+    return "FRIO", "FRIO"
 
-# --- CONTROLADORES (ROUTES) ---
+# --- RUTAS DE LA APLICACIÓN ---
 
 @app.route("/form/<cliente_id>", methods=["GET","POST"])
 def formulario(cliente_id):
@@ -102,7 +98,7 @@ def formulario(cliente_id):
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     
     if request.method == "POST":
-        payload = {
+        d = {
             "nombre": request.form.get("nombre"), 
             "telefono": request.form.get("telefono"), 
             "zona_interes": request.form.get("zona"), 
@@ -111,29 +107,29 @@ def formulario(cliente_id):
             "vendedor": cliente_id.lower() 
         }
         
-        # Ejecución del motor de inteligencia
-        final_score = motor_scoring_profesional(payload)
-        clasificacion, temperatura = obtener_metadatos_lead(final_score)
+        # Aplicamos el motor de scoring global
+        score = motor_scoring_global(d)
+        clasificacion, temperatura = obtener_etiquetas_crm(score)
         
         lead_data = {
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "nombre": payload["nombre"],
-            "telefono": payload["telefono"],
-            "zona_interes": payload["zona_interes"], 
-            "presupuesto": payload["presupuesto"],
+            "nombre": d["nombre"],
+            "telefono": d["telefono"],
+            "zona_interes": d["zona_interes"], 
+            "presupuesto": d["presupuesto"],
             "clasificacion": clasificacion,
-            "score": final_score,
+            "score": score,
             "temperatura": temperatura,
             "estado": "Nuevo",
-            "mensaje": payload["mensaje"],
-            "vendedor": payload["vendedor"]
+            "mensaje": d["mensaje"],
+            "vendedor": d["vendedor"]
         }
         
         try:
             supabase.table("leads").insert(lead_data).execute()
             return render_template("formulario.html", enviado=True, link_whatsapp=f"https://wa.me/{vendedor['whatsapp']}", cliente=vendedor, textos=textos)
         except Exception as e:
-            return f"Error en la base de datos: {e}", 500
+            return f"Database Error: {e}", 500
 
     return render_template("formulario.html", enviado=False, cliente=vendedor, textos=textos)
 
@@ -146,13 +142,13 @@ def historial(cliente_id):
     lang = session.get('idioma', 'es')
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     
-    # Los mejores negocios siempre aparecen en la parte superior (Ranking por Score)
     query = supabase.table("leads").select("*").eq("vendedor", cliente_id.lower())
     
-    # Soporte para búsqueda por nombre
+    # Buscador opcional
     q = request.args.get('q', '')
     if q: query = query.ilike("nombre", f"%{q}%")
     
+    # Ranking inteligente: El sistema pone los cierres más probables arriba
     resultado = query.order("score", desc=True).execute()
     return render_template("historial.html", leads=resultado.data, cliente=vendedor, textos=textos)
 
@@ -168,7 +164,7 @@ def login(cliente_id):
         if request.form.get("usuario") == vendedor["usuario"] and request.form.get("password") == vendedor["password"]:
             session["cliente"] = cliente_id.lower()
             return redirect(url_for('historial', cliente_id=cliente_id.lower()))
-        return render_template("login.html", error="Error de autenticación", cliente=vendedor, textos=textos)
+        return render_template("login.html", error="Auth Error", cliente=vendedor, textos=textos)
     return render_template("login.html", cliente=vendedor, textos=textos)
 
 @app.route("/idioma/<lang>/<proximo>/<cliente_id>")
@@ -178,7 +174,7 @@ def cambiar_idioma(lang, proximo, cliente_id):
 
 @app.route("/")
 def index():
-    return "API Real Estate Engine Online. 🌐"
+    return "PropTech Global Engine Active. 🌍"
 
 if __name__ == "__main__":
     app.run(debug=True)
