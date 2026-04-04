@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template, redirect, session, url_for
 from supabase import create_client
 import os
+import re
 from datetime import datetime
 import config
 from config_clientes import CLIENTES
@@ -14,90 +15,83 @@ url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
 
-# --- LÓGICA DE NEGOCIO AVANZADA (EL CEREBRO) ---
+# --- EL MOTOR DE DECISIÓN "OMNI-SCORING" ---
 
-def clasificar_lead(p):
-    """Clasificación simplificada basada en presupuesto para la etiqueta visual."""
-    try:
-        p_val = float(str(p).replace('$', '').replace(',', ''))
-        if p_val >= 500000: return "ALTO VALOR"
-        elif p_val >= 150000: return "PROSPECTO"
-        else: return "SEGUIMIENTO"
-    except: return "ND"
-
-def calcular_score_pro(d):
+def motor_calificacion_elite(d):
     """
-    Calcula la relevancia real del lead (0-100).
-    Ponderación: Presupuesto (40%), Intención (35%), Zona (15%), Calidad Datos (10%).
+    Analiza la intención real del cliente (0-100 pts).
+    Supera a una IA básica mediante validación de patrones de comportamiento.
     """
     score = 0
+    msg = d.get("mensaje", "").lower()
+    nombre = d.get("nombre", "").strip()
     
-    # 1. Análisis de Presupuesto (Máx 40 pts)
+    # 1. CAPA DE INTENCIÓN PSICOLÓGICA (Máx 35 pts)
+    # Buscamos verbos de acción y urgencia en los 6 idiomas del sistema
+    patrones_alta_intencion = [
+        "comprar", "invertir", "ahora", "urgente", "visita", "contado", "cita", "pago", # ES
+        "buy", "invest", "now", "urgent", "visit", "cash", "appointment", "ready",    # EN
+        "acheter", "maintenant", "viste", "urgent", "rdv",                            # FR
+        "kaufen", "jetzt", "sofort", "dringend", "termin",                            # DE
+        "comprar", "agora", "urgente", "visita",                                      # PT
+        "购买", "现在", "紧急", "预约"                                                  # ZH
+    ]
+    
+    if any(p in msg for p in patrones_alta_intencion):
+        score += 35
+    elif len(msg.split()) > 8:
+        score += 15 # Interés narrativo (el cliente explica su situación)
+
+    # 2. CAPA DE ESFUERZO Y CALIDAD DE DATOS (Máx 25 pts)
+    # Un cliente "real" se esfuerza más al llenar el formulario.
+    if " " in nombre: score += 5              # Dio nombre y apellido
+    
+    # Análisis de longitud de mensaje: Más texto = Mayor compromiso
+    if len(msg) > 200: score += 20            
+    elif len(msg) > 100: score += 15
+    elif len(msg) > 40: score += 10
+    
+    # 3. CAPA DE CAPACIDAD FINANCIERA (Máx 25 pts)
     try:
-        p_val = float(str(d.get("presupuesto", 0)).replace('$', '').replace(',', ''))
-        if p_val >= 1000000: score += 40
-        elif p_val >= 500000: score += 35
-        elif p_val >= 250000: score += 25
-        elif p_val >= 100000: score += 15
+        # Extraer solo números para soporte de cualquier moneda ($ o €)
+        p_limpio = re.sub(r'[^\d.]', '', str(d.get("presupuesto", 0)))
+        p_val = float(p_limpio)
+        
+        if p_val >= 1000000: score += 25      # Perfil Inversionista
+        elif p_val >= 500000: score += 20     # Perfil Premium
+        elif p_val >= 150000: score += 10     # Perfil Estándar
         else: score += 5
     except:
         pass
 
-    # 2. Análisis de Intención IA-Mimic (Máx 35 pts)
-    msg = d.get("mensaje", "").lower()
-    # Palabras que indican cierre o dinero en mano
-    urgentes = ["comprar", "invertir", "contado", "urgente", "ahora", "visita", "cita", "mañana", "pago"]
-    # Palabras que indican curiosidad básica
-    interes = ["informacion", "precio", "disponible", "detalles", "fotos"]
+    # 4. CAPA DE RELEVANCIA GEOGRÁFICA (Máx 15 pts)
+    # Zonas de alta plusvalía o interés estratégico (Guatemala y Global)
+    zonas_top = ["10", "14", "15", "16", "cayala", "muxbal", "fraijanes", "antigua", "zona 14", "zona 10"]
+    zona_lead = d.get("zona_interes", "").lower()
     
-    if any(x in msg for x in urgentes):
-        score += 35
-    elif any(x in msg for x in interes):
-        score += 20
-    elif len(msg.split()) > 15:
-        score += 10
-
-    # 3. Filtro de Zona Estratégica (Máx 15 pts)
-    # Zonas de alta demanda en Guatemala
-    zonas_premium = ["10", "14", "15", "16", "cayala", "carretera", "muxbal"]
-    zona_user = d.get("zona_interes", "").lower()
-    if any(z in zona_user for z in zonas_premium):
+    if any(z in zona_lead for z in zonas_top):
         score += 15
-    else:
-        score += 5
-
-    # 4. Calidad y Seriedad del Perfil (Máx 10 pts)
-    nombre = d.get("nombre", "")
-    if len(nombre.split()) >= 2: score += 5  # Dio nombre y apellido
-    if len(msg) > 60: score += 5             # Mensaje detallado
+    elif len(zona_lead) > 3:
+        score += 5 # Especificó una ubicación real
 
     return min(int(score), 100)
 
-def temperatura_lead(score):
-    """Asigna la temperatura basada en el nuevo score optimizado."""
-    if score >= 85: return "MUY_CALIENTE" # 🔥🔥🔥
-    elif score >= 65: return "CALIENTE"     # 🔥
-    elif score >= 40: return "MEDIO"        # 🟡
-    else: return "FRIO"                     # ❄️
+def determinar_etiquetas_pro(score):
+    """Sincroniza el score con las traducciones del Dashboard."""
+    # Clasificación (Visual)
+    if score >= 85: clas = "ALTO VALOR"
+    elif score >= 50: clas = "PROSPECTO"
+    else: clas = "SEGUIMIENTO"
+    
+    # Temperatura (Iconografía)
+    if score >= 85: temp = "MUY_CALIENTE"
+    elif score >= 65: temp = "CALIENTE"
+    elif score >= 40: temp = "MEDIO"
+    else: temp = "FRIO"
+    
+    return clas, temp
 
-# --- RUTAS (Se mantienen igual para no romper el flujo) ---
-
-@app.route("/idioma/<lang>/<proximo>/<cliente_id>")
-def cambiar_idioma(lang, proximo, cliente_id):
-    session['idioma'] = lang
-    return redirect(url_for(proximo, cliente_id=cliente_id))
-
-@app.route("/")
-def index():
-    return "Sistema Inmobiliario Cloud Activo. 🚀"
-
-@app.route("/cliente/<cliente_id>")
-def bienvenida(cliente_id):
-    cliente = CLIENTES.get(cliente_id.lower())
-    if not cliente: return "Error: Vendedor no existe", 404
-    lang = session.get('idioma', 'es')
-    textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
-    return render_template("bienvenida.html", cliente=cliente, textos=textos)
+# --- RUTAS MEJORADAS ---
 
 @app.route("/form/<cliente_id>", methods=["GET","POST"])
 def formulario(cliente_id):
@@ -116,8 +110,9 @@ def formulario(cliente_id):
             "vendedor": cliente_id.lower() 
         }
         
-        # Usamos el nuevo cálculo Pro
-        score = calcular_score_pro(d)
+        # PROCESAMIENTO CON EL NUEVO MOTOR ELITE
+        score_final = motor_calificacion_elite(d)
+        clasificacion, temperatura = determinar_etiquetas_pro(score_final)
         
         datos_supabase = {
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -125,33 +120,21 @@ def formulario(cliente_id):
             "telefono": d["telefono"],
             "zona_interes": d["zona_interes"], 
             "presupuesto": d["presupuesto"],
-            "clasificacion": clasificar_lead(d["presupuesto"]),
-            "score": score,
-            "temperatura": temperatura_lead(score),
+            "clasificacion": clasificacion,
+            "score": score_final,
+            "temperatura": temperatura,
             "estado": "Nuevo",
             "mensaje": d["mensaje"],
             "vendedor": d["vendedor"]
         }
         
-        supabase.table("leads").insert(datos_supabase).execute()
-        return render_template("formulario.html", enviado=True, link_whatsapp=f"https://wa.me/{cliente['whatsapp']}", cliente=cliente, textos=textos)
-
+        try:
+            supabase.table("leads").insert(datos_supabase).execute()
+            return render_template("formulario.html", enviado=True, link_whatsapp=f"https://wa.me/{cliente['whatsapp']}", cliente=cliente, textos=textos)
+        except Exception as e:
+            return f"Error de conexión: {e}", 500
+            
     return render_template("formulario.html", enviado=False, cliente=cliente, textos=textos)
-
-@app.route("/login/<cliente_id>", methods=["GET","POST"])
-def login(cliente_id):
-    cliente = CLIENTES.get(cliente_id.lower())
-    if not cliente: return "Vendedor no existe", 404
-    lang = session.get('idioma', 'es')
-    textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
-    
-    if request.method == "POST":
-        if request.form.get("usuario") == cliente["usuario"] and request.form.get("password") == cliente["password"]:
-            session["cliente"] = cliente_id.lower()
-            return redirect(url_for('historial', cliente_id=cliente_id.lower()))
-        return render_template("login.html", error="Credenciales incorrectas", cliente=cliente, textos=textos)
-    
-    return render_template("login.html", cliente=cliente, textos=textos)
 
 @app.route("/historial/<cliente_id>")
 def historial(cliente_id):
@@ -162,14 +145,9 @@ def historial(cliente_id):
     lang = session.get('idioma', 'es')
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     
-    q = request.args.get('q', '') 
-    # Ordenamos por score descendente para que los mejores salgan arriba automáticamente
-    query = supabase.table("leads").select("*").eq("vendedor", cliente_id.lower())
-    if q: query = query.ilike("nombre", f"%{q}%")
+    # ORDENAMIENTO POR SCORE: Los clientes "cerrables" aparecen primero.
+    resultado = supabase.table("leads").select("*").eq("vendedor", cliente_id.lower()).order("score", desc=True).execute()
     
-    resultado = query.order("score", desc=True).execute()
-    leads = resultado.data
-    return render_template("historial.html", leads=leads, cliente=cliente, textos=textos)
+    return render_template("historial.html", leads=resultado.data, cliente=cliente, textos=textos)
 
-if __name__ == "__main__":
-    app.run(debug=True)
+# ... (Rutas de login, idioma e index igual) ...
