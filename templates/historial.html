@@ -2,88 +2,44 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ textos.historial_titulo }} | {{ cliente.nombre }}</title>
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
     <style>
-        :root {
-            --primary: #1e3c72;
-            --gold: #d4af37;
-            --success: #27ae60;
-            --danger: #e74c3c;
-            --warning: #f39c12;
-            --info: #3498db;
-        }
-
-        body { font-family: 'Poppins', 'Segoe UI', sans-serif; background: #f4f7f6; padding: 30px; color: #2c3e50; height: auto; display: block; overflow-y: auto; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f2f6; padding: 20px; }
+        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .selector-idioma { display: flex; gap: 15px; margin-bottom: 15px; }
+        .bandera { font-size: 24px; text-decoration: none; transition: 0.2s; }
+        .bandera:hover { transform: scale(1.3); }
+        .search-container { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; gap: 10px; align-items: center; }
+        .search-container input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .btn-search { background: #2c3e50; color: white; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-clear { background: #bdc3c7; color: #333; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; display: flex; align-items: center; }
+        .btn-excel { background: #27ae60; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); transition: 0.3s; }
+        .btn-excel:hover { background: #219150; transform: translateY(-2px); }
         
-        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 15px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        th { background: #2c3e50; color: white; padding: 15px; font-size: 13px; text-transform: uppercase; }
+        td { padding: 15px; border-bottom: 1px solid #eee; text-align: center; font-size: 14px; }
         
-        h2 { margin: 0; color: var(--primary); font-weight: 700; letter-spacing: -0.5px; }
-
-        .search-container { background: white; padding: 20px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .search-container input { flex: 1; padding: 12px 20px; border: 1px solid #e0e0e0; border-radius: 10px; font-size: 15px; transition: 0.3s; }
-        .search-container input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 8px rgba(212, 175, 55, 0.2); }
-
-        .btn-search { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.3s; }
-        .btn-search:hover { background: #142a50; transform: translateY(-1px); }
-
-        .btn-excel { background: var(--success); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: 700; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
-        .btn-excel:hover { background: #1e8449; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3); }
-
-        /* Contenedor para scroll en móviles */
-        .table-wrapper { width: 100%; overflow-x: auto; border-radius: 15px; }
-
-        table { width: 100%; border-collapse: separate; border-spacing: 0 10px; min-width: 1000px; }
-        th { background: var(--primary); color: white; padding: 18px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
-        th:first-child { border-radius: 12px 0 0 12px; }
-        th:last-child { border-radius: 0 12px 12px 0; }
+        /* Colores de Clasificación */
+        .alto { color: #e74c3c; font-weight: bold; background: #fdf2f2; border-radius: 4px; padding: 4px 8px; }
+        .medio { color: #f39c12; font-weight: bold; background: #fffaf0; border-radius: 4px; padding: 4px 8px; }
+        .bajo { color: #7f8c8d; font-weight: bold; background: #f8f9fa; border-radius: 4px; padding: 4px 8px; }
         
-        tr.lead-row { background: white; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        tr.lead-row:hover { transform: scale(1.005); box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
-        
-        td { padding: 20px; text-align: center; vertical-align: middle; border: none; font-size: 14px; }
-        td:first-child { border-radius: 12px 0 0 12px; }
-        td:last-child { border-radius: 0 12px 12px 0; }
-
-        .badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; display: inline-block; }
-        .progress-container { width: 100px; background: #eee; border-radius: 10px; height: 8px; margin: 5px auto; overflow: hidden; }
-        .progress-bar { height: 100%; border-radius: 10px; transition: width 1s ease-in-out; }
-        .score-text { font-weight: 700; font-size: 13px; }
-        
-        .score-high { background: linear-gradient(90deg, #e74c3c, #ff5e57); }
-        .score-mid { background: linear-gradient(90deg, #f39c12, #f1c40f); }
-        .score-low { background: linear-gradient(90deg, #3498db, #5dade2); }
-
-        .temp-badge { font-weight: 700; padding: 5px 10px; border-radius: 8px; display: inline-block; }
-        .temp-muy-caliente { color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
-        .temp-frio { color: #3498db; background: rgba(52, 152, 219, 0.1); }
-
-        .wa-link { color: var(--success); text-decoration: none; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 5px; }
-        
-        /* Ajuste del selector de idioma para el historial */
-        .historial-lang { position: relative; display: flex; justify-content: flex-end; margin-bottom: 20px; }
-        .historial-lang .lang-selected { color: var(--primary); border: 1px solid #ddd; background: white; }
+        /* Estilo para la temperatura */
+        .temp-emoji { font-size: 1.2em; font-weight: bold; }
+        tr:hover { background-color: #f8f9fa; }
     </style>
 </head>
 <body>
 
-<div class="historial-lang">
-    <div class="lang-container" style="position: relative; top: 0; right: 0;">
-        <div class="lang-selected">
-            <span>🌐</span>
-            <span style="text-transform: uppercase;">{{ session.get('idioma', 'es') }}</span>
-        </div>
-        <div class="lang-dropdown">
-            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='historial', cliente_id=cliente.usuario) }}"><span>🇪🇸</span> Español</a>
-            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='historial', cliente_id=cliente.usuario) }}"><span>🇺🇸</span> English</a>
-            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='historial', cliente_id=cliente.usuario) }}"><span>🇫🇷</span> Français</a>
-            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='historial', cliente_id=cliente.usuario) }}"><span>🇩🇪</span> Deutsch</a>
-            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='historial', cliente_id=cliente.usuario) }}"><span>🇵🇹</span> Português</a>
-            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='historial', cliente_id=cliente.usuario) }}"><span>🇨🇳</span> 中文</a>
-        </div>
-    </div>
+<div class="selector-idioma">
+    <a href="{{ url_for('cambiar_idioma', lang='es', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇪🇸</a>
+    <a href="{{ url_for('cambiar_idioma', lang='en', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇺🇸</a>
+    <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇫🇷</a>
+    <a href="{{ url_for('cambiar_idioma', lang='de', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇩🇪</a>
+    <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇵🇹</a>
+    <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇨🇳</a>
 </div>
 
 <div class="header-container">
@@ -92,75 +48,63 @@
 </div>
 
 <div class="search-container">
-    <form method="GET" style="display: flex; width: 100%; gap: 15px; flex-wrap: wrap;">
+    <form method="GET" style="display: flex; width: 100%; gap: 10px;">
         <input type="text" name="q" placeholder="{{ textos.btn_buscar }}" value="{{ request.args.get('q', '') }}">
-        <button type="submit" class="btn-search">BUSCAR</button>
-        <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" style="text-decoration:none; color:#999; display:flex; align-items:center; font-size:13px;">{{ textos.btn_limpiar }}</a>
+        <button type="submit" class="btn-search">🔍</button>
+        <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="btn-clear">{{ textos.btn_limpiar }}</a>
     </form>
 </div>
 
-<div class="table-wrapper">
-    <table id="tabla-leads">
-        <thead>
-            <tr>
-                <th>{{ textos.col_fecha }}</th>
-                <th>{{ textos.placeholder_nombre }}</th>
-                <th>Contacto</th>
-                <th>{{ textos.placeholder_zona }}</th>
-                <th>{{ textos.placeholder_presupuesto }}</th>
-                <th>{{ textos.col_clasificacion }}</th>
-                <th>Relevancia (Score)</th>
-                <th>Prioridad</th>
-                <th>{{ textos.col_mensaje }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for lead in leads %}
-            <tr class="lead-row">
-                <td style="color: #95a5a6; font-size: 12px;">{{ lead.fecha }}</td>
-                <td><strong>{{ lead.nombre }}</strong></td>
-                <td><a href="https://wa.me/{{ lead.telefono }}" target="_blank" class="wa-link">🟢 WhatsApp</a></td>
-                <td><span style="background:#f1f2f6; padding:4px 8px; border-radius:6px;">{{ lead.zona_interes }}</span></td> 
-                <td style="font-weight:700; color:var(--primary)">${{ lead.presupuesto }}</td>
-                
-                <td>
-                    <span class="badge" style="background: #f0f0f0; border: 1px solid #ccc;">
-                        {{ lead.clasificacion }}
-                    </span>
-                </td>
-
-                <td>
-                    <div class="score-text">{{ lead.score }}/100</div>
-                    <div class="progress-container">
-                        <div class="progress-bar {% if lead.score >= 80 %}score-high{% elif lead.score >= 50 %}score-mid{% else %}score-low{% endif %}" 
-                             style="width: {{ lead.score }}%"></div>
-                    </div>
-                </td>
-
-                <td>
-                    <span class="temp-badge {% if 'CALIENTE' in lead.temperatura %}temp-muy-caliente{% elif 'FRIO' in lead.temperatura %}temp-frio{% endif %}">
-                        {{ lead.temperatura }}
-                    </span>
-                </td>
-
-                <td style="font-size: 11px; color: #7f8c8d; max-width: 180px; text-align: left; line-height: 1.3;">
-                    {{ lead.mensaje[:100] }}{% if lead.mensaje|length > 100 %}...{% endif %}
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="9" style="padding: 60px; color: #999; background: white; border-radius: 15px;">{{ textos.no_leads }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+<table id="tabla-leads">
+    <thead>
+        <tr>
+            <th>{{ textos.col_fecha }}</th>
+            <th>{{ textos.placeholder_nombre }}</th>
+            <th>{{ textos.placeholder_tel }}</th>
+            <th>{{ textos.placeholder_zona }}</th>
+            <th>{{ textos.placeholder_presupuesto }}</th>
+            <th>{{ textos.col_clasificacion }}</th>
+            <th>Score</th>
+            <th>{{ textos.col_temperatura }}</th>
+            <th>{{ textos.col_mensaje }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for lead in leads %}
+        <tr>
+            <td>{{ lead.fecha }}</td>
+            <td><strong>{{ lead.nombre }}</strong></td>
+            <td><a href="https://wa.me/{{ lead.telefono }}" target="_blank" style="color: #27ae60; text-decoration: none; font-weight: bold;">📱 {{ lead.telefono }}</a></td>
+            <td>{{ lead.zona_interes }}</td> 
+            <td>${{ "{:,.2f}".format(lead.presupuesto|float) if lead.presupuesto else "0.00" }}</td>
+            <td>
+                <span class="{% if 'ALTO' in lead.clasificacion %}alto{% elif 'MEDIO' in lead.clasificacion %}medio{% else %}bajo{% endif %}">
+                    {# Buscamos la traducción usando la clave class_ + el valor guardado (ALTO, MEDIO, BAJO) #}
+                    {{ textos['class_' + lead.clasificacion] if ('class_' + lead.clasificacion) in textos else lead.clasificacion }}
+                </span>
+            </td>
+            <td><progress value="{{ lead.score }}" max="100"></progress> <br> {{ lead.score }}/100</td>
+            <td>
+                <span class="temp-emoji">
+                    {# Buscamos la traducción usando la clave temp_ + el valor guardado (MUY_CALIENTE, etc) #}
+                    {{ textos['temp_' + lead.temperatura] if ('temp_' + lead.temperatura) in textos else lead.temperatura }}
+                </span>
+            </td>
+            <td style="font-size: 12px; color: #666; max-width: 200px;">{{ lead.mensaje }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="9" style="padding: 40px; color: #999;">{{ textos.no_leads }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
 <script>
 function descargarExcel() {
     var table = document.getElementById("tabla-leads");
-    var wb = XLSX.utils.table_to_book(table, {sheet: "Prospectos VIP"});
-    XLSX.writeFile(wb, "CRM_Leads_{{ cliente.nombre }}_" + new Date().toISOString().split('T')[0] + ".xlsx");
+    var wb = XLSX.utils.table_to_book(table, {sheet: "Prospectos"});
+    XLSX.writeFile(wb, "Reporte_Leads_{{ cliente.nombre }}_" + new Date().toISOString().split('T')[0] + ".xlsx");
 }
 </script>
 
