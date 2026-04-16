@@ -14,7 +14,7 @@
 
         <div class="lang-selected">
             <span>🌐</span>
-            <span style="text-transform: uppercase;">{{ session.get('lang', 'ES') }}</span>
+            <span style="text-transform: uppercase;">{{ session.get('idioma', 'es') }}</span>
         </div>
         <div class="lang-dropdown">
             <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente.usuario) }}"><span>🇪🇸</span> Español</a>
