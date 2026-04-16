@@ -11,39 +11,66 @@
             --primary: #1e3c72;
             --gold: #d4af37;
             --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #3498db;
         }
 
-        body { font-family: 'Poppins', sans-serif; background: #f4f7f6; padding: 20px; color: #2c3e50; height: auto; display: block; overflow-y: auto; }
+        body { font-family: 'Poppins', 'Segoe UI', sans-serif; background: #f4f7f6; padding: 30px; color: #2c3e50; height: auto; display: block; overflow-y: auto; }
         
         .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 15px; }
         
-        /* Contenedor de tabla con scroll para móviles */
-        .table-responsive { width: 100%; overflow-x: auto; background: transparent; border-radius: 15px; }
+        h2 { margin: 0; color: var(--primary); font-weight: 700; letter-spacing: -0.5px; }
 
-        table { width: 100%; border-collapse: separate; border-spacing: 0 10px; min-width: 900px; }
-        th { background: var(--primary); color: white; padding: 18px; font-size: 12px; text-transform: uppercase; }
+        .search-container { background: white; padding: 20px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .search-container input { flex: 1; padding: 12px 20px; border: 1px solid #e0e0e0; border-radius: 10px; font-size: 15px; transition: 0.3s; }
+        .search-container input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 8px rgba(212, 175, 55, 0.2); }
+
+        .btn-search { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .btn-search:hover { background: #142a50; transform: translateY(-1px); }
+
+        .btn-excel { background: var(--success); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: 700; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+        .btn-excel:hover { background: #1e8449; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3); }
+
+        /* Contenedor para scroll en móviles */
+        .table-wrapper { width: 100%; overflow-x: auto; border-radius: 15px; }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0 10px; min-width: 1000px; }
+        th { background: var(--primary); color: white; padding: 18px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        th:first-child { border-radius: 12px 0 0 12px; }
+        th:last-child { border-radius: 0 12px 12px 0; }
         
-        tr.lead-row { background: white; transition: 0.3s; }
-        td { padding: 15px; text-align: center; font-size: 14px; border: none; }
-
-        .badge { padding: 6px 12px; border-radius: 20px; font-size: 10px; font-weight: 800; }
-        .progress-container { width: 80px; background: #eee; border-radius: 10px; height: 6px; margin: 5px auto; overflow: hidden; }
-        .progress-bar { height: 100%; transition: width 1s; }
-        .score-high { background: #e74c3c; }
-        .score-mid { background: #f39c12; }
-        .score-low { background: #3498db; }
-
-        .btn-excel { background: var(--success); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        tr.lead-row { background: white; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        tr.lead-row:hover { transform: scale(1.005); box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
         
-        /* Ajuste del selector para el historial */
-        .lang-container { position: relative; top: 0; right: 0; margin-bottom: 10px; }
-        .lang-selected { color: var(--primary); border: 1px solid #ddd; background: white; }
+        td { padding: 20px; text-align: center; vertical-align: middle; border: none; font-size: 14px; }
+        td:first-child { border-radius: 12px 0 0 12px; }
+        td:last-child { border-radius: 0 12px 12px 0; }
+
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; display: inline-block; }
+        .progress-container { width: 100px; background: #eee; border-radius: 10px; height: 8px; margin: 5px auto; overflow: hidden; }
+        .progress-bar { height: 100%; border-radius: 10px; transition: width 1s ease-in-out; }
+        .score-text { font-weight: 700; font-size: 13px; }
+        
+        .score-high { background: linear-gradient(90deg, #e74c3c, #ff5e57); }
+        .score-mid { background: linear-gradient(90deg, #f39c12, #f1c40f); }
+        .score-low { background: linear-gradient(90deg, #3498db, #5dade2); }
+
+        .temp-badge { font-weight: 700; padding: 5px 10px; border-radius: 8px; display: inline-block; }
+        .temp-muy-caliente { color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
+        .temp-frio { color: #3498db; background: rgba(52, 152, 219, 0.1); }
+
+        .wa-link { color: var(--success); text-decoration: none; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        
+        /* Ajuste del selector de idioma para el historial */
+        .historial-lang { position: relative; display: flex; justify-content: flex-end; margin-bottom: 20px; }
+        .historial-lang .lang-selected { color: var(--primary); border: 1px solid #ddd; background: white; }
     </style>
 </head>
 <body>
 
-<div style="display: flex; justify-content: flex-end;">
-    <div class="lang-container">
+<div class="historial-lang">
+    <div class="lang-container" style="position: relative; top: 0; right: 0;">
         <div class="lang-selected">
             <span>🌐</span>
             <span style="text-transform: uppercase;">{{ session.get('idioma', 'es') }}</span>
@@ -53,6 +80,7 @@
             <a href="{{ url_for('cambiar_idioma', lang='en', proximo='historial', cliente_id=cliente.usuario) }}"><span>🇺🇸</span> English</a>
             <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='historial', cliente_id=cliente.usuario) }}"><span>🇫🇷</span> Français</a>
             <a href="{{ url_for('cambiar_idioma', lang='de', proximo='historial', cliente_id=cliente.usuario) }}"><span>🇩🇪</span> Deutsch</a>
+            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='historial', cliente_id=cliente.usuario) }}"><span>🇵🇹</span> Português</a>
             <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='historial', cliente_id=cliente.usuario) }}"><span>🇨🇳</span> 中文</a>
         </div>
     </div>
@@ -63,34 +91,65 @@
     <button onclick="descargarExcel()" class="btn-excel">📥 {{ textos.btn_descargar }}</button>
 </div>
 
-<div class="table-responsive">
+<div class="search-container">
+    <form method="GET" style="display: flex; width: 100%; gap: 15px; flex-wrap: wrap;">
+        <input type="text" name="q" placeholder="{{ textos.btn_buscar }}" value="{{ request.args.get('q', '') }}">
+        <button type="submit" class="btn-search">BUSCAR</button>
+        <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" style="text-decoration:none; color:#999; display:flex; align-items:center; font-size:13px;">{{ textos.btn_limpiar }}</a>
+    </form>
+</div>
+
+<div class="table-wrapper">
     <table id="tabla-leads">
         <thead>
             <tr>
                 <th>{{ textos.col_fecha }}</th>
-                <th>Nombre</th>
+                <th>{{ textos.placeholder_nombre }}</th>
                 <th>Contacto</th>
-                <th>Presupuesto</th>
-                <th>Calificación</th>
-                <th>Score</th>
-                <th>Mensaje</th>
+                <th>{{ textos.placeholder_zona }}</th>
+                <th>{{ textos.placeholder_presupuesto }}</th>
+                <th>{{ textos.col_clasificacion }}</th>
+                <th>Relevancia (Score)</th>
+                <th>Prioridad</th>
+                <th>{{ textos.col_mensaje }}</th>
             </tr>
         </thead>
         <tbody>
             {% for lead in leads %}
             <tr class="lead-row">
-                <td style="font-size: 11px;">{{ lead.fecha }}</td>
+                <td style="color: #95a5a6; font-size: 12px;">{{ lead.fecha }}</td>
                 <td><strong>{{ lead.nombre }}</strong></td>
-                <td><a href="https://wa.me/{{ lead.telefono }}" target="_blank" style="color:var(--success); text-decoration:none; font-weight:bold;">WhatsApp</a></td>
-                <td style="font-weight:bold;">${{ lead.presupuesto }}</td>
-                <td><span class="badge">{{ lead.clasificacion }}</span></td>
+                <td><a href="https://wa.me/{{ lead.telefono }}" target="_blank" class="wa-link">🟢 WhatsApp</a></td>
+                <td><span style="background:#f1f2f6; padding:4px 8px; border-radius:6px;">{{ lead.zona_interes }}</span></td> 
+                <td style="font-weight:700; color:var(--primary)">${{ lead.presupuesto }}</td>
+                
                 <td>
-                    <div style="font-size:11px;">{{ lead.score }}/100</div>
+                    <span class="badge" style="background: #f0f0f0; border: 1px solid #ccc;">
+                        {{ lead.clasificacion }}
+                    </span>
+                </td>
+
+                <td>
+                    <div class="score-text">{{ lead.score }}/100</div>
                     <div class="progress-container">
-                        <div class="progress-bar {% if lead.score >= 80 %}score-high{% elif lead.score >= 50 %}score-mid{% else %}score-low{% endif %}" style="width: {{ lead.score }}%"></div>
+                        <div class="progress-bar {% if lead.score >= 80 %}score-high{% elif lead.score >= 50 %}score-mid{% else %}score-low{% endif %}" 
+                             style="width: {{ lead.score }}%"></div>
                     </div>
                 </td>
-                <td style="font-size: 11px; text-align: left; max-width: 200px;">{{ lead.mensaje[:80] }}...</td>
+
+                <td>
+                    <span class="temp-badge {% if 'CALIENTE' in lead.temperatura %}temp-muy-caliente{% elif 'FRIO' in lead.temperatura %}temp-frio{% endif %}">
+                        {{ lead.temperatura }}
+                    </span>
+                </td>
+
+                <td style="font-size: 11px; color: #7f8c8d; max-width: 180px; text-align: left; line-height: 1.3;">
+                    {{ lead.mensaje[:100] }}{% if lead.mensaje|length > 100 %}...{% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="9" style="padding: 60px; color: #999; background: white; border-radius: 15px;">{{ textos.no_leads }}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -100,9 +159,10 @@
 <script>
 function descargarExcel() {
     var table = document.getElementById("tabla-leads");
-    var wb = XLSX.utils.table_to_book(table, {sheet: "Leads"});
-    XLSX.writeFile(wb, "CRM_Leads.xlsx");
+    var wb = XLSX.utils.table_to_book(table, {sheet: "Prospectos VIP"});
+    XLSX.writeFile(wb, "CRM_Leads_{{ cliente.nombre }}_" + new Date().toISOString().split('T')[0] + ".xlsx");
 }
 </script>
+
 </body>
 </html>
