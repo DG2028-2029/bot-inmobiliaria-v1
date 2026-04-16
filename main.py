@@ -151,9 +151,7 @@ def historial(cliente_id):
         return redirect(url_for('login', cliente_id=id_clean))
     
     vendedor = CLIENTES.get(id_clean)
-    # Aseguramos que el historial use el idioma de la sesión
-    lang = session.get('idioma', 'es')
-    textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
+    textos = DICCIONARIO.get(session.get('idioma', 'es'), DICCIONARIO['es'])
     
     query = supabase.table("leads").select("*").eq("vendedor", id_clean)
     
