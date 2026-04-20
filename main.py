@@ -28,6 +28,7 @@ def calcular_entropia_mensaje(texto):
 def motor_scoring_global(d):
     """
     Algoritmo de Calificación Universal.
+    Independiente de moneda o país.
     Mide: Capacidad (30%), Intención (40%), Esfuerzo (20%), Contexto (10%).
     """
     score = 0
@@ -38,9 +39,9 @@ def motor_scoring_global(d):
     # 1. ANÁLISIS DE CAPACIDAD FINANCIERA
     try:
         p_val = float(re.sub(r'[^\d.]', '', str(d.get("presupuesto", 0))))
-        if p_val >= 1000000: score += 30
-        elif p_val >= 500000: score += 25
-        elif p_val >= 150000: score += 15
+        if p_val >= 1000000: score += 30      # Inversionista Global
+        elif p_val >= 500000: score += 25     # Cliente Premium
+        elif p_val >= 150000: score += 15     # Mercado Estándar
         elif p_val > 0: score += 5
     except: pass
 
@@ -56,14 +57,14 @@ def motor_scoring_global(d):
     hits = sum(1 for t in triggers if t in msg_l)
     if hits >= 2: score += 40
     elif hits == 1: score += 25
-    elif len(msg.split()) > 15: score += 15
+    elif len(msg.split()) > 15: score += 15 
 
     # 3. MÉTRICA DE ESFUERZO (20 pts)
     entropia = calcular_entropia_mensaje(msg)
     if entropia > 0.8 and len(msg) > 100: score += 20
     elif len(msg) > 50: score += 10
     
-    if len(d.get("nombre", "").split()) >= 2: score += 5
+    if len(d.get("nombre", "").split()) >= 2: score += 5 
 
     # 4. RELEVANCIA DE CONTEXTO (10 pts)
     keywords_premium = ["lujo", "luxury", "penthouse", "roi", "rentabilidad", "yield", "exclusive"]
@@ -73,13 +74,13 @@ def motor_scoring_global(d):
     return min(int(score), 100)
 
 def calificar_lead_profesional(score):
-    """Asignación de estatus de grado CRM (Claves para Diccionario)."""
-    if score >= 85: return "ALTO_VALOR", "MUY_CALIENTE"
-    elif score >= 65: return "PROSPECTO", "CALIENTE"
-    elif score >= 40: return "SEGUIMIENTO", "MEDIO"
-    return "ND", "FRIO"
+    """Asignación de estatus de grado CRM."""
+    if score >= 85: return "💎 VIP / INVERSIONISTA", "MUY_CALIENTE"
+    elif score >= 65: return "🔥 PROSPECTO A", "CALIENTE"
+    elif score >= 40: return "🟡 SEGUIMIENTO B", "MEDIO"
+    return "❄️ LEAD FRÍO", "FRIO"
 
-# --- CONTROLADORES DE RUTA (BUSINESS LOGIC) ---
+# --- CONTROLADORES DE RUTA ---
 
 @app.route("/cliente/<cliente_id>")
 def seleccion_idioma(cliente_id):
