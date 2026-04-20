@@ -23,9 +23,12 @@ DICCIONARIO = {
         'btn_limpiar': 'Limpiar',
         'no_leads': 'No hay prospectos.',
         'btn_es': 'Español', 'btn_en': 'English', 'btn_fr': 'Français', 'btn_de': 'Deutsch', 'btn_pt': 'Português', 'btn_zh': '中文',
-        # --- CLAVES SINCRONIZADAS CON MAIN.PY ---
+        # --- CLAVES SINCRONIZADAS CON TU MAIN.PY ---
         'temp_MUY_CALIENTE': '🔥 MUY CALIENTE', 'temp_CALIENTE': '🔥 CALIENTE', 'temp_MEDIO': '🟡 MEDIO', 'temp_FRIO': '❄️ FRÍO',
-        'class_ALTO VALOR': 'ALTO VALOR 💎', 'class_PROSPECTO': 'PROSPECTO 🟡', 'class_SEGUIMIENTO': 'SEGUIMIENTO ⚪', 'class_ND': 'NO DEFINIDO'
+        'class_💎 VIP / INVERSIONISTA': 'ALTO VALOR 💎', 
+        'class_🔥 PROSPECTO A': 'PROSPECTO 🟡', 
+        'class_🟡 SEGUIMIENTO B': 'SEGUIMIENTO ⚪', 
+        'class_❄️ LEAD FRÍO': 'LEAD FRÍO ❄️'
     },
     'en': {
         'titulo_form': 'Please fill in your details to contact you.',
@@ -52,7 +55,10 @@ DICCIONARIO = {
         'no_leads': 'No leads found.',
         'btn_es': 'Spanish', 'btn_en': 'English', 'btn_fr': 'French', 'btn_de': 'German', 'btn_pt': 'Portuguese', 'btn_zh': 'Chinese',
         'temp_MUY_CALIENTE': '🔥 VERY HOT', 'temp_CALIENTE': '🔥 HOT', 'temp_MEDIO': '🟡 MEDIUM', 'temp_FRIO': '❄️ COLD',
-        'class_ALTO VALOR': 'HIGH VALUE 💎', 'class_PROSPECTO': 'PROSPECT 🟡', 'class_SEGUIMIENTO': 'FOLLOW-UP ⚪', 'class_ND': 'UNDEFINED'
+        'class_💎 VIP / INVERSIONISTA': 'HIGH VALUE 💎', 
+        'class_🔥 PROSPECTO A': 'PROSPECT 🟡', 
+        'class_🟡 SEGUIMIENTO B': 'FOLLOW-UP ⚪', 
+        'class_❄️ LEAD FRÍO': 'COLD LEAD ❄️'
     },
     'fr': {
         'titulo_form': 'Veuillez remplir vos coordonnées.',
@@ -78,7 +84,10 @@ DICCIONARIO = {
         'btn_limpiar': 'Effacer',
         'no_leads': 'Aucun prospect.',
         'temp_MUY_CALIENTE': '🔥 TRÈS CHAUD', 'temp_CALIENTE': '🔥 CHAUD', 'temp_MEDIO': '🟡 MOYEN', 'temp_FRIO': '❄️ FROID',
-        'class_ALTO VALOR': 'HAUTE VALEUR 💎', 'class_PROSPECTO': 'PROSPECT 🟡', 'class_SEGUIMIENTO': 'SUIVI ⚪', 'class_ND': 'NON DÉFINI'
+        'class_💎 VIP / INVERSIONISTA': 'HAUTE VALEUR 💎', 
+        'class_🔥 PROSPECTO A': 'PROSPECT 🟡', 
+        'class_🟡 SEGUIMIENTO B': 'SUIVI ⚪', 
+        'class_❄️ LEAD FRÍO': 'PROSPECT FROID ❄️'
     },
     'de': {
         'titulo_form': 'Bitte füllen Sie Ihre Daten aus.',
@@ -104,7 +113,10 @@ DICCIONARIO = {
         'btn_limpiar': 'Löschen',
         'no_leads': 'Keine Leads.',
         'temp_MUY_CALIENTE': '🔥 SEHR HEISS', 'temp_CALIENTE': '🔥 HEISS', 'temp_MEDIO': '🟡 MITTEL', 'temp_FRIO': '❄️ KALT',
-        'class_ALTO VALOR': 'HOHER WERT 💎', 'class_PROSPECTO': 'PROSPEKT 🟡', 'class_SEGUIMIENTO': 'NACHVERFOLGUNG ⚪', 'class_ND': 'UNDEFINIERT'
+        'class_💎 VIP / INVERSIONISTA': 'HOHER WERT 💎', 
+        'class_🔥 PROSPECTO A': 'PROSPEKT 🟡', 
+        'class_🟡 SEGUIMIENTO B': 'NACHVERFOLGUNG ⚪', 
+        'class_❄️ LEAD FRÍO': 'KALTER LEAD ❄️'
     },
     'pt': {
         'titulo_form': 'Preencha seus dados para contato.',
@@ -130,7 +142,10 @@ DICCIONARIO = {
         'btn_limpiar': 'Limpar',
         'no_leads': 'Nenhum lead.',
         'temp_MUY_CALIENTE': '🔥 MUITO QUENTE', 'temp_CALIENTE': '🔥 QUENTE', 'temp_MEDIO': '🟡 MÉDIO', 'temp_FRIO': '❄️ FRIO',
-        'class_ALTO VALOR': 'ALTO VALOR 💎', 'class_PROSPECTO': 'PROSPECTO 🟡', 'class_SEGUIMIENTO': 'ACOMPANHAMENTO ⚪', 'class_ND': 'NÃO DEFINIDO'
+        'class_💎 VIP / INVERSIONISTA': 'ALTO VALOR 💎', 
+        'class_🔥 PROSPECTO A': 'PROSPECTO 🟡', 
+        'class_🟡 SEGUIMIENTO B': 'ACOMPANHAMENTO ⚪', 
+        'class_❄️ LEAD FRÍO': 'LEAD FRIO ❄️'
     },
     'zh': {
         'titulo_form': '请填写您的联系方式',
@@ -156,6 +171,9 @@ DICCIONARIO = {
         'btn_limpiar': '清除',
         'no_leads': '未找到潜客。',
         'temp_MUY_CALIENTE': '🔥 非常热', 'temp_CALIENTE': '🔥 热', 'temp_MEDIO': '🟡 中等', 'temp_FRIO': '❄️ 冷',
-        'class_ALTO VALOR': '高价值 💎', 'class_PROSPECTO': '潜在客户 🟡', 'class_SEGUIMIENTO': '跟进中 ⚪', 'class_ND': '未定义'
+        'class_💎 VIP / INVERSIONISTA': '高价值 💎', 
+        'class_🔥 PROSPECTO A': '潜在客户 🟡', 
+        'class_🟡 SEGUIMIENTO B': '跟进中 ⚪', 
+        'class_❄️ LEAD FRÍO': '冷淡客户 ❄️'
     }
 }
