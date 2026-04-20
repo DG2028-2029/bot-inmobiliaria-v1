@@ -11,16 +11,19 @@
             --accent: #3498db;
             --bg: #f8f9fa;
         }
+
         body {
             margin: 0;
             padding: 0;
             font-family: 'Inter', sans-serif;
+            /* Degradado de fondo profesional */
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
         }
+
         .card {
             background: white;
             width: 90%;
@@ -30,6 +33,7 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             text-align: center;
         }
+
         .logo-icon {
             font-size: 50px;
             background: #f1f2f6;
@@ -39,21 +43,25 @@
             border-radius: 20px;
             margin: 0 auto 20px;
         }
+
         h2 {
             color: var(--primary);
             font-size: 24px;
             margin-bottom: 10px;
             font-weight: 700;
         }
+
         .subtitle {
             color: #7f8c8d;
             margin-bottom: 30px;
             font-size: 15px;
         }
+
         .languages-grid {
             display: grid;
             gap: 12px;
         }
+
         .btn-lang {
             display: flex;
             align-items: center;
@@ -67,17 +75,20 @@
             font-size: 16px;
             transition: all 0.3s ease;
         }
+
         .btn-lang:hover {
             border-color: var(--accent);
             background: #f0f7ff;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
         }
+
         .flag-icon {
             font-size: 24px;
             margin-right: 15px;
             filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
         }
+
         .footer-text {
             margin-top: 25px;
             font-size: 12px;
@@ -95,29 +106,27 @@
         <p class="subtitle">{{ textos.selecciona_idioma }}</p>
 
         <div class="languages-grid">
-            {% set next_page = destino if destino else 'formulario' %}
-            
-            <a href="{{ url_for('cambiar_idioma', lang='es', proximo=next_page, cliente_id=cliente.usuario) }}" class="btn-lang">
+            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
                 <span class="flag-icon">🇪🇸</span> {{ textos.btn_es }}
             </a>
             
-            <a href="{{ url_for('cambiar_idioma', lang='en', proximo=next_page, cliente_id=cliente.usuario) }}" class="btn-lang">
+            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
                 <span class="flag-icon">🇺🇸</span> {{ textos.btn_en }}
             </a>
 
-            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo=next_page, cliente_id=cliente.usuario) }}" class="btn-lang">
+            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
                 <span class="flag-icon">🇫🇷</span> {{ textos.btn_fr }}
             </a>
 
-            <a href="{{ url_for('cambiar_idioma', lang='de', proximo=next_page, cliente_id=cliente.usuario) }}" class="btn-lang">
+            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
                 <span class="flag-icon">🇩🇪</span> {{ textos.btn_de }}
             </a>
 
-            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo=next_page, cliente_id=cliente.usuario) }}" class="btn-lang">
+            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
                 <span class="flag-icon">🇵🇹</span> {{ textos.btn_pt }}
             </a>
 
-            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo=next_page, cliente_id=cliente.usuario) }}" class="btn-lang">
+            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
                 <span class="flag-icon">🇨🇳</span> {{ textos.btn_zh }}
             </a>
         </div>
