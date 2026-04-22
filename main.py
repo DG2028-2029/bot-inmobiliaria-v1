@@ -23,7 +23,6 @@ def calcular_entropia_mensaje(texto):
     if not texto or len(texto) < 10: return 0
     palabras = texto.lower().split()
     unicas = set(palabras)
-    # Si usa muchas palabras diferentes, es un mensaje con mucha sustancia.
     return (len(unicas) / len(palabras)) if palabras else 0
 
 def motor_scoring_global(d):
@@ -37,44 +36,33 @@ def motor_scoring_global(d):
     msg_l = msg.lower()
     zona = d.get("zona_interes", "").lower()
     
-    # 1. ANÁLISIS DE CAPACIDAD FINANCIERA (Normalización de Moneda)
     try:
-        # Extrae solo los números, ignorando $, €, Q, o comas.
         p_val = float(re.sub(r'[^\d.]', '', str(d.get("presupuesto", 0))))
-        
-        # Escala de inversión profesional (Agnóstica al mercado)
-        if p_val >= 1000000: score += 30      # Inversionista Global
-        elif p_val >= 500000: score += 25     # Cliente Premium
-        elif p_val >= 150000: score += 15     # Mercado Estándar
+        if p_val >= 1000000: score += 30
+        elif p_val >= 500000: score += 25
+        elif p_val >= 150000: score += 15
         elif p_val > 0: score += 5
     except: pass
 
-    # 2. INTENCIÓN PSICOLÓGICA Y SEMÁNTICA (40 pts)
-    # Buscamos 'Triggers' de cierre en múltiples idiomas
     triggers = [
-        "comprar", "invertir", "contado", "urgente", "pago", "visita", "ahora", # ES
-        "buy", "invest", "cash", "closing", "ready", "now", "tour",             # EN
-        "acheter", "maintenant", "urgent", "viste", "rdv", "paiement",         # FR
-        "kaufen", "jetzt", "sofort", "dringend", "termin",                     # DE
-        "购买", "现在", "紧急", "预约", "现金", "投资"                             # ZH
+        "comprar", "invertir", "contado", "urgente", "pago", "visita", "ahora",
+        "buy", "invest", "cash", "closing", "ready", "now", "tour",
+        "acheter", "maintenant", "urgent", "viste", "rdv", "paiement",
+        "kaufen", "jetzt", "sofort", "dringend", "termin",
+        "购买", "现在", "紧急", "预约", "现金", "投资"
     ]
     
-    # Detección inteligente de intención
     hits = sum(1 for t in triggers if t in msg_l)
     if hits >= 2: score += 40
     elif hits == 1: score += 25
-    elif len(msg.split()) > 15: score += 15 # No hay triggers pero hay explicación larga
+    elif len(msg.split()) > 15: score += 15
 
-    # 3. MÉTRICA DE ESFUERZO (20 pts)
-    # Cuanto más escribe el cliente, más probable es el cierre.
     entropia = calcular_entropia_mensaje(msg)
     if entropia > 0.8 and len(msg) > 100: score += 20
     elif len(msg) > 50: score += 10
     
-    if len(d.get("nombre", "").split()) >= 2: score += 5 # Formalidad en el nombre
+    if len(d.get("nombre", "").split()) >= 2: score += 5
 
-    # 4. RELEVANCIA DE CONTEXTO (10 pts)
-    # Detecta si el cliente conoce el mercado o busca lujo
     keywords_premium = ["lujo", "luxury", "penthouse", "roi", "rentabilidad", "yield", "exclusive"]
     if any(k in msg_l or k in zona for k in keywords_premium):
         score += 10
@@ -92,29 +80,20 @@ def calificar_lead_profesional(score):
 
 @app.route("/")
 def index():
-    """Punto de entrada principal."""
+    """Ruta raíz del servidor."""
     return "PropTech Global Engine V4.0 [Active Mode] 🌐🚀"
 
-@app.route("/start/<cliente_id>")
-def pantalla_inicio(cliente_id):
-    """Nueva pantalla inicial para selección de idioma antes del login/form."""
+@app.route("/cliente/<cliente_id>")
+def seleccion_idioma(cliente_id):
+    """
+    PANTALLA INICIAL DE SELECCIÓN (bienvenida.html).
+    Esta es la ruta que el cliente abre primero.
+    """
     id_clean = cliente_id.lower()
     vendedor = CLIENTES.get(id_clean)
     if not vendedor: return "Error 403: Acceso denegado.", 403
     
-    # Si ya tiene un idioma en sesión, lo pasamos para marcar el default
-    lang = session.get('idioma', 'es')
-    textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
-    
-    return render_template("index.html", cliente=vendedor, textos=textos)
-
-@app.route("/cliente/<cliente_id>")
-def seleccion_idioma(cliente_id):
-    """Puerta de enlace global con detección automática de idioma."""
-    id_clean = cliente_id.lower()
-    vendedor = CLIENTES.get(id_clean)
-    if not vendedor: return "Error 403: Acceso denegado a la plataforma.", 403
-    
+    # Detectamos idioma automático pero permitimos que la pantalla de bienvenida lo cambie
     lang = session.get('idioma', request.accept_languages.best_match(['es', 'en', 'fr', 'de', 'pt', 'zh']) or 'es')
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     
@@ -122,6 +101,7 @@ def seleccion_idioma(cliente_id):
 
 @app.route("/form/<cliente_id>", methods=["GET","POST"])
 def formulario(cliente_id):
+    """Ruta del Formulario de Registro de Leads."""
     id_clean = cliente_id.lower()
     vendedor = CLIENTES.get(id_clean)
     if not vendedor: return "Error 404: Vendedor no configurado.", 404
@@ -139,7 +119,6 @@ def formulario(cliente_id):
             "vendedor": id_clean 
         }
         
-        # Procesamiento con el motor V4
         score_final = motor_scoring_global(d)
         clasificacion, temperatura = calificar_lead_profesional(score_final)
         
@@ -154,7 +133,6 @@ def formulario(cliente_id):
         
         try:
             supabase.table("leads").insert(lead_data).execute()
-            # Link dinámico de WhatsApp para respuesta inmediata
             ws_link = f"https://wa.me/{vendedor['whatsapp']}"
             return render_template("formulario.html", enviado=True, link_whatsapp=ws_link, cliente=vendedor, textos=textos)
         except Exception as e:
@@ -162,32 +140,15 @@ def formulario(cliente_id):
 
     return render_template("formulario.html", enviado=False, cliente=vendedor, textos=textos)
 
-@app.route("/historial/<cliente_id>")
-def historial(cliente_id):
-    id_clean = cliente_id.lower()
-    if session.get("cliente") != id_clean:
-        return redirect(url_for('login', cliente_id=id_clean))
-    
-    vendedor = CLIENTES.get(id_clean)
-    textos = DICCIONARIO.get(session.get('idioma', 'es'), DICCIONARIO['es'])
-    
-    query = supabase.table("leads").select("*").eq("vendedor", id_clean)
-    
-    # Filtro de búsqueda profesional
-    q = request.args.get('q', '')
-    if q: query = query.ilike("nombre", f"%{q}%")
-    
-    # El ranking PRIORIZA el dinero y la intención (Score)
-    resultado = query.order("score", desc=True).execute()
-    return render_template("historial.html", leads=resultado.data, cliente=vendedor, textos=textos)
-
 @app.route("/login/<cliente_id>", methods=["GET","POST"])
 def login(cliente_id):
+    """Ruta de Acceso Privado para el Vendedor."""
     id_clean = cliente_id.lower()
     vendedor = CLIENTES.get(id_clean)
     if not vendedor: return "Error 404", 404
-
-    textos = DICCIONARIO.get(session.get('idioma', 'es'), DICCIONARIO['es'])
+    
+    lang = session.get('idioma', 'es')
+    textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     
     if request.method == "POST":
         if request.form.get("usuario") == vendedor["usuario"] and request.form.get("password") == vendedor["password"]:
@@ -196,9 +157,26 @@ def login(cliente_id):
         return render_template("login.html", error="Credenciales Invalidas", cliente=vendedor, textos=textos)
     return render_template("login.html", cliente=vendedor, textos=textos)
 
+@app.route("/historial/<cliente_id>")
+def historial(cliente_id):
+    """Dashboard de Leads."""
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return redirect(url_for('login', cliente_id=id_clean))
+    
+    vendedor = CLIENTES.get(id_clean)
+    textos = DICCIONARIO.get(session.get('idioma', 'es'), DICCIONARIO['es'])
+    
+    query = supabase.table("leads").select("*").eq("vendedor", id_clean)
+    q = request.args.get('q', '')
+    if q: query = query.ilike("nombre", f"%{q}%")
+    
+    resultado = query.order("score", desc=True).execute()
+    return render_template("historial.html", leads=resultado.data, cliente=vendedor, textos=textos)
+
 @app.route("/idioma/<lang>/<proximo>/<cliente_id>")
 def cambiar_idioma(lang, proximo, cliente_id):
-    """Cambia el idioma y redirige a la ruta especificada."""
+    """Procesador de cambio de idioma."""
     session['idioma'] = lang
     return redirect(url_for(proximo, cliente_id=cliente_id.lower()))
 
