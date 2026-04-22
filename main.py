@@ -163,11 +163,24 @@ def historial(cliente_id):
     resultado = query.order("score", desc=True).execute()
     return render_template("historial.html", leads=resultado.data, cliente=vendedor, textos=textos)
 
+# --- NUEVA RUTA PARA TU ACCESO ADMINISTRATIVO ---
+
+@app.route("/access/<cliente_id>")
+def seleccion_idioma_login(cliente_id):
+    """Muestra la pantalla personalizada de bienvenida_login.html."""
+    id_clean = cliente_id.lower()
+    vendedor = CLIENTES.get(id_clean)
+    if not vendedor: return "Error 403", 403
+    return render_template("bienvenida_login.html", cliente=vendedor)
+
 @app.route("/login/<cliente_id>", methods=["GET","POST"])
 def login(cliente_id):
     id_clean = cliente_id.lower()
     vendedor = CLIENTES.get(id_clean)
-    textos = DICCIONARIO.get(session.get('idioma', 'es'), DICCIONARIO['es'])
+    
+    # Usamos el idioma que se haya guardado en la sesión
+    lang = session.get('idioma', 'es')
+    textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     
     if request.method == "POST":
         if request.form.get("usuario") == vendedor["usuario"] and request.form.get("password") == vendedor["password"]:
