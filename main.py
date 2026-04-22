@@ -90,6 +90,24 @@ def calificar_lead_profesional(score):
 
 # --- CONTROLADORES DE RUTA (BUSINESS LOGIC) ---
 
+@app.route("/")
+def index():
+    """Punto de entrada principal."""
+    return "PropTech Global Engine V4.0 [Active Mode] 🌐🚀"
+
+@app.route("/start/<cliente_id>")
+def pantalla_inicio(cliente_id):
+    """Nueva pantalla inicial para selección de idioma antes del login/form."""
+    id_clean = cliente_id.lower()
+    vendedor = CLIENTES.get(id_clean)
+    if not vendedor: return "Error 403: Acceso denegado.", 403
+    
+    # Si ya tiene un idioma en sesión, lo pasamos para marcar el default
+    lang = session.get('idioma', 'es')
+    textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
+    
+    return render_template("index.html", cliente=vendedor, textos=textos)
+
 @app.route("/cliente/<cliente_id>")
 def seleccion_idioma(cliente_id):
     """Puerta de enlace global con detección automática de idioma."""
@@ -97,7 +115,7 @@ def seleccion_idioma(cliente_id):
     vendedor = CLIENTES.get(id_clean)
     if not vendedor: return "Error 403: Acceso denegado a la plataforma.", 403
     
-    lang = session.get('idioma', request.accept_languages.best_match(['es', 'en', 'fr', 'de']) or 'es')
+    lang = session.get('idioma', request.accept_languages.best_match(['es', 'en', 'fr', 'de', 'pt', 'zh']) or 'es')
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     
     return render_template("bienvenida.html", cliente=vendedor, textos=textos)
@@ -167,6 +185,8 @@ def historial(cliente_id):
 def login(cliente_id):
     id_clean = cliente_id.lower()
     vendedor = CLIENTES.get(id_clean)
+    if not vendedor: return "Error 404", 404
+
     textos = DICCIONARIO.get(session.get('idioma', 'es'), DICCIONARIO['es'])
     
     if request.method == "POST":
@@ -178,12 +198,9 @@ def login(cliente_id):
 
 @app.route("/idioma/<lang>/<proximo>/<cliente_id>")
 def cambiar_idioma(lang, proximo, cliente_id):
+    """Cambia el idioma y redirige a la ruta especificada."""
     session['idioma'] = lang
     return redirect(url_for(proximo, cliente_id=cliente_id.lower()))
-
-@app.route("/")
-def index():
-    return "PropTech Global Engine V4.0 [Active Mode] 🌐🚀"
 
 if __name__ == "__main__":
     app.run(debug=True)
