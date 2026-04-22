@@ -177,6 +177,7 @@ def seleccion_idioma_login(cliente_id):
 def login(cliente_id):
     id_clean = cliente_id.lower()
     vendedor = CLIENTES.get(id_clean)
+    if not vendedor: return "Error 404", 404
     
     # Usamos el idioma que se haya guardado en la sesión
     lang = session.get('idioma', 'es')
@@ -191,6 +192,7 @@ def login(cliente_id):
 
 @app.route("/idioma/<lang>/<proximo>/<cliente_id>")
 def cambiar_idioma(lang, proximo, cliente_id):
+    """Lógica unificada para cambio de idioma en cualquier vista."""
     session['idioma'] = lang
     return redirect(url_for(proximo, cliente_id=cliente_id.lower()))
 
