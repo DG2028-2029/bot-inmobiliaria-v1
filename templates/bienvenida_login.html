@@ -1,1 +1,120 @@
-
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Administrativo | Sistema Inmobiliario</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #1e293b; 
+            --accent: #d4af37; 
+            --bg: #0f172a; 
+            --card-bg: #1e293b;
+            --text-main: #ffffff;
+            --text-dim: #94a3b8;
+        }
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            color: var(--text-main); 
+        }
+        .card { 
+            background: var(--card-bg); 
+            width: 90%; 
+            max-width: 400px; 
+            padding: 40px; 
+            border-radius: 24px; 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+            text-align: center; 
+            border: 1px solid #334155; 
+        }
+        .logo-icon { 
+            font-size: 50px; 
+            margin-bottom: 20px; 
+            display: inline-block;
+        }
+        h2 { 
+            font-size: 24px; 
+            margin-bottom: 10px; 
+            font-weight: 700; 
+            letter-spacing: -0.025em;
+        }
+        .subtitle { 
+            color: var(--text-dim); 
+            margin-bottom: 30px; 
+            font-size: 15px; 
+        }
+        .languages-grid { 
+            display: grid; 
+            gap: 12px; 
+        }
+        .btn-lang { 
+            display: flex; 
+            align-items: center; 
+            padding: 16px 20px; 
+            background: #334155; 
+            border: 1px solid #475569; 
+            border-radius: 14px; 
+            text-decoration: none; 
+            color: white; 
+            font-weight: 600; 
+            font-size: 16px;
+            transition: all 0.2s ease; 
+        }
+        .btn-lang:hover { 
+            background: #475569; 
+            border-color: var(--accent); 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+        .flag-icon { 
+            font-size: 22px; 
+            margin-right: 15px; 
+        }
+        .footer-tag {
+            margin-top: 30px;
+            font-size: 12px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo-icon">🔑</div>
+        <h2>Acceso Administrativo</h2>
+        <p class="subtitle">Seleccione el idioma para gestionar sus leads</p>
+        
+        <div class="languages-grid">
+            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='login', cliente_id=cliente.usuario) }}" class="btn-lang">
+                <span class="flag-icon">🇪🇸</span> Español
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='login', cliente_id=cliente.usuario) }}" class="btn-lang">
+                <span class="flag-icon">🇺🇸</span> English
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='login', cliente_id=cliente.usuario) }}" class="btn-lang">
+                <span class="flag-icon">🇫🇷</span> Français
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='login', cliente_id=cliente.usuario) }}" class="btn-lang">
+                <span class="flag-icon">🇩🇪</span> Deutsch
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='login', cliente_id=cliente.usuario) }}" class="btn-lang">
+                <span class="flag-icon">🇵🇹</span> Português
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='login', cliente_id=cliente.usuario) }}" class="btn-lang">
+                <span class="flag-icon">🇨🇳</span> 简体中文
+            </a>
+        </div>
+        
+        <div class="footer-tag">PropTech Engine V4.0</div>
+    </div>
+</body>
+</html>
