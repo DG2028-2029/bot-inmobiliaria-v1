@@ -7,6 +7,7 @@ from datetime import datetime
 import config
 from config_clientes import CLIENTES
 from traducciones import DICCIONARIO
+from email_service import enviar_email_lead
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -136,6 +137,15 @@ def formulario(cliente_id):
         
         try:
             supabase.table("leads").insert(lead_data).execute()
+            
+            # 🚀 ENVÍO DE EMAIL AUTOMÁTICO (OPCIONAL)
+            # Solo se envía si:
+            # 1. El cliente tiene "premium_email": True en config_clientes.py
+            # 2. El cliente proporcionó su email en el formulario
+            email_cliente = request.form.get("email", "").strip()
+            if email_cliente:
+                enviar_email_lead(id_clean, d.get("nombre"), email_cliente)
+            
             # Link dinámico de WhatsApp para respuesta inmediata
             ws_link = f"https://wa.me/{vendedor['whatsapp']}"
             return render_template("formulario.html", enviado=True, link_whatsapp=ws_link, cliente=vendedor, textos=textos)
