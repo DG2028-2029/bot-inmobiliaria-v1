@@ -11,7 +11,6 @@
         <div class="lang-hint">
             Selecciona tu idioma <span>➜</span>
         </div>
-
         <div class="lang-selected">
             <span>🌐</span>
             <span style="text-transform: uppercase;">{{ session.get('lang', 'ES') }}</span>
@@ -25,7 +24,6 @@
             <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente.usuario) }}"><span>🇨🇳</span> 中文</a>
         </div>
     </div>
-
     {% if not enviado %}
     <form method="POST">
         <h2>{{ cliente.nombre }}</h2>
@@ -33,6 +31,7 @@
         
         <input name="nombre" placeholder="{{ textos.placeholder_nombre }}" required>
         <input name="telefono" type="tel" placeholder="{{ textos.placeholder_tel }}" required>
+        <input name="email" type="email" placeholder="Email" required>
         <input name="zona" placeholder="{{ textos.placeholder_zona }}" required>
         <input name="presupuesto" type="number" placeholder="{{ textos.placeholder_presupuesto }}" required>
         <textarea name="mensaje" placeholder="{{ textos.placeholder_propiedad }}" rows="3" required></textarea>
@@ -43,7 +42,6 @@
                 {{ textos.acepto_terminos }}
             </label>
         </div>
-
         <button type="submit">{{ textos.boton_enviar }}</button>
     </form>
     {% else %}
