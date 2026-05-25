@@ -1,8 +1,8 @@
 CLIENTES = {
     "roberto": {
         "nombre": "Roberto Inmobiliaria",
-        "premium_email": False,
-        "email_api_key": "",
+        "premium_email": True,
+        "email_api_key": "re_LxhSiSm5_FKrpCRPAAK8hkPnGaVN7ZaU1",
         "whatsapp": "50230840598",
         "usuario": "roberto",
         "password": "1234",
