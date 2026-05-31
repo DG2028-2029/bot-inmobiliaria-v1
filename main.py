@@ -8,6 +8,7 @@ import config
 from config_clientes import CLIENTES
 from traducciones import DICCIONARIO
 from email_service import enviar_email_lead
+from stats import obtener_stats
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -172,6 +173,25 @@ def historial(cliente_id):
     # El ranking PRIORIZA el dinero y la intención (Score)
     resultado = query.order("score", desc=True).execute()
     return render_template("historial.html", leads=resultado.data, cliente=vendedor, textos=textos)
+
+@app.route("/stats/<cliente_id>")
+def stats(cliente_id):
+    """Muestra gráficos y estadísticas del cliente."""
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return redirect(url_for('login', cliente_id=id_clean))
+    
+    vendedor = CLIENTES.get(id_clean)
+    if not vendedor:
+        return "Error 404: Vendedor no encontrado.", 404
+    
+    # Obtener estadísticas
+    stats_data = obtener_stats(id_clean)
+    
+    if stats_data is None:
+        return "Error al obtener estadísticas.", 500
+    
+    return render_template("stats.html", cliente=vendedor, stats=stats_data)
 
 # --- NUEVA RUTA PARA TU ACCESO ADMINISTRATIVO ---
 
