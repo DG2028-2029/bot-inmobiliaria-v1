@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas - {{ cliente.nombre }}</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <style>
+        .stats-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .stats-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .stats-header h1 {
+            font-size: 32px;
+            color: #333;
+            margin: 0;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #007bff;
+            margin: 10px 0;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        .chart-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .chart-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .back-button {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .back-button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="stats-container">
+        <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="back-button">← Volver al Dashboard</a>
+        
+        <div class="stats-header">
+            <h1>📊 Estadísticas - {{ cliente.nombre }}</h1>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total de Leads</div>
+                <div class="stat-number">{{ stats.total_leads }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Leads Este Mes</div>
+                <div class="stat-number">{{ stats.leads_este_mes }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Tasa de Conversión</div>
+                <div class="stat-number">{{ stats.tasa_conversion }}%</div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-title">Leads por Zona</div>
+                <canvas id="chartZonas"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Leads por Clasificación</div>
+                <canvas id="chartClasificacion"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos desde el servidor
+        const statsData = {{ stats | tojson }};
+
+        // Gráfico de Zonas
+        const ctxZonas = document.getElementById('chartZonas').getContext('2d');
+        new Chart(ctxZonas, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(statsData.leads_por_zona),
+                datasets: [{
+                    label: 'Leads por Zona',
+                    data: Object.values(statsData.leads_por_zona),
+                    backgroundColor: '#007bff'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: true }
+        });
+
+        // Gráfico de Clasificación
+        const ctxClasificacion = document.getElementById('chartClasificacion').getContext('2d');
+        new Chart(ctxClasificacion, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(statsData.leads_por_clasificacion),
+                datasets: [{
+                    data: Object.values(statsData.leads_por_clasificacion),
+                    backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: true }
+        });
+    </script>
+</body>
+</html>
