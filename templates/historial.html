@@ -16,17 +16,17 @@
         .btn-clear { background: #bdc3c7; color: #333; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; display: flex; align-items: center; }
         .btn-excel { background: #27ae60; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); transition: 0.3s; }
         .btn-excel:hover { background: #219150; transform: translateY(-2px); }
+        .btn-stats { background: #3498db; color: white; text-decoration: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3); transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-stats:hover { background: #2980b9; transform: translateY(-2px); }
         
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         th { background: #2c3e50; color: white; padding: 15px; font-size: 13px; text-transform: uppercase; }
         td { padding: 15px; border-bottom: 1px solid #eee; text-align: center; font-size: 14px; }
         
-        /* Colores de Clasificación */
         .alto { color: #e74c3c; font-weight: bold; background: #fdf2f2; border-radius: 4px; padding: 4px 8px; }
         .medio { color: #f39c12; font-weight: bold; background: #fffaf0; border-radius: 4px; padding: 4px 8px; }
         .bajo { color: #7f8c8d; font-weight: bold; background: #f8f9fa; border-radius: 4px; padding: 4px 8px; }
         
-        /* Estilo para la temperatura */
         .temp-emoji { font-size: 1.2em; font-weight: bold; }
         tr:hover { background-color: #f8f9fa; }
     </style>
@@ -44,7 +44,10 @@
 
 <div class="header-container">
     <h2>📊 {{ textos.historial_titulo }}: {{ cliente.nombre }}</h2>
-    <button onclick="descargarExcel()" class="btn-excel">📥 {{ textos.btn_descargar }}</button>
+    <div style="display: flex; gap: 10px;">
+        <a href="{{ url_for('stats', cliente_id=cliente.usuario) }}" class="btn-stats">📈 Estadísticas</a>
+        <button onclick="descargarExcel()" class="btn-excel">📥 {{ textos.btn_descargar }}</button>
+    </div>
 </div>
 
 <div class="search-container">
@@ -79,14 +82,12 @@
             <td>${{ "{:,.2f}".format(lead.presupuesto|float) if lead.presupuesto else "0.00" }}</td>
             <td>
                 <span class="{% if 'ALTO' in lead.clasificacion %}alto{% elif 'MEDIO' in lead.clasificacion %}medio{% else %}bajo{% endif %}">
-                    {# Buscamos la traducción usando la clave class_ + el valor guardado (ALTO, MEDIO, BAJO) #}
                     {{ textos['class_' + lead.clasificacion] if ('class_' + lead.clasificacion) in textos else lead.clasificacion }}
                 </span>
             </td>
             <td><progress value="{{ lead.score }}" max="100"></progress> <br> {{ lead.score }}/100</td>
             <td>
                 <span class="temp-emoji">
-                    {# Buscamos la traducción usando la clave temp_ + el valor guardado (MUY_CALIENTE, etc) #}
                     {{ textos['temp_' + lead.temperatura] if ('temp_' + lead.temperatura) in textos else lead.temperatura }}
                 </span>
             </td>
