@@ -185,8 +185,8 @@ def stats(cliente_id):
     if not vendedor:
         return "Error 404: Vendedor no encontrado.", 404
     
-    # Obtener el período desde el request (por defecto "mes")
-    periodo = request.args.get('periodo', 'mes')
+    # Obtener el período desde el request (por defecto "todo")
+    periodo = request.args.get('periodo', 'todo')
     
     # Obtener estadísticas con el período seleccionado
     stats_data = obtener_stats(id_clean, periodo)
