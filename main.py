@@ -185,13 +185,47 @@ def stats(cliente_id):
     if not vendedor:
         return "Error 404: Vendedor no encontrado.", 404
     
-    # Obtener estadísticas
-    stats_data = obtener_stats(id_clean)
+    # Obtener el período desde el request (por defecto "mes")
+    periodo = request.args.get('periodo', 'mes')
+    
+    # Obtener estadísticas con el período seleccionado
+    stats_data = obtener_stats(id_clean, periodo)
     
     if stats_data is None:
         return "Error al obtener estadísticas.", 500
     
     return render_template("stats.html", cliente=vendedor, stats=stats_data)
+
+@app.route("/marcar_cliente/<cliente_id>/<int:lead_id>", methods=["POST"])
+def marcar_cliente(cliente_id, lead_id):
+    """Marca un lead como CLIENTE manualmente."""
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return "Error 403: No autorizado.", 403
+    
+    vendedor = CLIENTES.get(id_clean)
+    if not vendedor:
+        return "Error 404: Vendedor no encontrado.", 404
+    
+    try:
+        # Obtener el lead
+        resultado = supabase.table("leads").select("*").eq("id", lead_id).eq("vendedor", id_clean).execute()
+        
+        if not resultado.data:
+            return "Error 404: Lead no encontrado.", 404
+        
+        lead = resultado.data[0]
+        
+        # Actualizar temperatura a MUY_CALIENTE (cliente)
+        supabase.table("leads").update({
+            "temperatura": "MUY_CALIENTE",
+            "clasificacion": "💎 CLIENTE"
+        }).eq("id", lead_id).execute()
+        
+        return redirect(url_for('historial', cliente_id=id_clean))
+    
+    except Exception as e:
+        return f"Error: {e}", 500
 
 # --- NUEVA RUTA PARA TU ACCESO ADMINISTRATIVO ---
 
