@@ -43,14 +43,52 @@
         
         .stats-header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             color: white;
         }
         
         .stats-header h1 {
             font-size: 36px;
-            margin: 0;
+            margin: 0 0 20px 0;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .filter-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+        
+        .filter-btn {
+            padding: 10px 20px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .filter-btn:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+        
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .periodo-label {
+            color: white;
+            text-align: center;
+            font-size: 14px;
+            margin-bottom: 10px;
         }
         
         .stats-grid {
@@ -127,6 +165,14 @@
         
         <div class="stats-header">
             <h1>📊 Estadísticas - {{ cliente.nombre }}</h1>
+            <div class="periodo-label">Período: <strong>{{ stats.periodo|capitalize }}</strong></div>
+        </div>
+
+        <div class="filter-buttons">
+            <button class="filter-btn {% if stats.periodo == 'semana' %}active{% endif %}" onclick="cambiarPeriodo('semana')">📅 1 Semana</button>
+            <button class="filter-btn {% if stats.periodo == 'mes' %}active{% endif %}" onclick="cambiarPeriodo('mes')">📆 1 Mes</button>
+            <button class="filter-btn {% if stats.periodo == 'año' %}active{% endif %}" onclick="cambiarPeriodo('año')">📊 1 Año</button>
+            <button class="filter-btn {% if stats.periodo == 'todo' %}active{% endif %}" onclick="cambiarPeriodo('todo')">∞ Todo el tiempo</button>
         </div>
 
         <div class="stats-grid">
@@ -161,6 +207,10 @@
     </div>
 
     <script>
+        function cambiarPeriodo(periodo) {
+            window.location.href = "{{ url_for('stats', cliente_id=cliente.usuario) }}?periodo=" + periodo;
+        }
+
         const statsData = {{ stats | tojson }};
 
         const ctxZonas = document.getElementById('chartZonas').getContext('2d');
