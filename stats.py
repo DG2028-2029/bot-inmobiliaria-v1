@@ -45,19 +45,29 @@ def obtener_stats(cliente_id, periodo="mes"):
         elif periodo == "año":
             fecha_limite = hoy - timedelta(days=365)
         elif periodo == "todo":
-            fecha_limite = datetime(2000, 1, 1)  # Una fecha muy antigua
+            fecha_limite = datetime(2000, 1, 1)
         
-        # Filtrar leads por período
+        # Filtrar leads por período (MEJORADO)
         leads_filtrados = []
         for lead in leads:
-            fecha_str = lead.get("fecha", "").split(" ")[0]  # "2026-05-31"
+            fecha_str = lead.get("fecha", "")
             if fecha_str:
                 try:
-                    fecha = datetime.strptime(fecha_str, "%Y-%m-%d")
+                    # Intenta parsear el formato "2026-05-31 14:30"
+                    if " " in fecha_str:
+                        fecha = datetime.strptime(fecha_str.split(" ")[0], "%Y-%m-%d")
+                    else:
+                        fecha = datetime.strptime(fecha_str, "%Y-%m-%d")
+                    
                     if fecha >= fecha_limite:
                         leads_filtrados.append(lead)
-                except:
-                    pass
+                except Exception as e:
+                    # Si hay error al parsear, incluye el lead de todas formas
+                    leads_filtrados.append(lead)
+        
+        # Si no hay leads filtrados, usa todos (fallback)
+        if not leads_filtrados:
+            leads_filtrados = leads
         
         if not leads_filtrados:
             return {
@@ -77,10 +87,14 @@ def obtener_stats(cliente_id, periodo="mes"):
         leads_mes_pasado = 0
         
         for lead in leads_filtrados:
-            fecha_str = lead.get("fecha", "").split(" ")[0]
+            fecha_str = lead.get("fecha", "")
             if fecha_str:
                 try:
-                    fecha = datetime.strptime(fecha_str, "%Y-%m-%d")
+                    if " " in fecha_str:
+                        fecha = datetime.strptime(fecha_str.split(" ")[0], "%Y-%m-%d")
+                    else:
+                        fecha = datetime.strptime(fecha_str, "%Y-%m-%d")
+                    
                     if fecha.month == mes_actual and fecha.year == año_actual:
                         leads_este_mes += 1
                     elif fecha.month == (mes_actual - 1) and fecha.year == año_actual:
@@ -101,7 +115,7 @@ def obtener_stats(cliente_id, periodo="mes"):
             leads_por_clasificacion[clasificacion] = leads_por_clasificacion.get(clasificacion, 0) + 1
         
         # Tasa de conversión (clientes vs total)
-        clientes = sum(1 for lead in leads_filtrados if "CLIENTE" in lead.get("temperatura", ""))
+        clientes = sum(1 for lead in leads_filtrados if "CLIENTE" in lead.get("temperatura", "") or "MUY_CALIENTE" in lead.get("temperatura", ""))
         tasa_conversion = round((clientes / len(leads_filtrados) * 100), 1) if leads_filtrados else 0
         
         return {
