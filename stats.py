@@ -11,7 +11,7 @@ url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
 
-def obtener_stats(cliente_id, periodo="mes"):
+def obtener_stats(cliente_id, periodo="todo"):
     """
     Obtiene estadísticas del cliente para mostrar en gráficos.
     
