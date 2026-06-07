@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estadísticas - {{ cliente.nombre }}</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
     <style>
         html, body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -53,6 +52,13 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
         
+        .periodo-label {
+            color: white;
+            text-align: center;
+            font-size: 15px;
+            margin-bottom: 15px;
+        }
+        
         .filter-buttons {
             display: flex;
             justify-content: center;
@@ -83,14 +89,6 @@
             background: #667eea;
             color: white;
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-        
-        .periodo-label {
-            color: white;
-            text-align: center;
-            font-size: 15px;
-            margin-bottom: 15px;
-            font-weight: 500;
         }
         
         .stats-grid {
