@@ -178,7 +178,6 @@ def marcar_cliente(cliente_id, lead_id):
     """Marca un lead como CLIENTE manualmente."""
     id_clean = cliente_id.lower()
     
-    # Validar sesión
     if session.get("cliente") != id_clean:
         return "Error 403: No autorizado.", 403
     
@@ -187,15 +186,14 @@ def marcar_cliente(cliente_id, lead_id):
         return "Error 404: Vendedor no encontrado.", 404
     
     try:
-        print(f"🔄 Iniciando: marcar lead {lead_id} como cliente...")
+        print(f"🔄 Marcando lead {lead_id} como cliente...")
         
-        # Actualizar directamente sin buscar primero
-        resultado = supabase.table("leads").update({
+        supabase.table("leads").update({
             "temperatura": "MUY_CALIENTE",
             "clasificacion": "💎 CLIENTE"
-        }).eq("id", lead_id).eq("vendedor", id_clean).execute()
+        }).eq("id", lead_id).execute()
         
-        print(f"✅ Lead {lead_id} actualizado exitosamente")
+        print(f"✅ Lead {lead_id} marcado como cliente exitosamente")
         return redirect(url_for('historial', cliente_id=id_clean))
     
     except Exception as e:
