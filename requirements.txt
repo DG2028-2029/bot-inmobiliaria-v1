@@ -3,3 +3,4 @@ gunicorn
 supabase
 python-dotenv
 requests
+fpdf2
