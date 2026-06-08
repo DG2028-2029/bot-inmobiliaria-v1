@@ -25,7 +25,6 @@ def calcular_entropia_mensaje(texto):
     if not texto or len(texto) < 10: return 0
     palabras = texto.lower().split()
     unicas = set(palabras)
-    # Si usa muchas palabras diferentes, es un mensaje con mucha sustancia.
     return (len(unicas) / len(palabras)) if palabras else 0
 
 def motor_scoring_global(d):
@@ -39,44 +38,33 @@ def motor_scoring_global(d):
     msg_l = msg.lower()
     zona = d.get("zona_interes", "").lower()
     
-    # 1. ANÁLISIS DE CAPACIDAD FINANCIERA (Normalización de Moneda)
     try:
-        # Extrae solo los números, ignorando $, €, Q, o comas.
         p_val = float(re.sub(r'[^\d.]', '', str(d.get("presupuesto", 0))))
-        
-        # Escala de inversión profesional (Agnóstica al mercado)
-        if p_val >= 1000000: score += 30      # Inversionista Global
-        elif p_val >= 500000: score += 25     # Cliente Premium
-        elif p_val >= 150000: score += 15     # Mercado Estándar
+        if p_val >= 1000000: score += 30
+        elif p_val >= 500000: score += 25
+        elif p_val >= 150000: score += 15
         elif p_val > 0: score += 5
     except: pass
 
-    # 2. INTENCIÓN PSICOLÓGICA Y SEMÁNTICA (40 pts)
-    # Buscamos 'Triggers' de cierre en múltiples idiomas
     triggers = [
-        "comprar", "invertir", "contado", "urgente", "pago", "visita", "ahora", # ES
-        "buy", "invest", "cash", "closing", "ready", "now", "tour",             # EN
-        "acheter", "maintenant", "urgent", "viste", "rdv", "paiement",         # FR
-        "kaufen", "jetzt", "sofort", "dringend", "termin",                     # DE
-        "购买", "现在", "紧急", "预约", "现金", "投资"                             # ZH
+        "comprar", "invertir", "contado", "urgente", "pago", "visita", "ahora",
+        "buy", "invest", "cash", "closing", "ready", "now", "tour",
+        "acheter", "maintenant", "urgent", "viste", "rdv", "paiement",
+        "kaufen", "jetzt", "sofort", "dringend", "termin",
+        "购买", "现在", "紧急", "预约", "现金", "投资"
     ]
     
-    # Detección inteligente de intención
     hits = sum(1 for t in triggers if t in msg_l)
     if hits >= 2: score += 40
     elif hits == 1: score += 25
-    elif len(msg.split()) > 15: score += 15 # No hay triggers pero hay explicación larga
+    elif len(msg.split()) > 15: score += 15
 
-    # 3. MÉTRICA DE ESFUERZO (20 pts)
-    # Cuanto más escribe el cliente, más probable es el cierre.
     entropia = calcular_entropia_mensaje(msg)
     if entropia > 0.8 and len(msg) > 100: score += 20
     elif len(msg) > 50: score += 10
     
-    if len(d.get("nombre", "").split()) >= 2: score += 5 # Formalidad en el nombre
+    if len(d.get("nombre", "").split()) >= 2: score += 5
 
-    # 4. RELEVANCIA DE CONTEXTO (10 pts)
-    # Detecta si el cliente conoce el mercado o busca lujo
     keywords_premium = ["lujo", "luxury", "penthouse", "roi", "rentabilidad", "yield", "exclusive"]
     if any(k in msg_l or k in zona for k in keywords_premium):
         score += 10
@@ -123,7 +111,6 @@ def formulario(cliente_id):
             "vendedor": id_clean 
         }
         
-        # Procesamiento con el motor V4
         score_final = motor_scoring_global(d)
         clasificacion, temperatura = calificar_lead_profesional(score_final)
         
@@ -139,15 +126,10 @@ def formulario(cliente_id):
         try:
             supabase.table("leads").insert(lead_data).execute()
             
-            # 🚀 ENVÍO DE EMAIL AUTOMÁTICO (OPCIONAL)
-            # Solo se envía si:
-            # 1. El cliente tiene "premium_email": True en config_clientes.py
-            # 2. El cliente proporcionó su email en el formulario
             email_cliente = request.form.get("email", "").strip()
             if email_cliente:
                 enviar_email_lead(id_clean, d.get("nombre"), email_cliente)
             
-            # Link dinámico de WhatsApp para respuesta inmediata
             ws_link = f"https://wa.me/{vendedor['whatsapp']}"
             return render_template("formulario.html", enviado=True, link_whatsapp=ws_link, cliente=vendedor, textos=textos)
         except Exception as e:
@@ -166,11 +148,9 @@ def historial(cliente_id):
     
     query = supabase.table("leads").select("*").eq("vendedor", id_clean)
     
-    # Filtro de búsqueda profesional
     q = request.args.get('q', '')
     if q: query = query.ilike("nombre", f"%{q}%")
     
-    # El ranking PRIORIZA el dinero y la intención (Score)
     resultado = query.order("score", desc=True).execute()
     return render_template("historial.html", leads=resultado.data, cliente=vendedor, textos=textos)
 
@@ -185,10 +165,7 @@ def stats(cliente_id):
     if not vendedor:
         return "Error 404: Vendedor no encontrado.", 404
     
-    # Obtener el período desde el request (por defecto "todo")
     periodo = request.args.get('periodo', 'todo')
-    
-    # Obtener estadísticas con el período seleccionado
     stats_data = obtener_stats(id_clean, periodo)
     
     if stats_data is None:
@@ -200,6 +177,8 @@ def stats(cliente_id):
 def marcar_cliente(cliente_id, lead_id):
     """Marca un lead como CLIENTE manualmente."""
     id_clean = cliente_id.lower()
+    
+    # Validar sesión
     if session.get("cliente") != id_clean:
         return "Error 403: No autorizado.", 403
     
@@ -208,26 +187,20 @@ def marcar_cliente(cliente_id, lead_id):
         return "Error 404: Vendedor no encontrado.", 404
     
     try:
-        # Obtener el lead
-        resultado = supabase.table("leads").select("*").eq("id", lead_id).eq("vendedor", id_clean).execute()
+        print(f"🔄 Iniciando: marcar lead {lead_id} como cliente...")
         
-        if not resultado.data:
-            return "Error 404: Lead no encontrado.", 404
-        
-        lead = resultado.data[0]
-        
-        # Actualizar temperatura a MUY_CALIENTE (cliente)
-        supabase.table("leads").update({
+        # Actualizar directamente sin buscar primero
+        resultado = supabase.table("leads").update({
             "temperatura": "MUY_CALIENTE",
             "clasificacion": "💎 CLIENTE"
-        }).eq("id", lead_id).execute()
+        }).eq("id", lead_id).eq("vendedor", id_clean).execute()
         
+        print(f"✅ Lead {lead_id} actualizado exitosamente")
         return redirect(url_for('historial', cliente_id=id_clean))
     
     except Exception as e:
-        return f"Error: {e}", 500
-
-# --- NUEVA RUTA PARA TU ACCESO ADMINISTRATIVO ---
+        print(f"❌ Error al marcar cliente: {str(e)}")
+        return f"Error: {str(e)}", 500
 
 @app.route("/access/<cliente_id>")
 def seleccion_idioma_login(cliente_id):
@@ -242,7 +215,6 @@ def login(cliente_id):
     id_clean = cliente_id.lower()
     vendedor = CLIENTES.get(id_clean)
     
-    # Usamos el idioma que se haya guardado en la sesión
     lang = session.get('idioma', 'es')
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     
