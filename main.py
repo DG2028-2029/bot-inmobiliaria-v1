@@ -1,9 +1,11 @@
-from flask import Flask, request, render_template, redirect, session, url_for
+from flask import Flask, request, render_template, redirect, session, url_for, send_file
 from supabase import create_client
 import os
 import re
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
+from io import BytesIO
+from fpdf import FPDF
 import config
 from config_clientes import CLIENTES
 from traducciones import DICCIONARIO
@@ -77,6 +79,90 @@ def calificar_lead_profesional(score):
     elif score >= 65: return "🔥 PROSPECTO A", "CALIENTE"
     elif score >= 40: return "🟡 SEGUIMIENTO B", "MEDIO"
     return "❄️ LEAD FRÍO", "FRIO"
+
+def obtener_leads_por_periodo(cliente_id, periodo="todo"):
+    """Obtiene los leads del cliente filtrados por período."""
+    try:
+        resultado = supabase.table("leads").select("*").eq("vendedor", cliente_id).execute()
+        leads = resultado.data
+        
+        if not leads:
+            return []
+        
+        hoy = datetime.now()
+        fecha_limite = hoy
+        
+        if periodo == "semana":
+            fecha_limite = hoy - timedelta(days=7)
+        elif periodo == "mes":
+            fecha_limite = hoy - timedelta(days=30)
+        elif periodo == "año":
+            fecha_limite = hoy - timedelta(days=365)
+        elif periodo == "todo":
+            fecha_limite = datetime(2000, 1, 1)
+        
+        leads_filtrados = []
+        for lead in leads:
+            fecha_str = lead.get("fecha", "")
+            if fecha_str:
+                try:
+                    fecha = datetime.strptime(fecha_str.split(" ")[0], "%Y-%m-%d")
+                    if fecha >= fecha_limite:
+                        leads_filtrados.append(lead)
+                except:
+                    leads_filtrados.append(lead)
+        
+        if not leads_filtrados:
+            leads_filtrados = leads
+        
+        return leads_filtrados
+    except Exception as e:
+        print(f"Error obteniendo leads: {e}")
+        return []
+
+def generar_pdf_leads(cliente_id, periodo="todo", cliente_nombre=""):
+    """Genera un PDF con los leads del período seleccionado."""
+    try:
+        leads = obtener_leads_por_periodo(cliente_id, periodo)
+        
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", "B", 16)
+        pdf.cell(0, 10, f"Reporte de Leads - {cliente_nombre}", 0, 1, "C")
+        
+        pdf.set_font("Arial", "I", 10)
+        pdf.cell(0, 10, f"Periodo: {periodo.upper()} | Fecha: {datetime.now().strftime('%d/%m/%Y')}", 0, 1, "C")
+        pdf.ln(5)
+        
+        pdf.set_font("Arial", "B", 10)
+        pdf.cell(25, 7, "Fecha", 1)
+        pdf.cell(30, 7, "Nombre", 1)
+        pdf.cell(25, 7, "Telefono", 1)
+        pdf.cell(25, 7, "Zona", 1)
+        pdf.cell(25, 7, "Presupuesto", 1)
+        pdf.cell(30, 7, "Clasificacion", 1)
+        pdf.cell(10, 7, "Score", 1)
+        pdf.cell(20, 7, "Temp", 1)
+        pdf.ln()
+        
+        pdf.set_font("Arial", "", 8)
+        for lead in leads:
+            pdf.cell(25, 7, str(lead.get("fecha", ""))[:10], 1)
+            pdf.cell(30, 7, str(lead.get("nombre", ""))[:15], 1)
+            pdf.cell(25, 7, str(lead.get("telefono", ""))[:10], 1)
+            pdf.cell(25, 7, str(lead.get("zona_interes", ""))[:10], 1)
+            pdf.cell(25, 7, f"${lead.get('presupuesto', 0)}"[:10], 1)
+            pdf.cell(30, 7, str(lead.get("clasificacion", ""))[:15], 1)
+            pdf.cell(10, 7, str(lead.get("score", 0)), 1)
+            pdf.cell(20, 7, str(lead.get("temperatura", ""))[:8], 1)
+            pdf.ln()
+        
+        pdf_bytes = BytesIO(pdf.output())
+        return pdf_bytes
+    
+    except Exception as e:
+        print(f"Error generando PDF: {e}")
+        return None
 
 # --- CONTROLADORES DE RUTA (BUSINESS LOGIC) ---
 
@@ -172,6 +258,40 @@ def stats(cliente_id):
         return "Error al obtener estadísticas.", 500
     
     return render_template("stats.html", cliente=vendedor, stats=stats_data)
+
+@app.route("/descargar_pdf/<cliente_id>", methods=["GET"])
+def descargar_pdf(cliente_id):
+    """Descarga PDF con leads filtrados por período."""
+    id_clean = cliente_id.lower()
+    
+    if session.get("cliente") != id_clean:
+        return "Error 403: No autorizado.", 403
+    
+    vendedor = CLIENTES.get(id_clean)
+    if not vendedor:
+        return "Error 404: Vendedor no encontrado.", 404
+    
+    periodo = request.args.get('periodo', 'todo')
+    
+    try:
+        pdf_bytes = generar_pdf_leads(id_clean, periodo, vendedor['nombre'])
+        
+        if pdf_bytes is None:
+            return "Error al generar PDF.", 500
+        
+        pdf_bytes.seek(0)
+        nombre_archivo = f"Leads_{vendedor['nombre']}_{periodo}_{datetime.now().strftime('%Y%m%d')}.pdf"
+        
+        return send_file(
+            pdf_bytes,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=nombre_archivo
+        )
+    
+    except Exception as e:
+        print(f"Error descargando PDF: {e}")
+        return f"Error: {e}", 500
 
 @app.route("/marcar_cliente/<cliente_id>/<int:lead_id>", methods=["POST"])
 def marcar_cliente(cliente_id, lead_id):
