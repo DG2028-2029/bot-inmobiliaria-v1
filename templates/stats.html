@@ -64,7 +64,7 @@
             justify-content: center;
             gap: 10px;
             flex-wrap: wrap;
-            margin-bottom: 50px;
+            margin-bottom: 30px;
         }
         
         .filter-btn {
@@ -89,6 +89,33 @@
             background: #667eea;
             color: white;
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .download-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 50px;
+        }
+        
+        .btn-pdf {
+            padding: 12px 24px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: 0.3s;
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
+        }
+        
+        .btn-pdf:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(231, 76, 60, 0.4);
         }
         
         .stats-grid {
@@ -175,6 +202,13 @@
             <button class="filter-btn {% if stats.periodo == 'todo' %}active{% endif %}" onclick="cambiarPeriodo('todo')">∞ Todo el tiempo</button>
         </div>
 
+        <div class="download-buttons">
+            <button class="btn-pdf" onclick="descargarPDF('semana')">📥 PDF 1 Semana</button>
+            <button class="btn-pdf" onclick="descargarPDF('mes')">📥 PDF 1 Mes</button>
+            <button class="btn-pdf" onclick="descargarPDF('año')">📥 PDF 1 Año</button>
+            <button class="btn-pdf" onclick="descargarPDF('todo')">📥 PDF Todo</button>
+        </div>
+
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-label">Total de Leads</div>
@@ -209,6 +243,10 @@
     <script>
         function cambiarPeriodo(periodo) {
             window.location.href = "{{ url_for('stats', cliente_id=cliente.usuario) }}?periodo=" + periodo;
+        }
+
+        function descargarPDF(periodo) {
+            window.location.href = "{{ url_for('descargar_pdf', cliente_id=cliente.usuario) }}?periodo=" + periodo;
         }
 
         const statsData = {{ stats | tojson }};
