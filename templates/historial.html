@@ -29,6 +29,22 @@
         
         .temp-emoji { font-size: 1.2em; font-weight: bold; }
         tr:hover { background-color: #f8f9fa; }
+        
+        .btn-marcar-cliente { 
+            background: #9b59b6; 
+            color: white; 
+            border: none; 
+            padding: 8px 16px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 13px;
+            transition: 0.3s;
+        }
+        .btn-marcar-cliente:hover { 
+            background: #8e44ad; 
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -70,6 +86,7 @@
             <th>Score</th>
             <th>{{ textos.col_temperatura }}</th>
             <th>{{ textos.col_mensaje }}</th>
+            <th>Acciones</th>
         </tr>
     </thead>
     <tbody>
@@ -92,10 +109,19 @@
                 </span>
             </td>
             <td style="font-size: 12px; color: #666; max-width: 200px;">{{ lead.mensaje }}</td>
+            <td>
+                {% if "CLIENTE" not in lead.clasificacion %}
+                <form method="POST" action="{{ url_for('marcar_cliente', cliente_id=cliente.usuario, lead_id=lead.id) }}" style="display: inline;">
+                    <button type="submit" class="btn-marcar-cliente" onclick="return confirm('¿Marcar a {{ lead.nombre }} como cliente?')">💎 Cliente</button>
+                </form>
+                {% else %}
+                <span style="color: #27ae60; font-weight: bold;">✅ Cliente</span>
+                {% endif %}
+            </td>
         </tr>
         {% else %}
         <tr>
-            <td colspan="9" style="padding: 40px; color: #999;">{{ textos.no_leads }}</td>
+            <td colspan="10" style="padding: 40px; color: #999;">{{ textos.no_leads }}</td>
         </tr>
         {% endfor %}
     </tbody>
