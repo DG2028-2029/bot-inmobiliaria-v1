@@ -5,7 +5,11 @@ import re
 import math
 from datetime import datetime, timedelta
 from io import BytesIO
-from fpdf import FPDF
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.units import inch
 import config
 from config_clientes import CLIENTES
 from traducciones import DICCIONARIO
@@ -121,41 +125,77 @@ def obtener_leads_por_periodo(cliente_id, periodo="todo"):
         return []
 
 def generar_pdf_leads(cliente_id, periodo="todo", cliente_nombre=""):
-    """Genera un PDF con los leads del período seleccionado."""
+    """Genera un PDF profesional con los leads del período seleccionado."""
     try:
         leads = obtener_leads_por_periodo(cliente_id, periodo)
         
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", "B", 14)
-        pdf.cell(0, 10, f"Reporte de Leads - {cliente_nombre}", 0, 1, "C")
+        pdf_buffer = BytesIO()
+        doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
         
-        pdf.set_font("Arial", "I", 9)
-        pdf.cell(0, 8, f"Periodo: {periodo} | Fecha: {datetime.now().strftime('%d/%m/%Y')}", 0, 1, "C")
-        pdf.ln(5)
+        elements = []
+        styles = getSampleStyleSheet()
         
-        pdf.set_font("Arial", "B", 8)
-        col_widths = [20, 20, 18, 18, 25, 25, 12, 15]
-        headers = ["Fecha", "Nombre", "Tel", "Zona", "Presupuesto", "Clasificacion", "Score", "Temp"]
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            textColor=colors.HexColor('#667eea'),
+            spaceAfter=6,
+            alignment=1
+        )
         
-        for i, header in enumerate(headers):
-            pdf.cell(col_widths[i], 7, header, 1, 0, "C")
-        pdf.ln()
+        subtitle_style = ParagraphStyle(
+            'CustomSubtitle',
+            parent=styles['Normal'],
+            fontSize=9,
+            textColor=colors.HexColor('#666666'),
+            spaceAfter=20,
+            alignment=1
+        )
         
-        pdf.set_font("Arial", "", 7)
+        elements.append(Paragraph(f"REPORTE DE LEADS - {cliente_nombre}", title_style))
+        elements.append(Paragraph(f"Periodo: {periodo.upper()} | Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}", subtitle_style))
+        elements.append(Spacer(1, 0.15*inch))
+        
+        data = [["Fecha", "Nombre", "Telefono", "Zona", "Presupuesto", "Clasificacion", "Score", "Temperatura"]]
+        
         for lead in leads:
-            pdf.cell(col_widths[0], 6, str(lead.get("fecha", ""))[:10], 1, 0, "C")
-            pdf.cell(col_widths[1], 6, str(lead.get("nombre", ""))[:12], 1, 0, "L")
-            pdf.cell(col_widths[2], 6, str(lead.get("telefono", ""))[:10], 1, 0, "C")
-            pdf.cell(col_widths[3], 6, str(lead.get("zona_interes", ""))[:8], 1, 0, "C")
-            pdf.cell(col_widths[4], 6, str(lead.get("presupuesto", 0))[:15], 1, 0, "R")
-            pdf.cell(col_widths[5], 6, str(lead.get("clasificacion", ""))[:12], 1, 0, "C")
-            pdf.cell(col_widths[6], 6, str(lead.get("score", 0)), 1, 0, "C")
-            pdf.cell(col_widths[7], 6, str(lead.get("temperatura", ""))[:8], 1, 0, "C")
-            pdf.ln()
+            data.append([
+                str(lead.get("fecha", ""))[:10],
+                str(lead.get("nombre", ""))[:18],
+                str(lead.get("telefono", ""))[:12],
+                str(lead.get("zona_interes", ""))[:10],
+                str(lead.get("presupuesto", 0))[:12],
+                str(lead.get("clasificacion", ""))[:12],
+                str(lead.get("score", 0)),
+                str(lead.get("temperatura", ""))[:10]
+            ])
         
-        pdf_bytes = BytesIO(pdf.output())
-        return pdf_bytes
+        table = Table(data, colWidths=[0.85*inch, 1.1*inch, 0.95*inch, 0.85*inch, 1.1*inch, 1.15*inch, 0.55*inch, 0.9*inch])
+        
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#667eea')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('ALIGN', (1, 1), (1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#cccccc')),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f9f9f9')]),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 1), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ]))
+        
+        elements.append(table)
+        doc.build(elements)
+        
+        pdf_buffer.seek(0)
+        return pdf_buffer
     
     except Exception as e:
         print(f"Error generando PDF: {str(e)}")
