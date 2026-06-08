@@ -53,7 +53,7 @@ def motor_scoring_global(d):
         "buy", "invest", "cash", "closing", "ready", "now", "tour",
         "acheter", "maintenant", "urgent", "viste", "rdv", "paiement",
         "kaufen", "jetzt", "sofort", "dringend", "termin",
-        "购买", "现在", "紧急", "预约", "现金", "投资"
+        "購買", "現在", "緊急", "預約", "現金", "投資"
     ]
     
     hits = sum(1 for t in triggers if t in msg_l)
@@ -78,7 +78,7 @@ def calificar_lead_profesional(score):
     if score >= 85: return "💎 VIP / INVERSIONISTA", "MUY_CALIENTE"
     elif score >= 65: return "🔥 PROSPECTO A", "CALIENTE"
     elif score >= 40: return "🟡 SEGUIMIENTO B", "MEDIO"
-    return "❄️ LEAD FRÍO", "FRIO"
+    return "❄️ LEAD FRIO", "FRIO"
 
 def obtener_leads_por_periodo(cliente_id, periodo="todo"):
     """Obtiene los leads del cliente filtrados por período."""
@@ -127,41 +127,38 @@ def generar_pdf_leads(cliente_id, periodo="todo", cliente_nombre=""):
         
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font("Arial", "B", 16)
+        pdf.set_font("Arial", "B", 14)
         pdf.cell(0, 10, f"Reporte de Leads - {cliente_nombre}", 0, 1, "C")
         
-        pdf.set_font("Arial", "I", 10)
-        pdf.cell(0, 10, f"Periodo: {periodo.upper()} | Fecha: {datetime.now().strftime('%d/%m/%Y')}", 0, 1, "C")
+        pdf.set_font("Arial", "I", 9)
+        pdf.cell(0, 8, f"Periodo: {periodo} | Fecha: {datetime.now().strftime('%d/%m/%Y')}", 0, 1, "C")
         pdf.ln(5)
         
-        pdf.set_font("Arial", "B", 10)
-        pdf.cell(25, 7, "Fecha", 1)
-        pdf.cell(30, 7, "Nombre", 1)
-        pdf.cell(25, 7, "Telefono", 1)
-        pdf.cell(25, 7, "Zona", 1)
-        pdf.cell(25, 7, "Presupuesto", 1)
-        pdf.cell(30, 7, "Clasificacion", 1)
-        pdf.cell(10, 7, "Score", 1)
-        pdf.cell(20, 7, "Temp", 1)
+        pdf.set_font("Arial", "B", 8)
+        col_widths = [20, 20, 18, 18, 25, 25, 12, 15]
+        headers = ["Fecha", "Nombre", "Tel", "Zona", "Presupuesto", "Clasificacion", "Score", "Temp"]
+        
+        for i, header in enumerate(headers):
+            pdf.cell(col_widths[i], 7, header, 1, 0, "C")
         pdf.ln()
         
-        pdf.set_font("Arial", "", 8)
+        pdf.set_font("Arial", "", 7)
         for lead in leads:
-            pdf.cell(25, 7, str(lead.get("fecha", ""))[:10], 1)
-            pdf.cell(30, 7, str(lead.get("nombre", ""))[:15], 1)
-            pdf.cell(25, 7, str(lead.get("telefono", ""))[:10], 1)
-            pdf.cell(25, 7, str(lead.get("zona_interes", ""))[:10], 1)
-            pdf.cell(25, 7, f"${lead.get('presupuesto', 0)}"[:10], 1)
-            pdf.cell(30, 7, str(lead.get("clasificacion", ""))[:15], 1)
-            pdf.cell(10, 7, str(lead.get("score", 0)), 1)
-            pdf.cell(20, 7, str(lead.get("temperatura", ""))[:8], 1)
+            pdf.cell(col_widths[0], 6, str(lead.get("fecha", ""))[:10], 1, 0, "C")
+            pdf.cell(col_widths[1], 6, str(lead.get("nombre", ""))[:12], 1, 0, "L")
+            pdf.cell(col_widths[2], 6, str(lead.get("telefono", ""))[:10], 1, 0, "C")
+            pdf.cell(col_widths[3], 6, str(lead.get("zona_interes", ""))[:8], 1, 0, "C")
+            pdf.cell(col_widths[4], 6, str(lead.get("presupuesto", 0))[:15], 1, 0, "R")
+            pdf.cell(col_widths[5], 6, str(lead.get("clasificacion", ""))[:12], 1, 0, "C")
+            pdf.cell(col_widths[6], 6, str(lead.get("score", 0)), 1, 0, "C")
+            pdf.cell(col_widths[7], 6, str(lead.get("temperatura", ""))[:8], 1, 0, "C")
             pdf.ln()
         
         pdf_bytes = BytesIO(pdf.output())
         return pdf_bytes
     
     except Exception as e:
-        print(f"Error generando PDF: {e}")
+        print(f"Error generando PDF: {str(e)}")
         return None
 
 # --- CONTROLADORES DE RUTA (BUSINESS LOGIC) ---
@@ -306,18 +303,18 @@ def marcar_cliente(cliente_id, lead_id):
         return "Error 404: Vendedor no encontrado.", 404
     
     try:
-        print(f"🔄 Marcando lead {lead_id} como cliente...")
+        print(f"Marcando lead {lead_id} como cliente...")
         
         supabase.table("leads").update({
             "temperatura": "MUY_CALIENTE",
             "clasificacion": "💎 CLIENTE"
         }).eq("id", lead_id).execute()
         
-        print(f"✅ Lead {lead_id} marcado como cliente exitosamente")
+        print(f"Lead {lead_id} marcado como cliente exitosamente")
         return redirect(url_for('historial', cliente_id=id_clean))
     
     except Exception as e:
-        print(f"❌ Error al marcar cliente: {str(e)}")
+        print(f"Error al marcar cliente: {str(e)}")
         return f"Error: {str(e)}", 500
 
 @app.route("/access/<cliente_id>")
