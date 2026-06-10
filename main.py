@@ -357,6 +357,51 @@ def marcar_cliente(cliente_id, lead_id):
         print(f"Error al marcar cliente: {str(e)}")
         return f"Error: {str(e)}", 500
 
+@app.route("/desmarcar_cliente/<cliente_id>/<int:lead_id>", methods=["POST"])
+def desmarcar_cliente(cliente_id, lead_id):
+    """Desmarca un lead como CLIENTE (revierte a clasificación original)."""
+    id_clean = cliente_id.lower()
+    
+    if session.get("cliente") != id_clean:
+        return "Error 403: No autorizado.", 403
+    
+    vendedor = CLIENTES.get(id_clean)
+    if not vendedor:
+        return "Error 404: Vendedor no encontrado.", 404
+    
+    try:
+        print(f"Desmarcando lead {lead_id}...")
+        
+        resultado = supabase.table("leads").select("*").eq("id", lead_id).execute()
+        if not resultado.data:
+            return "Lead no encontrado.", 404
+        
+        lead = resultado.data[0]
+        
+        lead_data = {
+            "nombre": lead.get("nombre", ""),
+            "telefono": lead.get("telefono", ""),
+            "zona_interes": lead.get("zona_interes", ""),
+            "presupuesto": lead.get("presupuesto", ""),
+            "mensaje": lead.get("mensaje", "")
+        }
+        
+        score_nuevo = motor_scoring_global(lead_data)
+        clasificacion_nueva, temperatura_nueva = calificar_lead_profesional(score_nuevo)
+        
+        supabase.table("leads").update({
+            "score": score_nuevo,
+            "clasificacion": clasificacion_nueva,
+            "temperatura": temperatura_nueva
+        }).eq("id", lead_id).execute()
+        
+        print(f"Lead {lead_id} desmarcado exitosamente")
+        return redirect(url_for('historial', cliente_id=id_clean))
+    
+    except Exception as e:
+        print(f"Error al desmarcar cliente: {str(e)}")
+        return f"Error: {str(e)}", 500
+
 @app.route("/access/<cliente_id>")
 def seleccion_idioma_login(cliente_id):
     """Muestra la pantalla personalizada de bienvenida_login.html."""
