@@ -277,6 +277,21 @@ def historial(cliente_id):
     resultado = query.order("score", desc=True).execute()
     return render_template("historial.html", leads=resultado.data, cliente=vendedor, textos=textos)
 
+@app.route("/herramientas/<cliente_id>")
+def herramientas(cliente_id):
+    """Muestra las calculadoras inmobiliarias."""
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return redirect(url_for('login', cliente_id=id_clean))
+    
+    vendedor = CLIENTES.get(id_clean)
+    if not vendedor:
+        return "Error 404: Vendedor no encontrado.", 404
+    
+    textos = DICCIONARIO.get(session.get('idioma', 'es'), DICCIONARIO['es'])
+    
+    return render_template("herramientas.html", cliente=vendedor, textos=textos)
+
 @app.route("/stats/<cliente_id>")
 def stats(cliente_id):
     """Muestra gráficos y estadísticas del cliente."""
