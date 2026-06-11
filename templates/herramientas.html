@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Herramientas | {{ cliente.nombre }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f2f6; padding: 20px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header h1 { color: #2c3e50; font-size: 28px; }
+        .btn-back { background: #3498db; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; }
+        .btn-back:hover { background: #2980b9; }
+        
+        .selector-idioma { display: flex; gap: 10px; margin-bottom: 20px; }
+        .bandera { font-size: 20px; text-decoration: none; cursor: pointer; }
+        
+        .container { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+        
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .card h2 { color: #2c3e50; margin-bottom: 20px; font-size: 20px; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; color: #2c3e50; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        .input-group input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .input-group input:focus { outline: none; border-color: #3498db; background: #f0f7ff; }
+        
+        .btn-calculate { width: 100%; background: #27ae60; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.3s; }
+        .btn-calculate:hover { background: #229954; }
+        
+        .result { background: #f0f7ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db; margin-top: 20px; display: none; }
+        .result.show { display: block; }
+        .result-label { color: #7f8c8d; font-size: 12px; }
+        .result-value { color: #27ae60; font-size: 24px; font-weight: bold; }
+        
+        .tabla-resultado { width: 100%; margin-top: 20px; border-collapse: collapse; font-size: 13px; }
+        .tabla-resultado th { background: #2c3e50; color: white; padding: 10px; text-align: left; }
+        .tabla-resultado td { padding: 10px; border-bottom: 1px solid #eee; }
+        .tabla-resultado tr:hover { background: #f0f7ff; }
+    </style>
+</head>
+<body>
+
+<div class="selector-idioma">
+    <a href="{{ url_for('cambiar_idioma', lang='es', proximo='herramientas', cliente_id=cliente.usuario) }}" class="bandera">🇪🇸</a>
+    <a href="{{ url_for('cambiar_idioma', lang='en', proximo='herramientas', cliente_id=cliente.usuario) }}" class="bandera">🇺🇸</a>
+    <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='herramientas', cliente_id=cliente.usuario) }}" class="bandera">🇫🇷</a>
+</div>
+
+<div class="header">
+    <h1>🧮 Herramientas Inmobiliarias</h1>
+    <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="btn-back">← Volver</a>
+</div>
+
+<div class="container">
+    <!-- CALCULADORA 1: RENTABILIDAD -->
+    <div class="card">
+        <h2>📈 Rentabilidad por Años</h2>
+        
+        <div class="input-group">
+            <label>Precio Inicial ($)</label>
+            <input type="number" id="precio_inicial" placeholder="100000" value="100000">
+        </div>
+        
+        <div class="input-group">
+            <label>% Rentabilidad Anual</label>
+            <input type="number" id="rentabilidad" placeholder="10" value="10" step="0.1">
+        </div>
+        
+        <div class="input-group">
+            <label>Años a Proyectar</label>
+            <input type="number" id="anos" placeholder="5" value="5" min="1" max="50">
+        </div>
+        
+        <button class="btn-calculate" onclick="calcularRentabilidad()">Calcular Rentabilidad</button>
+        
+        <div id="resultado_rentabilidad" class="result">
+            <table class="tabla-resultado">
+                <thead>
+                    <tr>
+                        <th>Año</th>
+                        <th>Valor</th>
+                        <th>Ganancia</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla_rentabilidad"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CALCULADORA 2: PRECIO POR M² -->
+    <div class="card">
+        <h2>📐 Precio por Metro Cuadrado</h2>
+        
+        <div class="input-group">
+            <label>Metraje (m²)</label>
+            <input type="number" id="metraje" placeholder="100" value="100">
+        </div>
+        
+        <div class="input-group">
+            <label>Precio por m² ($)</label>
+            <input type="number" id="precio_m2" placeholder="1000" value="1000">
+        </div>
+        
+        <button class="btn-calculate" onclick="calcularMetros()">Calcular Precio Total</button>
+        
+        <div id="resultado_metros" class="result">
+            <div class="result-label">Precio Total de la Propiedad</div>
+            <div class="result-value" id="precio_total">$0</div>
+        </div>
+    </div>
+
+    <!-- CALCULADORA 3: ENGANCHE -->
+    <div class="card">
+        <h2>💰 Calculadora de Enganche</h2>
+        
+        <div class="input-group">
+            <label>Precio Total ($)</label>
+            <input type="number" id="precio_propiedad" placeholder="100000" value="100000">
+        </div>
+        
+        <div class="input-group">
+            <label>% de Enganche</label>
+            <input type="number" id="porcentaje_enganche" placeholder="20" value="20" step="5">
+        </div>
+        
+        <button class="btn-calculate" onclick="calcularEnganche()">Calcular Enganche</button>
+        
+        <div id="resultado_enganche" class="result">
+            <div style="margin-bottom: 15px;">
+                <div class="result-label">Monto de Enganche</div>
+                <div class="result-value" id="monto_enganche">$0</div>
+            </div>
+            <div>
+                <div class="result-label">Saldo a Financiar</div>
+                <div class="result-value" id="saldo_financiar">$0</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function calcularRentabilidad() {
+    const precio = parseFloat(document.getElementById('precio_inicial').value) || 0;
+    const rentabilidad = parseFloat(document.getElementById('rentabilidad').value) || 0;
+    const anos = parseInt(document.getElementById('anos').value) || 5;
+    
+    let html = '';
+    let valor_actual = precio;
+    
+    for (let i = 1; i <= anos; i++) {
+        valor_actual = precio * Math.pow(1 + (rentabilidad/100), i);
+        const ganancia = valor_actual - precio;
+        html += `<tr>
+            <td>${i}</td>
+            <td>$${valor_actual.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td>
+            <td>$${ganancia.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td>
+        </tr>`;
+    }
+    
+    document.getElementById('tabla_rentabilidad').innerHTML = html;
+    document.getElementById('resultado_rentabilidad').classList.add('show');
+}
+
+function calcularMetros() {
+    const metraje = parseFloat(document.getElementById('metraje').value) || 0;
+    const precio_m2 = parseFloat(document.getElementById('precio_m2').value) || 0;
+    const total = metraje * precio_m2;
+    
+    document.getElementById('precio_total').textContent = '$' + total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    document.getElementById('resultado_metros').classList.add('show');
+}
+
+function calcularEnganche() {
+    const precio = parseFloat(document.getElementById('precio_propiedad').value) || 0;
+    const porcentaje = parseFloat(document.getElementById('porcentaje_enganche').value) || 0;
+    
+    const enganche = precio * (porcentaje / 100);
+    const saldo = precio - enganche;
+    
+    document.getElementById('monto_enganche').textContent = '$' + enganche.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    document.getElementById('saldo_financiar').textContent = '$' + saldo.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    document.getElementById('resultado_enganche').classList.add('show');
+}
+</script>
+
+</body>
+</html>
