@@ -40,10 +40,35 @@
             font-weight: bold; 
             font-size: 13px;
             transition: 0.3s;
+            width: 100%;
         }
         .btn-marcar-cliente:hover { 
             background: #8e44ad; 
             transform: scale(1.05);
+        }
+
+        .btn-desmarcar-cliente {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            transition: 0.3s;
+            width: 100%;
+        }
+        .btn-desmarcar-cliente:hover {
+            background: #c0392b;
+            transform: scale(1.05);
+        }
+
+        .acciones-container {
+            display: flex;
+            gap: 8px;
+            flex-direction: column;
+            align-items: center;
         }
     </style>
 </head>
@@ -110,13 +135,17 @@
             </td>
             <td style="font-size: 12px; color: #666; max-width: 200px;">{{ lead.mensaje }}</td>
             <td>
-                {% if "CLIENTE" not in lead.clasificacion %}
-                <form method="POST" action="{{ url_for('marcar_cliente', cliente_id=cliente.usuario, lead_id=lead.id) }}" style="display: inline;">
-                    <button type="submit" class="btn-marcar-cliente" onclick="return confirm('¿Marcar a {{ lead.nombre }} como cliente?')">💎 Cliente</button>
-                </form>
-                {% else %}
-                <span style="color: #27ae60; font-weight: bold;">✅ Cliente</span>
-                {% endif %}
+                <div class="acciones-container">
+                    {% if "CLIENTE" not in lead.clasificacion %}
+                    <form method="POST" action="{{ url_for('marcar_cliente', cliente_id=cliente.usuario, lead_id=lead.id) }}" style="display: inline; width: 100%;">
+                        <button type="submit" class="btn-marcar-cliente" onclick="return confirm('¿Marcar a {{ lead.nombre }} como cliente?')">💎 Cliente</button>
+                    </form>
+                    {% else %}
+                    <form method="POST" action="{{ url_for('desmarcar_cliente', cliente_id=cliente.usuario, lead_id=lead.id) }}" style="display: inline; width: 100%;">
+                        <button type="submit" class="btn-desmarcar-cliente" onclick="return confirm('¿Desmarcar a {{ lead.nombre }} como cliente?')">❌ Desmarcar</button>
+                    </form>
+                    {% endif %}
+                </div>
             </td>
         </tr>
         {% else %}
