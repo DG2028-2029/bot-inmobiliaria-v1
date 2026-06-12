@@ -253,11 +253,11 @@ def formulario(cliente_id):
             if email_cliente:
                 enviar_email_lead(id_clean, d.get("nombre"), email_cliente)
             
-            return render_template("formulario.html", enviado=True, textos=textos)
+            return render_template("formulario.html", enviado=True, textos=textos, cliente_id=id_clean, whatsapp=vendedor['whatsapp'])
         except Exception as e:
             return f"System Synch Error: {e}", 500
 
-    return render_template("formulario.html", enviado=False, cliente=vendedor, textos=textos)
+    return render_template("formulario.html", enviado=False, cliente_id=id_clean, textos=textos)
 
 @app.route("/historial/<cliente_id>")
 def historial(cliente_id):
