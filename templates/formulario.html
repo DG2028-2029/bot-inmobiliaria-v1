@@ -40,8 +40,8 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
-        h2 { color: #2c3e50; font-size: 24px; margin-bottom: 8px; text-align: center; }
-        .subtitle { text-align: center; color: #7f8c8d; font-size: 14px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; font-size: 26px; margin-bottom: 12px; text-align: center; font-weight: 700; }
+        .subtitle { text-align: center; color: #7f8c8d; font-size: 13px; margin-bottom: 30px; }
         
         .form-group { margin-bottom: 15px; }
         label { display: block; color: #2c3e50; font-weight: 600; font-size: 13px; margin-bottom: 5px; }
@@ -127,8 +127,8 @@
 <div class="form-container">
     {% if not enviado %}
     
-    <h2>{{ textos.titulo_form }}</h2>
-    <p class="subtitle">{{ textos.subtitulo_form }}</p>
+    <h2>{{ cliente_nombre }}</h2>
+    <p class="subtitle">Por favor llena tus datos para contactarte.</p>
     
     <form method="POST">
         <div class="form-group">
