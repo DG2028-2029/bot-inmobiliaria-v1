@@ -98,17 +98,30 @@
         .success-icon { font-size: 60px; margin-bottom: 15px; }
         .success-title { color: #27ae60; font-size: 20px; font-weight: bold; margin-bottom: 10px; }
         .success-text { color: #666; margin-bottom: 25px; }
+        
+        .contact-button {
+            background: #25D366;
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        
+        .contact-button:hover { background: #20ba5c; }
     </style>
 </head>
 <body>
 
 <div class="lang-container">
-    <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-flag">🇪🇸</a>
-    <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-flag">🇺🇸</a>
-    <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-flag">🇫🇷</a>
-    <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-flag">🇩🇪</a>
-    <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-flag">🇵🇹</a>
-    <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-flag">🇨🇳</a>
+    <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente_id) }}" class="lang-flag">🇪🇸</a>
+    <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente_id) }}" class="lang-flag">🇺🇸</a>
+    <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente_id) }}" class="lang-flag">🇫🇷</a>
+    <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente_id) }}" class="lang-flag">🇩🇪</a>
+    <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente_id) }}" class="lang-flag">🇵🇹</a>
+    <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente_id) }}" class="lang-flag">🇨🇳</a>
 </div>
 
 <div class="form-container">
@@ -143,6 +156,11 @@
             <textarea name="mensaje" required></textarea>
         </div>
         
+        <div class="form-group">
+            <label>Email (Opcional)</label>
+            <input type="email" name="email">
+        </div>
+        
         <div class="checkbox-group">
             <input type="checkbox" id="terminos" name="terminos" required>
             <label for="terminos">{{ textos.acepto_terminos }}</label>
@@ -157,6 +175,7 @@
         <div class="success-icon">✅</div>
         <div class="success-title">{{ textos.mensaje_exito }}</div>
         <div class="success-text">{{ textos.subtitulo_exito }}</div>
+        <a href="https://wa.me/{{ whatsapp }}" target="_blank" class="contact-button">💬 Contactar por WhatsApp</a>
     </div>
     
     {% endif %}
