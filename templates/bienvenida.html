@@ -3,136 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ cliente.nombre }} | Select Language</title>
+    <title>{{ cliente.nombre }} | Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #2c3e50;
             --accent: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
             --bg: #f8f9fa;
         }
 
-        body {
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
             font-family: 'Inter', sans-serif;
-            /* Degradado de fondo profesional */
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
+            padding: 20px;
         }
 
-        .card {
+        .selector-idioma {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .bandera {
+            font-size: 24px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .bandera:hover {
+            transform: scale(1.3);
+        }
+
+        .container {
             background: white;
-            width: 90%;
-            max-width: 420px;
-            padding: 40px 30px;
-            border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 50px 40px;
+            max-width: 500px;
+            width: 100%;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
             text-align: center;
+            margin-bottom: 40px;
         }
 
         .logo-icon {
-            font-size: 50px;
-            background: #f1f2f6;
-            width: 80px;
-            height: 80px;
-            line-height: 80px;
-            border-radius: 20px;
-            margin: 0 auto 20px;
+            font-size: 60px;
+            margin-bottom: 15px;
         }
 
-        h2 {
+        h1 {
             color: var(--primary);
-            font-size: 24px;
-            margin-bottom: 10px;
+            font-size: 28px;
+            margin-bottom: 8px;
             font-weight: 700;
         }
 
         .subtitle {
             color: #7f8c8d;
-            margin-bottom: 30px;
-            font-size: 15px;
+            font-size: 14px;
         }
 
-        .languages-grid {
+        .menu-grid {
             display: grid;
-            gap: 12px;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
         }
 
-        .btn-lang {
+        .menu-item {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            padding: 16px 20px;
-            background: #ffffff;
-            border: 1.5px solid #edf2f7;
-            border-radius: 16px;
+            justify-content: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 14px;
             text-decoration: none;
             color: var(--primary);
             font-weight: 600;
-            font-size: 16px;
+            font-size: 13px;
             transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
         }
 
-        .btn-lang:hover {
+        .menu-item:hover {
+            background: #e8f4f8;
             border-color: var(--accent);
-            background: #f0f7ff;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.2);
         }
 
-        .flag-icon {
-            font-size: 24px;
-            margin-right: 15px;
-            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
+        .menu-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .menu-text {
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .divider {
+            height: 1px;
+            background: #eee;
+            margin: 25px 0;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
         }
 
         .footer-text {
-            margin-top: 25px;
-            font-size: 12px;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 11px;
             color: #bdc3c7;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
 
-    <div class="card">
+<div class="selector-idioma">
+    <a href="{{ url_for('cambiar_idioma', lang='es', proximo='seleccion_idioma', cliente_id=cliente.usuario) }}" class="bandera">🇪🇸</a>
+    <a href="{{ url_for('cambiar_idioma', lang='en', proximo='seleccion_idioma', cliente_id=cliente.usuario) }}" class="bandera">🇺🇸</a>
+    <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='seleccion_idioma', cliente_id=cliente.usuario) }}" class="bandera">🇫🇷</a>
+    <a href="{{ url_for('cambiar_idioma', lang='de', proximo='seleccion_idioma', cliente_id=cliente.usuario) }}" class="bandera">🇩🇪</a>
+    <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='seleccion_idioma', cliente_id=cliente.usuario) }}" class="bandera">🇵🇹</a>
+    <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='seleccion_idioma', cliente_id=cliente.usuario) }}" class="bandera">🇨🇳</a>
+</div>
+
+<div class="container">
+    <div class="header">
         <div class="logo-icon">🏢</div>
-        <h2>{{ cliente.nombre }}</h2>
-        <p class="subtitle">{{ textos.selecciona_idioma }}</p>
-
-        <div class="languages-grid">
-            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
-                <span class="flag-icon">🇪🇸</span> {{ textos.btn_es }}
-            </a>
-            
-            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
-                <span class="flag-icon">🇺🇸</span> {{ textos.btn_en }}
-            </a>
-
-            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
-                <span class="flag-icon">🇫🇷</span> {{ textos.btn_fr }}
-            </a>
-
-            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
-                <span class="flag-icon">🇩🇪</span> {{ textos.btn_de }}
-            </a>
-
-            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
-                <span class="flag-icon">🇵🇹</span> {{ textos.btn_pt }}
-            </a>
-
-            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente.usuario) }}" class="btn-lang">
-                <span class="flag-icon">🇨🇳</span> {{ textos.btn_zh }}
-            </a>
-        </div>
-
-        <div class="footer-text">Real Estate System v2.0</div>
+        <h1>{{ cliente.nombre }}</h1>
+        <p class="subtitle">Sistema de Gestión Inmobiliaria Profesional</p>
     </div>
+
+    <div class="menu-grid">
+        <a href="{{ url_for('formulario', cliente_id=cliente.usuario) }}" class="menu-item">
+            <div class="menu-icon">📝</div>
+            <div class="menu-text">Nuevo Lead</div>
+        </a>
+
+        <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="menu-item">
+            <div class="menu-icon">📋</div>
+            <div class="menu-text">Historial</div>
+        </a>
+
+        <a href="{{ url_for('stats', cliente_id=cliente.usuario) }}" class="menu-item">
+            <div class="menu-icon">📊</div>
+            <div class="menu-text">Estadísticas</div>
+        </a>
+
+        <a href="{{ url_for('herramientas', cliente_id=cliente.usuario) }}" class="menu-item">
+            <div class="menu-icon">🧮</div>
+            <div class="menu-text">Herramientas</div>
+        </a>
+    </div>
+
+    <div class="divider"></div>
+
+    <button class="logout-btn" onclick="logout()">🚪 Cerrar Sesión</button>
+
+    <div class="footer-text">Real Estate System v2.0</div>
+</div>
+
+<script>
+function logout() {
+    if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+        window.location.href = "{{ url_for('login', cliente_id=cliente.usuario) }}";
+    }
+}
+</script>
 
 </body>
 </html>
