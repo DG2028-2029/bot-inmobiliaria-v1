@@ -1,6 +1,7 @@
 CLIENTES = {
     "roberto": {
         "nombre": "Roberto Inmobiliaria",
+        "email_vendedor": "roberto@inmobiliaria.com",
         "premium_email": False,
         "email_api_key": "re_LxhSiSm5_FKrpCRPAAK8hkPnGaVN7ZaU1",
         "whatsapp": "50230840598",
@@ -10,6 +11,7 @@ CLIENTES = {
     },
     "juan": {
         "nombre": "Juan Realty",
+        "email_vendedor": "juan@realty.com",
         "premium_email": False,
         "email_api_key": "",
         "whatsapp": "50231111111",
