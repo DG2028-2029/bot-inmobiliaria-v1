@@ -253,8 +253,7 @@ def formulario(cliente_id):
             if email_cliente:
                 enviar_email_lead(id_clean, d.get("nombre"), email_cliente)
             
-            ws_link = f"https://wa.me/{vendedor['whatsapp']}"
-            return render_template("formulario.html", enviado=True, link_whatsapp=ws_link, cliente=vendedor, textos=textos)
+            return render_template("formulario.html", enviado=True, textos=textos)
         except Exception as e:
             return f"System Synch Error: {e}", 500
 
