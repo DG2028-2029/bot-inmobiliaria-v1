@@ -3,55 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ cliente.nombre }} | Registro</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <title>Formulario de Registro</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .lang-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .lang-flag { font-size: 20px; cursor: pointer; text-decoration: none; }
+        
+        .form-container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h2 { color: #2c3e50; font-size: 24px; margin-bottom: 8px; text-align: center; }
+        .subtitle { text-align: center; color: #7f8c8d; font-size: 14px; margin-bottom: 30px; }
+        
+        .form-group { margin-bottom: 15px; }
+        label { display: block; color: #2c3e50; font-weight: 600; font-size: 13px; margin-bottom: 5px; }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        textarea { resize: vertical; min-height: 80px; }
+        
+        .checkbox-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            align-items: flex-start;
+        }
+        
+        .checkbox-group input { width: 18px; height: 18px; margin: 0; cursor: pointer; flex-shrink: 0; }
+        .checkbox-group label { margin: 0; font-size: 12px; color: #555; font-weight: normal; }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+        
+        button:hover { background: #5568d3; }
+        
+        .success-message {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .success-icon { font-size: 60px; margin-bottom: 15px; }
+        .success-title { color: #27ae60; font-size: 20px; font-weight: bold; margin-bottom: 10px; }
+        .success-text { color: #666; margin-bottom: 25px; }
+    </style>
 </head>
 <body>
-    <div class="lang-container">
-        <div class="lang-hint">
-            Selecciona tu idioma <span>➜</span>
-        </div>
-        <div class="lang-selected">
-            <span>🌐</span>
-            <span style="text-transform: uppercase;">{{ session.get('lang', 'ES') }}</span>
-        </div>
-        <div class="lang-dropdown">
-            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente.usuario) }}"><span>🇪🇸</span> Español</a>
-            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente.usuario) }}"><span>🇺🇸</span> English</a>
-            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente.usuario) }}"><span>🇫🇷</span> Français</a>
-            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente.usuario) }}"><span>🇩🇪</span> Deutsch</a>
-            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente.usuario) }}"><span>🇵🇹</span> Português</a>
-            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente.usuario) }}"><span>🇨🇳</span> 中文</a>
-        </div>
-    </div>
+
+<div class="lang-container">
+    <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-flag">🇪🇸</a>
+    <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-flag">🇺🇸</a>
+    <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-flag">🇫🇷</a>
+    <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-flag">🇩🇪</a>
+    <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-flag">🇵🇹</a>
+    <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-flag">🇨🇳</a>
+</div>
+
+<div class="form-container">
     {% if not enviado %}
+    
+    <h2>{{ textos.titulo_form }}</h2>
+    <p class="subtitle">{{ textos.subtitulo_form }}</p>
+    
     <form method="POST">
-        <h2>{{ cliente.nombre }}</h2>
-        <p style="text-align: center; color: #666; margin-bottom: 20px;">{{ textos.titulo_form }}</p>
-        
-        <input name="nombre" placeholder="{{ textos.placeholder_nombre }}" required>
-        <input name="telefono" type="tel" placeholder="{{ textos.placeholder_tel }}" required>
-        <input name="email" type="email" placeholder="Email" required>
-        <input name="zona" placeholder="{{ textos.placeholder_zona }}" required>
-        <input name="presupuesto" type="number" placeholder="{{ textos.placeholder_presupuesto }}" required>
-        <textarea name="mensaje" placeholder="{{ textos.placeholder_propiedad }}" rows="3" required></textarea>
-        
-        <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; text-align: left;">
-            <input type="checkbox" name="terminos" id="terminos" required style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
-            <label for="terminos" style="font-size: 11px; color: #555; line-height: 1.4; cursor: pointer;">
-                {{ textos.acepto_terminos }}
-            </label>
+        <div class="form-group">
+            <label>{{ textos.placeholder_nombre }}</label>
+            <input type="text" name="nombre" required>
         </div>
+        
+        <div class="form-group">
+            <label>{{ textos.placeholder_tel }}</label>
+            <input type="tel" name="telefono" required>
+        </div>
+        
+        <div class="form-group">
+            <label>{{ textos.placeholder_zona }}</label>
+            <input type="text" name="zona" required>
+        </div>
+        
+        <div class="form-group">
+            <label>{{ textos.placeholder_presupuesto }}</label>
+            <input type="number" name="presupuesto" required>
+        </div>
+        
+        <div class="form-group">
+            <label>{{ textos.placeholder_propiedad }}</label>
+            <textarea name="mensaje" required></textarea>
+        </div>
+        
+        <div class="checkbox-group">
+            <input type="checkbox" id="terminos" name="terminos" required>
+            <label for="terminos">{{ textos.acepto_terminos }}</label>
+        </div>
+        
         <button type="submit">{{ textos.boton_enviar }}</button>
     </form>
+    
     {% else %}
-    <div class="mensaje-exito">
-        <h3 style="color: #28a745; margin-bottom: 10px;">{{ textos.mensaje_exito }}</h3>
-        <p style="color: #666;">{{ textos.subtitulo_exito }}</p>
-        <a href="{{ link_whatsapp }}" target="_blank" style="background:#25D366; color:white; padding:12px 25px; text-decoration:none; border-radius:8px; display: inline-block; margin-top: 20px; font-weight: bold; width: 80%;">
-            WhatsApp
-        </a>
+    
+    <div class="success-message">
+        <div class="success-icon">✅</div>
+        <div class="success-title">{{ textos.mensaje_exito }}</div>
+        <div class="success-text">{{ textos.subtitulo_exito }}</div>
     </div>
+    
     {% endif %}
+</div>
+
 </body>
 </html>
