@@ -27,7 +27,7 @@ def enviar_email_cliente(cliente_id, nombre, email_cliente):
         }
         
         payload = {
-            "from": "noreply@inmobiliaria.com",
+            "from": "onboarding@resend.dev",
             "to": email_cliente,
             "subject": f"✅ Recibimos tu solicitud, {nombre}",
             "html": f"""
@@ -97,7 +97,7 @@ def notificar_vendedor_lead_nuevo(cliente_id, nombre, telefono, zona, presupuest
             color = "#95a5a6"
         
         payload = {
-            "from": "noreply@inmobiliaria.com",
+            "from": "onboarding@resend.dev",
             "to": email_vendedor,
             "subject": f"🆕 NUEVO LEAD: {nombre} (Score: {score}/100)",
             "html": f"""
@@ -189,7 +189,7 @@ def notificar_vendedor_cliente_marcado(cliente_id, nombre, telefono, zona, presu
         }
         
         payload = {
-            "from": "noreply@inmobiliaria.com",
+            "from": "onboarding@resend.dev",
             "to": email_vendedor,
             "subject": f"💎 NUEVO CLIENTE: {nombre}",
             "html": f"""
