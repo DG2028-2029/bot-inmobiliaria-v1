@@ -13,7 +13,7 @@ from reportlab.lib.units import inch
 import config
 from config_clientes import CLIENTES
 from traducciones import DICCIONARIO
-from email_service import enviar_email_lead
+from email_service import enviar_email_cliente, notificar_vendedor_lead_nuevo, notificar_vendedor_cliente_marcado
 from stats import obtener_stats
 
 app = Flask(__name__)
@@ -251,7 +251,18 @@ def formulario(cliente_id):
             
             email_cliente = request.form.get("email", "").strip()
             if email_cliente:
-                enviar_email_lead(id_clean, d.get("nombre"), email_cliente)
+                enviar_email_cliente(id_clean, d.get("nombre"), email_cliente)
+            
+            # ✨ NOTIFICAR AL VENDEDOR DEL NUEVO LEAD
+            notificar_vendedor_lead_nuevo(
+                cliente_id=id_clean,
+                nombre=d.get("nombre"),
+                telefono=d.get("telefono"),
+                zona=d.get("zona_interes"),
+                presupuesto=d.get("presupuesto"),
+                mensaje=d.get("mensaje"),
+                score=score_final
+            )
             
             return render_template("formulario.html", enviado=True, textos=textos, cliente_id=id_clean, whatsapp=vendedor['whatsapp'], cliente_nombre=vendedor['nombre'])
         except Exception as e:
@@ -359,12 +370,27 @@ def marcar_cliente(cliente_id, lead_id):
     try:
         print(f"Marcando lead {lead_id} como cliente...")
         
-        supabase.table("leads").update({
-            "temperatura": "MUY_CALIENTE",
-            "clasificacion": "💎 CLIENTE"
-        }).eq("id", lead_id).execute()
+        # Obtener datos del lead para la notificación
+        resultado = supabase.table("leads").select("*").eq("id", lead_id).execute()
+        if resultado.data:
+            lead = resultado.data[0]
+            
+            supabase.table("leads").update({
+                "temperatura": "MUY_CALIENTE",
+                "clasificacion": "💎 CLIENTE"
+            }).eq("id", lead_id).execute()
+            
+            # ✨ NOTIFICAR AL VENDEDOR QUE SE MARCÓ UN CLIENTE
+            notificar_vendedor_cliente_marcado(
+                cliente_id=id_clean,
+                nombre=lead.get("nombre"),
+                telefono=lead.get("telefono"),
+                zona=lead.get("zona_interes"),
+                presupuesto=lead.get("presupuesto")
+            )
+            
+            print(f"Lead {lead_id} marcado como cliente exitosamente")
         
-        print(f"Lead {lead_id} marcado como cliente exitosamente")
         return redirect(url_for('historial', cliente_id=id_clean))
     
     except Exception as e:
