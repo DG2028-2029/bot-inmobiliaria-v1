@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ cliente_nombre }} - Inventario</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-size: 24px;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn-nuevo {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-nuevo:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+        
+        .btn-volver {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-volver:hover {
+            background: #7f8c8d;
+        }
+        
+        .propiedades-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .propiedad-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        
+        .propiedad-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .propiedad-imagen {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+        }
+        
+        .propiedad-contenido {
+            padding: 20px;
+        }
+        
+        .propiedad-titulo {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .propiedad-precio {
+            font-size: 20px;
+            color: #27ae60;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .propiedad-ubicacion {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+        
+        .propiedad-descripcion {
+            color: #555;
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+        
+        .btn-eliminar {
+            width: 100%;
+            padding: 10px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .btn-eliminar:hover {
+            background: #c0392b;
+        }
+        
+        .vacio {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 12px;
+            color: #95a5a6;
+            grid-column: 1/-1;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-contenido {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 15px;
+        }
+        
+        .close {
+            font-size: 28px;
+            font-weight: bold;
+            color: #95a5a6;
+            cursor: pointer;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .btn-enviar {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .btn-enviar:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>📦 Inventario de Propiedades</h1>
+                <p style="color: #666; margin-top: 5px;">{{ cliente_nombre }}</p>
+            </div>
+            <div class="header-buttons">
+                <button class="btn btn-nuevo" onclick="abrirModal()">➕ Agregar Propiedad</button>
+                <a href="/historial/{{ cliente_id }}" class="btn btn-volver">← Volver</a>
+            </div>
+        </div>
+        
+        <div id="propiedades-container" class="propiedades-grid">
+            <!-- Las propiedades se cargan aquí -->
+        </div>
+    </div>
+    
+    <!-- MODAL AGREGAR PROPIEDAD -->
+    <div id="modalAgregar" class="modal">
+        <div class="modal-contenido">
+            <div class="modal-header">
+                <h2>➕ Agregar Nueva Propiedad</h2>
+                <span class="close" onclick="cerrarModal()">&times;</span>
+            </div>
+            
+            <form id="formPropiedad" method="POST" action="/agregar_propiedad/{{ cliente_id }}">
+                <div class="form-group">
+                    <label>Título de la Propiedad *</label>
+                    <input type="text" name="titulo" required placeholder="Ej: Casa en Zona 10">
+                </div>
+                
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea name="descripcion" placeholder="Detalles de la propiedad..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Precio (USD) *</label>
+                    <input type="number" name="precio" required step="0.01" placeholder="250000">
+                </div>
+                
+                <div class="form-group">
+                    <label>Ubicación *</label>
+                    <input type="text" name="ubicacion" required placeholder="Ej: Zona 14, Ciudad de Guatemala">
+                </div>
+                
+                <div class="form-group">
+                    <label>URL de Imagen</label>
+                    <input type="url" name="imagen_url" placeholder="https://ejemplo.com/imagen.jpg">
+                </div>
+                
+                <button type="submit" class="btn-enviar">💾 Guardar Propiedad</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        const clienteId = "{{ cliente_id }}";
+        
+        document.addEventListener('DOMContentLoaded', cargarPropiedades);
+        
+        window.onclick = function(event) {
+            const modal = document.getElementById("modalAgregar");
+            if (event.target == modal) {
+                cerrarModal();
+            }
+        }
+        
+        function abrirModal() {
+            document.getElementById("modalAgregar").style.display = "block";
+        }
+        
+        function cerrarModal() {
+            document.getElementById("modalAgregar").style.display = "none";
+            document.getElementById("formPropiedad").reset();
+        }
+        
+        function cargarPropiedades() {
+            const propiedades = {{ propiedades_json | safe }};
+            const container = document.getElementById("propiedades-container");
+            
+            if (!propiedades || propiedades.length === 0) {
+                container.innerHTML = `
+                    <div class="vacio">
+                        <div style="font-size: 64px; margin-bottom: 20px;">📭</div>
+                        <h2 style="color: #7f8c8d; margin-bottom: 10px;">No hay propiedades aún</h2>
+                        <p>Comienza agregando tu primera propiedad</p>
+                        <button class="btn btn-nuevo" onclick="abrirModal()" style="margin-top: 20px;">➕ Agregar Propiedad</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = propiedades.map(prop => `
+                <div class="propiedad-card">
+                    <div class="propiedad-imagen">🏠</div>
+                    <div class="propiedad-contenido">
+                        <div class="propiedad-titulo">${prop.titulo}</div>
+                        <div class="propiedad-precio">$${parseFloat(prop.precio).toLocaleString()}</div>
+                        <div class="propiedad-ubicacion">📍 ${prop.ubicacion}</div>
+                        <div class="propiedad-descripcion">${prop.descripcion || 'Sin descripción'}</div>
+                        <form method="POST" action="/eliminar_propiedad/${clienteId}/${prop.id}">
+                            <button type="submit" class="btn-eliminar" onclick="return confirm('¿Eliminar?');">🗑️ Eliminar</button>
+                        </form>
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
