@@ -1,8 +1,9 @@
-from flask import Flask, request, render_template, redirect, session, url_for, send_file
+from flask import Flask, request, render_template, redirect, session, url_for, send_file, jsonify
 from supabase import create_client
 import os
 import re
 import math
+import json
 from datetime import datetime, timedelta
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
@@ -287,6 +288,88 @@ def historial(cliente_id):
     resultado = query.order("score", desc=True).execute()
     return render_template("historial.html", leads=resultado.data, cliente=vendedor, textos=textos)
 
+@app.route("/inventario/<cliente_id>", methods=["GET"])
+def inventario(cliente_id):
+    """Muestra el inventario de propiedades del vendedor."""
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return redirect(url_for('login', cliente_id=id_clean))
+    
+    vendedor = CLIENTES.get(id_clean)
+    if not vendedor:
+        return "Error 404: Vendedor no encontrado.", 404
+    
+    try:
+        resultado = supabase.table("propiedades").select("*").eq("vendedor", id_clean).order("created_at", desc=True).execute()
+        propiedades = resultado.data or []
+        
+        # Convertir a JSON para pasar a JavaScript
+        propiedades_json = json.dumps(propiedades)
+        
+        return render_template("inventario.html", 
+                             cliente_id=id_clean, 
+                             cliente_nombre=vendedor['nombre'],
+                             propiedades_json=propiedades_json)
+    
+    except Exception as e:
+        print(f"Error cargando inventario: {e}")
+        return render_template("inventario.html", 
+                             cliente_id=id_clean, 
+                             cliente_nombre=vendedor['nombre'],
+                             propiedades_json='[]')
+
+@app.route("/agregar_propiedad/<cliente_id>", methods=["POST"])
+def agregar_propiedad(cliente_id):
+    """Agrega una nueva propiedad al inventario."""
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return "Error 403: No autorizado.", 403
+    
+    vendedor = CLIENTES.get(id_clean)
+    if not vendedor:
+        return "Error 404: Vendedor no encontrado.", 404
+    
+    try:
+        propiedad_data = {
+            "titulo": request.form.get("titulo").strip(),
+            "descripcion": request.form.get("descripcion", "").strip(),
+            "precio": float(request.form.get("precio", 0)),
+            "ubicacion": request.form.get("ubicacion").strip(),
+            "imagen_url": request.form.get("imagen_url", "").strip(),
+            "vendedor": id_clean,
+            "estado": "disponible"
+        }
+        
+        supabase.table("propiedades").insert(propiedad_data).execute()
+        print(f"✅ Propiedad agregada: {propiedad_data['titulo']}")
+        
+        return redirect(url_for('inventario', cliente_id=id_clean))
+    
+    except Exception as e:
+        print(f"Error agregando propiedad: {e}")
+        return f"Error: {e}", 500
+
+@app.route("/eliminar_propiedad/<cliente_id>/<int:prop_id>", methods=["POST"])
+def eliminar_propiedad(cliente_id, prop_id):
+    """Elimina una propiedad del inventario."""
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return "Error 403: No autorizado.", 403
+    
+    vendedor = CLIENTES.get(id_clean)
+    if not vendedor:
+        return "Error 404: Vendedor no encontrado.", 404
+    
+    try:
+        supabase.table("propiedades").delete().eq("id", prop_id).eq("vendedor", id_clean).execute()
+        print(f"✅ Propiedad {prop_id} eliminada")
+        
+        return redirect(url_for('inventario', cliente_id=id_clean))
+    
+    except Exception as e:
+        print(f"Error eliminando propiedad: {e}")
+        return f"Error: {e}", 500
+
 @app.route("/herramientas/<cliente_id>")
 def herramientas(cliente_id):
     """Muestra las calculadoras inmobiliarias."""
@@ -461,7 +544,7 @@ def login(cliente_id):
     if request.method == "POST":
         if request.form.get("usuario") == vendedor["usuario"] and request.form.get("password") == vendedor["password"]:
             session["cliente"] = id_clean
-            return redirect(url_for('historial', cliente_id=id_clean))
+            return redirect(url_for('seleccion_idioma', cliente_id=id_clean))
         return render_template("login.html", error="Credenciales Invalidas", cliente=vendedor, textos=textos)
     return render_template("login.html", cliente=vendedor, textos=textos)
 
