@@ -1,31 +1,23 @@
 # ============================================
 # SERVICIO DE EMAIL PROFESIONAL
 # ============================================
-# Notificaciones a vendedor + confirmación a cliente
 import requests
 from config_clientes import CLIENTES
 
 def enviar_email_cliente(cliente_id, nombre, email_cliente):
-    """
-    Envía email de confirmación al cliente que llenó el formulario.
-    """
+    """Envía email de confirmación al cliente que llenó el formulario."""
     vendedor = CLIENTES.get(cliente_id.lower())
-    
     if not vendedor or not vendedor.get("premium_email", False):
         return True
-    
     api_key = vendedor.get("email_api_key", "")
-    
     if not api_key:
         print("⚠️ Email activado pero sin API KEY configurada")
         return False
-    
     try:
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
-        
         payload = {
             "from": "onboarding@resend.dev",
             "to": email_cliente,
@@ -41,48 +33,34 @@ def enviar_email_cliente(cliente_id, nombre, email_cliente):
             </div>
             """
         }
-        
-        response = requests.post(
-            "https://api.resend.com/emails",
-            json=payload,
-            headers=headers
-        )
-        
+        response = requests.post("https://api.resend.com/emails", json=payload, headers=headers)
         if response.status_code == 200:
             print(f"✅ Email confirmación enviado a {email_cliente}")
             return True
         else:
             print(f"❌ Error: {response.text}")
             return False
-    
     except Exception as e:
         print(f"❌ Error enviando email: {e}")
         return False
 
 
-def notificar_vendedor_lead_nuevo(cliente_id, nombre, telefono, zona, presupuesto, mensaje, score):
-    """
-    Notifica al vendedor cuando se registra un LEAD NUEVO.
-    """
+def notificar_vendedor_lead_nuevo(cliente_id, nombre, telefono, zona, presupuesto, mensaje, score, email_prospecto=""):
+    """Notifica al vendedor cuando se registra un LEAD NUEVO."""
     vendedor = CLIENTES.get(cliente_id.lower())
-    
     if not vendedor:
         return False
-    
     email_vendedor = vendedor.get("email_vendedor", "")
     api_key = vendedor.get("email_api_key", "")
-    
     if not email_vendedor or not api_key:
         print(f"⚠️ No se puede notificar - falta email_vendedor o API_KEY")
         return False
-    
     try:
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
-        
-        # Determinar nivel de urgencia
+
         if score >= 85:
             urgencia = "🔥🔥 URGENTE - VIP/INVERSIONISTA"
             color = "#e74c3c"
@@ -95,7 +73,22 @@ def notificar_vendedor_lead_nuevo(cliente_id, nombre, telefono, zona, presupuest
         else:
             urgencia = "❄️ BAJA - LEAD FRÍO"
             color = "#95a5a6"
-        
+
+        # Fila de email solo si el prospecto lo proporcionó
+        fila_email = f"""
+            <tr>
+                <td style="padding: 10px; border: 1px solid #eee; font-weight: bold; color: #2c3e50;">Email:</td>
+                <td style="padding: 10px; border: 1px solid #eee;">
+                    <a href="mailto:{email_prospecto}" style="color: #3498db; text-decoration: none;">✉️ {email_prospecto}</a>
+                </td>
+            </tr>
+        """ if email_prospecto else """
+            <tr>
+                <td style="padding: 10px; border: 1px solid #eee; font-weight: bold; color: #2c3e50;">Email:</td>
+                <td style="padding: 10px; border: 1px solid #eee; color: #999;">No proporcionado</td>
+            </tr>
+        """
+
         payload = {
             "from": "onboarding@resend.dev",
             "to": email_vendedor,
@@ -105,9 +98,9 @@ def notificar_vendedor_lead_nuevo(cliente_id, nombre, telefono, zona, presupuest
                 <div style="background: {color}; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                     <h2 style="margin: 0; font-size: 18px;">{urgencia}</h2>
                 </div>
-                
+
                 <h3 style="color: #2c3e50; margin-top: 0;">Detalles del Prospecto:</h3>
-                
+
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr style="background: #f8f9fa;">
                         <td style="padding: 10px; border: 1px solid #eee; font-weight: bold; color: #2c3e50;">Nombre:</td>
@@ -115,7 +108,9 @@ def notificar_vendedor_lead_nuevo(cliente_id, nombre, telefono, zona, presupuest
                     </tr>
                     <tr>
                         <td style="padding: 10px; border: 1px solid #eee; font-weight: bold; color: #2c3e50;">Teléfono:</td>
-                        <td style="padding: 10px; border: 1px solid #eee;"><a href="https://wa.me/{telefono}" style="color: #27ae60; text-decoration: none;">📱 {telefono}</a></td>
+                        <td style="padding: 10px; border: 1px solid #eee;">
+                            <a href="https://wa.me/{telefono}" style="color: #27ae60; text-decoration: none;">📱 {telefono}</a>
+                        </td>
                     </tr>
                     <tr style="background: #f8f9fa;">
                         <td style="padding: 10px; border: 1px solid #eee; font-weight: bold; color: #2c3e50;">Zona:</td>
@@ -129,11 +124,12 @@ def notificar_vendedor_lead_nuevo(cliente_id, nombre, telefono, zona, presupuest
                         <td style="padding: 10px; border: 1px solid #eee; font-weight: bold; color: #2c3e50;">Score:</td>
                         <td style="padding: 10px; border: 1px solid #eee;"><strong>{score}/100</strong></td>
                     </tr>
+                    {fila_email}
                 </table>
-                
+
                 <h4 style="color: #2c3e50; margin-top: 20px;">Mensaje:</h4>
                 <p style="background: #f8f9fa; padding: 15px; border-radius: 8px; color: #555;">{mensaje}</p>
-                
+
                 <div style="background: #ecf0f1; padding: 15px; border-radius: 8px; margin-top: 20px;">
                     <p style="margin: 0; color: #555; font-size: 12px;">
                         ⏰ Registrado: {__import__('datetime').datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
@@ -142,52 +138,39 @@ def notificar_vendedor_lead_nuevo(cliente_id, nombre, telefono, zona, presupuest
                         💡 Este lead fue registrado automáticamente en tu CRM
                     </p>
                 </div>
-                
+
                 <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
                 <p style="color: #999; font-size: 12px; text-align: center;">Bot Inmobiliaria V1 - Sistema Automático</p>
             </div>
             """
         }
-        
-        response = requests.post(
-            "https://api.resend.com/emails",
-            json=payload,
-            headers=headers
-        )
-        
+
+        response = requests.post("https://api.resend.com/emails", json=payload, headers=headers)
         if response.status_code == 200:
             print(f"✅ Notificación de lead nuevo enviada a {email_vendedor}")
             return True
         else:
             print(f"❌ Error: {response.text}")
             return False
-    
     except Exception as e:
         print(f"❌ Error enviando notificación: {e}")
         return False
 
 
 def notificar_vendedor_cliente_marcado(cliente_id, nombre, telefono, zona, presupuesto):
-    """
-    Notifica al vendedor cuando se MARCA UN CLIENTE.
-    """
+    """Notifica al vendedor cuando se MARCA UN CLIENTE."""
     vendedor = CLIENTES.get(cliente_id.lower())
-    
     if not vendedor:
         return False
-    
     email_vendedor = vendedor.get("email_vendedor", "")
     api_key = vendedor.get("email_api_key", "")
-    
     if not email_vendedor or not api_key:
         return False
-    
     try:
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
-        
         payload = {
             "from": "onboarding@resend.dev",
             "to": email_vendedor,
@@ -197,9 +180,7 @@ def notificar_vendedor_cliente_marcado(cliente_id, nombre, telefono, zona, presu
                 <div style="background: #27ae60; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                     <h2 style="margin: 0; font-size: 18px;">💎 CLIENTE CONFIRMADO</h2>
                 </div>
-                
                 <h3 style="color: #2c3e50; margin-top: 0;">¡Felicidades! Nuevo cliente:</h3>
-                
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr style="background: #f8f9fa;">
                         <td style="padding: 10px; border: 1px solid #eee; font-weight: bold; color: #2c3e50;">Nombre:</td>
@@ -207,7 +188,9 @@ def notificar_vendedor_cliente_marcado(cliente_id, nombre, telefono, zona, presu
                     </tr>
                     <tr>
                         <td style="padding: 10px; border: 1px solid #eee; font-weight: bold; color: #2c3e50;">Teléfono:</td>
-                        <td style="padding: 10px; border: 1px solid #eee;"><a href="https://wa.me/{telefono}" style="color: #27ae60; text-decoration: none;">📱 {telefono}</a></td>
+                        <td style="padding: 10px; border: 1px solid #eee;">
+                            <a href="https://wa.me/{telefono}" style="color: #27ae60; text-decoration: none;">📱 {telefono}</a>
+                        </td>
                     </tr>
                     <tr style="background: #f8f9fa;">
                         <td style="padding: 10px; border: 1px solid #eee; font-weight: bold; color: #2c3e50;">Zona de Interés:</td>
@@ -218,31 +201,22 @@ def notificar_vendedor_cliente_marcado(cliente_id, nombre, telefono, zona, presu
                         <td style="padding: 10px; border: 1px solid #eee;">${presupuesto}</td>
                     </tr>
                 </table>
-                
                 <div style="background: #d5f4e6; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #27ae60;">
                     <p style="margin: 0; color: #27ae60; font-weight: bold;">✅ Este cliente está listo para seguimiento</p>
                     <p style="margin: 10px 0 0 0; color: #555; font-size: 12px;">Te recomendamos contactar en las próximas 24 horas</p>
                 </div>
-                
                 <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
                 <p style="color: #999; font-size: 12px; text-align: center;">Bot Inmobiliaria V1 - Sistema Automático</p>
             </div>
             """
         }
-        
-        response = requests.post(
-            "https://api.resend.com/emails",
-            json=payload,
-            headers=headers
-        )
-        
+        response = requests.post("https://api.resend.com/emails", json=payload, headers=headers)
         if response.status_code == 200:
             print(f"✅ Notificación de cliente marcado enviada a {email_vendedor}")
             return True
         else:
             print(f"❌ Error: {response.text}")
             return False
-    
     except Exception as e:
         print(f"❌ Error enviando notificación: {e}")
         return False
