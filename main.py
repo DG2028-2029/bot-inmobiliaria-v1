@@ -202,9 +202,14 @@ def formulario(cliente_id):
             if email_cliente:
                 enviar_email_cliente(id_clean, d.get("nombre"), email_cliente)
             notificar_vendedor_lead_nuevo(
-                cliente_id=id_clean, nombre=d.get("nombre"), telefono=d.get("telefono"),
-                zona=d.get("zona_interes"), presupuesto=d.get("presupuesto"),
-                mensaje=d.get("mensaje"), score=score_final
+                cliente_id=id_clean,
+                nombre=d.get("nombre"),
+                telefono=d.get("telefono"),
+                zona=d.get("zona_interes"),
+                presupuesto=d.get("presupuesto"),
+                mensaje=d.get("mensaje"),
+                score=score_final,
+                email_prospecto=email_cliente   # ← NUEVO
             )
             return render_template("formulario.html", enviado=True, textos=textos,
                                    cliente_id=id_clean, whatsapp=vendedor['whatsapp'],
@@ -398,6 +403,7 @@ def seleccion_idioma_login(cliente_id):
 def login(cliente_id):
     id_clean = cliente_id.lower()
     vendedor = CLIENTES.get(id_clean)
+    if not vendedor: return "Error 404", 404
     lang = session.get('idioma', 'es')
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     if request.method == "POST":
