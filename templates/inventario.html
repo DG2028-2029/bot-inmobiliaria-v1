@@ -9,8 +9,7 @@
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            min-height: 100vh; padding: 20px;
         }
         .container { max-width: 1200px; margin: 0 auto; }
         .header {
@@ -81,9 +80,24 @@
         .propiedad-titulo { font-size: 17px; font-weight: bold; color: #2c3e50; margin-bottom: 6px; }
         .propiedad-precio { font-size: 20px; color: #27ae60; font-weight: bold; margin-bottom: 8px; }
         .propiedad-ubicacion { color: #666; font-size: 13px; margin-bottom: 10px; }
-        .propiedad-descripcion { color: #555; font-size: 13px; line-height: 1.5; margin-bottom: 14px; }
+        .propiedad-descripcion {
+            color: #555; font-size: 13px; line-height: 1.5; margin-bottom: 14px;
+            overflow: hidden; display: -webkit-box;
+            -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+        }
+        .card-botones { display: flex; gap: 8px; margin-top: 10px; }
+        .btn-ver {
+            flex: 1; padding: 9px; background: #3498db; color: white;
+            border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;
+        }
+        .btn-ver:hover { background: #2980b9; }
+        .btn-editar {
+            flex: 1; padding: 9px; background: #f39c12; color: white;
+            border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;
+        }
+        .btn-editar:hover { background: #e67e22; }
         .btn-eliminar {
-            width: 100%; padding: 10px; background: #e74c3c; color: white;
+            flex: 1; padding: 9px; background: #e74c3c; color: white;
             border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;
         }
         .btn-eliminar:hover { background: #c0392b; }
@@ -92,12 +106,11 @@
             border-radius: 12px; color: #95a5a6; grid-column: 1/-1;
         }
 
-        /* MODAL */
+        /* MODALES */
         .modal {
             display: none; position: fixed; z-index: 1000;
             left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.6);
-            overflow-y: auto;
+            background-color: rgba(0,0,0,0.6); overflow-y: auto;
         }
         .modal-contenido {
             background-color: white; margin: 4% auto; padding: 30px;
@@ -120,30 +133,22 @@
         /* UPLOAD FOTOS */
         .upload-area {
             border: 2px dashed #bdc3c7; border-radius: 8px; padding: 20px;
-            text-align: center; cursor: pointer; transition: 0.3s;
-            background: #f8f9fa;
+            text-align: center; cursor: pointer; transition: 0.3s; background: #f8f9fa;
         }
         .upload-area:hover { border-color: #667eea; background: #f0f4ff; }
         .upload-area input[type="file"] { display: none; }
         .upload-icon { font-size: 36px; margin-bottom: 8px; }
         .upload-texto { color: #666; font-size: 13px; }
         .upload-sub { color: #999; font-size: 11px; margin-top: 4px; }
-        .preview-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 8px; margin-top: 12px;
-        }
-        .preview-item {
-            position: relative; border-radius: 6px; overflow: hidden; height: 80px;
-        }
+        .preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+        .preview-item { position: relative; border-radius: 6px; overflow: hidden; height: 80px; }
         .preview-item img { width: 100%; height: 100%; object-fit: cover; }
         .preview-remove {
             position: absolute; top: 3px; right: 3px;
             background: rgba(231,76,60,0.9); color: white;
             border: none; border-radius: 50%; width: 20px; height: 20px;
-            font-size: 12px; cursor: pointer; display: flex;
-            align-items: center; justify-content: center;
+            font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
-
         .btn-enviar {
             width: 100%; padding: 12px; background: #667eea; color: white;
             border: none; border-radius: 6px; cursor: pointer;
@@ -151,7 +156,6 @@
         }
         .btn-enviar:hover { background: #5568d3; }
         .btn-enviar:disabled { background: #bdc3c7; cursor: not-allowed; }
-
         .progress-bar {
             display: none; width: 100%; height: 6px;
             background: #ecf0f1; border-radius: 3px; margin-top: 10px; overflow: hidden;
@@ -160,8 +164,39 @@
             height: 100%; background: #667eea; border-radius: 3px;
             animation: progreso 2s ease-in-out infinite;
         }
-        @keyframes progreso {
-            0% { width: 0%; } 70% { width: 85%; } 100% { width: 95%; }
+        @keyframes progreso { 0% { width: 0%; } 70% { width: 85%; } 100% { width: 95%; } }
+
+        /* MODAL DETALLE */
+        .detalle-galeria {
+            width: 100%; height: 280px; border-radius: 10px; overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative; margin-bottom: 20px;
+        }
+        .detalle-galeria img {
+            width: 100%; height: 100%; object-fit: cover;
+            position: absolute; top: 0; left: 0;
+            opacity: 0; transition: opacity 0.4s;
+        }
+        .detalle-galeria img.activa { opacity: 1; }
+        .detalle-placeholder {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 64px;
+        }
+        .detalle-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        .detalle-campo { background: #f8f9fa; padding: 12px; border-radius: 8px; }
+        .detalle-campo-label { font-size: 11px; color: #999; text-transform: uppercase; margin-bottom: 4px; }
+        .detalle-campo-valor { font-size: 15px; color: #2c3e50; font-weight: bold; }
+        .detalle-descripcion { background: #f8f9fa; padding: 14px; border-radius: 8px; font-size: 13px; color: #555; line-height: 1.6; }
+
+        /* FOTOS EXISTENTES EN EDICIÓN */
+        .fotos-existentes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+        .foto-existente { position: relative; height: 70px; border-radius: 6px; overflow: hidden; }
+        .foto-existente img { width: 100%; height: 100%; object-fit: cover; }
+        .foto-existente-badge {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: rgba(0,0,0,0.5); color: white; font-size: 10px;
+            text-align: center; padding: 2px;
         }
     </style>
 </head>
@@ -180,7 +215,7 @@
     <div id="propiedades-container" class="propiedades-grid"></div>
 </div>
 
-<!-- MODAL -->
+<!-- MODAL AGREGAR -->
 <div id="modalAgregar" class="modal">
     <div class="modal-contenido">
         <div class="modal-header">
@@ -215,54 +250,127 @@
                 <div id="previewGrid" class="preview-grid"></div>
             </div>
             <button type="submit" class="btn-enviar" id="btnGuardar">💾 Guardar Propiedad</button>
-            <div class="progress-bar" id="progressBar">
-                <div class="progress-fill"></div>
+            <div class="progress-bar" id="progressBar"><div class="progress-fill"></div></div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL DETALLE -->
+<div id="modalDetalle" class="modal">
+    <div class="modal-contenido">
+        <div class="modal-header">
+            <h2 id="detalleTitulo">Detalle de Propiedad</h2>
+            <span class="close" onclick="cerrarDetalle()">&times;</span>
+        </div>
+        <div id="detalleGaleria" class="detalle-galeria"></div>
+        <div class="detalle-info">
+            <div class="detalle-campo">
+                <div class="detalle-campo-label">Precio</div>
+                <div class="detalle-campo-valor" id="detallePrecio"></div>
             </div>
+            <div class="detalle-campo">
+                <div class="detalle-campo-label">Ubicación</div>
+                <div class="detalle-campo-valor" id="detalleUbicacion"></div>
+            </div>
+        </div>
+        <div class="detalle-descripcion" id="detalleDescripcion"></div>
+    </div>
+</div>
+
+<!-- MODAL EDITAR -->
+<div id="modalEditar" class="modal">
+    <div class="modal-contenido">
+        <div class="modal-header">
+            <h2>✏️ Editar Propiedad</h2>
+            <span class="close" onclick="cerrarEditar()">&times;</span>
+        </div>
+        <form id="formEditar" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>Título *</label>
+                <input type="text" name="titulo" id="editTitulo" required>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea name="descripcion" id="editDescripcion"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Precio (USD) *</label>
+                <input type="number" name="precio" id="editPrecio" required step="0.01">
+            </div>
+            <div class="form-group">
+                <label>Ubicación *</label>
+                <input type="text" name="ubicacion" id="editUbicacion" required>
+            </div>
+            <div class="form-group">
+                <label>Fotos actuales</label>
+                <div id="fotosExistentes" class="fotos-existentes"></div>
+            </div>
+            <div class="form-group">
+                <label>Reemplazar fotos (opcional)</label>
+                <div class="upload-area" onclick="document.getElementById('inputFotosEdit').click()">
+                    <input type="file" id="inputFotosEdit" name="imagenes" multiple accept="image/*" onchange="previsualizarFotosEdit(this)">
+                    <div class="upload-icon">📸</div>
+                    <div class="upload-texto">Click para subir fotos nuevas</div>
+                    <div class="upload-sub">Si subes fotos nuevas reemplazará las actuales</div>
+                </div>
+                <div id="previewGridEdit" class="preview-grid"></div>
+            </div>
+            <button type="submit" class="btn-enviar" id="btnEditar">💾 Guardar Cambios</button>
+            <div class="progress-bar" id="progressBarEdit"><div class="progress-fill"></div></div>
         </form>
     </div>
 </div>
 
 <script>
     const clienteId = "{{ cliente_id }}";
-    let archivosSeleccionados = [];
+    let propiedadesData = [];
 
     document.addEventListener('DOMContentLoaded', cargarPropiedades);
 
     window.onclick = function(e) {
         if (e.target == document.getElementById("modalAgregar")) cerrarModal();
+        if (e.target == document.getElementById("modalDetalle")) cerrarDetalle();
+        if (e.target == document.getElementById("modalEditar")) cerrarEditar();
     }
 
     function abrirModal() { document.getElementById("modalAgregar").style.display = "block"; }
-
     function cerrarModal() {
         document.getElementById("modalAgregar").style.display = "none";
         document.getElementById("formPropiedad").reset();
         document.getElementById("previewGrid").innerHTML = "";
-        archivosSeleccionados = [];
     }
+    function cerrarDetalle() { document.getElementById("modalDetalle").style.display = "none"; }
+    function cerrarEditar() { document.getElementById("modalEditar").style.display = "none"; }
 
     function previsualizarFotos(input) {
         const archivos = Array.from(input.files).slice(0, 6);
-        archivosSeleccionados = archivos;
         const grid = document.getElementById("previewGrid");
         grid.innerHTML = "";
-
         archivos.forEach((archivo, i) => {
             const reader = new FileReader();
             reader.onload = function(e) {
-                grid.innerHTML += `
-                    <div class="preview-item" id="preview-${i}">
-                        <img src="${e.target.result}" alt="foto ${i+1}">
-                        <button type="button" class="preview-remove" onclick="removerFoto(${i})">✕</button>
-                    </div>
-                `;
+                grid.innerHTML += `<div class="preview-item" id="preview-${i}">
+                    <img src="${e.target.result}">
+                    <button type="button" class="preview-remove" onclick="document.getElementById('preview-${i}').remove()">✕</button>
+                </div>`;
             };
             reader.readAsDataURL(archivo);
         });
     }
 
-    function removerFoto(index) {
-        document.getElementById(`preview-${index}`)?.remove();
+    function previsualizarFotosEdit(input) {
+        const archivos = Array.from(input.files).slice(0, 6);
+        const grid = document.getElementById("previewGridEdit");
+        grid.innerHTML = "";
+        archivos.forEach((archivo, i) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                grid.innerHTML += `<div class="preview-item">
+                    <img src="${e.target.result}">
+                </div>`;
+            };
+            reader.readAsDataURL(archivo);
+        });
     }
 
     document.getElementById("formPropiedad").addEventListener("submit", function() {
@@ -271,11 +379,91 @@
         document.getElementById("progressBar").style.display = "block";
     });
 
+    document.getElementById("formEditar").addEventListener("submit", function() {
+        document.getElementById("btnEditar").disabled = true;
+        document.getElementById("btnEditar").textContent = "⏳ Guardando...";
+        document.getElementById("progressBarEdit").style.display = "block";
+    });
+
+    function verDetalle(propId) {
+        const prop = propiedadesData.find(p => p.id == propId);
+        if (!prop) return;
+
+        let imagenes = [];
+        try { imagenes = JSON.parse(prop.imagen_url || '[]'); } catch(e) {
+            if (prop.imagen_url && prop.imagen_url.startsWith('http')) imagenes = [prop.imagen_url];
+        }
+
+        document.getElementById("detalleTitulo").textContent = prop.titulo;
+        document.getElementById("detallePrecio").textContent = "$" + parseFloat(prop.precio).toLocaleString();
+        document.getElementById("detalleUbicacion").textContent = "📍 " + prop.ubicacion;
+        document.getElementById("detalleDescripcion").textContent = prop.descripcion || 'Sin descripción';
+
+        const galeriaEl = document.getElementById("detalleGaleria");
+        if (imagenes.length > 0) {
+            let fotoIdx = 0;
+            galeriaEl.innerHTML = imagenes.map((url, i) =>
+                `<img src="${url}" class="${i===0?'activa':''}" alt="foto ${i+1}">`
+            ).join('') + (imagenes.length > 1 ? `
+                <button class="galeria-btn prev" onclick="cambiarDetalleImg(-1, ${imagenes.length})">‹</button>
+                <button class="galeria-btn next" onclick="cambiarDetalleImg(1, ${imagenes.length})">›</button>
+                <div class="contador-fotos">1/${imagenes.length}</div>
+            ` : '');
+        } else {
+            galeriaEl.innerHTML = `<div class="detalle-placeholder">🏠</div>`;
+        }
+
+        document.getElementById("modalDetalle").style.display = "block";
+    }
+
+    let detalleIdx = 0;
+    function cambiarDetalleImg(dir, total) {
+        const galeria = document.getElementById("detalleGaleria");
+        const imgs = galeria.querySelectorAll('img');
+        const contador = galeria.querySelector('.contador-fotos');
+        imgs[detalleIdx].classList.remove('activa');
+        detalleIdx = (detalleIdx + dir + total) % total;
+        imgs[detalleIdx].classList.add('activa');
+        if (contador) contador.textContent = `${detalleIdx+1}/${total}`;
+    }
+
+    function abrirEditar(propId) {
+        const prop = propiedadesData.find(p => p.id == propId);
+        if (!prop) return;
+
+        document.getElementById("editTitulo").value = prop.titulo;
+        document.getElementById("editDescripcion").value = prop.descripcion || '';
+        document.getElementById("editPrecio").value = prop.precio;
+        document.getElementById("editUbicacion").value = prop.ubicacion;
+        document.getElementById("formEditar").action = `/editar_propiedad/${clienteId}/${prop.id}`;
+        document.getElementById("previewGridEdit").innerHTML = "";
+        document.getElementById("btnEditar").disabled = false;
+        document.getElementById("btnEditar").textContent = "💾 Guardar Cambios";
+
+        let imagenes = [];
+        try { imagenes = JSON.parse(prop.imagen_url || '[]'); } catch(e) {
+            if (prop.imagen_url && prop.imagen_url.startsWith('http')) imagenes = [prop.imagen_url];
+        }
+
+        const fotosEl = document.getElementById("fotosExistentes");
+        if (imagenes.length > 0) {
+            fotosEl.innerHTML = imagenes.map((url, i) => `
+                <div class="foto-existente">
+                    <img src="${url}" alt="foto ${i+1}">
+                    <div class="foto-existente-badge">Foto ${i+1}</div>
+                </div>`).join('');
+        } else {
+            fotosEl.innerHTML = `<p style="color:#999;font-size:12px;">Sin fotos</p>`;
+        }
+
+        document.getElementById("modalEditar").style.display = "block";
+    }
+
     function cargarPropiedades() {
-        const propiedades = {{ propiedades_json | safe }};
+        propiedadesData = {{ propiedades_json | safe }};
         const container = document.getElementById("propiedades-container");
 
-        if (!propiedades || propiedades.length === 0) {
+        if (!propiedadesData || propiedadesData.length === 0) {
             container.innerHTML = `
                 <div class="vacio">
                     <div style="font-size: 64px; margin-bottom: 20px;">📭</div>
@@ -286,7 +474,7 @@
             return;
         }
 
-        container.innerHTML = propiedades.map(prop => {
+        container.innerHTML = propiedadesData.map(prop => {
             let imagenes = [];
             try { imagenes = JSON.parse(prop.imagen_url || '[]'); } catch(e) {
                 if (prop.imagen_url && prop.imagen_url.startsWith('http')) imagenes = [prop.imagen_url];
@@ -314,28 +502,29 @@
                         <div class="propiedad-precio">$${parseFloat(prop.precio).toLocaleString()}</div>
                         <div class="propiedad-ubicacion">📍 ${prop.ubicacion}</div>
                         <div class="propiedad-descripcion">${prop.descripcion || 'Sin descripción'}</div>
-                        <form method="POST" action="/eliminar_propiedad/${clienteId}/${prop.id}">
-                            <button type="submit" class="btn-eliminar" onclick="return confirm('¿Eliminar esta propiedad?')">🗑️ Eliminar</button>
-                        </form>
+                        <div class="card-botones">
+                            <button class="btn-ver" onclick="verDetalle(${prop.id})">🔍 Ver</button>
+                            <button class="btn-editar" onclick="abrirEditar(${prop.id})">✏️ Editar</button>
+                            <form method="POST" action="/eliminar_propiedad/${clienteId}/${prop.id}" style="flex:1">
+                                <button type="submit" class="btn-eliminar" style="width:100%" onclick="return confirm('¿Eliminar?')">🗑️</button>
+                            </form>
+                        </div>
                     </div>
                 </div>`;
         }).join('');
     }
 
     const fotoActual = {};
-
-    function cambiarFoto(propId, direccion) {
+    function cambiarFoto(propId, dir) {
         const galeria = document.getElementById(`galeria-${propId}`);
         const imgs = galeria.querySelectorAll('img');
         const dots = galeria.querySelectorAll('.galeria-dot');
         const contador = galeria.querySelector('.contador-fotos');
         if (!imgs.length) return;
-
         if (fotoActual[propId] === undefined) fotoActual[propId] = 0;
         imgs[fotoActual[propId]].classList.remove('activa');
         dots[fotoActual[propId]]?.classList.remove('activo');
-
-        fotoActual[propId] = (fotoActual[propId] + direccion + imgs.length) % imgs.length;
+        fotoActual[propId] = (fotoActual[propId] + dir + imgs.length) % imgs.length;
         imgs[fotoActual[propId]].classList.add('activa');
         dots[fotoActual[propId]]?.classList.add('activo');
         if (contador) contador.textContent = `${fotoActual[propId]+1}/${imgs.length}`;
@@ -347,7 +536,6 @@
         const dots = galeria.querySelectorAll('.galeria-dot');
         const contador = galeria.querySelector('.contador-fotos');
         if (fotoActual[propId] === undefined) fotoActual[propId] = 0;
-
         imgs[fotoActual[propId]].classList.remove('activa');
         dots[fotoActual[propId]]?.classList.remove('activo');
         fotoActual[propId] = index;
