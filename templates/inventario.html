@@ -6,346 +6,355 @@
     <title>{{ cliente_nombre }} - Inventario</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
+        .container { max-width: 1200px; margin: 0 auto; }
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 30px; background: white; padding: 20px;
+            border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        
-        .header h1 {
-            color: #2c3e50;
-            font-size: 24px;
-        }
-        
-        .header-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        
-        .btn-nuevo {
-            background: #27ae60;
-            color: white;
-        }
-        
-        .btn-nuevo:hover {
-            background: #229954;
-            transform: translateY(-2px);
-        }
-        
-        .btn-volver {
-            background: #95a5a6;
-            color: white;
-        }
-        
-        .btn-volver:hover {
-            background: #7f8c8d;
-        }
-        
+        .header h1 { color: #2c3e50; font-size: 24px; }
+        .header-buttons { display: flex; gap: 10px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; transition: all 0.3s; text-decoration: none; display: inline-flex; align-items: center; }
+        .btn-nuevo { background: #27ae60; color: white; }
+        .btn-nuevo:hover { background: #229954; transform: translateY(-2px); }
+        .btn-volver { background: #95a5a6; color: white; }
+        .btn-volver:hover { background: #7f8c8d; }
         .propiedades-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px; margin-bottom: 40px;
         }
-        
         .propiedad-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s;
+            background: white; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.3s;
         }
-        
-        .propiedad-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-        
-        .propiedad-imagen {
-            width: 100%;
-            height: 200px;
+        .propiedad-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+
+        /* GALERÍA */
+        .galeria {
+            position: relative; width: 100%; height: 210px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 48px;
+            overflow: hidden;
         }
-        
-        .propiedad-contenido {
-            padding: 20px;
+        .galeria img {
+            width: 100%; height: 100%; object-fit: cover;
+            position: absolute; top: 0; left: 0;
+            opacity: 0; transition: opacity 0.4s;
         }
-        
-        .propiedad-titulo {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 8px;
+        .galeria img.activa { opacity: 1; }
+        .galeria-placeholder {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 48px; color: white;
         }
-        
-        .propiedad-precio {
-            font-size: 20px;
-            color: #27ae60;
-            font-weight: bold;
-            margin-bottom: 10px;
+        .galeria-nav {
+            position: absolute; bottom: 8px; left: 0; right: 0;
+            display: flex; justify-content: center; gap: 6px;
         }
-        
-        .propiedad-ubicacion {
-            color: #666;
-            font-size: 13px;
-            margin-bottom: 12px;
+        .galeria-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: rgba(255,255,255,0.5); cursor: pointer; border: none;
+            transition: background 0.3s;
         }
-        
-        .propiedad-descripcion {
-            color: #555;
-            font-size: 13px;
-            line-height: 1.5;
-            margin-bottom: 15px;
+        .galeria-dot.activo { background: white; }
+        .galeria-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(0,0,0,0.4); color: white; border: none;
+            width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+            font-size: 14px; display: flex; align-items: center; justify-content: center;
         }
-        
+        .galeria-btn.prev { left: 8px; }
+        .galeria-btn.next { right: 8px; }
+        .contador-fotos {
+            position: absolute; top: 8px; right: 8px;
+            background: rgba(0,0,0,0.5); color: white;
+            font-size: 11px; padding: 3px 8px; border-radius: 10px;
+        }
+
+        .propiedad-contenido { padding: 18px; }
+        .propiedad-titulo { font-size: 17px; font-weight: bold; color: #2c3e50; margin-bottom: 6px; }
+        .propiedad-precio { font-size: 20px; color: #27ae60; font-weight: bold; margin-bottom: 8px; }
+        .propiedad-ubicacion { color: #666; font-size: 13px; margin-bottom: 10px; }
+        .propiedad-descripcion { color: #555; font-size: 13px; line-height: 1.5; margin-bottom: 14px; }
         .btn-eliminar {
-            width: 100%;
-            padding: 10px;
-            background: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: bold;
+            width: 100%; padding: 10px; background: #e74c3c; color: white;
+            border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;
         }
-        
-        .btn-eliminar:hover {
-            background: #c0392b;
-        }
-        
+        .btn-eliminar:hover { background: #c0392b; }
         .vacio {
-            text-align: center;
-            padding: 60px 20px;
-            background: white;
-            border-radius: 12px;
-            color: #95a5a6;
-            grid-column: 1/-1;
+            text-align: center; padding: 60px 20px; background: white;
+            border-radius: 12px; color: #95a5a6; grid-column: 1/-1;
         }
-        
+
+        /* MODAL */
         .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            display: none; position: fixed; z-index: 1000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            overflow-y: auto;
         }
-        
         .modal-contenido {
-            background-color: white;
-            margin: 5% auto;
-            padding: 30px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 600px;
+            background-color: white; margin: 4% auto; padding: 30px;
+            border-radius: 12px; width: 90%; max-width: 600px;
             box-shadow: 0 8px 25px rgba(0,0,0,0.2);
         }
-        
         .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #ecf0f1;
-            padding-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px;
         }
-        
-        .close {
-            font-size: 28px;
-            font-weight: bold;
-            color: #95a5a6;
-            cursor: pointer;
+        .close { font-size: 28px; font-weight: bold; color: #95a5a6; cursor: pointer; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #2c3e50; font-weight: bold; font-size: 13px; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 10px; border: 1px solid #bdc3c7;
+            border-radius: 6px; font-family: Arial, sans-serif; font-size: 13px;
         }
-        
-        .form-group {
-            margin-bottom: 15px;
+        .form-group textarea { min-height: 100px; resize: vertical; }
+
+        /* UPLOAD FOTOS */
+        .upload-area {
+            border: 2px dashed #bdc3c7; border-radius: 8px; padding: 20px;
+            text-align: center; cursor: pointer; transition: 0.3s;
+            background: #f8f9fa;
         }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #2c3e50;
-            font-weight: bold;
-            font-size: 13px;
+        .upload-area:hover { border-color: #667eea; background: #f0f4ff; }
+        .upload-area input[type="file"] { display: none; }
+        .upload-icon { font-size: 36px; margin-bottom: 8px; }
+        .upload-texto { color: #666; font-size: 13px; }
+        .upload-sub { color: #999; font-size: 11px; margin-top: 4px; }
+        .preview-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 8px; margin-top: 12px;
         }
-        
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #bdc3c7;
-            border-radius: 6px;
-            font-family: Arial, sans-serif;
-            font-size: 13px;
+        .preview-item {
+            position: relative; border-radius: 6px; overflow: hidden; height: 80px;
         }
-        
-        .form-group textarea {
-            min-height: 100px;
-            resize: vertical;
+        .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .preview-remove {
+            position: absolute; top: 3px; right: 3px;
+            background: rgba(231,76,60,0.9); color: white;
+            border: none; border-radius: 50%; width: 20px; height: 20px;
+            font-size: 12px; cursor: pointer; display: flex;
+            align-items: center; justify-content: center;
         }
-        
+
         .btn-enviar {
-            width: 100%;
-            padding: 12px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
+            width: 100%; padding: 12px; background: #667eea; color: white;
+            border: none; border-radius: 6px; cursor: pointer;
+            font-size: 14px; font-weight: bold; margin-top: 5px;
         }
-        
-        .btn-enviar:hover {
-            background: #5568d3;
+        .btn-enviar:hover { background: #5568d3; }
+        .btn-enviar:disabled { background: #bdc3c7; cursor: not-allowed; }
+
+        .progress-bar {
+            display: none; width: 100%; height: 6px;
+            background: #ecf0f1; border-radius: 3px; margin-top: 10px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; background: #667eea; border-radius: 3px;
+            animation: progreso 2s ease-in-out infinite;
+        }
+        @keyframes progreso {
+            0% { width: 0%; } 70% { width: 85%; } 100% { width: 95%; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div>
-                <h1>📦 Inventario de Propiedades</h1>
-                <p style="color: #666; margin-top: 5px;">{{ cliente_nombre }}</p>
-            </div>
-            <div class="header-buttons">
-                <button class="btn btn-nuevo" onclick="abrirModal()">➕ Agregar Propiedad</button>
-                <a href="/historial/{{ cliente_id }}" class="btn btn-volver">← Volver</a>
-            </div>
+<div class="container">
+    <div class="header">
+        <div>
+            <h1>📦 Inventario de Propiedades</h1>
+            <p style="color: #666; margin-top: 5px;">{{ cliente_nombre }}</p>
         </div>
-        
-        <div id="propiedades-container" class="propiedades-grid">
-            <!-- Las propiedades se cargan aquí -->
+        <div class="header-buttons">
+            <button class="btn btn-nuevo" onclick="abrirModal()">➕ Agregar Propiedad</button>
+            <a href="/historial/{{ cliente_id }}" class="btn btn-volver">← Volver</a>
         </div>
     </div>
-    
-    <!-- MODAL AGREGAR PROPIEDAD -->
-    <div id="modalAgregar" class="modal">
-        <div class="modal-contenido">
-            <div class="modal-header">
-                <h2>➕ Agregar Nueva Propiedad</h2>
-                <span class="close" onclick="cerrarModal()">&times;</span>
-            </div>
-            
-            <form id="formPropiedad" method="POST" action="/agregar_propiedad/{{ cliente_id }}">
-                <div class="form-group">
-                    <label>Título de la Propiedad *</label>
-                    <input type="text" name="titulo" required placeholder="Ej: Casa en Zona 10">
-                </div>
-                
-                <div class="form-group">
-                    <label>Descripción</label>
-                    <textarea name="descripcion" placeholder="Detalles de la propiedad..."></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>Precio (USD) *</label>
-                    <input type="number" name="precio" required step="0.01" placeholder="250000">
-                </div>
-                
-                <div class="form-group">
-                    <label>Ubicación *</label>
-                    <input type="text" name="ubicacion" required placeholder="Ej: Zona 14, Ciudad de Guatemala">
-                </div>
-                
-                <div class="form-group">
-                    <label>URL de Imagen</label>
-                    <input type="url" name="imagen_url" placeholder="https://ejemplo.com/imagen.jpg">
-                </div>
-                
-                <button type="submit" class="btn-enviar">💾 Guardar Propiedad</button>
-            </form>
+    <div id="propiedades-container" class="propiedades-grid"></div>
+</div>
+
+<!-- MODAL -->
+<div id="modalAgregar" class="modal">
+    <div class="modal-contenido">
+        <div class="modal-header">
+            <h2>➕ Agregar Nueva Propiedad</h2>
+            <span class="close" onclick="cerrarModal()">&times;</span>
         </div>
+        <form id="formPropiedad" method="POST" action="/agregar_propiedad/{{ cliente_id }}" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>Título de la Propiedad *</label>
+                <input type="text" name="titulo" required placeholder="Ej: Casa en Zona 10">
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea name="descripcion" placeholder="Detalles de la propiedad..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Precio (USD) *</label>
+                <input type="number" name="precio" required step="0.01" placeholder="250000">
+            </div>
+            <div class="form-group">
+                <label>Ubicación *</label>
+                <input type="text" name="ubicacion" required placeholder="Ej: Zona 14, Ciudad de Guatemala">
+            </div>
+            <div class="form-group">
+                <label>Fotos de la Propiedad (máx. 6)</label>
+                <div class="upload-area" onclick="document.getElementById('inputFotos').click()">
+                    <input type="file" id="inputFotos" name="imagenes" multiple accept="image/*" onchange="previsualizarFotos(this)">
+                    <div class="upload-icon">📸</div>
+                    <div class="upload-texto">Click para subir fotos</div>
+                    <div class="upload-sub">JPG, PNG, WEBP · Máximo 6 fotos</div>
+                </div>
+                <div id="previewGrid" class="preview-grid"></div>
+            </div>
+            <button type="submit" class="btn-enviar" id="btnGuardar">💾 Guardar Propiedad</button>
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill"></div>
+            </div>
+        </form>
     </div>
-    
-    <script>
-        const clienteId = "{{ cliente_id }}";
-        
-        document.addEventListener('DOMContentLoaded', cargarPropiedades);
-        
-        window.onclick = function(event) {
-            const modal = document.getElementById("modalAgregar");
-            if (event.target == modal) {
-                cerrarModal();
-            }
-        }
-        
-        function abrirModal() {
-            document.getElementById("modalAgregar").style.display = "block";
-        }
-        
-        function cerrarModal() {
-            document.getElementById("modalAgregar").style.display = "none";
-            document.getElementById("formPropiedad").reset();
-        }
-        
-        function cargarPropiedades() {
-            const propiedades = {{ propiedades_json | safe }};
-            const container = document.getElementById("propiedades-container");
-            
-            if (!propiedades || propiedades.length === 0) {
-                container.innerHTML = `
-                    <div class="vacio">
-                        <div style="font-size: 64px; margin-bottom: 20px;">📭</div>
-                        <h2 style="color: #7f8c8d; margin-bottom: 10px;">No hay propiedades aún</h2>
-                        <p>Comienza agregando tu primera propiedad</p>
-                        <button class="btn btn-nuevo" onclick="abrirModal()" style="margin-top: 20px;">➕ Agregar Propiedad</button>
+</div>
+
+<script>
+    const clienteId = "{{ cliente_id }}";
+    let archivosSeleccionados = [];
+
+    document.addEventListener('DOMContentLoaded', cargarPropiedades);
+
+    window.onclick = function(e) {
+        if (e.target == document.getElementById("modalAgregar")) cerrarModal();
+    }
+
+    function abrirModal() { document.getElementById("modalAgregar").style.display = "block"; }
+
+    function cerrarModal() {
+        document.getElementById("modalAgregar").style.display = "none";
+        document.getElementById("formPropiedad").reset();
+        document.getElementById("previewGrid").innerHTML = "";
+        archivosSeleccionados = [];
+    }
+
+    function previsualizarFotos(input) {
+        const archivos = Array.from(input.files).slice(0, 6);
+        archivosSeleccionados = archivos;
+        const grid = document.getElementById("previewGrid");
+        grid.innerHTML = "";
+
+        archivos.forEach((archivo, i) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                grid.innerHTML += `
+                    <div class="preview-item" id="preview-${i}">
+                        <img src="${e.target.result}" alt="foto ${i+1}">
+                        <button type="button" class="preview-remove" onclick="removerFoto(${i})">✕</button>
                     </div>
                 `;
-                return;
+            };
+            reader.readAsDataURL(archivo);
+        });
+    }
+
+    function removerFoto(index) {
+        document.getElementById(`preview-${index}`)?.remove();
+    }
+
+    document.getElementById("formPropiedad").addEventListener("submit", function() {
+        document.getElementById("btnGuardar").disabled = true;
+        document.getElementById("btnGuardar").textContent = "⏳ Subiendo fotos...";
+        document.getElementById("progressBar").style.display = "block";
+    });
+
+    function cargarPropiedades() {
+        const propiedades = {{ propiedades_json | safe }};
+        const container = document.getElementById("propiedades-container");
+
+        if (!propiedades || propiedades.length === 0) {
+            container.innerHTML = `
+                <div class="vacio">
+                    <div style="font-size: 64px; margin-bottom: 20px;">📭</div>
+                    <h2 style="color: #7f8c8d; margin-bottom: 10px;">No hay propiedades aún</h2>
+                    <p>Comienza agregando tu primera propiedad</p>
+                    <button class="btn btn-nuevo" onclick="abrirModal()" style="margin-top: 20px;">➕ Agregar Propiedad</button>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = propiedades.map(prop => {
+            let imagenes = [];
+            try { imagenes = JSON.parse(prop.imagen_url || '[]'); } catch(e) {
+                if (prop.imagen_url && prop.imagen_url.startsWith('http')) imagenes = [prop.imagen_url];
             }
-            
-            container.innerHTML = propiedades.map(prop => `
+
+            const galeriaHTML = imagenes.length > 0 ? `
+                <div class="galeria" id="galeria-${prop.id}">
+                    ${imagenes.map((url, i) => `<img src="${url}" class="${i===0?'activa':''}" alt="foto ${i+1}">`).join('')}
+                    ${imagenes.length > 1 ? `
+                        <button class="galeria-btn prev" onclick="cambiarFoto('${prop.id}', -1)">‹</button>
+                        <button class="galeria-btn next" onclick="cambiarFoto('${prop.id}', 1)">›</button>
+                        <div class="galeria-nav">
+                            ${imagenes.map((_, i) => `<button class="galeria-dot ${i===0?'activo':''}" onclick="irFoto('${prop.id}', ${i})"></button>`).join('')}
+                        </div>
+                        <div class="contador-fotos">1/${imagenes.length}</div>
+                    ` : ''}
+                </div>` :
+                `<div class="galeria"><div class="galeria-placeholder">🏠</div></div>`;
+
+            return `
                 <div class="propiedad-card">
-                    <div class="propiedad-imagen">🏠</div>
+                    ${galeriaHTML}
                     <div class="propiedad-contenido">
                         <div class="propiedad-titulo">${prop.titulo}</div>
                         <div class="propiedad-precio">$${parseFloat(prop.precio).toLocaleString()}</div>
                         <div class="propiedad-ubicacion">📍 ${prop.ubicacion}</div>
                         <div class="propiedad-descripcion">${prop.descripcion || 'Sin descripción'}</div>
                         <form method="POST" action="/eliminar_propiedad/${clienteId}/${prop.id}">
-                            <button type="submit" class="btn-eliminar" onclick="return confirm('¿Eliminar?');">🗑️ Eliminar</button>
+                            <button type="submit" class="btn-eliminar" onclick="return confirm('¿Eliminar esta propiedad?')">🗑️ Eliminar</button>
                         </form>
                     </div>
-                </div>
-            `).join('');
-        }
-    </script>
+                </div>`;
+        }).join('');
+    }
+
+    const fotoActual = {};
+
+    function cambiarFoto(propId, direccion) {
+        const galeria = document.getElementById(`galeria-${propId}`);
+        const imgs = galeria.querySelectorAll('img');
+        const dots = galeria.querySelectorAll('.galeria-dot');
+        const contador = galeria.querySelector('.contador-fotos');
+        if (!imgs.length) return;
+
+        if (fotoActual[propId] === undefined) fotoActual[propId] = 0;
+        imgs[fotoActual[propId]].classList.remove('activa');
+        dots[fotoActual[propId]]?.classList.remove('activo');
+
+        fotoActual[propId] = (fotoActual[propId] + direccion + imgs.length) % imgs.length;
+        imgs[fotoActual[propId]].classList.add('activa');
+        dots[fotoActual[propId]]?.classList.add('activo');
+        if (contador) contador.textContent = `${fotoActual[propId]+1}/${imgs.length}`;
+    }
+
+    function irFoto(propId, index) {
+        const galeria = document.getElementById(`galeria-${propId}`);
+        const imgs = galeria.querySelectorAll('img');
+        const dots = galeria.querySelectorAll('.galeria-dot');
+        const contador = galeria.querySelector('.contador-fotos');
+        if (fotoActual[propId] === undefined) fotoActual[propId] = 0;
+
+        imgs[fotoActual[propId]].classList.remove('activa');
+        dots[fotoActual[propId]]?.classList.remove('activo');
+        fotoActual[propId] = index;
+        imgs[index].classList.add('activa');
+        dots[index]?.classList.add('activo');
+        if (contador) contador.textContent = `${index+1}/${imgs.length}`;
+    }
+</script>
 </body>
 </html>
