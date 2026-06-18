@@ -4,6 +4,8 @@ import os
 import re
 import math
 import json
+import cloudinary
+import cloudinary.uploader
 from datetime import datetime, timedelta
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
@@ -24,6 +26,13 @@ app.secret_key = config.SECRET_KEY
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
+
+# --- CLOUDINARY CONFIG ---
+cloudinary.config(
+    cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    api_key    = os.environ.get("CLOUDINARY_API_KEY"),
+    api_secret = os.environ.get("CLOUDINARY_API_SECRET")
+)
 
 # --- MOTOR DE INTELIGENCIA DE NEGOCIOS (OMNI-ENGINE V4) ---
 
@@ -209,7 +218,7 @@ def formulario(cliente_id):
                 presupuesto=d.get("presupuesto"),
                 mensaje=d.get("mensaje"),
                 score=score_final,
-                email_prospecto=email_cliente   # ← NUEVO
+                email_prospecto=email_cliente
             )
             return render_template("formulario.html", enviado=True, textos=textos,
                                    cliente_id=id_clean, whatsapp=vendedor['whatsapp'],
@@ -235,7 +244,6 @@ def historial(cliente_id):
 
 @app.route("/inventario/<cliente_id>", methods=["GET"])
 def inventario(cliente_id):
-    """Vista ADMIN del inventario - requiere login, permite editar."""
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean:
         return redirect(url_for('login', cliente_id=id_clean))
@@ -254,7 +262,6 @@ def inventario(cliente_id):
 
 @app.route("/propiedades/<cliente_id>", methods=["GET"])
 def inventario_publico(cliente_id):
-    """Vista PÚBLICA del inventario - sin login, solo lectura."""
     id_clean = cliente_id.lower()
     vendedor = CLIENTES.get(id_clean)
     if not vendedor: return "Error 404: No encontrado.", 404
@@ -276,17 +283,29 @@ def agregar_propiedad(cliente_id):
     vendedor = CLIENTES.get(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
+        # Subir imágenes a Cloudinary
+        imagenes_urls = []
+        archivos = request.files.getlist("imagenes")
+        for archivo in archivos:
+            if archivo and archivo.filename:
+                resultado = cloudinary.uploader.upload(
+                    archivo,
+                    folder=f"bot_inmobiliaria/{id_clean}",
+                    transformation=[{"width": 800, "height": 600, "crop": "fill", "quality": "auto"}]
+                )
+                imagenes_urls.append(resultado["secure_url"])
+
         propiedad_data = {
             "titulo": request.form.get("titulo").strip(),
             "descripcion": request.form.get("descripcion", "").strip(),
             "precio": float(request.form.get("precio", 0)),
             "ubicacion": request.form.get("ubicacion").strip(),
-            "imagen_url": request.form.get("imagen_url", "").strip(),
+            "imagen_url": json.dumps(imagenes_urls),
             "vendedor": id_clean,
             "estado": "disponible"
         }
         supabase.table("propiedades").insert(propiedad_data).execute()
-        print(f"✅ Propiedad agregada: {propiedad_data['titulo']}")
+        print(f"✅ Propiedad agregada con {len(imagenes_urls)} imágenes")
         return redirect(url_for('inventario', cliente_id=id_clean))
     except Exception as e:
         print(f"Error agregando propiedad: {e}")
