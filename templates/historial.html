@@ -20,7 +20,9 @@
         .btn-stats:hover { background: #2980b9; transform: translateY(-2px); }
         .btn-herramientas { background: #f39c12; color: white; text-decoration: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3); transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
         .btn-herramientas:hover { background: #e67e22; transform: translateY(-2px); }
-        
+        .btn-inventario { background: #8e44ad; color: white; text-decoration: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 10px rgba(142, 68, 173, 0.3); transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-inventario:hover { background: #6c3483; transform: translateY(-2px); }
+
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         th { background: #2c3e50; color: white; padding: 15px; font-size: 13px; text-transform: uppercase; }
         td { padding: 15px; border-bottom: 1px solid #eee; text-align: center; font-size: 14px; }
@@ -88,6 +90,7 @@
 <div class="header-container">
     <h2>📊 {{ textos.historial_titulo }}: {{ cliente.nombre }}</h2>
     <div style="display: flex; gap: 10px;">
+        <a href="{{ url_for('inventario', cliente_id=cliente.usuario) }}" class="btn-inventario">📦 Inventario</a>
         <a href="{{ url_for('herramientas', cliente_id=cliente.usuario) }}" class="btn-herramientas">🧮 Herramientas</a>
         <a href="{{ url_for('stats', cliente_id=cliente.usuario) }}" class="btn-stats">📈 Estadísticas</a>
         <button onclick="descargarExcel()" class="btn-excel">📥 {{ textos.btn_descargar }}</button>
