@@ -284,7 +284,7 @@ def agregar_propiedad(cliente_id):
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
         imagenes_urls = []
-        archivos = request.files.getlist("imagenes")
+        archivos = request.files.getlist("imagenes")[:5]
         for archivo in archivos:
             if archivo and archivo.filename:
                 resultado = cloudinary.uploader.upload(
@@ -312,13 +312,12 @@ def agregar_propiedad(cliente_id):
 
 @app.route("/editar_propiedad/<cliente_id>/<int:prop_id>", methods=["POST"])
 def editar_propiedad(cliente_id, prop_id):
-    """Edita propiedad — agrega fotos nuevas a las existentes."""
+    """Edita propiedad — agrega fotos nuevas a las existentes (máx. 5 total)."""
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean: return "Error 403: No autorizado.", 403
     vendedor = CLIENTES.get(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
-        # Obtener fotos existentes de Supabase
         prop_actual = supabase.table("propiedades").select("imagen_url").eq("id", prop_id).execute()
         imagenes_existentes = []
         if prop_actual.data:
@@ -328,8 +327,9 @@ def editar_propiedad(cliente_id, prop_id):
                     imagenes_existentes = []
             except: pass
 
-        # Subir fotos nuevas y AGREGAR a las existentes
-        archivos = request.files.getlist("imagenes")
+        espacio_disponible = max(0, 5 - len(imagenes_existentes))
+        archivos = request.files.getlist("imagenes")[:espacio_disponible]
+
         for archivo in archivos:
             if archivo and archivo.filename:
                 resultado = cloudinary.uploader.upload(
