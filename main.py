@@ -283,7 +283,6 @@ def agregar_propiedad(cliente_id):
     vendedor = CLIENTES.get(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
-        # Subir imágenes a Cloudinary
         imagenes_urls = []
         archivos = request.files.getlist("imagenes")
         for archivo in archivos:
@@ -309,6 +308,42 @@ def agregar_propiedad(cliente_id):
         return redirect(url_for('inventario', cliente_id=id_clean))
     except Exception as e:
         print(f"Error agregando propiedad: {e}")
+        return f"Error: {e}", 500
+
+@app.route("/editar_propiedad/<cliente_id>/<int:prop_id>", methods=["POST"])
+def editar_propiedad(cliente_id, prop_id):
+    """Edita una propiedad existente del inventario."""
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean: return "Error 403: No autorizado.", 403
+    vendedor = CLIENTES.get(id_clean)
+    if not vendedor: return "Error 404: Vendedor no encontrado.", 404
+    try:
+        archivos = request.files.getlist("imagenes")
+        archivos_validos = [f for f in archivos if f and f.filename]
+
+        update_data = {
+            "titulo": request.form.get("titulo").strip(),
+            "descripcion": request.form.get("descripcion", "").strip(),
+            "precio": float(request.form.get("precio", 0)),
+            "ubicacion": request.form.get("ubicacion").strip(),
+        }
+
+        if archivos_validos:
+            imagenes_urls = []
+            for archivo in archivos_validos:
+                resultado = cloudinary.uploader.upload(
+                    archivo,
+                    folder=f"bot_inmobiliaria/{id_clean}",
+                    transformation=[{"width": 800, "height": 600, "crop": "fill", "quality": "auto"}]
+                )
+                imagenes_urls.append(resultado["secure_url"])
+            update_data["imagen_url"] = json.dumps(imagenes_urls)
+
+        supabase.table("propiedades").update(update_data).eq("id", prop_id).eq("vendedor", id_clean).execute()
+        print(f"✅ Propiedad {prop_id} editada")
+        return redirect(url_for('inventario', cliente_id=id_clean))
+    except Exception as e:
+        print(f"Error editando propiedad: {e}")
         return f"Error: {e}", 500
 
 @app.route("/eliminar_propiedad/<cliente_id>/<int:prop_id>", methods=["POST"])
