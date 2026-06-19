@@ -19,11 +19,16 @@
         }
         .header h1 { color: #2c3e50; font-size: 24px; }
         .header-buttons { display: flex; gap: 10px; }
-        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; transition: all 0.3s; text-decoration: none; display: inline-flex; align-items: center; }
+        .btn {
+            padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;
+            font-size: 14px; font-weight: bold; transition: all 0.3s;
+            text-decoration: none; display: inline-flex; align-items: center;
+        }
         .btn-nuevo { background: #27ae60; color: white; }
         .btn-nuevo:hover { background: #229954; transform: translateY(-2px); }
         .btn-volver { background: #95a5a6; color: white; }
         .btn-volver:hover { background: #7f8c8d; }
+
         .propiedades-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -35,14 +40,14 @@
         }
         .propiedad-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
 
-        /* GALERÍA */
+        /* GALERÍA — fotos completas */
         .galeria {
-            position: relative; width: 100%; height: 210px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            overflow: hidden;
+            position: relative; width: 100%; height: 240px;
+            background: #1a1a2e; overflow: hidden;
         }
         .galeria img {
-            width: 100%; height: 100%; object-fit: cover;
+            width: 100%; height: 100%;
+            object-fit: contain;
             position: absolute; top: 0; left: 0;
             opacity: 0; transition: opacity 0.4s;
         }
@@ -51,29 +56,31 @@
             width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
             font-size: 48px; color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         .galeria-nav {
             position: absolute; bottom: 8px; left: 0; right: 0;
-            display: flex; justify-content: center; gap: 6px;
+            display: flex; justify-content: center; gap: 6px; z-index: 2;
         }
         .galeria-dot {
             width: 8px; height: 8px; border-radius: 50%;
-            background: rgba(255,255,255,0.5); cursor: pointer; border: none;
-            transition: background 0.3s;
+            background: rgba(255,255,255,0.5); cursor: pointer; border: none; transition: 0.3s;
         }
         .galeria-dot.activo { background: white; }
         .galeria-btn {
             position: absolute; top: 50%; transform: translateY(-50%);
-            background: rgba(0,0,0,0.4); color: white; border: none;
-            width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
-            font-size: 14px; display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.5); color: white; border: none;
+            width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+            font-size: 18px; display: flex; align-items: center; justify-content: center;
+            z-index: 2; transition: 0.2s;
         }
+        .galeria-btn:hover { background: rgba(0,0,0,0.8); }
         .galeria-btn.prev { left: 8px; }
         .galeria-btn.next { right: 8px; }
         .contador-fotos {
             position: absolute; top: 8px; right: 8px;
-            background: rgba(0,0,0,0.5); color: white;
-            font-size: 11px; padding: 3px 8px; border-radius: 10px;
+            background: rgba(0,0,0,0.6); color: white;
+            font-size: 11px; padding: 3px 8px; border-radius: 10px; z-index: 2;
         }
 
         .propiedad-contenido { padding: 18px; }
@@ -88,19 +95,21 @@
         .card-botones { display: flex; gap: 8px; margin-top: 10px; }
         .btn-ver {
             flex: 1; padding: 9px; background: #3498db; color: white;
-            border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;
+            border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s;
         }
         .btn-ver:hover { background: #2980b9; }
         .btn-editar {
             flex: 1; padding: 9px; background: #f39c12; color: white;
-            border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;
+            border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s;
         }
         .btn-editar:hover { background: #e67e22; }
         .btn-eliminar {
             flex: 1; padding: 9px; background: #e74c3c; color: white;
-            border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;
+            border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s;
+            width: 100%;
         }
         .btn-eliminar:hover { background: #c0392b; }
+
         .vacio {
             text-align: center; padding: 60px 20px; background: white;
             border-radius: 12px; color: #95a5a6; grid-column: 1/-1;
@@ -110,27 +119,34 @@
         .modal {
             display: none; position: fixed; z-index: 1000;
             left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.6); overflow-y: auto;
+            background-color: rgba(0,0,0,0.65); overflow-y: auto;
         }
         .modal-contenido {
             background-color: white; margin: 4% auto; padding: 30px;
-            border-radius: 12px; width: 90%; max-width: 600px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            border-radius: 12px; width: 90%; max-width: 620px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
         }
         .modal-header {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 20px; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px;
         }
-        .close { font-size: 28px; font-weight: bold; color: #95a5a6; cursor: pointer; }
+        .modal-header h2 { color: #2c3e50; font-size: 20px; }
+        .close { font-size: 28px; font-weight: bold; color: #95a5a6; cursor: pointer; line-height: 1; }
+        .close:hover { color: #e74c3c; }
+
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; color: #2c3e50; font-weight: bold; font-size: 13px; }
         .form-group input, .form-group textarea {
             width: 100%; padding: 10px; border: 1px solid #bdc3c7;
-            border-radius: 6px; font-family: Arial, sans-serif; font-size: 13px;
+            border-radius: 6px; font-family: inherit; font-size: 13px;
+            transition: 0.2s;
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none; border-color: #667eea; background: #f8f9ff;
         }
         .form-group textarea { min-height: 100px; resize: vertical; }
 
-        /* UPLOAD FOTOS */
+        /* UPLOAD */
         .upload-area {
             border: 2px dashed #bdc3c7; border-radius: 8px; padding: 20px;
             text-align: center; cursor: pointer; transition: 0.3s; background: #f8f9fa;
@@ -140,22 +156,71 @@
         .upload-icon { font-size: 36px; margin-bottom: 8px; }
         .upload-texto { color: #666; font-size: 13px; }
         .upload-sub { color: #999; font-size: 11px; margin-top: 4px; }
+
         .preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
-        .preview-item { position: relative; border-radius: 6px; overflow: hidden; height: 80px; }
-        .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .preview-item { position: relative; border-radius: 6px; overflow: hidden; height: 80px; background: #1a1a2e; }
+        .preview-item img { width: 100%; height: 100%; object-fit: contain; }
         .preview-remove {
             position: absolute; top: 3px; right: 3px;
             background: rgba(231,76,60,0.9); color: white;
             border: none; border-radius: 50%; width: 20px; height: 20px;
-            font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
+
+        /* FOTOS EXISTENTES EN EDICIÓN */
+        .fotos-existentes-titulo { font-size: 12px; color: #666; margin-bottom: 8px; font-weight: bold; }
+        .fotos-existentes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
+        .foto-existente {
+            position: relative; height: 65px; border-radius: 6px;
+            overflow: hidden; background: #1a1a2e; border: 1px solid #eee;
+        }
+        .foto-existente img { width: 100%; height: 100%; object-fit: contain; }
+        .foto-existente-num {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: rgba(0,0,0,0.5); color: white; font-size: 9px;
+            text-align: center; padding: 2px;
+        }
+        .btn-borrar-foto {
+            position: absolute; top: 2px; right: 2px;
+            background: rgba(231,76,60,0.85); color: white;
+            border: none; border-radius: 50%; width: 16px; height: 16px;
+            font-size: 9px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* GALERÍA DETALLE MODAL */
+        .detalle-galeria {
+            width: 100%; height: 320px; border-radius: 10px;
+            background: #1a1a2e; position: relative; margin-bottom: 20px; overflow: hidden;
+        }
+        .detalle-galeria img {
+            width: 100%; height: 100%; object-fit: contain;
+            position: absolute; top: 0; left: 0;
+            opacity: 0; transition: opacity 0.4s;
+        }
+        .detalle-galeria img.activa { opacity: 1; }
+        .detalle-placeholder {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 64px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .detalle-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        .detalle-campo { background: #f8f9fa; padding: 12px; border-radius: 8px; }
+        .detalle-campo-label { font-size: 11px; color: #999; text-transform: uppercase; margin-bottom: 4px; }
+        .detalle-campo-valor { font-size: 15px; color: #2c3e50; font-weight: bold; }
+        .detalle-descripcion {
+            background: #f8f9fa; padding: 14px; border-radius: 8px;
+            font-size: 13px; color: #555; line-height: 1.7;
+        }
+
         .btn-enviar {
             width: 100%; padding: 12px; background: #667eea; color: white;
             border: none; border-radius: 6px; cursor: pointer;
-            font-size: 14px; font-weight: bold; margin-top: 5px;
+            font-size: 14px; font-weight: bold; margin-top: 8px; transition: 0.2s;
         }
         .btn-enviar:hover { background: #5568d3; }
         .btn-enviar:disabled { background: #bdc3c7; cursor: not-allowed; }
+
         .progress-bar {
             display: none; width: 100%; height: 6px;
             background: #ecf0f1; border-radius: 3px; margin-top: 10px; overflow: hidden;
@@ -166,37 +231,10 @@
         }
         @keyframes progreso { 0% { width: 0%; } 70% { width: 85%; } 100% { width: 95%; } }
 
-        /* MODAL DETALLE */
-        .detalle-galeria {
-            width: 100%; height: 280px; border-radius: 10px; overflow: hidden;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            position: relative; margin-bottom: 20px;
-        }
-        .detalle-galeria img {
-            width: 100%; height: 100%; object-fit: cover;
-            position: absolute; top: 0; left: 0;
-            opacity: 0; transition: opacity 0.4s;
-        }
-        .detalle-galeria img.activa { opacity: 1; }
-        .detalle-placeholder {
-            width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 64px;
-        }
-        .detalle-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-        .detalle-campo { background: #f8f9fa; padding: 12px; border-radius: 8px; }
-        .detalle-campo-label { font-size: 11px; color: #999; text-transform: uppercase; margin-bottom: 4px; }
-        .detalle-campo-valor { font-size: 15px; color: #2c3e50; font-weight: bold; }
-        .detalle-descripcion { background: #f8f9fa; padding: 14px; border-radius: 8px; font-size: 13px; color: #555; line-height: 1.6; }
-
-        /* FOTOS EXISTENTES EN EDICIÓN */
-        .fotos-existentes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
-        .foto-existente { position: relative; height: 70px; border-radius: 6px; overflow: hidden; }
-        .foto-existente img { width: 100%; height: 100%; object-fit: cover; }
-        .foto-existente-badge {
-            position: absolute; bottom: 0; left: 0; right: 0;
-            background: rgba(0,0,0,0.5); color: white; font-size: 10px;
-            text-align: center; padding: 2px;
+        .info-box {
+            background: #eaf4fb; border-left: 3px solid #3498db;
+            padding: 10px 14px; border-radius: 6px; font-size: 12px;
+            color: #2980b9; margin-bottom: 12px;
         }
     </style>
 </head>
@@ -205,7 +243,7 @@
     <div class="header">
         <div>
             <h1>📦 Inventario de Propiedades</h1>
-            <p style="color: #666; margin-top: 5px;">{{ cliente_nombre }}</p>
+            <p style="color:#666;margin-top:5px;">{{ cliente_nombre }}</p>
         </div>
         <div class="header-buttons">
             <button class="btn btn-nuevo" onclick="abrirModal()">➕ Agregar Propiedad</button>
@@ -224,7 +262,7 @@
         </div>
         <form id="formPropiedad" method="POST" action="/agregar_propiedad/{{ cliente_id }}" enctype="multipart/form-data">
             <div class="form-group">
-                <label>Título de la Propiedad *</label>
+                <label>Título *</label>
                 <input type="text" name="titulo" required placeholder="Ej: Casa en Zona 10">
             </div>
             <div class="form-group">
@@ -237,15 +275,15 @@
             </div>
             <div class="form-group">
                 <label>Ubicación *</label>
-                <input type="text" name="ubicacion" required placeholder="Ej: Zona 14, Ciudad de Guatemala">
+                <input type="text" name="ubicacion" required placeholder="Ej: Zona 14, Guatemala">
             </div>
             <div class="form-group">
-                <label>Fotos de la Propiedad (máx. 6)</label>
+                <label>Fotos (máx. 6)</label>
                 <div class="upload-area" onclick="document.getElementById('inputFotos').click()">
-                    <input type="file" id="inputFotos" name="imagenes" multiple accept="image/*" onchange="previsualizarFotos(this)">
+                    <input type="file" id="inputFotos" name="imagenes" multiple accept="image/*" onchange="previsualizarFotos(this,'previewGrid')">
                     <div class="upload-icon">📸</div>
                     <div class="upload-texto">Click para subir fotos</div>
-                    <div class="upload-sub">JPG, PNG, WEBP · Máximo 6 fotos</div>
+                    <div class="upload-sub">JPG, PNG, WEBP · Máx. 6 fotos</div>
                 </div>
                 <div id="previewGrid" class="preview-grid"></div>
             </div>
@@ -259,7 +297,7 @@
 <div id="modalDetalle" class="modal">
     <div class="modal-contenido">
         <div class="modal-header">
-            <h2 id="detalleTitulo">Detalle de Propiedad</h2>
+            <h2 id="detalleTitulo"></h2>
             <span class="close" onclick="cerrarDetalle()">&times;</span>
         </div>
         <div id="detalleGaleria" class="detalle-galeria"></div>
@@ -301,20 +339,31 @@
                 <label>Ubicación *</label>
                 <input type="text" name="ubicacion" id="editUbicacion" required>
             </div>
+
+            <!-- Fotos existentes con navegación -->
             <div class="form-group">
-                <label>Fotos actuales</label>
-                <div id="fotosExistentes" class="fotos-existentes"></div>
+                <div class="fotos-existentes-titulo">📸 Fotos actuales</div>
+                <div id="galeriaEditContainer" style="position:relative;width:100%;height:200px;background:#1a1a2e;border-radius:8px;overflow:hidden;margin-bottom:10px;">
+                    <div id="galeriaEditImgs"></div>
+                    <button type="button" class="galeria-btn prev" id="editPrev" onclick="cambiarEditFoto(-1)" style="display:none">‹</button>
+                    <button type="button" class="galeria-btn next" id="editNext" onclick="cambiarEditFoto(1)" style="display:none">›</button>
+                    <div id="editContador" class="contador-fotos" style="display:none"></div>
+                </div>
+                <div id="fotosExistentesGrid" class="fotos-existentes-grid"></div>
             </div>
+
+            <!-- Agregar más fotos -->
             <div class="form-group">
-                <label>Reemplazar fotos (opcional)</label>
+                <div class="info-box">➕ Las fotos nuevas se <strong>agregarán</strong> a las existentes</div>
                 <div class="upload-area" onclick="document.getElementById('inputFotosEdit').click()">
-                    <input type="file" id="inputFotosEdit" name="imagenes" multiple accept="image/*" onchange="previsualizarFotosEdit(this)">
+                    <input type="file" id="inputFotosEdit" name="imagenes" multiple accept="image/*" onchange="previsualizarFotos(this,'previewGridEdit')">
                     <div class="upload-icon">📸</div>
-                    <div class="upload-texto">Click para subir fotos nuevas</div>
-                    <div class="upload-sub">Si subes fotos nuevas reemplazará las actuales</div>
+                    <div class="upload-texto">Click para agregar más fotos</div>
+                    <div class="upload-sub">Se añadirán a las fotos actuales</div>
                 </div>
                 <div id="previewGridEdit" class="preview-grid"></div>
             </div>
+
             <button type="submit" class="btn-enviar" id="btnEditar">💾 Guardar Cambios</button>
             <div class="progress-bar" id="progressBarEdit"><div class="progress-fill"></div></div>
         </form>
@@ -324,6 +373,10 @@
 <script>
     const clienteId = "{{ cliente_id }}";
     let propiedadesData = [];
+    let detalleIdx = 0;
+    let editIdx = 0;
+    let editImagenes = [];
+    const fotoActual = {};
 
     document.addEventListener('DOMContentLoaded', cargarPropiedades);
 
@@ -340,181 +393,32 @@
         document.getElementById("previewGrid").innerHTML = "";
     }
     function cerrarDetalle() { document.getElementById("modalDetalle").style.display = "none"; }
-    function cerrarEditar() { document.getElementById("modalEditar").style.display = "none"; }
-
-    function previsualizarFotos(input) {
-        const archivos = Array.from(input.files).slice(0, 6);
-        const grid = document.getElementById("previewGrid");
-        grid.innerHTML = "";
-        archivos.forEach((archivo, i) => {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                grid.innerHTML += `<div class="preview-item" id="preview-${i}">
-                    <img src="${e.target.result}">
-                    <button type="button" class="preview-remove" onclick="document.getElementById('preview-${i}').remove()">✕</button>
-                </div>`;
-            };
-            reader.readAsDataURL(archivo);
-        });
-    }
-
-    function previsualizarFotosEdit(input) {
-        const archivos = Array.from(input.files).slice(0, 6);
-        const grid = document.getElementById("previewGridEdit");
-        grid.innerHTML = "";
-        archivos.forEach((archivo, i) => {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                grid.innerHTML += `<div class="preview-item">
-                    <img src="${e.target.result}">
-                </div>`;
-            };
-            reader.readAsDataURL(archivo);
-        });
-    }
-
-    document.getElementById("formPropiedad").addEventListener("submit", function() {
-        document.getElementById("btnGuardar").disabled = true;
-        document.getElementById("btnGuardar").textContent = "⏳ Subiendo fotos...";
-        document.getElementById("progressBar").style.display = "block";
-    });
-
-    document.getElementById("formEditar").addEventListener("submit", function() {
-        document.getElementById("btnEditar").disabled = true;
-        document.getElementById("btnEditar").textContent = "⏳ Guardando...";
-        document.getElementById("progressBarEdit").style.display = "block";
-    });
-
-    function verDetalle(propId) {
-        const prop = propiedadesData.find(p => p.id == propId);
-        if (!prop) return;
-
-        let imagenes = [];
-        try { imagenes = JSON.parse(prop.imagen_url || '[]'); } catch(e) {
-            if (prop.imagen_url && prop.imagen_url.startsWith('http')) imagenes = [prop.imagen_url];
-        }
-
-        document.getElementById("detalleTitulo").textContent = prop.titulo;
-        document.getElementById("detallePrecio").textContent = "$" + parseFloat(prop.precio).toLocaleString();
-        document.getElementById("detalleUbicacion").textContent = "📍 " + prop.ubicacion;
-        document.getElementById("detalleDescripcion").textContent = prop.descripcion || 'Sin descripción';
-
-        const galeriaEl = document.getElementById("detalleGaleria");
-        if (imagenes.length > 0) {
-            let fotoIdx = 0;
-            galeriaEl.innerHTML = imagenes.map((url, i) =>
-                `<img src="${url}" class="${i===0?'activa':''}" alt="foto ${i+1}">`
-            ).join('') + (imagenes.length > 1 ? `
-                <button class="galeria-btn prev" onclick="cambiarDetalleImg(-1, ${imagenes.length})">‹</button>
-                <button class="galeria-btn next" onclick="cambiarDetalleImg(1, ${imagenes.length})">›</button>
-                <div class="contador-fotos">1/${imagenes.length}</div>
-            ` : '');
-        } else {
-            galeriaEl.innerHTML = `<div class="detalle-placeholder">🏠</div>`;
-        }
-
-        document.getElementById("modalDetalle").style.display = "block";
-    }
-
-    let detalleIdx = 0;
-    function cambiarDetalleImg(dir, total) {
-        const galeria = document.getElementById("detalleGaleria");
-        const imgs = galeria.querySelectorAll('img');
-        const contador = galeria.querySelector('.contador-fotos');
-        imgs[detalleIdx].classList.remove('activa');
-        detalleIdx = (detalleIdx + dir + total) % total;
-        imgs[detalleIdx].classList.add('activa');
-        if (contador) contador.textContent = `${detalleIdx+1}/${total}`;
-    }
-
-    function abrirEditar(propId) {
-        const prop = propiedadesData.find(p => p.id == propId);
-        if (!prop) return;
-
-        document.getElementById("editTitulo").value = prop.titulo;
-        document.getElementById("editDescripcion").value = prop.descripcion || '';
-        document.getElementById("editPrecio").value = prop.precio;
-        document.getElementById("editUbicacion").value = prop.ubicacion;
-        document.getElementById("formEditar").action = `/editar_propiedad/${clienteId}/${prop.id}`;
+    function cerrarEditar() {
+        document.getElementById("modalEditar").style.display = "none";
         document.getElementById("previewGridEdit").innerHTML = "";
-        document.getElementById("btnEditar").disabled = false;
-        document.getElementById("btnEditar").textContent = "💾 Guardar Cambios";
-
-        let imagenes = [];
-        try { imagenes = JSON.parse(prop.imagen_url || '[]'); } catch(e) {
-            if (prop.imagen_url && prop.imagen_url.startsWith('http')) imagenes = [prop.imagen_url];
-        }
-
-        const fotosEl = document.getElementById("fotosExistentes");
-        if (imagenes.length > 0) {
-            fotosEl.innerHTML = imagenes.map((url, i) => `
-                <div class="foto-existente">
-                    <img src="${url}" alt="foto ${i+1}">
-                    <div class="foto-existente-badge">Foto ${i+1}</div>
-                </div>`).join('');
-        } else {
-            fotosEl.innerHTML = `<p style="color:#999;font-size:12px;">Sin fotos</p>`;
-        }
-
-        document.getElementById("modalEditar").style.display = "block";
+        editImagenes = [];
+        editIdx = 0;
     }
 
-    function cargarPropiedades() {
-        propiedadesData = {{ propiedades_json | safe }};
-        const container = document.getElementById("propiedades-container");
-
-        if (!propiedadesData || propiedadesData.length === 0) {
-            container.innerHTML = `
-                <div class="vacio">
-                    <div style="font-size: 64px; margin-bottom: 20px;">📭</div>
-                    <h2 style="color: #7f8c8d; margin-bottom: 10px;">No hay propiedades aún</h2>
-                    <p>Comienza agregando tu primera propiedad</p>
-                    <button class="btn btn-nuevo" onclick="abrirModal()" style="margin-top: 20px;">➕ Agregar Propiedad</button>
-                </div>`;
-            return;
-        }
-
-        container.innerHTML = propiedadesData.map(prop => {
-            let imagenes = [];
-            try { imagenes = JSON.parse(prop.imagen_url || '[]'); } catch(e) {
-                if (prop.imagen_url && prop.imagen_url.startsWith('http')) imagenes = [prop.imagen_url];
-            }
-
-            const galeriaHTML = imagenes.length > 0 ? `
-                <div class="galeria" id="galeria-${prop.id}">
-                    ${imagenes.map((url, i) => `<img src="${url}" class="${i===0?'activa':''}" alt="foto ${i+1}">`).join('')}
-                    ${imagenes.length > 1 ? `
-                        <button class="galeria-btn prev" onclick="cambiarFoto('${prop.id}', -1)">‹</button>
-                        <button class="galeria-btn next" onclick="cambiarFoto('${prop.id}', 1)">›</button>
-                        <div class="galeria-nav">
-                            ${imagenes.map((_, i) => `<button class="galeria-dot ${i===0?'activo':''}" onclick="irFoto('${prop.id}', ${i})"></button>`).join('')}
-                        </div>
-                        <div class="contador-fotos">1/${imagenes.length}</div>
-                    ` : ''}
-                </div>` :
-                `<div class="galeria"><div class="galeria-placeholder">🏠</div></div>`;
-
-            return `
-                <div class="propiedad-card">
-                    ${galeriaHTML}
-                    <div class="propiedad-contenido">
-                        <div class="propiedad-titulo">${prop.titulo}</div>
-                        <div class="propiedad-precio">$${parseFloat(prop.precio).toLocaleString()}</div>
-                        <div class="propiedad-ubicacion">📍 ${prop.ubicacion}</div>
-                        <div class="propiedad-descripcion">${prop.descripcion || 'Sin descripción'}</div>
-                        <div class="card-botones">
-                            <button class="btn-ver" onclick="verDetalle(${prop.id})">🔍 Ver</button>
-                            <button class="btn-editar" onclick="abrirEditar(${prop.id})">✏️ Editar</button>
-                            <form method="POST" action="/eliminar_propiedad/${clienteId}/${prop.id}" style="flex:1">
-                                <button type="submit" class="btn-eliminar" style="width:100%" onclick="return confirm('¿Eliminar?')">🗑️</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>`;
-        }).join('');
+    function previsualizarFotos(input, gridId) {
+        const archivos = Array.from(input.files).slice(0, 6);
+        const grid = document.getElementById(gridId);
+        grid.innerHTML = "";
+        archivos.forEach((archivo, i) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                div.id = `prev-${gridId}-${i}`;
+                div.innerHTML = `<img src="${e.target.result}">
+                    <button type="button" class="preview-remove" onclick="document.getElementById('prev-${gridId}-${i}').remove()">✕</button>`;
+                grid.appendChild(div);
+            };
+            reader.readAsDataURL(archivo);
+        });
     }
 
-    const fotoActual = {};
+    // Galería principal de cards
     function cambiarFoto(propId, dir) {
         const galeria = document.getElementById(`galeria-${propId}`);
         const imgs = galeria.querySelectorAll('img');
@@ -529,7 +433,6 @@
         dots[fotoActual[propId]]?.classList.add('activo');
         if (contador) contador.textContent = `${fotoActual[propId]+1}/${imgs.length}`;
     }
-
     function irFoto(propId, index) {
         const galeria = document.getElementById(`galeria-${propId}`);
         const imgs = galeria.querySelectorAll('img');
@@ -542,6 +445,189 @@
         imgs[index].classList.add('activa');
         dots[index]?.classList.add('activo');
         if (contador) contador.textContent = `${index+1}/${imgs.length}`;
+    }
+
+    // Galería del modal detalle
+    function verDetalle(propId) {
+        const prop = propiedadesData.find(p => p.id == propId);
+        if (!prop) return;
+        detalleIdx = 0;
+        let imagenes = parseImagenes(prop.imagen_url);
+        document.getElementById("detalleTitulo").textContent = prop.titulo;
+        document.getElementById("detallePrecio").textContent = "$" + parseFloat(prop.precio).toLocaleString();
+        document.getElementById("detalleUbicacion").textContent = "📍 " + prop.ubicacion;
+        document.getElementById("detalleDescripcion").textContent = prop.descripcion || 'Sin descripción';
+        const galeriaEl = document.getElementById("detalleGaleria");
+        if (imagenes.length > 0) {
+            galeriaEl.innerHTML = imagenes.map((url, i) =>
+                `<img src="${url}" class="${i===0?'activa':''}" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;opacity:${i===0?1:0};transition:opacity 0.4s">`
+            ).join('') + (imagenes.length > 1 ? `
+                <button type="button" class="galeria-btn prev" onclick="cambiarDetalleImg(-1,${imagenes.length})">‹</button>
+                <button type="button" class="galeria-btn next" onclick="cambiarDetalleImg(1,${imagenes.length})">›</button>
+                <div class="contador-fotos">1/${imagenes.length}</div>` : '');
+        } else {
+            galeriaEl.innerHTML = `<div class="detalle-placeholder">🏠</div>`;
+        }
+        document.getElementById("modalDetalle").style.display = "block";
+    }
+    function cambiarDetalleImg(dir, total) {
+        const galeria = document.getElementById("detalleGaleria");
+        const imgs = galeria.querySelectorAll('img');
+        const contador = galeria.querySelector('.contador-fotos');
+        imgs[detalleIdx].style.opacity = '0'; imgs[detalleIdx].classList.remove('activa');
+        detalleIdx = (detalleIdx + dir + total) % total;
+        imgs[detalleIdx].style.opacity = '1'; imgs[detalleIdx].classList.add('activa');
+        if (contador) contador.textContent = `${detalleIdx+1}/${total}`;
+    }
+
+    // Galería del modal editar
+    function cambiarEditFoto(dir) {
+        if (!editImagenes.length) return;
+        const cont = document.getElementById("galeriaEditImgs");
+        const imgs = cont.querySelectorAll('img');
+        if (!imgs.length) return;
+        imgs[editIdx].style.opacity = '0';
+        editIdx = (editIdx + dir + editImagenes.length) % editImagenes.length;
+        imgs[editIdx].style.opacity = '1';
+        const contador = document.getElementById("editContador");
+        if (contador) contador.textContent = `${editIdx+1}/${editImagenes.length}`;
+    }
+
+    function abrirEditar(propId) {
+        const prop = propiedadesData.find(p => p.id == propId);
+        if (!prop) return;
+        editIdx = 0;
+        editImagenes = parseImagenes(prop.imagen_url);
+
+        document.getElementById("editTitulo").value = prop.titulo;
+        document.getElementById("editDescripcion").value = prop.descripcion || '';
+        document.getElementById("editPrecio").value = prop.precio;
+        document.getElementById("editUbicacion").value = prop.ubicacion;
+        document.getElementById("formEditar").action = `/editar_propiedad/${clienteId}/${prop.id}`;
+        document.getElementById("previewGridEdit").innerHTML = "";
+        document.getElementById("btnEditar").disabled = false;
+        document.getElementById("btnEditar").textContent = "💾 Guardar Cambios";
+
+        // Galería grande en el modal editar
+        const cont = document.getElementById("galeriaEditImgs");
+        const prevBtn = document.getElementById("editPrev");
+        const nextBtn = document.getElementById("editNext");
+        const contador = document.getElementById("editContador");
+
+        if (editImagenes.length > 0) {
+            cont.innerHTML = editImagenes.map((url, i) =>
+                `<img src="${url}" style="width:100%;height:200px;object-fit:contain;position:absolute;top:0;left:0;opacity:${i===0?1:0};transition:opacity 0.4s;">`
+            ).join('');
+            if (editImagenes.length > 1) {
+                prevBtn.style.display = 'flex';
+                nextBtn.style.display = 'flex';
+                contador.style.display = 'block';
+                contador.textContent = `1/${editImagenes.length}`;
+            } else {
+                prevBtn.style.display = 'none';
+                nextBtn.style.display = 'none';
+                contador.style.display = 'none';
+            }
+        } else {
+            cont.innerHTML = `<div style="width:100%;height:200px;display:flex;align-items:center;justify-content:center;color:white;font-size:40px;">🏠</div>`;
+            prevBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+            contador.style.display = 'none';
+        }
+
+        // Miniaturas
+        const fotosGrid = document.getElementById("fotosExistentesGrid");
+        fotosGrid.innerHTML = editImagenes.length > 0
+            ? editImagenes.map((url, i) => `
+                <div class="foto-existente" onclick="irEditFoto(${i})" style="cursor:pointer;">
+                    <img src="${url}" alt="foto ${i+1}">
+                    <div class="foto-existente-num">Foto ${i+1}</div>
+                </div>`).join('')
+            : `<p style="color:#999;font-size:12px;grid-column:1/-1;">Sin fotos aún</p>`;
+
+        document.getElementById("modalEditar").style.display = "block";
+    }
+
+    function irEditFoto(index) {
+        const cont = document.getElementById("galeriaEditImgs");
+        const imgs = cont.querySelectorAll('img');
+        if (!imgs.length) return;
+        imgs[editIdx].style.opacity = '0';
+        editIdx = index;
+        imgs[editIdx].style.opacity = '1';
+        const contador = document.getElementById("editContador");
+        if (contador) contador.textContent = `${editIdx+1}/${editImagenes.length}`;
+    }
+
+    document.getElementById("formPropiedad").addEventListener("submit", function() {
+        document.getElementById("btnGuardar").disabled = true;
+        document.getElementById("btnGuardar").textContent = "⏳ Subiendo fotos...";
+        document.getElementById("progressBar").style.display = "block";
+    });
+    document.getElementById("formEditar").addEventListener("submit", function() {
+        document.getElementById("btnEditar").disabled = true;
+        document.getElementById("btnEditar").textContent = "⏳ Guardando...";
+        document.getElementById("progressBarEdit").style.display = "block";
+    });
+
+    function parseImagenes(imagen_url) {
+        try {
+            const parsed = JSON.parse(imagen_url || '[]');
+            return Array.isArray(parsed) ? parsed : [];
+        } catch(e) {
+            if (imagen_url && imagen_url.startsWith('http')) return [imagen_url];
+            return [];
+        }
+    }
+
+    function cargarPropiedades() {
+        propiedadesData = {{ propiedades_json | safe }};
+        const container = document.getElementById("propiedades-container");
+
+        if (!propiedadesData || propiedadesData.length === 0) {
+            container.innerHTML = `
+                <div class="vacio">
+                    <div style="font-size:64px;margin-bottom:20px;">📭</div>
+                    <h2 style="color:#7f8c8d;margin-bottom:10px;">No hay propiedades aún</h2>
+                    <p>Comienza agregando tu primera propiedad</p>
+                    <button class="btn btn-nuevo" onclick="abrirModal()" style="margin-top:20px;">➕ Agregar Propiedad</button>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = propiedadesData.map(prop => {
+            const imagenes = parseImagenes(prop.imagen_url);
+            const galeriaHTML = imagenes.length > 0 ? `
+                <div class="galeria" id="galeria-${prop.id}">
+                    ${imagenes.map((url, i) => `<img src="${url}" class="${i===0?'activa':''}" alt="foto ${i+1}">`).join('')}
+                    ${imagenes.length > 1 ? `
+                        <button type="button" class="galeria-btn prev" onclick="cambiarFoto('${prop.id}',-1)">‹</button>
+                        <button type="button" class="galeria-btn next" onclick="cambiarFoto('${prop.id}',1)">›</button>
+                        <div class="galeria-nav">
+                            ${imagenes.map((_,i)=>`<button type="button" class="galeria-dot ${i===0?'activo':''}" onclick="irFoto('${prop.id}',${i})"></button>`).join('')}
+                        </div>
+                        <div class="contador-fotos">1/${imagenes.length}</div>` : ''}
+                </div>` :
+                `<div class="galeria"><div class="galeria-placeholder">🏠</div></div>`;
+
+            return `
+                <div class="propiedad-card">
+                    ${galeriaHTML}
+                    <div class="propiedad-contenido">
+                        <div class="propiedad-titulo">${prop.titulo}</div>
+                        <div class="propiedad-precio">$${parseFloat(prop.precio).toLocaleString()}</div>
+                        <div class="propiedad-ubicacion">📍 ${prop.ubicacion}</div>
+                        <div class="propiedad-descripcion">${prop.descripcion || 'Sin descripción'}</div>
+                        <div class="card-botones">
+                            <button type="button" class="btn-ver" onclick="verDetalle(${prop.id})">🔍 Ver</button>
+                            <button type="button" class="btn-editar" onclick="abrirEditar(${prop.id})">✏️ Editar</button>
+                            <form method="POST" action="/eliminar_propiedad/${clienteId}/${prop.id}" style="flex:1">
+                                <button type="submit" class="btn-eliminar" onclick="return confirm('¿Eliminar esta propiedad?')">🗑️</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>`;
+        }).join('');
     }
 </script>
 </body>
