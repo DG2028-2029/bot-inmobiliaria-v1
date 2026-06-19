@@ -40,7 +40,6 @@
         }
         .propiedad-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
 
-        /* GALERÍA — fotos completas */
         .galeria {
             position: relative; width: 100%; height: 240px;
             background: #1a1a2e; overflow: hidden;
@@ -115,7 +114,6 @@
             border-radius: 12px; color: #95a5a6; grid-column: 1/-1;
         }
 
-        /* MODALES */
         .modal {
             display: none; position: fixed; z-index: 1000;
             left: 0; top: 0; width: 100%; height: 100%;
@@ -146,16 +144,17 @@
         }
         .form-group textarea { min-height: 100px; resize: vertical; }
 
-        /* UPLOAD */
         .upload-area {
             border: 2px dashed #bdc3c7; border-radius: 8px; padding: 20px;
             text-align: center; cursor: pointer; transition: 0.3s; background: #f8f9fa;
         }
         .upload-area:hover { border-color: #667eea; background: #f0f4ff; }
+        .upload-area.lleno { opacity: 0.5; cursor: not-allowed; }
         .upload-area input[type="file"] { display: none; }
         .upload-icon { font-size: 36px; margin-bottom: 8px; }
         .upload-texto { color: #666; font-size: 13px; }
         .upload-sub { color: #999; font-size: 11px; margin-top: 4px; }
+        .upload-espacio { color: #667eea; font-size: 11px; margin-top: 4px; font-weight: bold; }
 
         .preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
         .preview-item { position: relative; border-radius: 6px; overflow: hidden; height: 80px; background: #1a1a2e; }
@@ -167,7 +166,6 @@
             font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
 
-        /* FOTOS EXISTENTES EN EDICIÓN */
         .fotos-existentes-titulo { font-size: 12px; color: #666; margin-bottom: 8px; font-weight: bold; }
         .fotos-existentes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
         .foto-existente {
@@ -180,14 +178,7 @@
             background: rgba(0,0,0,0.5); color: white; font-size: 9px;
             text-align: center; padding: 2px;
         }
-        .btn-borrar-foto {
-            position: absolute; top: 2px; right: 2px;
-            background: rgba(231,76,60,0.85); color: white;
-            border: none; border-radius: 50%; width: 16px; height: 16px;
-            font-size: 9px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
 
-        /* GALERÍA DETALLE MODAL */
         .detalle-galeria {
             width: 100%; height: 320px; border-radius: 10px;
             background: #1a1a2e; position: relative; margin-bottom: 20px; overflow: hidden;
@@ -278,12 +269,13 @@
                 <input type="text" name="ubicacion" required placeholder="Ej: Zona 14, Guatemala">
             </div>
             <div class="form-group">
-                <label>Fotos (máx. 6)</label>
-                <div class="upload-area" onclick="document.getElementById('inputFotos').click()">
-                    <input type="file" id="inputFotos" name="imagenes" multiple accept="image/*" onchange="previsualizarFotos(this,'previewGrid')">
+                <label>Fotos (máx. 5)</label>
+                <div class="upload-area" id="uploadAreaNueva" onclick="document.getElementById('inputFotos').click()">
+                    <input type="file" id="inputFotos" name="imagenes" multiple accept="image/*" onchange="manejarFotosNueva(this)">
                     <div class="upload-icon">📸</div>
                     <div class="upload-texto">Click para subir fotos</div>
-                    <div class="upload-sub">JPG, PNG, WEBP · Máx. 6 fotos</div>
+                    <div class="upload-sub">JPG, PNG, WEBP · Puedes subir varias veces</div>
+                    <div class="upload-espacio" id="espacioNueva">Puedes agregar 5 fotos más</div>
                 </div>
                 <div id="previewGrid" class="preview-grid"></div>
             </div>
@@ -340,7 +332,6 @@
                 <input type="text" name="ubicacion" id="editUbicacion" required>
             </div>
 
-            <!-- Fotos existentes con navegación -->
             <div class="form-group">
                 <div class="fotos-existentes-titulo">📸 Fotos actuales</div>
                 <div id="galeriaEditContainer" style="position:relative;width:100%;height:200px;background:#1a1a2e;border-radius:8px;overflow:hidden;margin-bottom:10px;">
@@ -352,14 +343,14 @@
                 <div id="fotosExistentesGrid" class="fotos-existentes-grid"></div>
             </div>
 
-            <!-- Agregar más fotos -->
             <div class="form-group">
-                <div class="info-box">➕ Las fotos nuevas se <strong>agregarán</strong> a las existentes</div>
-                <div class="upload-area" onclick="document.getElementById('inputFotosEdit').click()">
-                    <input type="file" id="inputFotosEdit" name="imagenes" multiple accept="image/*" onchange="previsualizarFotos(this,'previewGridEdit')">
+                <div class="info-box">➕ Las fotos nuevas se <strong>agregan</strong> a las existentes (máx. 5 en total)</div>
+                <div class="upload-area" id="uploadAreaEdit" onclick="document.getElementById('inputFotosEdit').click()">
+                    <input type="file" id="inputFotosEdit" name="imagenes" multiple accept="image/*" onchange="manejarFotosEdit(this)">
                     <div class="upload-icon">📸</div>
                     <div class="upload-texto">Click para agregar más fotos</div>
-                    <div class="upload-sub">Se añadirán a las fotos actuales</div>
+                    <div class="upload-sub">Puedes subir varias veces</div>
+                    <div class="upload-espacio" id="espacioEdit">Puedes agregar 5 fotos más</div>
                 </div>
                 <div id="previewGridEdit" class="preview-grid"></div>
             </div>
@@ -372,11 +363,16 @@
 
 <script>
     const clienteId = "{{ cliente_id }}";
+    const MAX_FOTOS = 5;
     let propiedadesData = [];
     let detalleIdx = 0;
     let editIdx = 0;
     let editImagenes = [];
     const fotoActual = {};
+
+    // Acumuladores de archivos seleccionados (persisten entre clicks)
+    let fotosNuevaPropiedad = [];
+    let fotosEditPropiedad = [];
 
     document.addEventListener('DOMContentLoaded', cargarPropiedades);
 
@@ -386,39 +382,131 @@
         if (e.target == document.getElementById("modalEditar")) cerrarEditar();
     }
 
-    function abrirModal() { document.getElementById("modalAgregar").style.display = "block"; }
-    function cerrarModal() {
-        document.getElementById("modalAgregar").style.display = "none";
-        document.getElementById("formPropiedad").reset();
-        document.getElementById("previewGrid").innerHTML = "";
-    }
-    function cerrarDetalle() { document.getElementById("modalDetalle").style.display = "none"; }
-    function cerrarEditar() {
-        document.getElementById("modalEditar").style.display = "none";
-        document.getElementById("previewGridEdit").innerHTML = "";
-        editImagenes = [];
-        editIdx = 0;
+    // --- Helper: sincroniza el input real con el array acumulado ---
+    function actualizarInputFiles(inputId, archivosArray) {
+        const dt = new DataTransfer();
+        archivosArray.forEach(file => dt.items.add(file));
+        document.getElementById(inputId).files = dt.files;
     }
 
-    function previsualizarFotos(input, gridId) {
-        const archivos = Array.from(input.files).slice(0, 6);
+    function renderPreviewArray(archivos, gridId, tipo) {
         const grid = document.getElementById(gridId);
-        grid.innerHTML = "";
+        grid.innerHTML = '';
         archivos.forEach((archivo, i) => {
             const reader = new FileReader();
             reader.onload = function(e) {
                 const div = document.createElement('div');
                 div.className = 'preview-item';
-                div.id = `prev-${gridId}-${i}`;
-                div.innerHTML = `<img src="${e.target.result}">
-                    <button type="button" class="preview-remove" onclick="document.getElementById('prev-${gridId}-${i}').remove()">✕</button>`;
+                const fnRemove = tipo === 'nueva' ? `quitarFotoNueva(${i})` : `quitarFotoEdit(${i})`;
+                div.innerHTML = `<img src="${e.target.result}"><button type="button" class="preview-remove" onclick="${fnRemove}">✕</button>`;
                 grid.appendChild(div);
             };
             reader.readAsDataURL(archivo);
         });
     }
 
-    // Galería principal de cards
+    // --- MODAL AGREGAR: fotos acumulables ---
+    function manejarFotosNueva(input) {
+        const espacio = MAX_FOTOS - fotosNuevaPropiedad.length;
+        if (espacio <= 0) {
+            alert(`Ya tienes el máximo de ${MAX_FOTOS} fotos. Elimina alguna para agregar otra.`);
+            input.value = '';
+            return;
+        }
+        const seleccionadas = Array.from(input.files);
+        const aAgregar = seleccionadas.slice(0, espacio);
+        if (seleccionadas.length > espacio) {
+            alert(`Solo se agregaron ${aAgregar.length} foto(s). Máximo ${MAX_FOTOS} fotos por propiedad.`);
+        }
+        fotosNuevaPropiedad.push(...aAgregar);
+        input.value = '';
+        actualizarInputFiles('inputFotos', fotosNuevaPropiedad);
+        renderPreviewArray(fotosNuevaPropiedad, 'previewGrid', 'nueva');
+        actualizarEspacioNueva();
+    }
+
+    function quitarFotoNueva(index) {
+        fotosNuevaPropiedad.splice(index, 1);
+        actualizarInputFiles('inputFotos', fotosNuevaPropiedad);
+        renderPreviewArray(fotosNuevaPropiedad, 'previewGrid', 'nueva');
+        actualizarEspacioNueva();
+    }
+
+    function actualizarEspacioNueva() {
+        const restante = MAX_FOTOS - fotosNuevaPropiedad.length;
+        const el = document.getElementById('espacioNueva');
+        const area = document.getElementById('uploadAreaNueva');
+        if (restante <= 0) {
+            el.textContent = 'Alcanzaste el máximo de 5 fotos';
+            area.classList.add('lleno');
+        } else {
+            el.textContent = `Puedes agregar ${restante} foto${restante === 1 ? '' : 's'} más`;
+            area.classList.remove('lleno');
+        }
+    }
+
+    // --- MODAL EDITAR: fotos acumulables (cuenta existentes + nuevas) ---
+    function manejarFotosEdit(input) {
+        const totalActual = editImagenes.length + fotosEditPropiedad.length;
+        const espacio = MAX_FOTOS - totalActual;
+        if (espacio <= 0) {
+            alert(`Ya tienes el máximo de ${MAX_FOTOS} fotos en esta propiedad. Elimina alguna para agregar otra.`);
+            input.value = '';
+            return;
+        }
+        const seleccionadas = Array.from(input.files);
+        const aAgregar = seleccionadas.slice(0, espacio);
+        if (seleccionadas.length > espacio) {
+            alert(`Solo se agregaron ${aAgregar.length} foto(s). Máximo ${MAX_FOTOS} fotos por propiedad.`);
+        }
+        fotosEditPropiedad.push(...aAgregar);
+        input.value = '';
+        actualizarInputFiles('inputFotosEdit', fotosEditPropiedad);
+        renderPreviewArray(fotosEditPropiedad, 'previewGridEdit', 'edit');
+        actualizarEspacioEdit();
+    }
+
+    function quitarFotoEdit(index) {
+        fotosEditPropiedad.splice(index, 1);
+        actualizarInputFiles('inputFotosEdit', fotosEditPropiedad);
+        renderPreviewArray(fotosEditPropiedad, 'previewGridEdit', 'edit');
+        actualizarEspacioEdit();
+    }
+
+    function actualizarEspacioEdit() {
+        const restante = MAX_FOTOS - editImagenes.length - fotosEditPropiedad.length;
+        const el = document.getElementById('espacioEdit');
+        const area = document.getElementById('uploadAreaEdit');
+        if (restante <= 0) {
+            el.textContent = 'Alcanzaste el máximo de 5 fotos';
+            area.classList.add('lleno');
+        } else {
+            el.textContent = `Puedes agregar ${restante} foto${restante === 1 ? '' : 's'} más`;
+            area.classList.remove('lleno');
+        }
+    }
+
+    function abrirModal() {
+        fotosNuevaPropiedad = [];
+        document.getElementById("previewGrid").innerHTML = "";
+        actualizarEspacioNueva();
+        document.getElementById("modalAgregar").style.display = "block";
+    }
+    function cerrarModal() {
+        document.getElementById("modalAgregar").style.display = "none";
+        document.getElementById("formPropiedad").reset();
+        document.getElementById("previewGrid").innerHTML = "";
+        fotosNuevaPropiedad = [];
+    }
+    function cerrarDetalle() { document.getElementById("modalDetalle").style.display = "none"; }
+    function cerrarEditar() {
+        document.getElementById("modalEditar").style.display = "none";
+        document.getElementById("previewGridEdit").innerHTML = "";
+        fotosEditPropiedad = [];
+        editImagenes = [];
+        editIdx = 0;
+    }
+
     function cambiarFoto(propId, dir) {
         const galeria = document.getElementById(`galeria-${propId}`);
         const imgs = galeria.querySelectorAll('img');
@@ -447,7 +535,6 @@
         if (contador) contador.textContent = `${index+1}/${imgs.length}`;
     }
 
-    // Galería del modal detalle
     function verDetalle(propId) {
         const prop = propiedadesData.find(p => p.id == propId);
         if (!prop) return;
@@ -480,7 +567,6 @@
         if (contador) contador.textContent = `${detalleIdx+1}/${total}`;
     }
 
-    // Galería del modal editar
     function cambiarEditFoto(dir) {
         if (!editImagenes.length) return;
         const cont = document.getElementById("galeriaEditImgs");
@@ -498,6 +584,7 @@
         if (!prop) return;
         editIdx = 0;
         editImagenes = parseImagenes(prop.imagen_url);
+        fotosEditPropiedad = [];
 
         document.getElementById("editTitulo").value = prop.titulo;
         document.getElementById("editDescripcion").value = prop.descripcion || '';
@@ -507,8 +594,8 @@
         document.getElementById("previewGridEdit").innerHTML = "";
         document.getElementById("btnEditar").disabled = false;
         document.getElementById("btnEditar").textContent = "💾 Guardar Cambios";
+        actualizarEspacioEdit();
 
-        // Galería grande en el modal editar
         const cont = document.getElementById("galeriaEditImgs");
         const prevBtn = document.getElementById("editPrev");
         const nextBtn = document.getElementById("editNext");
@@ -535,7 +622,6 @@
             contador.style.display = 'none';
         }
 
-        // Miniaturas
         const fotosGrid = document.getElementById("fotosExistentesGrid");
         fotosGrid.innerHTML = editImagenes.length > 0
             ? editImagenes.map((url, i) => `
