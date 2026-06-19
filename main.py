@@ -290,7 +290,7 @@ def agregar_propiedad(cliente_id):
                 resultado = cloudinary.uploader.upload(
                     archivo,
                     folder=f"bot_inmobiliaria/{id_clean}",
-                    transformation=[{"width": 800, "height": 600, "crop": "fill", "quality": "auto"}]
+                    transformation=[{"width": 1200, "height": 900, "crop": "limit", "quality": "auto"}]
                 )
                 imagenes_urls.append(resultado["secure_url"])
 
@@ -312,35 +312,43 @@ def agregar_propiedad(cliente_id):
 
 @app.route("/editar_propiedad/<cliente_id>/<int:prop_id>", methods=["POST"])
 def editar_propiedad(cliente_id, prop_id):
-    """Edita una propiedad existente del inventario."""
+    """Edita propiedad — agrega fotos nuevas a las existentes."""
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean: return "Error 403: No autorizado.", 403
     vendedor = CLIENTES.get(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
+        # Obtener fotos existentes de Supabase
+        prop_actual = supabase.table("propiedades").select("imagen_url").eq("id", prop_id).execute()
+        imagenes_existentes = []
+        if prop_actual.data:
+            try:
+                imagenes_existentes = json.loads(prop_actual.data[0].get("imagen_url", "[]"))
+                if not isinstance(imagenes_existentes, list):
+                    imagenes_existentes = []
+            except: pass
+
+        # Subir fotos nuevas y AGREGAR a las existentes
         archivos = request.files.getlist("imagenes")
-        archivos_validos = [f for f in archivos if f and f.filename]
+        for archivo in archivos:
+            if archivo and archivo.filename:
+                resultado = cloudinary.uploader.upload(
+                    archivo,
+                    folder=f"bot_inmobiliaria/{id_clean}",
+                    transformation=[{"width": 1200, "height": 900, "crop": "limit", "quality": "auto"}]
+                )
+                imagenes_existentes.append(resultado["secure_url"])
 
         update_data = {
             "titulo": request.form.get("titulo").strip(),
             "descripcion": request.form.get("descripcion", "").strip(),
             "precio": float(request.form.get("precio", 0)),
             "ubicacion": request.form.get("ubicacion").strip(),
+            "imagen_url": json.dumps(imagenes_existentes)
         }
 
-        if archivos_validos:
-            imagenes_urls = []
-            for archivo in archivos_validos:
-                resultado = cloudinary.uploader.upload(
-                    archivo,
-                    folder=f"bot_inmobiliaria/{id_clean}",
-                    transformation=[{"width": 800, "height": 600, "crop": "fill", "quality": "auto"}]
-                )
-                imagenes_urls.append(resultado["secure_url"])
-            update_data["imagen_url"] = json.dumps(imagenes_urls)
-
         supabase.table("propiedades").update(update_data).eq("id", prop_id).eq("vendedor", id_clean).execute()
-        print(f"✅ Propiedad {prop_id} editada")
+        print(f"✅ Propiedad {prop_id} editada — {len(imagenes_existentes)} fotos totales")
         return redirect(url_for('inventario', cliente_id=id_clean))
     except Exception as e:
         print(f"Error editando propiedad: {e}")
