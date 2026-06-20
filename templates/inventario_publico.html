@@ -14,7 +14,7 @@
         .container { max-width: 1200px; margin: 0 auto; }
         .header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 30px; background: white; padding: 20px;
+            margin-bottom: 20px; background: white; padding: 20px;
             border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
         .header h1 { color: #2c3e50; font-size: 24px; }
@@ -25,6 +25,25 @@
             font-size: 14px; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s;
         }
         .btn-whatsapp:hover { background: #20ba5c; transform: translateY(-2px); }
+
+        .filtros-bar {
+            background: white; padding: 16px 20px; border-radius: 12px;
+            margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+        }
+        .filtros-bar input {
+            padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px;
+            font-size: 14px; font-family: inherit;
+        }
+        .filtros-bar input[type="text"] { flex: 2; min-width: 160px; }
+        .filtros-bar input[type="number"] { flex: 1; min-width: 100px; }
+        .filtros-bar input:focus { outline: none; border-color: #667eea; }
+        .btn-limpiar-filtros {
+            padding: 10px 16px; background: #95a5a6; color: white;
+            border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold;
+        }
+        .btn-limpiar-filtros:hover { background: #7f8c8d; }
+
         .propiedades-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -33,18 +52,15 @@
         .propiedad-card {
             background: white; border-radius: 12px; overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.3s;
-            cursor: pointer;
         }
         .propiedad-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
 
-        /* GALERÍA */
         .galeria {
             position: relative; width: 100%; height: 200px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            overflow: hidden;
+            background: #1a1a2e; overflow: hidden;
         }
         .galeria img {
-            width: 100%; height: 100%; object-fit: cover;
+            width: 100%; height: 100%; object-fit: contain;
             position: absolute; top: 0; left: 0;
             opacity: 0; transition: opacity 0.4s;
         }
@@ -53,10 +69,11 @@
             width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
             font-size: 48px; color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         .galeria-nav {
             position: absolute; bottom: 8px; left: 0; right: 0;
-            display: flex; justify-content: center; gap: 6px;
+            display: flex; justify-content: center; gap: 6px; z-index: 2;
         }
         .galeria-dot {
             width: 8px; height: 8px; border-radius: 50%;
@@ -65,22 +82,26 @@
         .galeria-dot.activo { background: white; }
         .galeria-btn {
             position: absolute; top: 50%; transform: translateY(-50%);
-            background: rgba(0,0,0,0.4); color: white; border: none;
-            width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
-            font-size: 14px; display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.5); color: white; border: none;
+            width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+            font-size: 18px; display: flex; align-items: center; justify-content: center;
+            z-index: 2; transition: 0.2s;
         }
+        .galeria-btn:hover { background: rgba(0,0,0,0.8); }
         .galeria-btn.prev { left: 8px; }
         .galeria-btn.next { right: 8px; }
         .contador-fotos {
             position: absolute; top: 8px; right: 8px;
-            background: rgba(0,0,0,0.5); color: white;
-            font-size: 11px; padding: 3px 8px; border-radius: 10px;
+            background: rgba(0,0,0,0.6); color: white;
+            font-size: 11px; padding: 3px 8px; border-radius: 10px; z-index: 2;
         }
 
         .propiedad-contenido { padding: 18px; }
         .propiedad-titulo { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 8px; }
         .propiedad-precio { font-size: 22px; color: #27ae60; font-weight: bold; margin-bottom: 10px; }
-        .propiedad-ubicacion { color: #666; font-size: 13px; margin-bottom: 12px; }
+        .propiedad-ubicacion { color: #666; font-size: 13px; margin-bottom: 8px; }
+        .propiedad-specs { display: flex; gap: 14px; margin-bottom: 10px; font-size: 12px; color: #666; }
+        .propiedad-specs span { display: flex; align-items: center; gap: 4px; }
         .badge-disponible {
             display: inline-block; background: #eafaf1; color: #27ae60;
             font-size: 12px; font-weight: bold; padding: 4px 10px;
@@ -114,7 +135,6 @@
             font-size: 12px; margin-top: 20px; padding-bottom: 20px;
         }
 
-        /* MODAL DETALLE */
         .modal {
             display: none; position: fixed; z-index: 1000;
             left: 0; top: 0; width: 100%; height: 100%;
@@ -133,12 +153,11 @@
         .close { font-size: 28px; font-weight: bold; color: #95a5a6; cursor: pointer; }
 
         .detalle-galeria {
-            width: 100%; height: 300px; border-radius: 10px; overflow: hidden;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            position: relative; margin-bottom: 20px;
+            width: 100%; height: 300px; border-radius: 10px;
+            background: #1a1a2e; position: relative; margin-bottom: 20px; overflow: hidden;
         }
         .detalle-galeria img {
-            width: 100%; height: 100%; object-fit: cover;
+            width: 100%; height: 100%; object-fit: contain;
             position: absolute; top: 0; left: 0;
             opacity: 0; transition: opacity 0.4s;
         }
@@ -146,11 +165,17 @@
         .detalle-placeholder {
             width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center; font-size: 64px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         .detalle-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
         .detalle-campo { background: #f8f9fa; padding: 12px; border-radius: 8px; }
         .detalle-campo-label { font-size: 11px; color: #999; text-transform: uppercase; margin-bottom: 4px; }
         .detalle-campo-valor { font-size: 16px; color: #2c3e50; font-weight: bold; }
+        .detalle-specs {
+            display: flex; gap: 16px; margin-bottom: 16px;
+            background: #f8f9fa; padding: 12px; border-radius: 8px; flex-wrap: wrap;
+        }
+        .detalle-specs span { font-size: 13px; color: #2c3e50; font-weight: bold; display:flex; align-items:center; gap:5px; }
         .detalle-descripcion {
             background: #f8f9fa; padding: 14px; border-radius: 8px;
             font-size: 13px; color: #555; line-height: 1.7; margin-bottom: 20px;
@@ -172,6 +197,14 @@
         </div>
         <a href="https://wa.me/{{ whatsapp }}" target="_blank" class="btn-whatsapp">💬 Contactar por WhatsApp</a>
     </div>
+
+    <div class="filtros-bar">
+        <input type="text" id="filtroZona" placeholder="📍 Buscar por zona..." oninput="aplicarFiltros()">
+        <input type="number" id="filtroPrecioMin" placeholder="Precio mín" oninput="aplicarFiltros()">
+        <input type="number" id="filtroPrecioMax" placeholder="Precio máx" oninput="aplicarFiltros()">
+        <button type="button" onclick="limpiarFiltros()" class="btn-limpiar-filtros">Limpiar</button>
+    </div>
+
     <div id="propiedades-container" class="propiedades-grid"></div>
     <div class="footer-texto">Real Estate System v2.0</div>
 </div>
@@ -194,6 +227,7 @@
                 <div class="detalle-campo-valor" id="detalleUbicacion"></div>
             </div>
         </div>
+        <div id="detalleSpecs"></div>
         <div class="detalle-descripcion" id="detalleDescripcion"></div>
         <a id="btnWaDetalle" href="#" target="_blank" class="btn-wa-detalle">💬 Consultar esta propiedad por WhatsApp</a>
     </div>
@@ -211,15 +245,22 @@
     }
     function cerrarDetalle() { document.getElementById("modalDetalle").style.display = "none"; }
 
+    function parseImagenes(imagen_url) {
+        try {
+            const parsed = JSON.parse(imagen_url || '[]');
+            return Array.isArray(parsed) ? parsed : [];
+        } catch(e) {
+            if (imagen_url && imagen_url.startsWith('http')) return [imagen_url];
+            return [];
+        }
+    }
+
     function verDetalle(propId) {
         const prop = propiedades.find(p => p.id == propId);
         if (!prop) return;
         detalleIdx = 0;
 
-        let imagenes = [];
-        try { imagenes = JSON.parse(prop.imagen_url || '[]'); } catch(e) {
-            if (prop.imagen_url && prop.imagen_url.startsWith('http')) imagenes = [prop.imagen_url];
-        }
+        let imagenes = parseImagenes(prop.imagen_url);
 
         document.getElementById("detalleTitulo").textContent = prop.titulo;
         document.getElementById("detallePrecio").textContent = "$" + parseFloat(prop.precio).toLocaleString();
@@ -227,6 +268,14 @@
         document.getElementById("detalleDescripcion").textContent = prop.descripcion || 'Sin descripción';
         document.getElementById("btnWaDetalle").href =
             `https://wa.me/${whatsapp}?text=Hola, me interesa la propiedad: ${encodeURIComponent(prop.titulo)} - $${parseFloat(prop.precio).toLocaleString()}`;
+
+        const specsHTML = (prop.habitaciones || prop.banos || prop.metros2) ? `
+            <div class="detalle-specs">
+                ${prop.habitaciones ? `<span>🛏️ ${prop.habitaciones} hab.</span>` : ''}
+                ${prop.banos ? `<span>🚿 ${prop.banos} baños</span>` : ''}
+                ${prop.metros2 ? `<span>📐 ${prop.metros2} m²</span>` : ''}
+            </div>` : '';
+        document.getElementById("detalleSpecs").innerHTML = specsHTML;
 
         const galeriaEl = document.getElementById("detalleGaleria");
         if (imagenes.length > 0) {
@@ -252,20 +301,50 @@
         if (contador) contador.textContent = `${detalleIdx+1}/${total}`;
     }
 
-    if (!propiedades || propiedades.length === 0) {
-        container.innerHTML = `
-            <div class="vacio">
-                <div style="font-size: 64px; margin-bottom: 20px;">🏡</div>
-                <h2 style="color: #7f8c8d; margin-bottom: 10px;">No hay propiedades disponibles aún</h2>
-                <p>Contáctanos para más información</p>
-            </div>`;
-    } else {
-        container.innerHTML = propiedades.map(prop => {
-            let imagenes = [];
-            try { imagenes = JSON.parse(prop.imagen_url || '[]'); } catch(e) {
-                if (prop.imagen_url && prop.imagen_url.startsWith('http')) imagenes = [prop.imagen_url];
-            }
+    function aplicarFiltros() {
+        const zona = document.getElementById('filtroZona').value.toLowerCase().trim();
+        const min = parseFloat(document.getElementById('filtroPrecioMin').value) || 0;
+        const max = parseFloat(document.getElementById('filtroPrecioMax').value) || Infinity;
 
+        const filtradas = propiedades.filter(p => {
+            const coincideZona = !zona || (p.ubicacion || '').toLowerCase().includes(zona);
+            const precio = parseFloat(p.precio) || 0;
+            const coincidePrecio = precio >= min && precio <= max;
+            return coincideZona && coincidePrecio;
+        });
+        renderPropiedades(filtradas);
+    }
+
+    function limpiarFiltros() {
+        document.getElementById('filtroZona').value = '';
+        document.getElementById('filtroPrecioMin').value = '';
+        document.getElementById('filtroPrecioMax').value = '';
+        renderPropiedades(propiedades);
+    }
+
+    function renderPropiedades(lista) {
+        if (!propiedades || propiedades.length === 0) {
+            container.innerHTML = `
+                <div class="vacio">
+                    <div style="font-size: 64px; margin-bottom: 20px;">🏡</div>
+                    <h2 style="color: #7f8c8d; margin-bottom: 10px;">No hay propiedades disponibles aún</h2>
+                    <p>Contáctanos para más información</p>
+                </div>`;
+            return;
+        }
+
+        if (lista.length === 0) {
+            container.innerHTML = `
+                <div class="vacio">
+                    <div style="font-size: 64px; margin-bottom: 20px;">🔍</div>
+                    <h2 style="color: #7f8c8d; margin-bottom: 10px;">Sin resultados</h2>
+                    <p>Prueba ajustando los filtros</p>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = lista.map(prop => {
+            const imagenes = parseImagenes(prop.imagen_url);
             const galeriaHTML = imagenes.length > 0 ? `
                 <div class="galeria" id="galeria-${prop.id}">
                     ${imagenes.map((url, i) => `<img src="${url}" class="${i===0?'activa':''}" alt="foto ${i+1}">`).join('')}
@@ -279,6 +358,13 @@
                 </div>` :
                 `<div class="galeria"><div class="galeria-placeholder">🏠</div></div>`;
 
+            const specsHTML = (prop.habitaciones || prop.banos || prop.metros2) ? `
+                <div class="propiedad-specs">
+                    ${prop.habitaciones ? `<span>🛏️ ${prop.habitaciones}</span>` : ''}
+                    ${prop.banos ? `<span>🚿 ${prop.banos}</span>` : ''}
+                    ${prop.metros2 ? `<span>📐 ${prop.metros2} m²</span>` : ''}
+                </div>` : '';
+
             return `
                 <div class="propiedad-card">
                     ${galeriaHTML}
@@ -286,6 +372,7 @@
                         <div class="propiedad-titulo">${prop.titulo}</div>
                         <div class="propiedad-precio">$${parseFloat(prop.precio).toLocaleString()}</div>
                         <div class="propiedad-ubicacion">📍 ${prop.ubicacion}</div>
+                        ${specsHTML}
                         <span class="badge-disponible">✅ Disponible</span>
                         <div class="propiedad-descripcion">${prop.descripcion || ''}</div>
                         <div class="card-botones">
@@ -326,6 +413,8 @@
         dots[index]?.classList.add('activo');
         if (contador) contador.textContent = `${index+1}/${imgs.length}`;
     }
+
+    renderPropiedades(propiedades);
 </script>
 </body>
 </html>
