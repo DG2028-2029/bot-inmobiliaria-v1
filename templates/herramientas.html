@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Herramientas | {{ cliente.nombre }}</title>
+    <title>{{ textos.herr_titulo }} | {{ cliente.nombre }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f2f6; padding: 20px; }
@@ -12,9 +12,28 @@
         .header h1 { color: #2c3e50; font-size: 28px; }
         .btn-back { background: #3498db; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; }
         .btn-back:hover { background: #2980b9; }
-        
-        .selector-idioma { display: flex; gap: 10px; margin-bottom: 20px; }
-        .bandera { font-size: 20px; text-decoration: none; cursor: pointer; }
+
+        .lang-selector { position: relative; display: inline-block; margin-bottom: 20px; }
+        .lang-selector-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: white; border: 1px solid #ddd; border-radius: 8px;
+            padding: 9px 14px; cursor: pointer; font-size: 14px; font-weight: 600; color: #2c3e50;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .lang-selector-btn:hover { border-color: #3498db; }
+        .lang-arrow { font-size: 10px; color: #999; transition: transform 0.2s; margin-left: 2px; }
+        .lang-selector.abierto .lang-arrow { transform: rotate(180deg); }
+        .lang-menu {
+            display: none; position: absolute; top: calc(100% + 6px); left: 0;
+            background: white; border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.18);
+            min-width: 170px; overflow: hidden; z-index: 200;
+        }
+        .lang-selector.abierto .lang-menu { display: block; }
+        .lang-menu a {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 14px; text-decoration: none; color: #2c3e50; font-size: 13px;
+        }
+        .lang-menu a:hover { background: #f0f7ff; }
         
         .container { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
         
@@ -42,46 +61,58 @@
 </head>
 <body>
 
-<div class="selector-idioma">
-    <a href="{{ url_for('cambiar_idioma', lang='es', proximo='herramientas', cliente_id=cliente.usuario) }}" class="bandera">🇪🇸</a>
-    <a href="{{ url_for('cambiar_idioma', lang='en', proximo='herramientas', cliente_id=cliente.usuario) }}" class="bandera">🇺🇸</a>
-    <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='herramientas', cliente_id=cliente.usuario) }}" class="bandera">🇫🇷</a>
+<div class="lang-selector" id="langSelector">
+    <button type="button" class="lang-selector-btn" onclick="toggleLangMenu()">
+        <span>
+            {% if idioma_actual == 'es' %}🇪🇸{% elif idioma_actual == 'en' %}🇺🇸{% elif idioma_actual == 'fr' %}🇫🇷{% elif idioma_actual == 'de' %}🇩🇪{% elif idioma_actual == 'pt' %}🇵🇹{% elif idioma_actual == 'zh' %}🇨🇳{% else %}🇪🇸{% endif %}
+        </span>
+        <span>{{ textos['btn_' + idioma_actual] if textos and ('btn_' + idioma_actual) in textos else textos.btn_es }}</span>
+        <span class="lang-arrow">▾</span>
+    </button>
+    <div class="lang-menu" id="langMenu">
+        <a href="{{ url_for('cambiar_idioma', lang='es', proximo='herramientas', cliente_id=cliente.usuario) }}">🇪🇸 {{ textos.btn_es }}</a>
+        <a href="{{ url_for('cambiar_idioma', lang='en', proximo='herramientas', cliente_id=cliente.usuario) }}">🇺🇸 {{ textos.btn_en }}</a>
+        <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='herramientas', cliente_id=cliente.usuario) }}">🇫🇷 {{ textos.btn_fr }}</a>
+        <a href="{{ url_for('cambiar_idioma', lang='de', proximo='herramientas', cliente_id=cliente.usuario) }}">🇩🇪 {{ textos.btn_de }}</a>
+        <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='herramientas', cliente_id=cliente.usuario) }}">🇵🇹 {{ textos.btn_pt }}</a>
+        <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='herramientas', cliente_id=cliente.usuario) }}">🇨🇳 {{ textos.btn_zh }}</a>
+    </div>
 </div>
 
 <div class="header">
-    <h1>🧮 Herramientas Inmobiliarias</h1>
-    <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="btn-back">← Volver</a>
+    <h1>🧮 {{ textos.herr_titulo }}</h1>
+    <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="btn-back">{{ textos.herr_volver }}</a>
 </div>
 
 <div class="container">
     <!-- CALCULADORA 1: RENTABILIDAD -->
     <div class="card">
-        <h2>📈 Rentabilidad por Años</h2>
+        <h2>{{ textos.herr_calc1_titulo }}</h2>
         
         <div class="input-group">
-            <label>Precio Inicial ($)</label>
+            <label>{{ textos.herr_precio_inicial }}</label>
             <input type="number" id="precio_inicial" placeholder="100000" value="100000">
         </div>
         
         <div class="input-group">
-            <label>% Rentabilidad Anual</label>
+            <label>{{ textos.herr_rentabilidad_anual }}</label>
             <input type="number" id="rentabilidad" placeholder="10" value="10" step="0.1">
         </div>
         
         <div class="input-group">
-            <label>Años a Proyectar</label>
+            <label>{{ textos.herr_anos_proyectar }}</label>
             <input type="number" id="anos" placeholder="5" value="5" min="1" max="50">
         </div>
         
-        <button class="btn-calculate" onclick="calcularRentabilidad()">Calcular Rentabilidad</button>
+        <button class="btn-calculate" onclick="calcularRentabilidad()">{{ textos.herr_btn_calc_rentabilidad }}</button>
         
         <div id="resultado_rentabilidad" class="result">
             <table class="tabla-resultado">
                 <thead>
                     <tr>
-                        <th>Año</th>
-                        <th>Valor</th>
-                        <th>Ganancia</th>
+                        <th>{{ textos.herr_tabla_anio }}</th>
+                        <th>{{ textos.herr_tabla_valor }}</th>
+                        <th>{{ textos.herr_tabla_ganancia }}</th>
                     </tr>
                 </thead>
                 <tbody id="tabla_rentabilidad"></tbody>
@@ -91,49 +122,49 @@
 
     <!-- CALCULADORA 2: PRECIO POR M² -->
     <div class="card">
-        <h2>📐 Precio por Metro Cuadrado</h2>
+        <h2>{{ textos.herr_calc2_titulo }}</h2>
         
         <div class="input-group">
-            <label>Metraje (m²)</label>
+            <label>{{ textos.herr_metraje }}</label>
             <input type="number" id="metraje" placeholder="100" value="100">
         </div>
         
         <div class="input-group">
-            <label>Precio por m² ($)</label>
+            <label>{{ textos.herr_precio_m2 }}</label>
             <input type="number" id="precio_m2" placeholder="1000" value="1000">
         </div>
         
-        <button class="btn-calculate" onclick="calcularMetros()">Calcular Precio Total</button>
+        <button class="btn-calculate" onclick="calcularMetros()">{{ textos.herr_btn_calc_metros }}</button>
         
         <div id="resultado_metros" class="result">
-            <div class="result-label">Precio Total de la Propiedad</div>
+            <div class="result-label">{{ textos.herr_precio_total_label }}</div>
             <div class="result-value" id="precio_total">$0</div>
         </div>
     </div>
 
     <!-- CALCULADORA 3: ENGANCHE -->
     <div class="card">
-        <h2>💰 Calculadora de Enganche</h2>
+        <h2>{{ textos.herr_calc3_titulo }}</h2>
         
         <div class="input-group">
-            <label>Precio Total ($)</label>
+            <label>{{ textos.herr_precio_propiedad }}</label>
             <input type="number" id="precio_propiedad" placeholder="100000" value="100000">
         </div>
         
         <div class="input-group">
-            <label>% de Enganche</label>
+            <label>{{ textos.herr_porcentaje_enganche }}</label>
             <input type="number" id="porcentaje_enganche" placeholder="20" value="20" step="5">
         </div>
         
-        <button class="btn-calculate" onclick="calcularEnganche()">Calcular Enganche</button>
+        <button class="btn-calculate" onclick="calcularEnganche()">{{ textos.herr_btn_calc_enganche }}</button>
         
         <div id="resultado_enganche" class="result">
             <div style="margin-bottom: 15px;">
-                <div class="result-label">Monto de Enganche</div>
+                <div class="result-label">{{ textos.herr_monto_enganche_label }}</div>
                 <div class="result-value" id="monto_enganche">$0</div>
             </div>
             <div>
-                <div class="result-label">Saldo a Financiar</div>
+                <div class="result-label">{{ textos.herr_saldo_financiar_label }}</div>
                 <div class="result-value" id="saldo_financiar">$0</div>
             </div>
         </div>
@@ -141,6 +172,14 @@
 </div>
 
 <script>
+function toggleLangMenu() {
+    document.getElementById('langSelector').classList.toggle('abierto');
+}
+document.addEventListener('click', function(e) {
+    const sel = document.getElementById('langSelector');
+    if (sel && !sel.contains(e.target)) sel.classList.remove('abierto');
+});
+
 function calcularRentabilidad() {
     const precio = parseFloat(document.getElementById('precio_inicial').value) || 0;
     const rentabilidad = parseFloat(document.getElementById('rentabilidad').value) || 0;
