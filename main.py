@@ -294,11 +294,18 @@ def agregar_propiedad(cliente_id):
                 )
                 imagenes_urls.append(resultado["secure_url"])
 
+        habitaciones = request.form.get("habitaciones", "").strip()
+        banos = request.form.get("banos", "").strip()
+        metros2 = request.form.get("metros2", "").strip()
+
         propiedad_data = {
             "titulo": request.form.get("titulo").strip(),
             "descripcion": request.form.get("descripcion", "").strip(),
             "precio": float(request.form.get("precio", 0)),
             "ubicacion": request.form.get("ubicacion").strip(),
+            "habitaciones": int(habitaciones) if habitaciones else None,
+            "banos": float(banos) if banos else None,
+            "metros2": float(metros2) if metros2 else None,
             "imagen_url": json.dumps(imagenes_urls),
             "vendedor": id_clean,
             "estado": "disponible"
@@ -339,11 +346,18 @@ def editar_propiedad(cliente_id, prop_id):
                 )
                 imagenes_existentes.append(resultado["secure_url"])
 
+        habitaciones = request.form.get("habitaciones", "").strip()
+        banos = request.form.get("banos", "").strip()
+        metros2 = request.form.get("metros2", "").strip()
+
         update_data = {
             "titulo": request.form.get("titulo").strip(),
             "descripcion": request.form.get("descripcion", "").strip(),
             "precio": float(request.form.get("precio", 0)),
             "ubicacion": request.form.get("ubicacion").strip(),
+            "habitaciones": int(habitaciones) if habitaciones else None,
+            "banos": float(banos) if banos else None,
+            "metros2": float(metros2) if metros2 else None,
             "imagen_url": json.dumps(imagenes_existentes)
         }
 
