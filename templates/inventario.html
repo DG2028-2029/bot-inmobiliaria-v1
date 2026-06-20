@@ -14,7 +14,7 @@
         .container { max-width: 1200px; margin: 0 auto; }
         .header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 30px; background: white; padding: 20px;
+            margin-bottom: 20px; background: white; padding: 20px;
             border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
         .header h1 { color: #2c3e50; font-size: 24px; }
@@ -28,6 +28,16 @@
         .btn-nuevo:hover { background: #229954; transform: translateY(-2px); }
         .btn-volver { background: #95a5a6; color: white; }
         .btn-volver:hover { background: #7f8c8d; }
+
+        .search-bar {
+            background: white; padding: 14px 20px; border-radius: 12px;
+            margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .search-bar input {
+            width: 100%; padding: 10px 14px; border: 1px solid #ddd;
+            border-radius: 8px; font-size: 14px; font-family: inherit;
+        }
+        .search-bar input:focus { outline: none; border-color: #667eea; }
 
         .propiedades-grid {
             display: grid;
@@ -85,7 +95,9 @@
         .propiedad-contenido { padding: 18px; }
         .propiedad-titulo { font-size: 17px; font-weight: bold; color: #2c3e50; margin-bottom: 6px; }
         .propiedad-precio { font-size: 20px; color: #27ae60; font-weight: bold; margin-bottom: 8px; }
-        .propiedad-ubicacion { color: #666; font-size: 13px; margin-bottom: 10px; }
+        .propiedad-ubicacion { color: #666; font-size: 13px; margin-bottom: 8px; }
+        .propiedad-specs { display: flex; gap: 14px; margin-bottom: 10px; font-size: 12px; color: #666; }
+        .propiedad-specs span { display: flex; align-items: center; gap: 4px; }
         .propiedad-descripcion {
             color: #555; font-size: 13px; line-height: 1.5; margin-bottom: 14px;
             overflow: hidden; display: -webkit-box;
@@ -133,16 +145,17 @@
         .close:hover { color: #e74c3c; }
 
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; color: #2c3e50; font-weight: bold; font-size: 13px; }
-        .form-group input, .form-group textarea {
+        .form-group label, .form-row-3 label { display: block; margin-bottom: 5px; color: #2c3e50; font-weight: bold; font-size: 13px; }
+        .form-group input, .form-group textarea, .form-row-3 input {
             width: 100%; padding: 10px; border: 1px solid #bdc3c7;
             border-radius: 6px; font-family: inherit; font-size: 13px;
             transition: 0.2s;
         }
-        .form-group input:focus, .form-group textarea:focus {
+        .form-group input:focus, .form-group textarea:focus, .form-row-3 input:focus {
             outline: none; border-color: #667eea; background: #f8f9ff;
         }
         .form-group textarea { min-height: 100px; resize: vertical; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
 
         .upload-area {
             border: 2px dashed #bdc3c7; border-radius: 8px; padding: 20px;
@@ -199,6 +212,11 @@
         .detalle-campo { background: #f8f9fa; padding: 12px; border-radius: 8px; }
         .detalle-campo-label { font-size: 11px; color: #999; text-transform: uppercase; margin-bottom: 4px; }
         .detalle-campo-valor { font-size: 15px; color: #2c3e50; font-weight: bold; }
+        .detalle-specs {
+            display: flex; gap: 16px; margin-bottom: 16px;
+            background: #f8f9fa; padding: 12px; border-radius: 8px; flex-wrap: wrap;
+        }
+        .detalle-specs span { font-size: 13px; color: #2c3e50; font-weight: bold; display:flex; align-items:center; gap:5px; }
         .detalle-descripcion {
             background: #f8f9fa; padding: 14px; border-radius: 8px;
             font-size: 13px; color: #555; line-height: 1.7;
@@ -241,6 +259,11 @@
             <a href="/historial/{{ cliente_id }}" class="btn btn-volver">← Volver</a>
         </div>
     </div>
+
+    <div class="search-bar">
+        <input type="text" id="buscarInput" placeholder="🔍 Buscar por título o ubicación..." oninput="filtrarPropiedades()">
+    </div>
+
     <div id="propiedades-container" class="propiedades-grid"></div>
 </div>
 
@@ -267,6 +290,20 @@
             <div class="form-group">
                 <label>Ubicación *</label>
                 <input type="text" name="ubicacion" required placeholder="Ej: Zona 14, Guatemala">
+            </div>
+            <div class="form-row-3">
+                <div>
+                    <label>Habitaciones</label>
+                    <input type="number" name="habitaciones" min="0" placeholder="3">
+                </div>
+                <div>
+                    <label>Baños</label>
+                    <input type="number" name="banos" min="0" step="0.5" placeholder="2">
+                </div>
+                <div>
+                    <label>m²</label>
+                    <input type="number" name="metros2" min="0" step="0.01" placeholder="150">
+                </div>
             </div>
             <div class="form-group">
                 <label>Fotos (máx. 5)</label>
@@ -303,6 +340,7 @@
                 <div class="detalle-campo-valor" id="detalleUbicacion"></div>
             </div>
         </div>
+        <div id="detalleSpecs"></div>
         <div class="detalle-descripcion" id="detalleDescripcion"></div>
     </div>
 </div>
@@ -330,6 +368,20 @@
             <div class="form-group">
                 <label>Ubicación *</label>
                 <input type="text" name="ubicacion" id="editUbicacion" required>
+            </div>
+            <div class="form-row-3">
+                <div>
+                    <label>Habitaciones</label>
+                    <input type="number" name="habitaciones" id="editHabitaciones" min="0">
+                </div>
+                <div>
+                    <label>Baños</label>
+                    <input type="number" name="banos" id="editBanos" min="0" step="0.5">
+                </div>
+                <div>
+                    <label>m²</label>
+                    <input type="number" name="metros2" id="editMetros2" min="0" step="0.01">
+                </div>
             </div>
 
             <div class="form-group">
@@ -370,7 +422,6 @@
     let editImagenes = [];
     const fotoActual = {};
 
-    // Acumuladores de archivos seleccionados (persisten entre clicks)
     let fotosNuevaPropiedad = [];
     let fotosEditPropiedad = [];
 
@@ -382,7 +433,6 @@
         if (e.target == document.getElementById("modalEditar")) cerrarEditar();
     }
 
-    // --- Helper: sincroniza el input real con el array acumulado ---
     function actualizarInputFiles(inputId, archivosArray) {
         const dt = new DataTransfer();
         archivosArray.forEach(file => dt.items.add(file));
@@ -405,7 +455,6 @@
         });
     }
 
-    // --- MODAL AGREGAR: fotos acumulables ---
     function manejarFotosNueva(input) {
         const espacio = MAX_FOTOS - fotosNuevaPropiedad.length;
         if (espacio <= 0) {
@@ -445,7 +494,6 @@
         }
     }
 
-    // --- MODAL EDITAR: fotos acumulables (cuenta existentes + nuevas) ---
     function manejarFotosEdit(input) {
         const totalActual = editImagenes.length + fotosEditPropiedad.length;
         const espacio = MAX_FOTOS - totalActual;
@@ -544,6 +592,15 @@
         document.getElementById("detallePrecio").textContent = "$" + parseFloat(prop.precio).toLocaleString();
         document.getElementById("detalleUbicacion").textContent = "📍 " + prop.ubicacion;
         document.getElementById("detalleDescripcion").textContent = prop.descripcion || 'Sin descripción';
+
+        const specsHTML = (prop.habitaciones || prop.banos || prop.metros2) ? `
+            <div class="detalle-specs">
+                ${prop.habitaciones ? `<span>🛏️ ${prop.habitaciones} hab.</span>` : ''}
+                ${prop.banos ? `<span>🚿 ${prop.banos} baños</span>` : ''}
+                ${prop.metros2 ? `<span>📐 ${prop.metros2} m²</span>` : ''}
+            </div>` : '';
+        document.getElementById("detalleSpecs").innerHTML = specsHTML;
+
         const galeriaEl = document.getElementById("detalleGaleria");
         if (imagenes.length > 0) {
             galeriaEl.innerHTML = imagenes.map((url, i) =>
@@ -590,6 +647,9 @@
         document.getElementById("editDescripcion").value = prop.descripcion || '';
         document.getElementById("editPrecio").value = prop.precio;
         document.getElementById("editUbicacion").value = prop.ubicacion;
+        document.getElementById("editHabitaciones").value = prop.habitaciones || '';
+        document.getElementById("editBanos").value = prop.banos || '';
+        document.getElementById("editMetros2").value = prop.metros2 || '';
         document.getElementById("formEditar").action = `/editar_propiedad/${clienteId}/${prop.id}`;
         document.getElementById("previewGridEdit").innerHTML = "";
         document.getElementById("btnEditar").disabled = false;
@@ -668,6 +728,23 @@
 
     function cargarPropiedades() {
         propiedadesData = {{ propiedades_json | safe }};
+        renderPropiedades(propiedadesData);
+    }
+
+    function filtrarPropiedades() {
+        const termino = document.getElementById('buscarInput').value.toLowerCase().trim();
+        if (!termino) {
+            renderPropiedades(propiedadesData);
+            return;
+        }
+        const filtradas = propiedadesData.filter(p =>
+            (p.titulo || '').toLowerCase().includes(termino) ||
+            (p.ubicacion || '').toLowerCase().includes(termino)
+        );
+        renderPropiedades(filtradas);
+    }
+
+    function renderPropiedades(lista) {
         const container = document.getElementById("propiedades-container");
 
         if (!propiedadesData || propiedadesData.length === 0) {
@@ -681,7 +758,17 @@
             return;
         }
 
-        container.innerHTML = propiedadesData.map(prop => {
+        if (lista.length === 0) {
+            container.innerHTML = `
+                <div class="vacio">
+                    <div style="font-size:64px;margin-bottom:20px;">🔍</div>
+                    <h2 style="color:#7f8c8d;margin-bottom:10px;">Sin resultados</h2>
+                    <p>No encontramos propiedades con ese criterio</p>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = lista.map(prop => {
             const imagenes = parseImagenes(prop.imagen_url);
             const galeriaHTML = imagenes.length > 0 ? `
                 <div class="galeria" id="galeria-${prop.id}">
@@ -696,6 +783,13 @@
                 </div>` :
                 `<div class="galeria"><div class="galeria-placeholder">🏠</div></div>`;
 
+            const specsHTML = (prop.habitaciones || prop.banos || prop.metros2) ? `
+                <div class="propiedad-specs">
+                    ${prop.habitaciones ? `<span>🛏️ ${prop.habitaciones}</span>` : ''}
+                    ${prop.banos ? `<span>🚿 ${prop.banos}</span>` : ''}
+                    ${prop.metros2 ? `<span>📐 ${prop.metros2} m²</span>` : ''}
+                </div>` : '';
+
             return `
                 <div class="propiedad-card">
                     ${galeriaHTML}
@@ -703,6 +797,7 @@
                         <div class="propiedad-titulo">${prop.titulo}</div>
                         <div class="propiedad-precio">$${parseFloat(prop.precio).toLocaleString()}</div>
                         <div class="propiedad-ubicacion">📍 ${prop.ubicacion}</div>
+                        ${specsHTML}
                         <div class="propiedad-descripcion">${prop.descripcion || 'Sin descripción'}</div>
                         <div class="card-botones">
                             <button type="button" class="btn-ver" onclick="verDetalle(${prop.id})">🔍 Ver</button>
