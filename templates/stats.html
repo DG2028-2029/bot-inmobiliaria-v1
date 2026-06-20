@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estadísticas - {{ cliente.nombre }}</title>
+    <title>{{ textos.stats_titulo }} - {{ cliente.nombre }}</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         html, body {
@@ -18,13 +18,17 @@
         .stats-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 80px 20px;
+            padding: 40px 20px;
             min-height: 100vh;
         }
         
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 40px; flex-wrap: wrap; gap: 10px;
+        }
+
         .back-button {
             display: inline-block;
-            margin-bottom: 40px;
             padding: 12px 25px;
             background: white;
             color: #667eea;
@@ -39,6 +43,28 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.3);
         }
+
+        .lang-selector { position: relative; display: inline-block; }
+        .lang-selector-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: white; border: 1px solid #ddd; border-radius: 8px;
+            padding: 11px 14px; cursor: pointer; font-size: 14px; font-weight: 600; color: #2c3e50;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .lang-selector-btn:hover { transform: translateY(-2px); }
+        .lang-arrow { font-size: 10px; color: #999; transition: transform 0.2s; margin-left: 2px; }
+        .lang-selector.abierto .lang-arrow { transform: rotate(180deg); }
+        .lang-menu {
+            display: none; position: absolute; top: calc(100% + 6px); right: 0;
+            background: white; border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+            min-width: 170px; overflow: hidden; z-index: 200;
+        }
+        .lang-selector.abierto .lang-menu { display: block; }
+        .lang-menu a {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 14px; text-decoration: none; color: #2c3e50; font-size: 13px;
+        }
+        .lang-menu a:hover { background: #f0f7ff; }
         
         .stats-header {
             text-align: center;
@@ -188,51 +214,80 @@
 </head>
 <body>
     <div class="stats-container">
-        <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="back-button">← Volver al Dashboard</a>
+        <div class="top-bar">
+            <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="back-button">{{ textos.stats_volver }}</a>
+
+            <div class="lang-selector" id="langSelector">
+                <button type="button" class="lang-selector-btn" onclick="toggleLangMenu()">
+                    <span>
+                        {% if idioma_actual == 'es' %}🇪🇸{% elif idioma_actual == 'en' %}🇺🇸{% elif idioma_actual == 'fr' %}🇫🇷{% elif idioma_actual == 'de' %}🇩🇪{% elif idioma_actual == 'pt' %}🇵🇹{% elif idioma_actual == 'zh' %}🇨🇳{% else %}🇪🇸{% endif %}
+                    </span>
+                    <span>{{ textos['btn_' + idioma_actual] if textos and ('btn_' + idioma_actual) in textos else textos.btn_es }}</span>
+                    <span class="lang-arrow">▾</span>
+                </button>
+                <div class="lang-menu" id="langMenu">
+                    <a href="{{ url_for('cambiar_idioma', lang='es', proximo='stats', cliente_id=cliente.usuario) }}">🇪🇸 {{ textos.btn_es }}</a>
+                    <a href="{{ url_for('cambiar_idioma', lang='en', proximo='stats', cliente_id=cliente.usuario) }}">🇺🇸 {{ textos.btn_en }}</a>
+                    <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='stats', cliente_id=cliente.usuario) }}">🇫🇷 {{ textos.btn_fr }}</a>
+                    <a href="{{ url_for('cambiar_idioma', lang='de', proximo='stats', cliente_id=cliente.usuario) }}">🇩🇪 {{ textos.btn_de }}</a>
+                    <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='stats', cliente_id=cliente.usuario) }}">🇵🇹 {{ textos.btn_pt }}</a>
+                    <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='stats', cliente_id=cliente.usuario) }}">🇨🇳 {{ textos.btn_zh }}</a>
+                </div>
+            </div>
+        </div>
         
         <div class="stats-header">
-            <h1>📊 Estadísticas - {{ cliente.nombre }}</h1>
-            <div class="periodo-label">Período: <strong>{{ stats.periodo|capitalize }}</strong></div>
+            <h1>📊 {{ textos.stats_titulo }} - {{ cliente.nombre }}</h1>
+            <div class="periodo-label">
+                {{ textos.stats_periodo_label }}
+                <strong>
+                    {% if stats.periodo == 'semana' %}{{ textos.stats_periodo_semana }}
+                    {% elif stats.periodo == 'mes' %}{{ textos.stats_periodo_mes }}
+                    {% elif stats.periodo == 'año' %}{{ textos.stats_periodo_anio }}
+                    {% else %}{{ textos.stats_periodo_todo }}
+                    {% endif %}
+                </strong>
+            </div>
         </div>
 
         <div class="filter-buttons">
-            <button class="filter-btn {% if stats.periodo == 'semana' %}active{% endif %}" onclick="cambiarPeriodo('semana')">📅 1 Semana</button>
-            <button class="filter-btn {% if stats.periodo == 'mes' %}active{% endif %}" onclick="cambiarPeriodo('mes')">📆 1 Mes</button>
-            <button class="filter-btn {% if stats.periodo == 'año' %}active{% endif %}" onclick="cambiarPeriodo('año')">📊 1 Año</button>
-            <button class="filter-btn {% if stats.periodo == 'todo' %}active{% endif %}" onclick="cambiarPeriodo('todo')">∞ Todo el tiempo</button>
+            <button class="filter-btn {% if stats.periodo == 'semana' %}active{% endif %}" onclick="cambiarPeriodo('semana')">📅 {{ textos.stats_periodo_semana }}</button>
+            <button class="filter-btn {% if stats.periodo == 'mes' %}active{% endif %}" onclick="cambiarPeriodo('mes')">📆 {{ textos.stats_periodo_mes }}</button>
+            <button class="filter-btn {% if stats.periodo == 'año' %}active{% endif %}" onclick="cambiarPeriodo('año')">📊 {{ textos.stats_periodo_anio }}</button>
+            <button class="filter-btn {% if stats.periodo == 'todo' %}active{% endif %}" onclick="cambiarPeriodo('todo')">∞ {{ textos.stats_periodo_todo }}</button>
         </div>
 
         <div class="download-buttons">
-            <button class="btn-pdf" onclick="descargarPDF('semana')">📥 PDF 1 Semana</button>
-            <button class="btn-pdf" onclick="descargarPDF('mes')">📥 PDF 1 Mes</button>
-            <button class="btn-pdf" onclick="descargarPDF('año')">📥 PDF 1 Año</button>
-            <button class="btn-pdf" onclick="descargarPDF('todo')">📥 PDF Todo</button>
+            <button class="btn-pdf" onclick="descargarPDF('semana')">📥 {{ textos.stats_pdf_semana }}</button>
+            <button class="btn-pdf" onclick="descargarPDF('mes')">📥 {{ textos.stats_pdf_mes }}</button>
+            <button class="btn-pdf" onclick="descargarPDF('año')">📥 {{ textos.stats_pdf_anio }}</button>
+            <button class="btn-pdf" onclick="descargarPDF('todo')">📥 {{ textos.stats_pdf_todo }}</button>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">Total de Leads</div>
+                <div class="stat-label">{{ textos.stats_total_leads }}</div>
                 <div class="stat-number">{{ stats.total_leads }}</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Leads Este Mes</div>
+                <div class="stat-label">{{ textos.stats_leads_mes }}</div>
                 <div class="stat-number">{{ stats.leads_este_mes }}</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Tasa de Conversión</div>
+                <div class="stat-label">{{ textos.stats_tasa_conversion }}</div>
                 <div class="stat-number">{{ stats.tasa_conversion }}%</div>
             </div>
         </div>
 
         <div class="charts-grid">
             <div class="chart-card">
-                <div class="chart-title">Leads por Zona</div>
+                <div class="chart-title">{{ textos.stats_chart_zona }}</div>
                 <div class="chart-container">
                     <canvas id="chartZonas"></canvas>
                 </div>
             </div>
             <div class="chart-card">
-                <div class="chart-title">Leads por Clasificación</div>
+                <div class="chart-title">{{ textos.stats_chart_clasificacion }}</div>
                 <div class="chart-container">
                     <canvas id="chartClasificacion"></canvas>
                 </div>
@@ -241,6 +296,14 @@
     </div>
 
     <script>
+        function toggleLangMenu() {
+            document.getElementById('langSelector').classList.toggle('abierto');
+        }
+        document.addEventListener('click', function(e) {
+            const sel = document.getElementById('langSelector');
+            if (sel && !sel.contains(e.target)) sel.classList.remove('abierto');
+        });
+
         function cambiarPeriodo(periodo) {
             window.location.href = "{{ url_for('stats', cliente_id=cliente.usuario) }}?periodo=" + periodo;
         }
@@ -257,7 +320,7 @@
             data: {
                 labels: Object.keys(statsData.leads_por_zona),
                 datasets: [{
-                    label: 'Leads por Zona',
+                    label: '{{ textos.stats_chart_zona }}',
                     data: Object.values(statsData.leads_por_zona),
                     backgroundColor: '#667eea',
                     borderColor: '#667eea',
