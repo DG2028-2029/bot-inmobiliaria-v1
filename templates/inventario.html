@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ cliente_nombre }} - Inventario</title>
+    <title>{{ textos.inv_titulo_pagina }} - {{ cliente_nombre }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -12,6 +12,29 @@
             min-height: 100vh; padding: 20px;
         }
         .container { max-width: 1200px; margin: 0 auto; }
+
+        .lang-selector { position: relative; display: inline-block; margin-bottom: 14px; }
+        .lang-selector-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: white; border: 1px solid #ddd; border-radius: 8px;
+            padding: 9px 14px; cursor: pointer; font-size: 14px; font-weight: 600; color: #2c3e50;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .lang-selector-btn:hover { border-color: #667eea; }
+        .lang-arrow { font-size: 10px; color: #999; transition: transform 0.2s; margin-left: 2px; }
+        .lang-selector.abierto .lang-arrow { transform: rotate(180deg); }
+        .lang-menu {
+            display: none; position: absolute; top: calc(100% + 6px); left: 0;
+            background: white; border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+            min-width: 170px; overflow: hidden; z-index: 200;
+        }
+        .lang-selector.abierto .lang-menu { display: block; }
+        .lang-menu a {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 14px; text-decoration: none; color: #2c3e50; font-size: 13px;
+        }
+        .lang-menu a:hover { background: #f0f4ff; }
+
         .header {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 20px; background: white; padding: 20px;
@@ -249,19 +272,38 @@
 </head>
 <body>
 <div class="container">
+
+    <div class="lang-selector" id="langSelector">
+        <button type="button" class="lang-selector-btn" onclick="toggleLangMenu()">
+            <span>
+                {% if idioma_actual == 'es' %}🇪🇸{% elif idioma_actual == 'en' %}🇺🇸{% elif idioma_actual == 'fr' %}🇫🇷{% elif idioma_actual == 'de' %}🇩🇪{% elif idioma_actual == 'pt' %}🇵🇹{% elif idioma_actual == 'zh' %}🇨🇳{% else %}🇪🇸{% endif %}
+            </span>
+            <span>{{ textos['btn_' + idioma_actual] if textos and ('btn_' + idioma_actual) in textos else textos.btn_es }}</span>
+            <span class="lang-arrow">▾</span>
+        </button>
+        <div class="lang-menu" id="langMenu">
+            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='inventario', cliente_id=cliente_id) }}">🇪🇸 {{ textos.btn_es }}</a>
+            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='inventario', cliente_id=cliente_id) }}">🇺🇸 {{ textos.btn_en }}</a>
+            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='inventario', cliente_id=cliente_id) }}">🇫🇷 {{ textos.btn_fr }}</a>
+            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='inventario', cliente_id=cliente_id) }}">🇩🇪 {{ textos.btn_de }}</a>
+            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='inventario', cliente_id=cliente_id) }}">🇵🇹 {{ textos.btn_pt }}</a>
+            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='inventario', cliente_id=cliente_id) }}">🇨🇳 {{ textos.btn_zh }}</a>
+        </div>
+    </div>
+
     <div class="header">
         <div>
-            <h1>📦 Inventario de Propiedades</h1>
+            <h1>📦 {{ textos.inv_titulo_pagina }}</h1>
             <p style="color:#666;margin-top:5px;">{{ cliente_nombre }}</p>
         </div>
         <div class="header-buttons">
-            <button class="btn btn-nuevo" onclick="abrirModal()">➕ Agregar Propiedad</button>
-            <a href="/historial/{{ cliente_id }}" class="btn btn-volver">← Volver</a>
+            <button class="btn btn-nuevo" onclick="abrirModal()">➕ {{ textos.inv_btn_agregar }}</button>
+            <a href="/historial/{{ cliente_id }}" class="btn btn-volver">← {{ textos.inv_btn_volver }}</a>
         </div>
     </div>
 
     <div class="search-bar">
-        <input type="text" id="buscarInput" placeholder="🔍 Buscar por título o ubicación..." oninput="filtrarPropiedades()">
+        <input type="text" id="buscarInput" placeholder="🔍 {{ textos.inv_buscar_placeholder }}" oninput="filtrarPropiedades()">
     </div>
 
     <div id="propiedades-container" class="propiedades-grid"></div>
@@ -271,52 +313,52 @@
 <div id="modalAgregar" class="modal">
     <div class="modal-contenido">
         <div class="modal-header">
-            <h2>➕ Agregar Nueva Propiedad</h2>
+            <h2>➕ {{ textos.inv_modal_agregar_titulo }}</h2>
             <span class="close" onclick="cerrarModal()">&times;</span>
         </div>
         <form id="formPropiedad" method="POST" action="/agregar_propiedad/{{ cliente_id }}" enctype="multipart/form-data">
             <div class="form-group">
-                <label>Título *</label>
-                <input type="text" name="titulo" required placeholder="Ej: Casa en Zona 10">
+                <label>{{ textos.inv_label_titulo }}</label>
+                <input type="text" name="titulo" required placeholder="{{ textos.inv_placeholder_titulo }}">
             </div>
             <div class="form-group">
-                <label>Descripción</label>
-                <textarea name="descripcion" placeholder="Detalles de la propiedad..."></textarea>
+                <label>{{ textos.inv_label_descripcion }}</label>
+                <textarea name="descripcion" placeholder="{{ textos.inv_placeholder_descripcion }}"></textarea>
             </div>
             <div class="form-group">
-                <label>Precio (USD) *</label>
+                <label>{{ textos.inv_label_precio }}</label>
                 <input type="number" name="precio" required step="0.01" placeholder="250000">
             </div>
             <div class="form-group">
-                <label>Ubicación *</label>
-                <input type="text" name="ubicacion" required placeholder="Ej: Zona 14, Guatemala">
+                <label>{{ textos.inv_label_ubicacion }}</label>
+                <input type="text" name="ubicacion" required placeholder="{{ textos.inv_placeholder_ubicacion }}">
             </div>
             <div class="form-row-3">
                 <div>
-                    <label>Habitaciones</label>
+                    <label>{{ textos.inv_label_habitaciones }}</label>
                     <input type="number" name="habitaciones" min="0" placeholder="3">
                 </div>
                 <div>
-                    <label>Baños</label>
+                    <label>{{ textos.inv_label_banos }}</label>
                     <input type="number" name="banos" min="0" step="0.5" placeholder="2">
                 </div>
                 <div>
-                    <label>m²</label>
+                    <label>{{ textos.inv_label_m2 }}</label>
                     <input type="number" name="metros2" min="0" step="0.01" placeholder="150">
                 </div>
             </div>
             <div class="form-group">
-                <label>Fotos (máx. 5)</label>
+                <label>{{ textos.inv_label_fotos }}</label>
                 <div class="upload-area" id="uploadAreaNueva" onclick="document.getElementById('inputFotos').click()">
                     <input type="file" id="inputFotos" name="imagenes" multiple accept="image/*" onchange="manejarFotosNueva(this)">
                     <div class="upload-icon">📸</div>
-                    <div class="upload-texto">Click para subir fotos</div>
-                    <div class="upload-sub">JPG, PNG, WEBP · Puedes subir varias veces</div>
-                    <div class="upload-espacio" id="espacioNueva">Puedes agregar 5 fotos más</div>
+                    <div class="upload-texto">{{ textos.inv_upload_click }}</div>
+                    <div class="upload-sub">{{ textos.inv_upload_sub }}</div>
+                    <div class="upload-espacio" id="espacioNueva"></div>
                 </div>
                 <div id="previewGrid" class="preview-grid"></div>
             </div>
-            <button type="submit" class="btn-enviar" id="btnGuardar">💾 Guardar Propiedad</button>
+            <button type="submit" class="btn-enviar" id="btnGuardar">💾 {{ textos.inv_btn_guardar }}</button>
             <div class="progress-bar" id="progressBar"><div class="progress-fill"></div></div>
         </form>
     </div>
@@ -332,11 +374,11 @@
         <div id="detalleGaleria" class="detalle-galeria"></div>
         <div class="detalle-info">
             <div class="detalle-campo">
-                <div class="detalle-campo-label">Precio</div>
+                <div class="detalle-campo-label">{{ textos.inv_detalle_precio }}</div>
                 <div class="detalle-campo-valor" id="detallePrecio"></div>
             </div>
             <div class="detalle-campo">
-                <div class="detalle-campo-label">Ubicación</div>
+                <div class="detalle-campo-label">{{ textos.inv_detalle_ubicacion }}</div>
                 <div class="detalle-campo-valor" id="detalleUbicacion"></div>
             </div>
         </div>
@@ -349,43 +391,43 @@
 <div id="modalEditar" class="modal">
     <div class="modal-contenido">
         <div class="modal-header">
-            <h2>✏️ Editar Propiedad</h2>
+            <h2>✏️ {{ textos.inv_modal_editar_titulo }}</h2>
             <span class="close" onclick="cerrarEditar()">&times;</span>
         </div>
         <form id="formEditar" method="POST" enctype="multipart/form-data">
             <div class="form-group">
-                <label>Título *</label>
+                <label>{{ textos.inv_label_titulo }}</label>
                 <input type="text" name="titulo" id="editTitulo" required>
             </div>
             <div class="form-group">
-                <label>Descripción</label>
+                <label>{{ textos.inv_label_descripcion }}</label>
                 <textarea name="descripcion" id="editDescripcion"></textarea>
             </div>
             <div class="form-group">
-                <label>Precio (USD) *</label>
+                <label>{{ textos.inv_label_precio }}</label>
                 <input type="number" name="precio" id="editPrecio" required step="0.01">
             </div>
             <div class="form-group">
-                <label>Ubicación *</label>
+                <label>{{ textos.inv_label_ubicacion }}</label>
                 <input type="text" name="ubicacion" id="editUbicacion" required>
             </div>
             <div class="form-row-3">
                 <div>
-                    <label>Habitaciones</label>
+                    <label>{{ textos.inv_label_habitaciones }}</label>
                     <input type="number" name="habitaciones" id="editHabitaciones" min="0">
                 </div>
                 <div>
-                    <label>Baños</label>
+                    <label>{{ textos.inv_label_banos }}</label>
                     <input type="number" name="banos" id="editBanos" min="0" step="0.5">
                 </div>
                 <div>
-                    <label>m²</label>
+                    <label>{{ textos.inv_label_m2 }}</label>
                     <input type="number" name="metros2" id="editMetros2" min="0" step="0.01">
                 </div>
             </div>
 
             <div class="form-group">
-                <div class="fotos-existentes-titulo">📸 Fotos actuales</div>
+                <div class="fotos-existentes-titulo">📸 {{ textos.inv_fotos_actuales }}</div>
                 <div id="galeriaEditContainer" style="position:relative;width:100%;height:200px;background:#1a1a2e;border-radius:8px;overflow:hidden;margin-bottom:10px;">
                     <div id="galeriaEditImgs"></div>
                     <button type="button" class="galeria-btn prev" id="editPrev" onclick="cambiarEditFoto(-1)" style="display:none">‹</button>
@@ -396,18 +438,18 @@
             </div>
 
             <div class="form-group">
-                <div class="info-box">➕ Las fotos nuevas se <strong>agregan</strong> a las existentes (máx. 5 en total)</div>
+                <div class="info-box">➕ {{ textos.inv_info_agrega }}</div>
                 <div class="upload-area" id="uploadAreaEdit" onclick="document.getElementById('inputFotosEdit').click()">
                     <input type="file" id="inputFotosEdit" name="imagenes" multiple accept="image/*" onchange="manejarFotosEdit(this)">
                     <div class="upload-icon">📸</div>
-                    <div class="upload-texto">Click para agregar más fotos</div>
-                    <div class="upload-sub">Puedes subir varias veces</div>
-                    <div class="upload-espacio" id="espacioEdit">Puedes agregar 5 fotos más</div>
+                    <div class="upload-texto">{{ textos.inv_upload_click_editar }}</div>
+                    <div class="upload-sub">{{ textos.inv_upload_sub_editar }}</div>
+                    <div class="upload-espacio" id="espacioEdit"></div>
                 </div>
                 <div id="previewGridEdit" class="preview-grid"></div>
             </div>
 
-            <button type="submit" class="btn-enviar" id="btnEditar">💾 Guardar Cambios</button>
+            <button type="submit" class="btn-enviar" id="btnEditar">💾 {{ textos.inv_btn_guardar_cambios }}</button>
             <div class="progress-bar" id="progressBarEdit"><div class="progress-fill"></div></div>
         </form>
     </div>
@@ -425,7 +467,38 @@
     let fotosNuevaPropiedad = [];
     let fotosEditPropiedad = [];
 
+    const T = {
+        sinDescripcion: "{{ textos.inv_sin_descripcion }}",
+        btnVer: "{{ textos.inv_btn_ver }}",
+        btnEditar: "{{ textos.inv_btn_editar }}",
+        confirmarEliminar: "{{ textos.inv_confirmar_eliminar }}",
+        vacioTitulo: "{{ textos.inv_vacio_titulo }}",
+        vacioTexto: "{{ textos.inv_vacio_texto }}",
+        btnAgregar: "{{ textos.inv_btn_agregar }}",
+        sinResultadosTitulo: "{{ textos.inv_sin_resultados_titulo }}",
+        sinResultadosTexto: "{{ textos.inv_sin_resultados_texto }}",
+        espacioMax: "{{ textos.inv_espacio_max }}",
+        espacioRestante: "{{ textos.inv_espacio_restante }}",
+        alertMax: "{{ textos.inv_alert_max }}",
+        alertParcial: "{{ textos.inv_alert_parcial }}",
+        optimizando: "{{ textos.inv_optimizando }}",
+        subiendoFotos: "{{ textos.inv_subiendo_fotos }}",
+        guardando: "{{ textos.inv_guardando }}",
+        btnGuardar: "{{ textos.inv_btn_guardar }}",
+        btnGuardarCambios: "{{ textos.inv_btn_guardar_cambios }}",
+        fotoLabel: "{{ textos.inv_foto_label }}",
+        sinFotos: "{{ textos.inv_sin_fotos }}"
+    };
+
     document.addEventListener('DOMContentLoaded', cargarPropiedades);
+
+    function toggleLangMenu() {
+        document.getElementById('langSelector').classList.toggle('abierto');
+    }
+    document.addEventListener('click', function(e) {
+        const sel = document.getElementById('langSelector');
+        if (sel && !sel.contains(e.target)) sel.classList.remove('abierto');
+    });
 
     window.onclick = function(e) {
         if (e.target == document.getElementById("modalAgregar")) cerrarModal();
@@ -495,20 +568,20 @@
     async function manejarFotosNueva(input) {
         const espacio = MAX_FOTOS - fotosNuevaPropiedad.length;
         if (espacio <= 0) {
-            alert(`Ya tienes el máximo de ${MAX_FOTOS} fotos. Elimina alguna para agregar otra.`);
+            alert(T.alertMax);
             input.value = '';
             return;
         }
         const seleccionadas = Array.from(input.files).slice(0, espacio);
         if (input.files.length > espacio) {
-            alert(`Solo se agregaron ${seleccionadas.length} foto(s). Máximo ${MAX_FOTOS} fotos por propiedad.`);
+            alert(T.alertParcial.replace('{n}', seleccionadas.length));
         }
         input.value = '';
 
         const areaEl = document.getElementById('uploadAreaNueva');
         const textoEl = areaEl.querySelector('.upload-texto');
         const textoOriginal = textoEl.textContent;
-        textoEl.textContent = '⏳ Optimizando fotos...';
+        textoEl.textContent = '⏳ ' + T.optimizando;
 
         for (const archivo of seleccionadas) {
             try {
@@ -537,10 +610,10 @@
         const el = document.getElementById('espacioNueva');
         const area = document.getElementById('uploadAreaNueva');
         if (restante <= 0) {
-            el.textContent = 'Alcanzaste el máximo de 5 fotos';
+            el.textContent = T.espacioMax;
             area.classList.add('lleno');
         } else {
-            el.textContent = `Puedes agregar ${restante} foto${restante === 1 ? '' : 's'} más`;
+            el.textContent = T.espacioRestante.replace('{n}', restante);
             area.classList.remove('lleno');
         }
     }
@@ -549,20 +622,20 @@
         const totalActual = editImagenes.length + fotosEditPropiedad.length;
         const espacio = MAX_FOTOS - totalActual;
         if (espacio <= 0) {
-            alert(`Ya tienes el máximo de ${MAX_FOTOS} fotos en esta propiedad. Elimina alguna para agregar otra.`);
+            alert(T.alertMax);
             input.value = '';
             return;
         }
         const seleccionadas = Array.from(input.files).slice(0, espacio);
         if (input.files.length > espacio) {
-            alert(`Solo se agregaron ${seleccionadas.length} foto(s). Máximo ${MAX_FOTOS} fotos por propiedad.`);
+            alert(T.alertParcial.replace('{n}', seleccionadas.length));
         }
         input.value = '';
 
         const areaEl = document.getElementById('uploadAreaEdit');
         const textoEl = areaEl.querySelector('.upload-texto');
         const textoOriginal = textoEl.textContent;
-        textoEl.textContent = '⏳ Optimizando fotos...';
+        textoEl.textContent = '⏳ ' + T.optimizando;
 
         for (const archivo of seleccionadas) {
             try {
@@ -591,10 +664,10 @@
         const el = document.getElementById('espacioEdit');
         const area = document.getElementById('uploadAreaEdit');
         if (restante <= 0) {
-            el.textContent = 'Alcanzaste el máximo de 5 fotos';
+            el.textContent = T.espacioMax;
             area.classList.add('lleno');
         } else {
-            el.textContent = `Puedes agregar ${restante} foto${restante === 1 ? '' : 's'} más`;
+            el.textContent = T.espacioRestante.replace('{n}', restante);
             area.classList.remove('lleno');
         }
     }
@@ -656,12 +729,12 @@
         document.getElementById("detalleTitulo").textContent = prop.titulo;
         document.getElementById("detallePrecio").textContent = "$" + parseFloat(prop.precio).toLocaleString();
         document.getElementById("detalleUbicacion").textContent = "📍 " + prop.ubicacion;
-        document.getElementById("detalleDescripcion").textContent = prop.descripcion || 'Sin descripción';
+        document.getElementById("detalleDescripcion").textContent = prop.descripcion || T.sinDescripcion;
 
         const specsHTML = (prop.habitaciones || prop.banos || prop.metros2) ? `
             <div class="detalle-specs">
-                ${prop.habitaciones ? `<span>🛏️ ${prop.habitaciones} hab.</span>` : ''}
-                ${prop.banos ? `<span>🚿 ${prop.banos} baños</span>` : ''}
+                ${prop.habitaciones ? `<span>🛏️ ${prop.habitaciones}</span>` : ''}
+                ${prop.banos ? `<span>🚿 ${prop.banos}</span>` : ''}
                 ${prop.metros2 ? `<span>📐 ${prop.metros2} m²</span>` : ''}
             </div>` : '';
         document.getElementById("detalleSpecs").innerHTML = specsHTML;
@@ -718,7 +791,7 @@
         document.getElementById("formEditar").action = `/editar_propiedad/${clienteId}/${prop.id}`;
         document.getElementById("previewGridEdit").innerHTML = "";
         document.getElementById("btnEditar").disabled = false;
-        document.getElementById("btnEditar").textContent = "💾 Guardar Cambios";
+        document.getElementById("btnEditar").textContent = "💾 " + T.btnGuardarCambios;
         actualizarEspacioEdit();
 
         const cont = document.getElementById("galeriaEditImgs");
@@ -752,9 +825,9 @@
             ? editImagenes.map((url, i) => `
                 <div class="foto-existente" onclick="irEditFoto(${i})" style="cursor:pointer;">
                     <img src="${url}" alt="foto ${i+1}">
-                    <div class="foto-existente-num">Foto ${i+1}</div>
+                    <div class="foto-existente-num">${T.fotoLabel} ${i+1}</div>
                 </div>`).join('')
-            : `<p style="color:#999;font-size:12px;grid-column:1/-1;">Sin fotos aún</p>`;
+            : `<p style="color:#999;font-size:12px;grid-column:1/-1;">${T.sinFotos}</p>`;
 
         document.getElementById("modalEditar").style.display = "block";
     }
@@ -772,12 +845,12 @@
 
     document.getElementById("formPropiedad").addEventListener("submit", function() {
         document.getElementById("btnGuardar").disabled = true;
-        document.getElementById("btnGuardar").textContent = "⏳ Subiendo fotos...";
+        document.getElementById("btnGuardar").textContent = "⏳ " + T.subiendoFotos;
         document.getElementById("progressBar").style.display = "block";
     });
     document.getElementById("formEditar").addEventListener("submit", function() {
         document.getElementById("btnEditar").disabled = true;
-        document.getElementById("btnEditar").textContent = "⏳ Guardando...";
+        document.getElementById("btnEditar").textContent = "⏳ " + T.guardando;
         document.getElementById("progressBarEdit").style.display = "block";
     });
 
@@ -793,6 +866,7 @@
 
     function cargarPropiedades() {
         propiedadesData = {{ propiedades_json | safe }};
+        actualizarEspacioNueva();
         renderPropiedades(propiedadesData);
     }
 
@@ -816,9 +890,9 @@
             container.innerHTML = `
                 <div class="vacio">
                     <div style="font-size:64px;margin-bottom:20px;">📭</div>
-                    <h2 style="color:#7f8c8d;margin-bottom:10px;">No hay propiedades aún</h2>
-                    <p>Comienza agregando tu primera propiedad</p>
-                    <button class="btn btn-nuevo" onclick="abrirModal()" style="margin-top:20px;">➕ Agregar Propiedad</button>
+                    <h2 style="color:#7f8c8d;margin-bottom:10px;">${T.vacioTitulo}</h2>
+                    <p>${T.vacioTexto}</p>
+                    <button class="btn btn-nuevo" onclick="abrirModal()" style="margin-top:20px;">➕ ${T.btnAgregar}</button>
                 </div>`;
             return;
         }
@@ -827,8 +901,8 @@
             container.innerHTML = `
                 <div class="vacio">
                     <div style="font-size:64px;margin-bottom:20px;">🔍</div>
-                    <h2 style="color:#7f8c8d;margin-bottom:10px;">Sin resultados</h2>
-                    <p>No encontramos propiedades con ese criterio</p>
+                    <h2 style="color:#7f8c8d;margin-bottom:10px;">${T.sinResultadosTitulo}</h2>
+                    <p>${T.sinResultadosTexto}</p>
                 </div>`;
             return;
         }
@@ -863,12 +937,12 @@
                         <div class="propiedad-precio">$${parseFloat(prop.precio).toLocaleString()}</div>
                         <div class="propiedad-ubicacion">📍 ${prop.ubicacion}</div>
                         ${specsHTML}
-                        <div class="propiedad-descripcion">${prop.descripcion || 'Sin descripción'}</div>
+                        <div class="propiedad-descripcion">${prop.descripcion || T.sinDescripcion}</div>
                         <div class="card-botones">
-                            <button type="button" class="btn-ver" onclick="verDetalle(${prop.id})">🔍 Ver</button>
-                            <button type="button" class="btn-editar" onclick="abrirEditar(${prop.id})">✏️ Editar</button>
+                            <button type="button" class="btn-ver" onclick="verDetalle(${prop.id})">🔍 ${T.btnVer}</button>
+                            <button type="button" class="btn-editar" onclick="abrirEditar(${prop.id})">✏️ ${T.btnEditar}</button>
                             <form method="POST" action="/eliminar_propiedad/${clienteId}/${prop.id}" style="flex:1">
-                                <button type="submit" class="btn-eliminar" onclick="return confirm('¿Eliminar esta propiedad?')">🗑️</button>
+                                <button type="submit" class="btn-eliminar" onclick="return confirm('${T.confirmarEliminar}')">🗑️</button>
                             </form>
                         </div>
                     </div>
