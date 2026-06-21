@@ -235,12 +235,13 @@ def historial(cliente_id):
     if session.get("cliente") != id_clean:
         return redirect(url_for('login', cliente_id=id_clean))
     vendedor = CLIENTES.get(id_clean)
-    textos = DICCIONARIO.get(session.get('idioma', 'es'), DICCIONARIO['es'])
+    idioma = session.get('idioma', 'es')
+    textos = DICCIONARIO.get(idioma, DICCIONARIO['es'])
     query = supabase.table("leads").select("*").eq("vendedor", id_clean)
     q = request.args.get('q', '')
     if q: query = query.ilike("nombre", f"%{q}%")
     resultado = query.order("score", desc=True).execute()
-    return render_template("historial.html", leads=resultado.data, cliente=vendedor, textos=textos)
+    return render_template("historial.html", leads=resultado.data, cliente=vendedor, textos=textos, idioma_actual=idioma)
 
 @app.route("/inventario/<cliente_id>", methods=["GET"])
 def inventario(cliente_id):
@@ -389,8 +390,9 @@ def herramientas(cliente_id):
         return redirect(url_for('login', cliente_id=id_clean))
     vendedor = CLIENTES.get(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
-    textos = DICCIONARIO.get(session.get('idioma', 'es'), DICCIONARIO['es'])
-    return render_template("herramientas.html", cliente=vendedor, textos=textos)
+    idioma = session.get('idioma', 'es')
+    textos = DICCIONARIO.get(idioma, DICCIONARIO['es'])
+    return render_template("herramientas.html", cliente=vendedor, textos=textos, idioma_actual=idioma)
 
 @app.route("/stats/<cliente_id>")
 def stats(cliente_id):
@@ -402,7 +404,9 @@ def stats(cliente_id):
     periodo = request.args.get('periodo', 'todo')
     stats_data = obtener_stats(id_clean, periodo)
     if stats_data is None: return "Error al obtener estadísticas.", 500
-    return render_template("stats.html", cliente=vendedor, stats=stats_data)
+    idioma = session.get('idioma', 'es')
+    textos = DICCIONARIO.get(idioma, DICCIONARIO['es'])
+    return render_template("stats.html", cliente=vendedor, stats=stats_data, textos=textos, idioma_actual=idioma)
 
 @app.route("/descargar_pdf/<cliente_id>", methods=["GET"])
 def descargar_pdf(cliente_id):
