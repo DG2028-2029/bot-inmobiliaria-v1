@@ -172,11 +172,11 @@
                 <div class="acciones-container">
                     {% if "CLIENTE" not in lead.clasificacion %}
                     <form method="POST" action="{{ url_for('marcar_cliente', cliente_id=cliente.usuario, lead_id=lead.id) }}" style="display: inline; width: 100%;">
-                        <button type="submit" class="btn-marcar-cliente" onclick="return confirm('¿Marcar a {{ lead.nombre }} como cliente?')">💎 Cliente</button>
+                        <button type="submit" class="btn-marcar-cliente" onclick="return confirm('{{ textos.confirm_marcar.replace('{nombre}', lead.nombre) }}')">💎 {{ textos.btn_marcar_cliente }}</button>
                     </form>
                     {% else %}
                     <form method="POST" action="{{ url_for('desmarcar_cliente', cliente_id=cliente.usuario, lead_id=lead.id) }}" style="display: inline; width: 100%;">
-                        <button type="submit" class="btn-desmarcar-cliente" onclick="return confirm('¿Desmarcar a {{ lead.nombre }} como cliente?')">❌ Desmarcar</button>
+                        <button type="submit" class="btn-desmarcar-cliente" onclick="return confirm('{{ textos.confirm_desmarcar.replace('{nombre}', lead.nombre) }}')">❌ {{ textos.btn_desmarcar }}</button>
                     </form>
                     {% endif %}
                 </div>
