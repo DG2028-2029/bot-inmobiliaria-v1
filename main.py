@@ -250,16 +250,20 @@ def inventario(cliente_id):
         return redirect(url_for('login', cliente_id=id_clean))
     vendedor = CLIENTES.get(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
+    idioma = session.get('idioma', 'es')
+    textos = DICCIONARIO.get(idioma, DICCIONARIO['es'])
     try:
         resultado = supabase.table("propiedades").select("*").eq("vendedor", id_clean).order("created_at", desc=True).execute()
         propiedades = resultado.data or []
         return render_template("inventario.html", cliente_id=id_clean,
                                cliente_nombre=vendedor['nombre'],
-                               propiedades_json=json.dumps(propiedades))
+                               propiedades_json=json.dumps(propiedades),
+                               textos=textos, idioma_actual=idioma)
     except Exception as e:
         print(f"Error cargando inventario: {e}")
         return render_template("inventario.html", cliente_id=id_clean,
-                               cliente_nombre=vendedor['nombre'], propiedades_json='[]')
+                               cliente_nombre=vendedor['nombre'], propiedades_json='[]',
+                               textos=textos, idioma_actual=idioma)
 
 @app.route("/propiedades/<cliente_id>", methods=["GET"])
 def inventario_publico(cliente_id):
