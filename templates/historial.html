@@ -7,9 +7,6 @@
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f2f6; padding: 20px; }
         .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .selector-idioma { display: flex; gap: 15px; margin-bottom: 15px; }
-        .bandera { font-size: 24px; text-decoration: none; transition: 0.2s; }
-        .bandera:hover { transform: scale(1.3); }
         .search-container { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; gap: 10px; align-items: center; }
         .search-container input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
         .btn-search { background: #2c3e50; color: white; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; }
@@ -22,6 +19,28 @@
         .btn-herramientas:hover { background: #e67e22; transform: translateY(-2px); }
         .btn-inventario { background: #8e44ad; color: white; text-decoration: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 10px rgba(142, 68, 173, 0.3); transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
         .btn-inventario:hover { background: #6c3483; transform: translateY(-2px); }
+
+        .lang-selector { position: relative; display: inline-block; margin-bottom: 15px; }
+        .lang-selector-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: white; border: 1px solid #ddd; border-radius: 8px;
+            padding: 9px 14px; cursor: pointer; font-size: 14px; font-weight: 600; color: #2c3e50;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .lang-selector-btn:hover { border-color: #2c3e50; }
+        .lang-arrow { font-size: 10px; color: #999; transition: transform 0.2s; margin-left: 2px; }
+        .lang-selector.abierto .lang-arrow { transform: rotate(180deg); }
+        .lang-menu {
+            display: none; position: absolute; top: calc(100% + 6px); left: 0;
+            background: white; border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.18);
+            min-width: 170px; overflow: hidden; z-index: 200;
+        }
+        .lang-selector.abierto .lang-menu { display: block; }
+        .lang-menu a {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 14px; text-decoration: none; color: #2c3e50; font-size: 13px;
+        }
+        .lang-menu a:hover { background: #f8f9fa; }
 
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         th { background: #2c3e50; color: white; padding: 15px; font-size: 13px; text-transform: uppercase; }
@@ -78,13 +97,22 @@
 </head>
 <body>
 
-<div class="selector-idioma">
-    <a href="{{ url_for('cambiar_idioma', lang='es', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇪🇸</a>
-    <a href="{{ url_for('cambiar_idioma', lang='en', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇺🇸</a>
-    <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇫🇷</a>
-    <a href="{{ url_for('cambiar_idioma', lang='de', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇩🇪</a>
-    <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇵🇹</a>
-    <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='historial', cliente_id=cliente.usuario) }}" class="bandera">🇨🇳</a>
+<div class="lang-selector" id="langSelector">
+    <button type="button" class="lang-selector-btn" onclick="toggleLangMenu()">
+        <span>
+            {% if idioma_actual == 'es' %}🇪🇸{% elif idioma_actual == 'en' %}🇺🇸{% elif idioma_actual == 'fr' %}🇫🇷{% elif idioma_actual == 'de' %}🇩🇪{% elif idioma_actual == 'pt' %}🇵🇹{% elif idioma_actual == 'zh' %}🇨🇳{% else %}🇪🇸{% endif %}
+        </span>
+        <span>{{ textos['btn_' + idioma_actual] if textos and ('btn_' + idioma_actual) in textos else textos.btn_es }}</span>
+        <span class="lang-arrow">▾</span>
+    </button>
+    <div class="lang-menu" id="langMenu">
+        <a href="{{ url_for('cambiar_idioma', lang='es', proximo='historial', cliente_id=cliente.usuario) }}">🇪🇸 {{ textos.btn_es }}</a>
+        <a href="{{ url_for('cambiar_idioma', lang='en', proximo='historial', cliente_id=cliente.usuario) }}">🇺🇸 {{ textos.btn_en }}</a>
+        <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='historial', cliente_id=cliente.usuario) }}">🇫🇷 {{ textos.btn_fr }}</a>
+        <a href="{{ url_for('cambiar_idioma', lang='de', proximo='historial', cliente_id=cliente.usuario) }}">🇩🇪 {{ textos.btn_de }}</a>
+        <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='historial', cliente_id=cliente.usuario) }}">🇵🇹 {{ textos.btn_pt }}</a>
+        <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='historial', cliente_id=cliente.usuario) }}">🇨🇳 {{ textos.btn_zh }}</a>
+    </div>
 </div>
 
 <div class="header-container">
@@ -117,7 +145,7 @@
             <th>Score</th>
             <th>{{ textos.col_temperatura }}</th>
             <th>{{ textos.col_mensaje }}</th>
-            <th>Acciones</th>
+            <th>{{ textos.col_acciones }}</th>
         </tr>
     </thead>
     <tbody>
@@ -163,6 +191,14 @@
 </table>
 
 <script>
+function toggleLangMenu() {
+    document.getElementById('langSelector').classList.toggle('abierto');
+}
+document.addEventListener('click', function(e) {
+    const sel = document.getElementById('langSelector');
+    if (sel && !sel.contains(e.target)) sel.classList.remove('abierto');
+});
+
 function descargarExcel() {
     var table = document.getElementById("tabla-leads");
     var wb = XLSX.utils.table_to_book(table, {sheet: "Prospectos"});
