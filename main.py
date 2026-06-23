@@ -1,5 +1,7 @@
 from flask import Flask, request, render_template, redirect, session, url_for, send_file, jsonify
 from supabase import create_client
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import os
 import re
 import math
@@ -22,6 +24,19 @@ from stats import obtener_stats
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
 
+# --- SEGURIDAD DE SESIÓN ---
+app.config['SESSION_COOKIE_HTTPONLY'] = True    # JS no puede leer la cookie
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Protege contra CSRF básico
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=60)  # Sesión expira en 60 min
+
+# --- RATE LIMITING (protección contra fuerza bruta) ---
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=[],
+    storage_uri="memory://"
+)
+
 # --- INFRAESTRUCTURA DE DATOS ESCALABLE ---
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
@@ -33,6 +48,32 @@ cloudinary.config(
     api_key    = os.environ.get("CLOUDINARY_API_KEY"),
     api_secret = os.environ.get("CLOUDINARY_API_SECRET")
 )
+
+# --- EXPIRACIÓN DE SESIÓN POR INACTIVIDAD ---
+@app.before_request
+def verificar_sesion():
+    rutas_publicas = ['formulario', 'index', 'seleccion_idioma_login', 'static']
+    if request.endpoint in rutas_publicas:
+        return
+    if 'cliente' in session:
+        ultima_actividad = session.get('ultima_actividad')
+        if ultima_actividad:
+            ultima = datetime.fromisoformat(ultima_actividad)
+            if datetime.now() - ultima > timedelta(minutes=60):
+                cliente_id = session.get('cliente')
+                session.clear()
+                return redirect(url_for('login', cliente_id=cliente_id or 'roberto'))
+        session['ultima_actividad'] = datetime.now().isoformat()
+        session.permanent = True
+
+# --- HEADERS DE SEGURIDAD ---
+@app.after_request
+def agregar_headers_seguridad(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    return response
 
 # --- MOTOR DE INTELIGENCIA DE NEGOCIOS (OMNI-ENGINE V4) ---
 
@@ -484,6 +525,7 @@ def seleccion_idioma_login(cliente_id):
     return render_template("bienvenida_login.html", cliente=vendedor)
 
 @app.route("/login/<cliente_id>", methods=["GET","POST"])
+@limiter.limit("5 per minute")
 def login(cliente_id):
     id_clean = cliente_id.lower()
     vendedor = CLIENTES.get(id_clean)
@@ -493,9 +535,17 @@ def login(cliente_id):
     if request.method == "POST":
         if request.form.get("usuario") == vendedor["usuario"] and request.form.get("password") == vendedor["password"]:
             session["cliente"] = id_clean
+            session['ultima_actividad'] = datetime.now().isoformat()
+            session.permanent = True
             return redirect(url_for('seleccion_idioma', cliente_id=id_clean))
+        print(f"⚠️ Intento de login fallido para {id_clean} desde {get_remote_address()}")
         return render_template("login.html", error="Credenciales Invalidas", cliente=vendedor, textos=textos)
     return render_template("login.html", cliente=vendedor, textos=textos)
+
+@app.route("/logout/<cliente_id>")
+def logout(cliente_id):
+    session.clear()
+    return redirect(url_for('login', cliente_id=cliente_id.lower()))
 
 @app.route("/idioma/<lang>/<proximo>/<cliente_id>")
 def cambiar_idioma(lang, proximo, cliente_id):
@@ -506,5 +556,16 @@ def cambiar_idioma(lang, proximo, cliente_id):
 def index():
     return "PropTech Global Engine V4.0 [Active Mode] 🌐🚀"
 
+# --- MANEJO DE ERRORES DE RATE LIMIT ---
+@app.errorhandler(429)
+def demasiados_intentos(e):
+    return """
+    <html><body style='font-family:sans-serif;text-align:center;padding:50px;background:#f8f9fa'>
+    <h2 style='color:#e74c3c'>⛔ Demasiados intentos</h2>
+    <p>Has excedido el límite de intentos de acceso.</p>
+    <p>Por favor espera 1 minuto antes de intentar de nuevo.</p>
+    </body></html>
+    """, 429
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
