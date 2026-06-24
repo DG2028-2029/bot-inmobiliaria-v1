@@ -25,11 +25,10 @@ app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
 
 # --- SEGURIDAD DE SESIÓN ---
-app.config['SESSION_COOKIE_HTTPONLY'] = True    # JS no puede leer la cookie
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Protege contra CSRF básico
-# Sin PERMANENT_SESSION_LIFETIME → sesión muere al cerrar el navegador
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
-# --- RATE LIMITING (protección contra fuerza bruta) ---
+# --- RATE LIMITING ---
 limiter = Limiter(
     get_remote_address,
     app=app,
@@ -49,12 +48,25 @@ cloudinary.config(
     api_secret = os.environ.get("CLOUDINARY_API_SECRET")
 )
 
-# --- VERIFICACIÓN DE SESIÓN (sin persistencia) ---
+# --- VERIFICACIÓN DE SESIÓN CON EXPIRACIÓN DE 8 HORAS ---
 @app.before_request
 def verificar_sesion():
-    rutas_publicas = ['formulario', 'index', 'seleccion_idioma_login', 'static']
+    rutas_publicas = ['formulario', 'index', 'seleccion_idioma_login', 'static', 'login', 'cambiar_idioma']
     if request.endpoint in rutas_publicas:
         return
+    if 'cliente' in session:
+        login_time = session.get('login_time')
+        if login_time:
+            tiempo_transcurrido = datetime.now() - datetime.fromisoformat(login_time)
+            if tiempo_transcurrido > timedelta(hours=8):
+                cliente_id = session.get('cliente')
+                session.clear()
+                return redirect(url_for('login', cliente_id=cliente_id or 'roberto'))
+        else:
+            # Sesión sin login_time = sesión vieja o inválida, bota al login
+            cliente_id = session.get('cliente')
+            session.clear()
+            return redirect(url_for('login', cliente_id=cliente_id or 'roberto'))
 
 # --- HEADERS DE SEGURIDAD ---
 @app.after_request
@@ -524,7 +536,7 @@ def login(cliente_id):
     if request.method == "POST":
         if request.form.get("usuario") == vendedor["usuario"] and request.form.get("password") == vendedor["password"]:
             session["cliente"] = id_clean
-            # Sin session.permanent = True → sesión muere al cerrar el navegador
+            session["login_time"] = datetime.now().isoformat()  # ← marca la hora de login
             return redirect(url_for('seleccion_idioma', cliente_id=id_clean))
         print(f"⚠️ Intento de login fallido para {id_clean} desde {get_remote_address()}")
         return render_template("login.html", error="Credenciales Invalidas", cliente=vendedor, textos=textos)
