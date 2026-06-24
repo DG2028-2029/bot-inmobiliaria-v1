@@ -27,7 +27,7 @@ app.secret_key = config.SECRET_KEY
 # --- SEGURIDAD DE SESIÓN ---
 app.config['SESSION_COOKIE_HTTPONLY'] = True    # JS no puede leer la cookie
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Protege contra CSRF básico
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=60)  # Sesión expira en 60 min
+# Sin PERMANENT_SESSION_LIFETIME → sesión muere al cerrar el navegador
 
 # --- RATE LIMITING (protección contra fuerza bruta) ---
 limiter = Limiter(
@@ -49,22 +49,12 @@ cloudinary.config(
     api_secret = os.environ.get("CLOUDINARY_API_SECRET")
 )
 
-# --- EXPIRACIÓN DE SESIÓN POR INACTIVIDAD ---
+# --- VERIFICACIÓN DE SESIÓN (sin persistencia) ---
 @app.before_request
 def verificar_sesion():
     rutas_publicas = ['formulario', 'index', 'seleccion_idioma_login', 'static']
     if request.endpoint in rutas_publicas:
         return
-    if 'cliente' in session:
-        ultima_actividad = session.get('ultima_actividad')
-        if ultima_actividad:
-            ultima = datetime.fromisoformat(ultima_actividad)
-            if datetime.now() - ultima > timedelta(minutes=60):
-                cliente_id = session.get('cliente')
-                session.clear()
-                return redirect(url_for('login', cliente_id=cliente_id or 'roberto'))
-        session['ultima_actividad'] = datetime.now().isoformat()
-        session.permanent = True
 
 # --- HEADERS DE SEGURIDAD ---
 @app.after_request
@@ -365,7 +355,6 @@ def agregar_propiedad(cliente_id):
 
 @app.route("/editar_propiedad/<cliente_id>/<int:prop_id>", methods=["POST"])
 def editar_propiedad(cliente_id, prop_id):
-    """Edita propiedad — agrega fotos nuevas a las existentes (máx. 5 total)."""
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean: return "Error 403: No autorizado.", 403
     vendedor = CLIENTES.get(id_clean)
@@ -535,8 +524,7 @@ def login(cliente_id):
     if request.method == "POST":
         if request.form.get("usuario") == vendedor["usuario"] and request.form.get("password") == vendedor["password"]:
             session["cliente"] = id_clean
-            session['ultima_actividad'] = datetime.now().isoformat()
-            session.permanent = True
+            # Sin session.permanent = True → sesión muere al cerrar el navegador
             return redirect(url_for('seleccion_idioma', cliente_id=id_clean))
         print(f"⚠️ Intento de login fallido para {id_clean} desde {get_remote_address()}")
         return render_template("login.html", error="Credenciales Invalidas", cliente=vendedor, textos=textos)
