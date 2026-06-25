@@ -19,6 +19,16 @@
         .btn-herramientas:hover { background: #e67e22; transform: translateY(-2px); }
         .btn-inventario { background: #8e44ad; color: white; text-decoration: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 10px rgba(142, 68, 173, 0.3); transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
         .btn-inventario:hover { background: #6c3483; transform: translateY(-2px); }
+        .btn-logout { background: #e74c3c; color: white; text-decoration: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3); transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-logout:hover { background: #c0392b; transform: translateY(-2px); }
+
+        .logout-bar {
+            background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px;
+            padding: 10px 16px; margin-bottom: 16px;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            font-size: 13px; color: #856404;
+        }
+        .logout-bar span { display: flex; align-items: center; gap: 6px; }
 
         .lang-selector { position: relative; display: inline-block; margin-bottom: 15px; }
         .lang-selector-btn {
@@ -54,45 +64,20 @@
         tr:hover { background-color: #f8f9fa; }
         
         .btn-marcar-cliente { 
-            background: #9b59b6; 
-            color: white; 
-            border: none; 
-            padding: 8px 16px; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            font-size: 13px;
-            transition: 0.3s;
-            width: 100%;
+            background: #9b59b6; color: white; border: none; padding: 8px 16px;
+            border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;
+            transition: 0.3s; width: 100%;
         }
-        .btn-marcar-cliente:hover { 
-            background: #8e44ad; 
-            transform: scale(1.05);
-        }
+        .btn-marcar-cliente:hover { background: #8e44ad; transform: scale(1.05); }
 
         .btn-desmarcar-cliente {
-            background: #e74c3c;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-            transition: 0.3s;
-            width: 100%;
+            background: #e74c3c; color: white; border: none; padding: 8px 16px;
+            border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;
+            transition: 0.3s; width: 100%;
         }
-        .btn-desmarcar-cliente:hover {
-            background: #c0392b;
-            transform: scale(1.05);
-        }
+        .btn-desmarcar-cliente:hover { background: #c0392b; transform: scale(1.05); }
 
-        .acciones-container {
-            display: flex;
-            gap: 8px;
-            flex-direction: column;
-            align-items: center;
-        }
+        .acciones-container { display: flex; gap: 8px; flex-direction: column; align-items: center; }
     </style>
 </head>
 <body>
@@ -115,12 +100,18 @@
     </div>
 </div>
 
+<!-- BARRA DE CIERRE DE SESIÓN CON MENSAJE DE SEGURIDAD -->
+<div class="logout-bar">
+    <span>⚠️ {{ textos.msg_cerrar_sesion }}</span>
+    <a href="{{ url_for('logout', cliente_id=cliente.usuario) }}" class="btn-logout">{{ textos.btn_cerrar_sesion }}</a>
+</div>
+
 <div class="header-container">
     <h2>📊 {{ textos.historial_titulo }}: {{ cliente.nombre }}</h2>
-    <div style="display: flex; gap: 10px;">
-        <a href="{{ url_for('inventario', cliente_id=cliente.usuario) }}" class="btn-inventario">📦 Inventario</a>
-        <a href="{{ url_for('herramientas', cliente_id=cliente.usuario) }}" class="btn-herramientas">🧮 Herramientas</a>
-        <a href="{{ url_for('stats', cliente_id=cliente.usuario) }}" class="btn-stats">📈 Estadísticas</a>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{{ url_for('inventario', cliente_id=cliente.usuario) }}" class="btn-inventario">{{ textos.btn_inventario }}</a>
+        <a href="{{ url_for('herramientas', cliente_id=cliente.usuario) }}" class="btn-herramientas">{{ textos.btn_herramientas }}</a>
+        <a href="{{ url_for('stats', cliente_id=cliente.usuario) }}" class="btn-stats">{{ textos.btn_estadisticas }}</a>
         <button onclick="descargarExcel()" class="btn-excel">📥 {{ textos.btn_descargar }}</button>
     </div>
 </div>
@@ -142,7 +133,7 @@
             <th>{{ textos.placeholder_zona }}</th>
             <th>{{ textos.placeholder_presupuesto }}</th>
             <th>{{ textos.col_clasificacion }}</th>
-            <th>Score</th>
+            <th>{{ textos.col_score }}</th>
             <th>{{ textos.col_temperatura }}</th>
             <th>{{ textos.col_mensaje }}</th>
             <th>{{ textos.col_acciones }}</th>
@@ -161,7 +152,7 @@
                     {{ textos['class_' + lead.clasificacion] if ('class_' + lead.clasificacion) in textos else lead.clasificacion }}
                 </span>
             </td>
-            <td><progress value="{{ lead.score }}" max="100"></progress> <br> {{ lead.score }}/100</td>
+            <td><progress value="{{ lead.score }}" max="100"></progress><br>{{ lead.score }}/100</td>
             <td>
                 <span class="temp-emoji">
                     {{ textos['temp_' + lead.temperatura] if ('temp_' + lead.temperatura) in textos else lead.temperatura }}
