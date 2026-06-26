@@ -63,7 +63,6 @@ def verificar_sesion():
                 session.clear()
                 return redirect(url_for('login', cliente_id=cliente_id or 'roberto'))
         else:
-            # Sesión sin login_time = sesión vieja o inválida, bota al login
             cliente_id = session.get('cliente')
             session.clear()
             return redirect(url_for('login', cliente_id=cliente_id or 'roberto'))
@@ -158,7 +157,9 @@ def obtener_leads_por_periodo(cliente_id, periodo="todo"):
         print(f"Error obteniendo leads: {e}")
         return []
 
-def generar_pdf_leads(cliente_id, periodo="todo", cliente_nombre=""):
+def generar_pdf_leads(cliente_id, periodo="todo", cliente_nombre="", textos=None):
+    if textos is None:
+        textos = {}
     try:
         leads = obtener_leads_por_periodo(cliente_id, periodo)
         pdf_buffer = BytesIO()
@@ -170,12 +171,25 @@ def generar_pdf_leads(cliente_id, periodo="todo", cliente_nombre=""):
             textColor=colors.HexColor('#667eea'), spaceAfter=6, alignment=1)
         subtitle_style = ParagraphStyle('CustomSubtitle', parent=styles['Normal'], fontSize=9,
             textColor=colors.HexColor('#666666'), spaceAfter=20, alignment=1)
-        
-        elements.append(Paragraph(f"REPORTE DE LEADS - {cliente_nombre}", title_style))
-        elements.append(Paragraph(f"Periodo: {periodo.upper()} | Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}", subtitle_style))
+
+        titulo_pdf = textos.get('pdf_reporte', 'REPORTE DE LEADS')
+        periodo_label = textos.get('pdf_periodo', 'Período')
+        fecha_label = textos.get('pdf_fecha', 'Fecha')
+
+        elements.append(Paragraph(f"{titulo_pdf} - {cliente_nombre}", title_style))
+        elements.append(Paragraph(f"{periodo_label}: {periodo.upper()} | {fecha_label}: {datetime.now().strftime('%d/%m/%Y %H:%M')}", subtitle_style))
         elements.append(Spacer(1, 0.15*inch))
-        
-        data = [["Fecha", "Nombre", "Telefono", "Zona", "Presupuesto", "Clasificacion", "Score", "Temperatura"]]
+
+        col_fecha = textos.get('pdf_col_fecha', 'Fecha')
+        col_nombre = textos.get('pdf_col_nombre', 'Nombre')
+        col_telefono = textos.get('pdf_col_telefono', 'Telefono')
+        col_zona = textos.get('pdf_col_zona', 'Zona')
+        col_presupuesto = textos.get('pdf_col_presupuesto', 'Presupuesto')
+        col_clasificacion = textos.get('pdf_col_clasificacion', 'Clasificacion')
+        col_score = textos.get('pdf_col_score', 'Score')
+        col_temperatura = textos.get('pdf_col_temperatura', 'Temperatura')
+
+        data = [[col_fecha, col_nombre, col_telefono, col_zona, col_presupuesto, col_clasificacion, col_score, col_temperatura]]
         for lead in leads:
             data.append([
                 str(lead.get("fecha", ""))[:10], str(lead.get("nombre", ""))[:18],
@@ -461,8 +475,10 @@ def descargar_pdf(cliente_id):
     vendedor = CLIENTES.get(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     periodo = request.args.get('periodo', 'todo')
+    idioma = session.get('idioma', 'es')
+    textos = DICCIONARIO.get(idioma, DICCIONARIO['es'])
     try:
-        pdf_bytes = generar_pdf_leads(id_clean, periodo, vendedor['nombre'])
+        pdf_bytes = generar_pdf_leads(id_clean, periodo, vendedor['nombre'], textos=textos)
         if pdf_bytes is None: return "Error al generar PDF.", 500
         pdf_bytes.seek(0)
         nombre_archivo = f"Leads_{vendedor['nombre']}_{periodo}_{datetime.now().strftime('%Y%m%d')}.pdf"
@@ -536,7 +552,7 @@ def login(cliente_id):
     if request.method == "POST":
         if request.form.get("usuario") == vendedor["usuario"] and request.form.get("password") == vendedor["password"]:
             session["cliente"] = id_clean
-            session["login_time"] = datetime.now().isoformat()  # ← marca la hora de login
+            session["login_time"] = datetime.now().isoformat()
             return redirect(url_for('seleccion_idioma', cliente_id=id_clean))
         print(f"⚠️ Intento de login fallido para {id_clean} desde {get_remote_address()}")
         return render_template("login.html", error="Credenciales Invalidas", cliente=vendedor, textos=textos)
