@@ -48,6 +48,23 @@ cloudinary.config(
     api_secret = os.environ.get("CLOUDINARY_API_SECRET")
 )
 
+# --- MAPA DE NOMBRES DE IDIOMA A CÓDIGO ---
+IDIOMA_NOMBRE_A_CODIGO = {
+    'español': 'es',
+    'english': 'en',
+    'français': 'fr',
+    'deutsch': 'de',
+    'português': 'pt',
+    '中文': 'zh',
+    # fallback por si alguien pone el código directamente
+    'es': 'es', 'en': 'en', 'fr': 'fr', 'de': 'de', 'pt': 'pt', 'zh': 'zh'
+}
+
+def get_idioma_default(vendedor):
+    """Convierte el idioma_default del cliente al código de 2 letras."""
+    nombre = vendedor.get('idioma_default', 'español').lower()
+    return IDIOMA_NOMBRE_A_CODIGO.get(nombre, 'es')
+
 # --- VERIFICACIÓN DE SESIÓN CON EXPIRACIÓN DE 8 HORAS ---
 @app.before_request
 def verificar_sesion():
@@ -240,7 +257,8 @@ def formulario(cliente_id):
     id_clean = cliente_id.lower()
     vendedor = CLIENTES.get(id_clean)
     if not vendedor: return "Error 404: Vendedor no configurado.", 404
-    lang = session.get('idioma', 'es')
+    idioma_default = get_idioma_default(vendedor)
+    lang = session.get('idioma', idioma_default)
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     
     if request.method == "POST":
@@ -279,12 +297,12 @@ def formulario(cliente_id):
             )
             return render_template("formulario.html", enviado=True, textos=textos,
                                    cliente_id=id_clean, whatsapp=vendedor['whatsapp'],
-                                   cliente_nombre=vendedor['nombre'])
+                                   cliente_nombre=vendedor['nombre'], idioma_actual=lang)
         except Exception as e:
             return f"System Synch Error: {e}", 500
 
     return render_template("formulario.html", enviado=False, cliente_id=id_clean,
-                           textos=textos, cliente_nombre=vendedor['nombre'])
+                           textos=textos, cliente_nombre=vendedor['nombre'], idioma_actual=lang)
 
 @app.route("/historial/<cliente_id>")
 def historial(cliente_id):
@@ -292,7 +310,8 @@ def historial(cliente_id):
     if session.get("cliente") != id_clean:
         return redirect(url_for('login', cliente_id=id_clean))
     vendedor = CLIENTES.get(id_clean)
-    idioma = session.get('idioma', 'es')
+    idioma_default = get_idioma_default(vendedor)
+    idioma = session.get('idioma', idioma_default)
     textos = DICCIONARIO.get(idioma, DICCIONARIO['es'])
     query = supabase.table("leads").select("*").eq("vendedor", id_clean)
     q = request.args.get('q', '')
@@ -307,7 +326,7 @@ def inventario(cliente_id):
         return redirect(url_for('login', cliente_id=id_clean))
     vendedor = CLIENTES.get(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
-    idioma = session.get('idioma', 'es')
+    idioma = session.get('idioma', get_idioma_default(vendedor))
     textos = DICCIONARIO.get(idioma, DICCIONARIO['es'])
     try:
         resultado = supabase.table("propiedades").select("*").eq("vendedor", id_clean).order("created_at", desc=True).execute()
@@ -450,7 +469,7 @@ def herramientas(cliente_id):
         return redirect(url_for('login', cliente_id=id_clean))
     vendedor = CLIENTES.get(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
-    idioma = session.get('idioma', 'es')
+    idioma = session.get('idioma', get_idioma_default(vendedor))
     textos = DICCIONARIO.get(idioma, DICCIONARIO['es'])
     return render_template("herramientas.html", cliente=vendedor, textos=textos, idioma_actual=idioma)
 
@@ -464,7 +483,7 @@ def stats(cliente_id):
     periodo = request.args.get('periodo', 'todo')
     stats_data = obtener_stats(id_clean, periodo)
     if stats_data is None: return "Error al obtener estadísticas.", 500
-    idioma = session.get('idioma', 'es')
+    idioma = session.get('idioma', get_idioma_default(vendedor))
     textos = DICCIONARIO.get(idioma, DICCIONARIO['es'])
     return render_template("stats.html", cliente=vendedor, stats=stats_data, textos=textos, idioma_actual=idioma)
 
@@ -475,7 +494,7 @@ def descargar_pdf(cliente_id):
     vendedor = CLIENTES.get(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     periodo = request.args.get('periodo', 'todo')
-    idioma = session.get('idioma', 'es')
+    idioma = session.get('idioma', get_idioma_default(vendedor))
     textos = DICCIONARIO.get(idioma, DICCIONARIO['es'])
     try:
         pdf_bytes = generar_pdf_leads(id_clean, periodo, vendedor['nombre'], textos=textos)
@@ -547,7 +566,7 @@ def login(cliente_id):
     id_clean = cliente_id.lower()
     vendedor = CLIENTES.get(id_clean)
     if not vendedor: return "Error 404", 404
-    lang = session.get('idioma', 'es')
+    lang = session.get('idioma', get_idioma_default(vendedor))
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     if request.method == "POST":
         if request.form.get("usuario") == vendedor["usuario"] and request.form.get("password") == vendedor["password"]:
