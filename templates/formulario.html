@@ -15,14 +15,59 @@
             justify-content: center;
             padding: 20px;
         }
-        .lang-container {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            gap: 10px;
+
+        /* SELECTOR DE IDIOMA MEJORADO */
+        .lang-wrapper {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 999;
         }
-        .lang-flag { font-size: 20px; cursor: pointer; text-decoration: none; }
+        .lang-selector { position: relative; display: inline-block; }
+        .lang-selector-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: white;
+            border: none;
+            border-radius: 50px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            color: #2c3e50;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .lang-selector-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
+        .lang-flag-actual { font-size: 20px; }
+        .lang-nombre { font-size: 13px; color: #555; }
+        .lang-arrow { font-size: 10px; color: #999; transition: transform 0.2s; }
+        .lang-selector.abierto .lang-arrow { transform: rotate(180deg); }
+        .lang-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            min-width: 180px;
+            overflow: hidden;
+        }
+        .lang-selector.abierto .lang-menu { display: block; }
+        .lang-menu a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 11px 16px;
+            text-decoration: none;
+            color: #2c3e50;
+            font-size: 14px;
+            font-weight: 500;
+            transition: 0.15s;
+        }
+        .lang-menu a:hover { background: #f0f4ff; color: #667eea; }
+        .lang-menu a.activo { background: #f0f4ff; font-weight: 700; color: #667eea; }
+        .lang-menu-flag { font-size: 18px; }
+
         .form-container {
             background: white;
             border-radius: 16px;
@@ -41,93 +86,78 @@
         .form-group { margin-bottom: 15px; }
         label { display: block; color: #2c3e50; font-weight: 600; font-size: 13px; margin-bottom: 5px; }
         input, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 14px;
-            transition: 0.3s;
+            width: 100%; padding: 12px; border: 1px solid #ddd;
+            border-radius: 8px; font-family: inherit; font-size: 14px; transition: 0.3s;
         }
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            background: #f0f4ff;
-        }
+        input:focus, textarea:focus { outline: none; border-color: #667eea; background: #f0f4ff; }
         textarea { resize: vertical; min-height: 80px; }
-        .checkbox-group {
-            display: flex;
-            gap: 10px;
-            margin: 20px 0;
-            align-items: flex-start;
-        }
+        .checkbox-group { display: flex; gap: 10px; margin: 20px 0; align-items: flex-start; }
         .checkbox-group input { width: 18px; height: 18px; margin: 0; cursor: pointer; flex-shrink: 0; }
         .checkbox-group label { margin: 0; font-size: 12px; color: #555; font-weight: normal; }
         button {
-            width: 100%;
-            padding: 12px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 10px;
+            width: 100%; padding: 12px; background: #667eea; color: white;
+            border: none; border-radius: 8px; font-weight: 600; font-size: 14px;
+            cursor: pointer; transition: 0.3s; margin-top: 10px;
         }
         button:hover { background: #5568d3; }
-        .success-message {
-            text-align: center;
-            padding: 40px 20px;
-        }
+        .success-message { text-align: center; padding: 40px 20px; }
         .success-icon { font-size: 60px; margin-bottom: 15px; }
         .success-title { color: #27ae60; font-size: 20px; font-weight: bold; margin-bottom: 10px; }
         .success-text { color: #666; margin-bottom: 25px; }
         .contact-button {
-            background: #25D366;
-            color: white;
-            text-decoration: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            display: block;
-            margin-top: 12px;
-            font-weight: bold;
-            text-align: center;
-            transition: 0.3s;
+            background: #25D366; color: white; text-decoration: none;
+            padding: 12px 25px; border-radius: 8px; display: block; margin-top: 12px;
+            font-weight: bold; text-align: center; transition: 0.3s;
         }
         .contact-button:hover { background: #20ba5c; }
         .inventario-button {
-            background: #8e44ad;
-            color: white;
-            text-decoration: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            display: block;
-            margin-top: 12px;
-            font-weight: bold;
-            text-align: center;
-            transition: 0.3s;
+            background: #8e44ad; color: white; text-decoration: none;
+            padding: 12px 25px; border-radius: 8px; display: block; margin-top: 12px;
+            font-weight: bold; text-align: center; transition: 0.3s;
         }
         .inventario-button:hover { background: #6c3483; }
     </style>
 </head>
 <body>
 
-<div class="lang-container">
-    <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente_id) }}" class="lang-flag">🇪🇸</a>
-    <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente_id) }}" class="lang-flag">🇺🇸</a>
-    <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente_id) }}" class="lang-flag">🇫🇷</a>
-    <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente_id) }}" class="lang-flag">🇩🇪</a>
-    <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente_id) }}" class="lang-flag">🇵🇹</a>
-    <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente_id) }}" class="lang-flag">🇨🇳</a>
+<!-- SELECTOR DE IDIOMA MEJORADO -->
+<div class="lang-wrapper">
+    <div class="lang-selector" id="langSelector">
+        <button type="button" class="lang-selector-btn" onclick="toggleLang()">
+            <span class="lang-flag-actual">
+                {% if idioma_actual == 'es' %}🇪🇸{% elif idioma_actual == 'en' %}🇺🇸{% elif idioma_actual == 'fr' %}🇫🇷{% elif idioma_actual == 'de' %}🇩🇪{% elif idioma_actual == 'pt' %}🇵🇹{% elif idioma_actual == 'zh' %}🇨🇳{% else %}🇪🇸{% endif %}
+            </span>
+            <span class="lang-nombre">{{ textos['btn_' + idioma_actual] if ('btn_' + idioma_actual) in textos else 'Idioma' }}</span>
+            <span class="lang-arrow">▾</span>
+        </button>
+        <div class="lang-menu">
+            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'es' %}class="activo"{% endif %}>
+                <span class="lang-menu-flag">🇪🇸</span> {{ textos.btn_es }}
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'en' %}class="activo"{% endif %}>
+                <span class="lang-menu-flag">🇺🇸</span> {{ textos.btn_en }}
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'fr' %}class="activo"{% endif %}>
+                <span class="lang-menu-flag">🇫🇷</span> {{ textos.btn_fr }}
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'de' %}class="activo"{% endif %}>
+                <span class="lang-menu-flag">🇩🇪</span> {{ textos.btn_de }}
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'pt' %}class="activo"{% endif %}>
+                <span class="lang-menu-flag">🇵🇹</span> {{ textos.btn_pt }}
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'zh' %}class="activo"{% endif %}>
+                <span class="lang-menu-flag">🇨🇳</span> {{ textos.btn_zh }}
+            </a>
+        </div>
+    </div>
 </div>
 
 <div class="form-container">
     {% if not enviado %}
     
     <h2>{{ cliente_nombre }}</h2>
-    <p class="subtitle">Por favor llena tus datos para contactarte.</p>
+    <p class="subtitle">{{ textos.titulo_form }}</p>
     
     <form method="POST">
         <div class="form-group">
@@ -167,12 +197,22 @@
         <div class="success-icon">✅</div>
         <div class="success-title">{{ textos.mensaje_exito }}</div>
         <div class="success-text">{{ textos.subtitulo_exito }}</div>
-        <a href="https://wa.me/{{ whatsapp }}" target="_blank" class="contact-button">💬 Contactar por WhatsApp</a>
-        <a href="/propiedades/{{ cliente_id }}" class="inventario-button">🏠 Ver Propiedades Disponibles</a>
+        <a href="https://wa.me/{{ whatsapp }}" target="_blank" class="contact-button">💬 {{ textos.btn_whatsapp }}</a>
+        <a href="/propiedades/{{ cliente_id }}" class="inventario-button">🏠 {{ textos.btn_ver_propiedades }}</a>
     </div>
     
     {% endif %}
 </div>
+
+<script>
+function toggleLang() {
+    document.getElementById('langSelector').classList.toggle('abierto');
+}
+document.addEventListener('click', function(e) {
+    const sel = document.getElementById('langSelector');
+    if (sel && !sel.contains(e.target)) sel.classList.remove('abierto');
+});
+</script>
 
 </body>
 </html>
