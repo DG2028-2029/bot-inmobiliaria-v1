@@ -7,7 +7,8 @@ CLIENTES = {
         "whatsapp": "50230840598",
         "usuario": "roberto",
         "password": "1234",
-        "archivo_csv": "clientes/roberto/leads.csv"
+        "archivo_csv": "clientes/roberto/leads.csv",
+        "idioma_default": "es"
     },
     "juan": {
         "nombre": "Juan Realty",
@@ -17,6 +18,7 @@ CLIENTES = {
         "whatsapp": "50231111111",
         "usuario": "juan",
         "password": "5678",
-        "archivo_csv": "clientes/juan/leads.csv"
+        "archivo_csv": "clientes/juan/leads.csv",
+        "idioma_default": "en"
     }
 }
