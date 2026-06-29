@@ -1,3 +1,6 @@
+# Idiomas disponibles para idioma_default:
+# "español" | "english" | "français" | "deutsch" | "português" | "中文"
+
 CLIENTES = {
     "roberto": {
         "nombre": "Roberto Inmobiliaria",
@@ -8,7 +11,7 @@ CLIENTES = {
         "usuario": "roberto",
         "password": "1234",
         "archivo_csv": "clientes/roberto/leads.csv",
-        "idioma_default": "es"
+        "idioma_default": "español"
     },
     "juan": {
         "nombre": "Juan Realty",
@@ -19,6 +22,6 @@ CLIENTES = {
         "usuario": "juan",
         "password": "5678",
         "archivo_csv": "clientes/juan/leads.csv",
-        "idioma_default": "en"
+        "idioma_default": "english"
     }
 }
