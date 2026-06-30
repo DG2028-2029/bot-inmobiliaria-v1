@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, redirect, session, url_for, s
 from supabase import create_client
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from werkzeug.security import check_password_hash, generate_password_hash
 import os
 import re
 import math
@@ -48,22 +49,33 @@ cloudinary.config(
     api_secret = os.environ.get("CLOUDINARY_API_SECRET")
 )
 
-# --- MAPA DE NOMBRES DE IDIOMA A CÓDIGO ---
+# --- MAPA DE NOMBRES DE IDIOMA (SIEMPRE EN ESPAÑOL) A CÓDIGO ---
 IDIOMA_NOMBRE_A_CODIGO = {
     'español': 'es',
-    'english': 'en',
-    'français': 'fr',
-    'deutsch': 'de',
-    'português': 'pt',
-    '中文': 'zh',
+    'inglés': 'en', 'ingles': 'en',
+    'francés': 'fr', 'frances': 'fr',
+    'alemán': 'de', 'aleman': 'de',
+    'portugués': 'pt', 'portugues': 'pt',
+    'chino': 'zh',
     # fallback por si alguien pone el código directamente
     'es': 'es', 'en': 'en', 'fr': 'fr', 'de': 'de', 'pt': 'pt', 'zh': 'zh'
 }
 
 def get_idioma_default(vendedor):
-    """Convierte el idioma_default del cliente al código de 2 letras."""
+    """Convierte el idioma_default (en español) del cliente al código de 2 letras."""
     nombre = vendedor.get('idioma_default', 'español').lower()
     return IDIOMA_NOMBRE_A_CODIGO.get(nombre, 'es')
+
+# --- VERIFICACIÓN DE CONTRASEÑA CON SOPORTE PARA HASH Y TEXTO PLANO ---
+def verificar_password(password_ingresada, password_guardada):
+    """
+    Soporta contraseñas hasheadas (scrypt/pbkdf2) y contraseñas en texto plano
+    (para no romper clientes que aún no has migrado a hash).
+    """
+    if password_guardada.startswith('scrypt:') or password_guardada.startswith('pbkdf2:'):
+        return check_password_hash(password_guardada, password_ingresada)
+    else:
+        return password_ingresada == password_guardada
 
 # --- VERIFICACIÓN DE SESIÓN CON EXPIRACIÓN DE 8 HORAS ---
 @app.before_request
@@ -569,7 +581,9 @@ def login(cliente_id):
     lang = session.get('idioma', get_idioma_default(vendedor))
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     if request.method == "POST":
-        if request.form.get("usuario") == vendedor["usuario"] and request.form.get("password") == vendedor["password"]:
+        usuario_form = request.form.get("usuario")
+        password_form = request.form.get("password")
+        if usuario_form == vendedor["usuario"] and verificar_password(password_form, vendedor["password"]):
             session["cliente"] = id_clean
             session["login_time"] = datetime.now().isoformat()
             return redirect(url_for('seleccion_idioma', cliente_id=id_clean))
