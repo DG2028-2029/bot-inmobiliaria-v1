@@ -24,7 +24,7 @@
         
         .top-bar {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 40px; flex-wrap: wrap; gap: 10px;
+            margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
         }
 
         .back-button {
@@ -43,6 +43,8 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.3);
         }
+
+        .top-bar-right { display: flex; align-items: center; gap: 10px; }
 
         .lang-selector { position: relative; display: inline-block; }
         .lang-selector-btn {
@@ -65,6 +67,21 @@
             padding: 10px 14px; text-decoration: none; color: #2c3e50; font-size: 13px;
         }
         .lang-menu a:hover { background: #f0f7ff; }
+
+        .btn-logout {
+            background: #e74c3c; color: white; text-decoration: none;
+            padding: 11px 16px; border-radius: 8px; font-weight: bold; font-size: 13px;
+            box-shadow: 0 4px 15px rgba(231,76,60,0.3); transition: 0.2s;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-logout:hover { background: #c0392b; transform: translateY(-2px); }
+
+        .logout-bar {
+            background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px;
+            padding: 10px 16px; margin-bottom: 24px;
+            display: flex; align-items: center; gap: 8px;
+            font-size: 13px; color: #856404;
+        }
         
         .stats-header {
             text-align: center;
@@ -217,23 +234,30 @@
         <div class="top-bar">
             <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="back-button">{{ textos.stats_volver }}</a>
 
-            <div class="lang-selector" id="langSelector">
-                <button type="button" class="lang-selector-btn" onclick="toggleLangMenu()">
-                    <span>
-                        {% if idioma_actual == 'es' %}🇪🇸{% elif idioma_actual == 'en' %}🇺🇸{% elif idioma_actual == 'fr' %}🇫🇷{% elif idioma_actual == 'de' %}🇩🇪{% elif idioma_actual == 'pt' %}🇵🇹{% elif idioma_actual == 'zh' %}🇨🇳{% else %}🇪🇸{% endif %}
-                    </span>
-                    <span>{{ textos['btn_' + idioma_actual] if textos and ('btn_' + idioma_actual) in textos else textos.btn_es }}</span>
-                    <span class="lang-arrow">▾</span>
-                </button>
-                <div class="lang-menu" id="langMenu">
-                    <a href="{{ url_for('cambiar_idioma', lang='es', proximo='stats', cliente_id=cliente.usuario) }}">🇪🇸 {{ textos.btn_es }}</a>
-                    <a href="{{ url_for('cambiar_idioma', lang='en', proximo='stats', cliente_id=cliente.usuario) }}">🇺🇸 {{ textos.btn_en }}</a>
-                    <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='stats', cliente_id=cliente.usuario) }}">🇫🇷 {{ textos.btn_fr }}</a>
-                    <a href="{{ url_for('cambiar_idioma', lang='de', proximo='stats', cliente_id=cliente.usuario) }}">🇩🇪 {{ textos.btn_de }}</a>
-                    <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='stats', cliente_id=cliente.usuario) }}">🇵🇹 {{ textos.btn_pt }}</a>
-                    <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='stats', cliente_id=cliente.usuario) }}">🇨🇳 {{ textos.btn_zh }}</a>
+            <div class="top-bar-right">
+                <div class="lang-selector" id="langSelector">
+                    <button type="button" class="lang-selector-btn" onclick="toggleLangMenu()">
+                        <span>
+                            {% if idioma_actual == 'es' %}🇪🇸{% elif idioma_actual == 'en' %}🇺🇸{% elif idioma_actual == 'fr' %}🇫🇷{% elif idioma_actual == 'de' %}🇩🇪{% elif idioma_actual == 'pt' %}🇵🇹{% elif idioma_actual == 'zh' %}🇨🇳{% else %}🇪🇸{% endif %}
+                        </span>
+                        <span>{{ textos['btn_' + idioma_actual] if textos and ('btn_' + idioma_actual) in textos else textos.btn_es }}</span>
+                        <span class="lang-arrow">▾</span>
+                    </button>
+                    <div class="lang-menu" id="langMenu">
+                        <a href="{{ url_for('cambiar_idioma', lang='es', proximo='stats', cliente_id=cliente.usuario) }}">🇪🇸 {{ textos.btn_es }}</a>
+                        <a href="{{ url_for('cambiar_idioma', lang='en', proximo='stats', cliente_id=cliente.usuario) }}">🇺🇸 {{ textos.btn_en }}</a>
+                        <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='stats', cliente_id=cliente.usuario) }}">🇫🇷 {{ textos.btn_fr }}</a>
+                        <a href="{{ url_for('cambiar_idioma', lang='de', proximo='stats', cliente_id=cliente.usuario) }}">🇩🇪 {{ textos.btn_de }}</a>
+                        <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='stats', cliente_id=cliente.usuario) }}">🇵🇹 {{ textos.btn_pt }}</a>
+                        <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='stats', cliente_id=cliente.usuario) }}">🇨🇳 {{ textos.btn_zh }}</a>
+                    </div>
                 </div>
+                <a href="{{ url_for('logout', cliente_id=cliente.usuario) }}" class="btn-logout">{{ textos.btn_cerrar_sesion }}</a>
             </div>
+        </div>
+
+        <div class="logout-bar">
+            ⚠️ {{ textos.msg_cerrar_sesion }}
         </div>
         
         <div class="stats-header">
