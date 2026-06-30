@@ -1,5 +1,5 @@
-# Idiomas disponibles para idioma_default:
-# "español" | "english" | "français" | "deutsch" | "português" | "中文"
+# Idiomas disponibles para idioma_default (escribe el nombre en ESPAÑOL):
+# "español" | "inglés" | "francés" | "alemán" | "portugués" | "chino"
 
 CLIENTES = {
     "roberto": {
@@ -22,6 +22,6 @@ CLIENTES = {
         "usuario": "juan",
         "password": "5678",
         "archivo_csv": "clientes/juan/leads.csv",
-        "idioma_default": "english"
+        "idioma_default": "inglés"
     }
 }
