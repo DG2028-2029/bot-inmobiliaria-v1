@@ -2,10 +2,10 @@ from flask import Flask, request, render_template, redirect, session, url_for, s
 from supabase import create_client
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import check_password_hash
+from apscheduler.schedulers.background import BackgroundScheduler
 import os
 import re
-import math
 import json
 import cloudinary
 import cloudinary.uploader
@@ -19,65 +19,85 @@ from reportlab.lib.units import inch
 import config
 from config_clientes import CLIENTES
 from traducciones import DICCIONARIO
-from email_service import enviar_email_cliente, notificar_vendedor_lead_nuevo, notificar_vendedor_cliente_marcado
+from email_service import (enviar_email_cliente, notificar_vendedor_lead_nuevo,
+                           notificar_vendedor_cliente_marcado, enviar_seguimiento_automatico)
 from stats import obtener_stats
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
 
-# --- SEGURIDAD DE SESIÓN ---
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
-# --- RATE LIMITING ---
-limiter = Limiter(
-    get_remote_address,
-    app=app,
-    default_limits=[],
-    storage_uri="memory://"
-)
+limiter = Limiter(get_remote_address, app=app, default_limits=[], storage_uri="memory://")
 
-# --- INFRAESTRUCTURA DE DATOS ESCALABLE ---
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
 
-# --- CLOUDINARY CONFIG ---
 cloudinary.config(
-    cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME"),
-    api_key    = os.environ.get("CLOUDINARY_API_KEY"),
-    api_secret = os.environ.get("CLOUDINARY_API_SECRET")
+    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.environ.get("CLOUDINARY_API_KEY"),
+    api_secret=os.environ.get("CLOUDINARY_API_SECRET")
 )
 
-# --- MAPA DE NOMBRES DE IDIOMA (SIEMPRE EN ESPAÑOL) A CÓDIGO ---
 IDIOMA_NOMBRE_A_CODIGO = {
-    'español': 'es',
-    'inglés': 'en', 'ingles': 'en',
-    'francés': 'fr', 'frances': 'fr',
-    'alemán': 'de', 'aleman': 'de',
-    'portugués': 'pt', 'portugues': 'pt',
-    'chino': 'zh',
-    # fallback por si alguien pone el código directamente
+    'español': 'es', 'inglés': 'en', 'ingles': 'en',
+    'francés': 'fr', 'frances': 'fr', 'alemán': 'de', 'aleman': 'de',
+    'portugués': 'pt', 'portugues': 'pt', 'chino': 'zh',
     'es': 'es', 'en': 'en', 'fr': 'fr', 'de': 'de', 'pt': 'pt', 'zh': 'zh'
 }
 
 def get_idioma_default(vendedor):
-    """Convierte el idioma_default (en español) del cliente al código de 2 letras."""
     nombre = vendedor.get('idioma_default', 'español').lower()
     return IDIOMA_NOMBRE_A_CODIGO.get(nombre, 'es')
 
-# --- VERIFICACIÓN DE CONTRASEÑA CON SOPORTE PARA HASH Y TEXTO PLANO ---
 def verificar_password(password_ingresada, password_guardada):
-    """
-    Soporta contraseñas hasheadas (scrypt/pbkdf2) y contraseñas en texto plano
-    (para no romper clientes que aún no has migrado a hash).
-    """
     if password_guardada.startswith('scrypt:') or password_guardada.startswith('pbkdf2:'):
         return check_password_hash(password_guardada, password_ingresada)
-    else:
-        return password_ingresada == password_guardada
+    return password_ingresada == password_guardada
 
-# --- VERIFICACIÓN DE SESIÓN CON EXPIRACIÓN DE 8 HORAS ---
+# --- SEGUIMIENTO AUTOMÁTICO ---
+def job_seguimiento_automatico():
+    """Corre cada día. Envía email a leads con más de 3 días sin convertirse."""
+    print(f"🔄 [{datetime.now().strftime('%Y-%m-%d %H:%M')}] Ejecutando seguimiento automático...")
+    try:
+        hace_3_dias = (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d")
+        resultado = supabase.table("leads").select("*") \
+            .eq("seguimiento_enviado", False) \
+            .not_.is_("email", "null") \
+            .not_.ilike("clasificacion", "%CLIENTE%") \
+            .lte("fecha", hace_3_dias + " 23:59") \
+            .execute()
+
+        leads = resultado.data or []
+        print(f"📋 Leads para seguimiento: {len(leads)}")
+
+        for lead in leads:
+            email = lead.get("email", "").strip()
+            if not email:
+                continue
+            enviado = enviar_seguimiento_automatico(
+                cliente_id=lead.get("vendedor"),
+                nombre=lead.get("nombre", ""),
+                telefono=lead.get("telefono", ""),
+                email_prospecto=email,
+                zona=lead.get("zona_interes", ""),
+                presupuesto=lead.get("presupuesto", "")
+            )
+            if enviado:
+                supabase.table("leads").update({"seguimiento_enviado": True}) \
+                    .eq("id", lead["id"]).execute()
+                print(f"✅ Seguimiento enviado a {lead.get('nombre')} ({email})")
+
+    except Exception as e:
+        print(f"❌ Error en seguimiento automático: {e}")
+
+# Iniciar scheduler
+scheduler = BackgroundScheduler()
+scheduler.add_job(job_seguimiento_automatico, 'cron', hour=9, minute=0)
+scheduler.start()
+
 @app.before_request
 def verificar_sesion():
     rutas_publicas = ['formulario', 'index', 'seleccion_idioma_login', 'static', 'login', 'cambiar_idioma']
@@ -86,8 +106,7 @@ def verificar_sesion():
     if 'cliente' in session:
         login_time = session.get('login_time')
         if login_time:
-            tiempo_transcurrido = datetime.now() - datetime.fromisoformat(login_time)
-            if tiempo_transcurrido > timedelta(hours=8):
+            if datetime.now() - datetime.fromisoformat(login_time) > timedelta(hours=8):
                 cliente_id = session.get('cliente')
                 session.clear()
                 return redirect(url_for('login', cliente_id=cliente_id or 'roberto'))
@@ -96,7 +115,6 @@ def verificar_sesion():
             session.clear()
             return redirect(url_for('login', cliente_id=cliente_id or 'roberto'))
 
-# --- HEADERS DE SEGURIDAD ---
 @app.after_request
 def agregar_headers_seguridad(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -104,8 +122,6 @@ def agregar_headers_seguridad(response):
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     return response
-
-# --- MOTOR DE INTELIGENCIA DE NEGOCIOS (OMNI-ENGINE V4) ---
 
 def calcular_entropia_mensaje(texto):
     if not texto or len(texto) < 10: return 0
@@ -118,7 +134,6 @@ def motor_scoring_global(d):
     msg = d.get("mensaje", "").strip()
     msg_l = msg.lower()
     zona = d.get("zona_interes", "").lower()
-    
     try:
         p_val = float(re.sub(r'[^\d.]', '', str(d.get("presupuesto", 0))))
         if p_val >= 1000000: score += 30
@@ -126,7 +141,6 @@ def motor_scoring_global(d):
         elif p_val >= 150000: score += 15
         elif p_val > 0: score += 5
     except: pass
-
     triggers = [
         "comprar", "invertir", "contado", "urgente", "pago", "visita", "ahora",
         "buy", "invest", "cash", "closing", "ready", "now", "tour",
@@ -134,22 +148,17 @@ def motor_scoring_global(d):
         "kaufen", "jetzt", "sofort", "dringend", "termin",
         "購買", "現在", "緊急", "預約", "現金", "投資"
     ]
-    
     hits = sum(1 for t in triggers if t in msg_l)
     if hits >= 2: score += 40
     elif hits == 1: score += 25
     elif len(msg.split()) > 15: score += 15
-
     entropia = calcular_entropia_mensaje(msg)
     if entropia > 0.8 and len(msg) > 100: score += 20
     elif len(msg) > 50: score += 10
-    
     if len(d.get("nombre", "").split()) >= 2: score += 5
-
     keywords_premium = ["lujo", "luxury", "penthouse", "roi", "rentabilidad", "yield", "exclusive"]
     if any(k in msg_l or k in zona for k in keywords_premium):
         score += 10
-
     return min(int(score), 100)
 
 def calificar_lead_profesional(score):
@@ -163,13 +172,11 @@ def obtener_leads_por_periodo(cliente_id, periodo="todo"):
         resultado = supabase.table("leads").select("*").eq("vendedor", cliente_id).execute()
         leads = resultado.data
         if not leads: return []
-        
         hoy = datetime.now()
         if periodo == "semana": fecha_limite = hoy - timedelta(days=7)
         elif periodo == "mes": fecha_limite = hoy - timedelta(days=30)
         elif periodo == "año": fecha_limite = hoy - timedelta(days=365)
         else: fecha_limite = datetime(2000, 1, 1)
-        
         leads_filtrados = []
         for lead in leads:
             fecha_str = lead.get("fecha", "")
@@ -180,35 +187,29 @@ def obtener_leads_por_periodo(cliente_id, periodo="todo"):
                         leads_filtrados.append(lead)
                 except:
                     leads_filtrados.append(lead)
-        
         return leads_filtrados if leads_filtrados else leads
     except Exception as e:
         print(f"Error obteniendo leads: {e}")
         return []
 
 def generar_pdf_leads(cliente_id, periodo="todo", cliente_nombre="", textos=None):
-    if textos is None:
-        textos = {}
+    if textos is None: textos = {}
     try:
         leads = obtener_leads_por_periodo(cliente_id, periodo)
         pdf_buffer = BytesIO()
         doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
         elements = []
         styles = getSampleStyleSheet()
-        
         title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=16,
             textColor=colors.HexColor('#667eea'), spaceAfter=6, alignment=1)
         subtitle_style = ParagraphStyle('CustomSubtitle', parent=styles['Normal'], fontSize=9,
             textColor=colors.HexColor('#666666'), spaceAfter=20, alignment=1)
-
         titulo_pdf = textos.get('pdf_reporte', 'REPORTE DE LEADS')
         periodo_label = textos.get('pdf_periodo', 'Período')
         fecha_label = textos.get('pdf_fecha', 'Fecha')
-
         elements.append(Paragraph(f"{titulo_pdf} - {cliente_nombre}", title_style))
         elements.append(Paragraph(f"{periodo_label}: {periodo.upper()} | {fecha_label}: {datetime.now().strftime('%d/%m/%Y %H:%M')}", subtitle_style))
         elements.append(Spacer(1, 0.15*inch))
-
         col_fecha = textos.get('pdf_col_fecha', 'Fecha')
         col_nombre = textos.get('pdf_col_nombre', 'Nombre')
         col_telefono = textos.get('pdf_col_telefono', 'Telefono')
@@ -217,7 +218,6 @@ def generar_pdf_leads(cliente_id, periodo="todo", cliente_nombre="", textos=None
         col_clasificacion = textos.get('pdf_col_clasificacion', 'Clasificacion')
         col_score = textos.get('pdf_col_score', 'Score')
         col_temperatura = textos.get('pdf_col_temperatura', 'Temperatura')
-
         data = [[col_fecha, col_nombre, col_telefono, col_zona, col_presupuesto, col_clasificacion, col_score, col_temperatura]]
         for lead in leads:
             data.append([
@@ -226,7 +226,6 @@ def generar_pdf_leads(cliente_id, periodo="todo", cliente_nombre="", textos=None
                 str(lead.get("presupuesto", 0))[:12], str(lead.get("clasificacion", ""))[:12],
                 str(lead.get("score", 0)), str(lead.get("temperatura", ""))[:10]
             ])
-        
         table = Table(data, colWidths=[0.85*inch, 1.1*inch, 0.95*inch, 0.85*inch, 1.1*inch, 1.15*inch, 0.55*inch, 0.9*inch])
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#667eea')),
@@ -253,8 +252,6 @@ def generar_pdf_leads(cliente_id, periodo="todo", cliente_nombre="", textos=None
         print(f"Error generando PDF: {str(e)}")
         return None
 
-# --- CONTROLADORES DE RUTA ---
-
 @app.route("/cliente/<cliente_id>")
 def seleccion_idioma(cliente_id):
     id_clean = cliente_id.lower()
@@ -272,7 +269,6 @@ def formulario(cliente_id):
     idioma_default = get_idioma_default(vendedor)
     lang = session.get('idioma', idioma_default)
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
-    
     if request.method == "POST":
         d = {
             "nombre": request.form.get("nombre").strip(),
@@ -284,35 +280,31 @@ def formulario(cliente_id):
         }
         score_final = motor_scoring_global(d)
         clasificacion, temperatura = calificar_lead_profesional(score_final)
+        email_prospecto = request.form.get("email", "").strip()
         lead_data = {
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
             **d,
             "clasificacion": clasificacion,
             "score": score_final,
             "temperatura": temperatura,
-            "estado": "Nuevo"
+            "estado": "Nuevo",
+            "email": email_prospecto,
+            "seguimiento_enviado": False
         }
         try:
             supabase.table("leads").insert(lead_data).execute()
-            email_cliente = request.form.get("email", "").strip()
-            if email_cliente:
-                enviar_email_cliente(id_clean, d.get("nombre"), email_cliente)
+            if email_prospecto:
+                enviar_email_cliente(id_clean, d.get("nombre"), email_prospecto)
             notificar_vendedor_lead_nuevo(
-                cliente_id=id_clean,
-                nombre=d.get("nombre"),
-                telefono=d.get("telefono"),
-                zona=d.get("zona_interes"),
-                presupuesto=d.get("presupuesto"),
-                mensaje=d.get("mensaje"),
-                score=score_final,
-                email_prospecto=email_cliente
+                cliente_id=id_clean, nombre=d.get("nombre"), telefono=d.get("telefono"),
+                zona=d.get("zona_interes"), presupuesto=d.get("presupuesto"),
+                mensaje=d.get("mensaje"), score=score_final, email_prospecto=email_prospecto
             )
             return render_template("formulario.html", enviado=True, textos=textos,
                                    cliente_id=id_clean, whatsapp=vendedor['whatsapp'],
                                    cliente_nombre=vendedor['nombre'], idioma_actual=lang)
         except Exception as e:
             return f"System Synch Error: {e}", 500
-
     return render_template("formulario.html", enviado=False, cliente_id=id_clean,
                            textos=textos, cliente_nombre=vendedor['nombre'], idioma_actual=lang)
 
@@ -361,10 +353,8 @@ def inventario_publico(cliente_id):
     try:
         resultado = supabase.table("propiedades").select("*").eq("vendedor", id_clean).eq("estado", "disponible").order("created_at", desc=True).execute()
         propiedades = resultado.data or []
-        return render_template("inventario_publico.html",
-                               cliente_id=id_clean,
-                               cliente_nombre=vendedor['nombre'],
-                               whatsapp=vendedor['whatsapp'],
+        return render_template("inventario_publico.html", cliente_id=id_clean,
+                               cliente_nombre=vendedor['nombre'], whatsapp=vendedor['whatsapp'],
                                propiedades_json=json.dumps(propiedades))
     except Exception as e:
         return f"Error: {e}", 500
@@ -380,17 +370,13 @@ def agregar_propiedad(cliente_id):
         archivos = request.files.getlist("imagenes")[:5]
         for archivo in archivos:
             if archivo and archivo.filename:
-                resultado = cloudinary.uploader.upload(
-                    archivo,
+                resultado = cloudinary.uploader.upload(archivo,
                     folder=f"bot_inmobiliaria/{id_clean}",
-                    transformation=[{"width": 1200, "height": 900, "crop": "limit", "quality": "auto"}]
-                )
+                    transformation=[{"width": 1200, "height": 900, "crop": "limit", "quality": "auto"}])
                 imagenes_urls.append(resultado["secure_url"])
-
         habitaciones = request.form.get("habitaciones", "").strip()
         banos = request.form.get("banos", "").strip()
         metros2 = request.form.get("metros2", "").strip()
-
         propiedad_data = {
             "titulo": request.form.get("titulo").strip(),
             "descripcion": request.form.get("descripcion", "").strip(),
@@ -400,14 +386,11 @@ def agregar_propiedad(cliente_id):
             "banos": float(banos) if banos else None,
             "metros2": float(metros2) if metros2 else None,
             "imagen_url": json.dumps(imagenes_urls),
-            "vendedor": id_clean,
-            "estado": "disponible"
+            "vendedor": id_clean, "estado": "disponible"
         }
         supabase.table("propiedades").insert(propiedad_data).execute()
-        print(f"✅ Propiedad agregada con {len(imagenes_urls)} imágenes")
         return redirect(url_for('inventario', cliente_id=id_clean))
     except Exception as e:
-        print(f"Error agregando propiedad: {e}")
         return f"Error: {e}", 500
 
 @app.route("/editar_propiedad/<cliente_id>/<int:prop_id>", methods=["POST"])
@@ -422,26 +405,19 @@ def editar_propiedad(cliente_id, prop_id):
         if prop_actual.data:
             try:
                 imagenes_existentes = json.loads(prop_actual.data[0].get("imagen_url", "[]"))
-                if not isinstance(imagenes_existentes, list):
-                    imagenes_existentes = []
+                if not isinstance(imagenes_existentes, list): imagenes_existentes = []
             except: pass
-
         espacio_disponible = max(0, 5 - len(imagenes_existentes))
         archivos = request.files.getlist("imagenes")[:espacio_disponible]
-
         for archivo in archivos:
             if archivo and archivo.filename:
-                resultado = cloudinary.uploader.upload(
-                    archivo,
+                resultado = cloudinary.uploader.upload(archivo,
                     folder=f"bot_inmobiliaria/{id_clean}",
-                    transformation=[{"width": 1200, "height": 900, "crop": "limit", "quality": "auto"}]
-                )
+                    transformation=[{"width": 1200, "height": 900, "crop": "limit", "quality": "auto"}])
                 imagenes_existentes.append(resultado["secure_url"])
-
         habitaciones = request.form.get("habitaciones", "").strip()
         banos = request.form.get("banos", "").strip()
         metros2 = request.form.get("metros2", "").strip()
-
         update_data = {
             "titulo": request.form.get("titulo").strip(),
             "descripcion": request.form.get("descripcion", "").strip(),
@@ -452,12 +428,9 @@ def editar_propiedad(cliente_id, prop_id):
             "metros2": float(metros2) if metros2 else None,
             "imagen_url": json.dumps(imagenes_existentes)
         }
-
         supabase.table("propiedades").update(update_data).eq("id", prop_id).eq("vendedor", id_clean).execute()
-        print(f"✅ Propiedad {prop_id} editada — {len(imagenes_existentes)} fotos totales")
         return redirect(url_for('inventario', cliente_id=id_clean))
     except Exception as e:
-        print(f"Error editando propiedad: {e}")
         return f"Error: {e}", 500
 
 @app.route("/eliminar_propiedad/<cliente_id>/<int:prop_id>", methods=["POST"])
@@ -468,10 +441,8 @@ def eliminar_propiedad(cliente_id, prop_id):
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
         supabase.table("propiedades").delete().eq("id", prop_id).eq("vendedor", id_clean).execute()
-        print(f"✅ Propiedad {prop_id} eliminada")
         return redirect(url_for('inventario', cliente_id=id_clean))
     except Exception as e:
-        print(f"Error eliminando propiedad: {e}")
         return f"Error: {e}", 500
 
 @app.route("/herramientas/<cliente_id>")
@@ -515,7 +486,6 @@ def descargar_pdf(cliente_id):
         nombre_archivo = f"Leads_{vendedor['nombre']}_{periodo}_{datetime.now().strftime('%Y%m%d')}.pdf"
         return send_file(pdf_bytes, mimetype="application/pdf", as_attachment=True, download_name=nombre_archivo)
     except Exception as e:
-        print(f"Error descargando PDF: {e}")
         return f"Error: {e}", 500
 
 @app.route("/marcar_cliente/<cliente_id>/<int:lead_id>", methods=["POST"])
@@ -529,7 +499,8 @@ def marcar_cliente(cliente_id, lead_id):
         if resultado.data:
             lead = resultado.data[0]
             supabase.table("leads").update({
-                "temperatura": "MUY_CALIENTE", "clasificacion": "💎 CLIENTE"
+                "temperatura": "MUY_CALIENTE", "clasificacion": "💎 CLIENTE",
+                "seguimiento_enviado": True
             }).eq("id", lead_id).execute()
             notificar_vendedor_cliente_marcado(
                 cliente_id=id_clean, nombre=lead.get("nombre"), telefono=lead.get("telefono"),
@@ -537,7 +508,6 @@ def marcar_cliente(cliente_id, lead_id):
             )
         return redirect(url_for('historial', cliente_id=id_clean))
     except Exception as e:
-        print(f"Error al marcar cliente: {str(e)}")
         return f"Error: {str(e)}", 500
 
 @app.route("/desmarcar_cliente/<cliente_id>/<int:lead_id>", methods=["POST"])
@@ -558,11 +528,11 @@ def desmarcar_cliente(cliente_id, lead_id):
         score_nuevo = motor_scoring_global(lead_data)
         clasificacion_nueva, temperatura_nueva = calificar_lead_profesional(score_nuevo)
         supabase.table("leads").update({
-            "score": score_nuevo, "clasificacion": clasificacion_nueva, "temperatura": temperatura_nueva
+            "score": score_nuevo, "clasificacion": clasificacion_nueva,
+            "temperatura": temperatura_nueva, "seguimiento_enviado": False
         }).eq("id", lead_id).execute()
         return redirect(url_for('historial', cliente_id=id_clean))
     except Exception as e:
-        print(f"Error al desmarcar cliente: {str(e)}")
         return f"Error: {str(e)}", 500
 
 @app.route("/access/<cliente_id>")
@@ -581,13 +551,12 @@ def login(cliente_id):
     lang = session.get('idioma', get_idioma_default(vendedor))
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     if request.method == "POST":
-        usuario_form = request.form.get("usuario")
-        password_form = request.form.get("password")
-        if usuario_form == vendedor["usuario"] and verificar_password(password_form, vendedor["password"]):
+        if request.form.get("usuario") == vendedor["usuario"] and \
+           verificar_password(request.form.get("password"), vendedor["password"]):
             session["cliente"] = id_clean
             session["login_time"] = datetime.now().isoformat()
             return redirect(url_for('seleccion_idioma', cliente_id=id_clean))
-        print(f"⚠️ Intento de login fallido para {id_clean} desde {get_remote_address()}")
+        print(f"⚠️ Login fallido para {id_clean} desde {get_remote_address()}")
         return render_template("login.html", error="Credenciales Invalidas", cliente=vendedor, textos=textos)
     return render_template("login.html", cliente=vendedor, textos=textos)
 
@@ -605,7 +574,6 @@ def cambiar_idioma(lang, proximo, cliente_id):
 def index():
     return "PropTech Global Engine V4.0 [Active Mode] 🌐🚀"
 
-# --- MANEJO DE ERRORES DE RATE LIMIT ---
 @app.errorhandler(429)
 def demasiados_intentos(e):
     return """
