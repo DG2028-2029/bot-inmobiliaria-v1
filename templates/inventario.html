@@ -45,13 +45,6 @@
         }
         .btn-logout:hover { background: #c0392b; transform: translateY(-1px); }
 
-        .logout-bar {
-            background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px;
-            padding: 10px 16px; margin-bottom: 16px;
-            display: flex; align-items: center; gap: 8px;
-            font-size: 13px; color: #856404;
-        }
-
         .header {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 20px; background: white; padding: 20px;
@@ -95,8 +88,7 @@
             background: #1a1a2e; overflow: hidden;
         }
         .galeria img {
-            width: 100%; height: 100%;
-            object-fit: contain;
+            width: 100%; height: 100%; object-fit: contain;
             position: absolute; top: 0; left: 0;
             opacity: 0; transition: opacity 0.4s;
         }
@@ -144,63 +136,30 @@
             -webkit-line-clamp: 3; -webkit-box-orient: vertical;
         }
         .card-botones { display: flex; gap: 8px; margin-top: 10px; }
-        .btn-ver {
-            flex: 1; padding: 9px; background: #3498db; color: white;
-            border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s;
-        }
+        .btn-ver { flex: 1; padding: 9px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; }
         .btn-ver:hover { background: #2980b9; }
-        .btn-editar {
-            flex: 1; padding: 9px; background: #f39c12; color: white;
-            border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s;
-        }
+        .btn-editar { flex: 1; padding: 9px; background: #f39c12; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; }
         .btn-editar:hover { background: #e67e22; }
-        .btn-eliminar {
-            flex: 1; padding: 9px; background: #e74c3c; color: white;
-            border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s;
-            width: 100%;
-        }
+        .btn-eliminar { flex: 1; padding: 9px; background: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; width: 100%; }
         .btn-eliminar:hover { background: #c0392b; }
 
-        .vacio {
-            text-align: center; padding: 60px 20px; background: white;
-            border-radius: 12px; color: #95a5a6; grid-column: 1/-1;
-        }
+        .vacio { text-align: center; padding: 60px 20px; background: white; border-radius: 12px; color: #95a5a6; grid-column: 1/-1; }
 
-        .modal {
-            display: none; position: fixed; z-index: 1000;
-            left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.65); overflow-y: auto;
-        }
-        .modal-contenido {
-            background-color: white; margin: 4% auto; padding: 30px;
-            border-radius: 12px; width: 90%; max-width: 620px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
-        }
-        .modal-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 20px; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px;
-        }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.65); overflow-y: auto; }
+        .modal-contenido { background-color: white; margin: 4% auto; padding: 30px; border-radius: 12px; width: 90%; max-width: 620px; box-shadow: 0 8px 25px rgba(0,0,0,0.25); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; }
         .modal-header h2 { color: #2c3e50; font-size: 20px; }
         .close { font-size: 28px; font-weight: bold; color: #95a5a6; cursor: pointer; line-height: 1; }
         .close:hover { color: #e74c3c; }
 
         .form-group { margin-bottom: 15px; }
         .form-group label, .form-row-3 label { display: block; margin-bottom: 5px; color: #2c3e50; font-weight: bold; font-size: 13px; }
-        .form-group input, .form-group textarea, .form-row-3 input {
-            width: 100%; padding: 10px; border: 1px solid #bdc3c7;
-            border-radius: 6px; font-family: inherit; font-size: 13px;
-            transition: 0.2s;
-        }
-        .form-group input:focus, .form-group textarea:focus, .form-row-3 input:focus {
-            outline: none; border-color: #667eea; background: #f8f9ff;
-        }
+        .form-group input, .form-group textarea, .form-row-3 input { width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 6px; font-family: inherit; font-size: 13px; transition: 0.2s; }
+        .form-group input:focus, .form-group textarea:focus, .form-row-3 input:focus { outline: none; border-color: #667eea; background: #f8f9ff; }
         .form-group textarea { min-height: 100px; resize: vertical; }
         .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
 
-        .upload-area {
-            border: 2px dashed #bdc3c7; border-radius: 8px; padding: 20px;
-            text-align: center; cursor: pointer; transition: 0.3s; background: #f8f9fa;
-        }
+        .upload-area { border: 2px dashed #bdc3c7; border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; background: #f8f9fa; }
         .upload-area:hover { border-color: #667eea; background: #f0f4ff; }
         .upload-area.lleno { opacity: 0.5; cursor: not-allowed; }
         .upload-area input[type="file"] { display: none; }
@@ -212,79 +171,35 @@
         .preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
         .preview-item { position: relative; border-radius: 6px; overflow: hidden; height: 80px; background: #1a1a2e; }
         .preview-item img { width: 100%; height: 100%; object-fit: contain; }
-        .preview-remove {
-            position: absolute; top: 3px; right: 3px;
-            background: rgba(231,76,60,0.9); color: white;
-            border: none; border-radius: 50%; width: 20px; height: 20px;
-            font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
+        .preview-remove { position: absolute; top: 3px; right: 3px; background: rgba(231,76,60,0.9); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
         .fotos-existentes-titulo { font-size: 12px; color: #666; margin-bottom: 8px; font-weight: bold; }
         .fotos-existentes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
-        .foto-existente {
-            position: relative; height: 65px; border-radius: 6px;
-            overflow: hidden; background: #1a1a2e; border: 1px solid #eee;
-        }
+        .foto-existente { position: relative; height: 65px; border-radius: 6px; overflow: hidden; background: #1a1a2e; border: 1px solid #eee; }
         .foto-existente img { width: 100%; height: 100%; object-fit: contain; }
-        .foto-existente-num {
-            position: absolute; bottom: 0; left: 0; right: 0;
-            background: rgba(0,0,0,0.5); color: white; font-size: 9px;
-            text-align: center; padding: 2px;
-        }
+        .foto-existente-num { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.5); color: white; font-size: 9px; text-align: center; padding: 2px; }
 
-        .detalle-galeria {
-            width: 100%; height: 320px; border-radius: 10px;
-            background: #1a1a2e; position: relative; margin-bottom: 20px; overflow: hidden;
-        }
-        .detalle-galeria img {
-            width: 100%; height: 100%; object-fit: contain;
-            position: absolute; top: 0; left: 0;
-            opacity: 0; transition: opacity 0.4s;
-        }
+        .detalle-galeria { width: 100%; height: 320px; border-radius: 10px; background: #1a1a2e; position: relative; margin-bottom: 20px; overflow: hidden; }
+        .detalle-galeria img { width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.4s; }
         .detalle-galeria img.activa { opacity: 1; }
-        .detalle-placeholder {
-            width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 64px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
+        .detalle-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 64px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
         .detalle-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
         .detalle-campo { background: #f8f9fa; padding: 12px; border-radius: 8px; }
         .detalle-campo-label { font-size: 11px; color: #999; text-transform: uppercase; margin-bottom: 4px; }
         .detalle-campo-valor { font-size: 15px; color: #2c3e50; font-weight: bold; }
-        .detalle-specs {
-            display: flex; gap: 16px; margin-bottom: 16px;
-            background: #f8f9fa; padding: 12px; border-radius: 8px; flex-wrap: wrap;
-        }
+        .detalle-specs { display: flex; gap: 16px; margin-bottom: 16px; background: #f8f9fa; padding: 12px; border-radius: 8px; flex-wrap: wrap; }
         .detalle-specs span { font-size: 13px; color: #2c3e50; font-weight: bold; display:flex; align-items:center; gap:5px; }
-        .detalle-descripcion {
-            background: #f8f9fa; padding: 14px; border-radius: 8px;
-            font-size: 13px; color: #555; line-height: 1.7;
-        }
+        .detalle-descripcion { background: #f8f9fa; padding: 14px; border-radius: 8px; font-size: 13px; color: #555; line-height: 1.7; }
 
-        .btn-enviar {
-            width: 100%; padding: 12px; background: #667eea; color: white;
-            border: none; border-radius: 6px; cursor: pointer;
-            font-size: 14px; font-weight: bold; margin-top: 8px; transition: 0.2s;
-        }
+        .btn-enviar { width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; margin-top: 8px; transition: 0.2s; }
         .btn-enviar:hover { background: #5568d3; }
         .btn-enviar:disabled { background: #bdc3c7; cursor: not-allowed; }
 
-        .progress-bar {
-            display: none; width: 100%; height: 6px;
-            background: #ecf0f1; border-radius: 3px; margin-top: 10px; overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%; background: #667eea; border-radius: 3px;
-            animation: progreso 2s ease-in-out infinite;
-        }
+        .progress-bar { display: none; width: 100%; height: 6px; background: #ecf0f1; border-radius: 3px; margin-top: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #667eea; border-radius: 3px; animation: progreso 2s ease-in-out infinite; }
         @keyframes progreso { 0% { width: 0%; } 70% { width: 85%; } 100% { width: 95%; } }
 
-        .info-box {
-            background: #eaf4fb; border-left: 3px solid #3498db;
-            padding: 10px 14px; border-radius: 6px; font-size: 12px;
-            color: #2980b9; margin-bottom: 12px;
-        }
+        .info-box { background: #eaf4fb; border-left: 3px solid #3498db; padding: 10px 14px; border-radius: 6px; font-size: 12px; color: #2980b9; margin-bottom: 12px; }
     </style>
 </head>
 <body>
@@ -309,10 +224,6 @@
             </div>
         </div>
         <a href="{{ url_for('logout', cliente_id=cliente_id) }}" class="btn-logout">{{ textos.btn_cerrar_sesion }}</a>
-    </div>
-
-    <div class="logout-bar">
-        ⚠️ {{ textos.msg_cerrar_sesion }}
     </div>
 
     <div class="header">
@@ -358,18 +269,9 @@
                 <input type="text" name="ubicacion" required placeholder="{{ textos.inv_placeholder_ubicacion }}">
             </div>
             <div class="form-row-3">
-                <div>
-                    <label>{{ textos.inv_label_habitaciones }}</label>
-                    <input type="number" name="habitaciones" min="0" placeholder="3">
-                </div>
-                <div>
-                    <label>{{ textos.inv_label_banos }}</label>
-                    <input type="number" name="banos" min="0" step="0.5" placeholder="2">
-                </div>
-                <div>
-                    <label>{{ textos.inv_label_m2 }}</label>
-                    <input type="number" name="metros2" min="0" step="0.01" placeholder="150">
-                </div>
+                <div><label>{{ textos.inv_label_habitaciones }}</label><input type="number" name="habitaciones" min="0" placeholder="3"></div>
+                <div><label>{{ textos.inv_label_banos }}</label><input type="number" name="banos" min="0" step="0.5" placeholder="2"></div>
+                <div><label>{{ textos.inv_label_m2 }}</label><input type="number" name="metros2" min="0" step="0.01" placeholder="150"></div>
             </div>
             <div class="form-group">
                 <label>{{ textos.inv_label_fotos }}</label>
@@ -419,37 +321,15 @@
             <span class="close" onclick="cerrarEditar()">&times;</span>
         </div>
         <form id="formEditar" method="POST" enctype="multipart/form-data">
-            <div class="form-group">
-                <label>{{ textos.inv_label_titulo }}</label>
-                <input type="text" name="titulo" id="editTitulo" required>
-            </div>
-            <div class="form-group">
-                <label>{{ textos.inv_label_descripcion }}</label>
-                <textarea name="descripcion" id="editDescripcion"></textarea>
-            </div>
-            <div class="form-group">
-                <label>{{ textos.inv_label_precio }}</label>
-                <input type="number" name="precio" id="editPrecio" required step="0.01">
-            </div>
-            <div class="form-group">
-                <label>{{ textos.inv_label_ubicacion }}</label>
-                <input type="text" name="ubicacion" id="editUbicacion" required>
-            </div>
+            <div class="form-group"><label>{{ textos.inv_label_titulo }}</label><input type="text" name="titulo" id="editTitulo" required></div>
+            <div class="form-group"><label>{{ textos.inv_label_descripcion }}</label><textarea name="descripcion" id="editDescripcion"></textarea></div>
+            <div class="form-group"><label>{{ textos.inv_label_precio }}</label><input type="number" name="precio" id="editPrecio" required step="0.01"></div>
+            <div class="form-group"><label>{{ textos.inv_label_ubicacion }}</label><input type="text" name="ubicacion" id="editUbicacion" required></div>
             <div class="form-row-3">
-                <div>
-                    <label>{{ textos.inv_label_habitaciones }}</label>
-                    <input type="number" name="habitaciones" id="editHabitaciones" min="0">
-                </div>
-                <div>
-                    <label>{{ textos.inv_label_banos }}</label>
-                    <input type="number" name="banos" id="editBanos" min="0" step="0.5">
-                </div>
-                <div>
-                    <label>{{ textos.inv_label_m2 }}</label>
-                    <input type="number" name="metros2" id="editMetros2" min="0" step="0.01">
-                </div>
+                <div><label>{{ textos.inv_label_habitaciones }}</label><input type="number" name="habitaciones" id="editHabitaciones" min="0"></div>
+                <div><label>{{ textos.inv_label_banos }}</label><input type="number" name="banos" id="editBanos" min="0" step="0.5"></div>
+                <div><label>{{ textos.inv_label_m2 }}</label><input type="number" name="metros2" id="editMetros2" min="0" step="0.01"></div>
             </div>
-
             <div class="form-group">
                 <div class="fotos-existentes-titulo">📸 {{ textos.inv_fotos_actuales }}</div>
                 <div id="galeriaEditContainer" style="position:relative;width:100%;height:200px;background:#1a1a2e;border-radius:8px;overflow:hidden;margin-bottom:10px;">
@@ -460,7 +340,6 @@
                 </div>
                 <div id="fotosExistentesGrid" class="fotos-existentes-grid"></div>
             </div>
-
             <div class="form-group">
                 <div class="info-box">➕ {{ textos.inv_info_agrega }}</div>
                 <div class="upload-area" id="uploadAreaEdit" onclick="document.getElementById('inputFotosEdit').click()">
@@ -472,7 +351,6 @@
                 </div>
                 <div id="previewGridEdit" class="preview-grid"></div>
             </div>
-
             <button type="submit" class="btn-enviar" id="btnEditar">💾 {{ textos.inv_btn_guardar_cambios }}</button>
             <div class="progress-bar" id="progressBarEdit"><div class="progress-fill"></div></div>
         </form>
@@ -487,7 +365,6 @@
     let editIdx = 0;
     let editImagenes = [];
     const fotoActual = {};
-
     let fotosNuevaPropiedad = [];
     let fotosEditPropiedad = [];
 
@@ -516,14 +393,11 @@
 
     document.addEventListener('DOMContentLoaded', cargarPropiedades);
 
-    function toggleLangMenu() {
-        document.getElementById('langSelector').classList.toggle('abierto');
-    }
+    function toggleLangMenu() { document.getElementById('langSelector').classList.toggle('abierto'); }
     document.addEventListener('click', function(e) {
         const sel = document.getElementById('langSelector');
         if (sel && !sel.contains(e.target)) sel.classList.remove('abierto');
     });
-
     window.onclick = function(e) {
         if (e.target == document.getElementById("modalAgregar")) cerrarModal();
         if (e.target == document.getElementById("modalDetalle")) cerrarDetalle();
@@ -558,27 +432,14 @@
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > maxAncho) {
-                        height = Math.round((height * maxAncho) / width);
-                        width = maxAncho;
-                    }
-
+                    let width = img.width, height = img.height;
+                    if (width > maxAncho) { height = Math.round((height * maxAncho) / width); width = maxAncho; }
                     const canvas = document.createElement('canvas');
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
+                    canvas.width = width; canvas.height = height;
+                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                     canvas.toBlob((blob) => {
                         if (!blob) { reject(new Error('No se pudo comprimir')); return; }
-                        const archivoComprimido = new File([blob], archivo.name, {
-                            type: 'image/jpeg',
-                            lastModified: Date.now()
-                        });
-                        resolve(archivoComprimido);
+                        resolve(new File([blob], archivo.name, { type: 'image/jpeg', lastModified: Date.now() }));
                     }, 'image/jpeg', calidad);
                 };
                 img.onerror = reject;
@@ -591,31 +452,18 @@
 
     async function manejarFotosNueva(input) {
         const espacio = MAX_FOTOS - fotosNuevaPropiedad.length;
-        if (espacio <= 0) {
-            alert(T.alertMax);
-            input.value = '';
-            return;
-        }
+        if (espacio <= 0) { alert(T.alertMax); input.value = ''; return; }
         const seleccionadas = Array.from(input.files).slice(0, espacio);
-        if (input.files.length > espacio) {
-            alert(T.alertParcial.replace('{n}', seleccionadas.length));
-        }
+        if (input.files.length > espacio) alert(T.alertParcial.replace('{n}', seleccionadas.length));
         input.value = '';
-
         const areaEl = document.getElementById('uploadAreaNueva');
         const textoEl = areaEl.querySelector('.upload-texto');
         const textoOriginal = textoEl.textContent;
         textoEl.textContent = '⏳ ' + T.optimizando;
-
         for (const archivo of seleccionadas) {
-            try {
-                const comprimido = await comprimirImagen(archivo);
-                fotosNuevaPropiedad.push(comprimido);
-            } catch (e) {
-                fotosNuevaPropiedad.push(archivo);
-            }
+            try { fotosNuevaPropiedad.push(await comprimirImagen(archivo)); }
+            catch (e) { fotosNuevaPropiedad.push(archivo); }
         }
-
         textoEl.textContent = textoOriginal;
         actualizarInputFiles('inputFotos', fotosNuevaPropiedad);
         renderPreviewArray(fotosNuevaPropiedad, 'previewGrid', 'nueva');
@@ -633,43 +481,25 @@
         const restante = MAX_FOTOS - fotosNuevaPropiedad.length;
         const el = document.getElementById('espacioNueva');
         const area = document.getElementById('uploadAreaNueva');
-        if (restante <= 0) {
-            el.textContent = T.espacioMax;
-            area.classList.add('lleno');
-        } else {
-            el.textContent = T.espacioRestante.replace('{n}', restante);
-            area.classList.remove('lleno');
-        }
+        if (restante <= 0) { el.textContent = T.espacioMax; area.classList.add('lleno'); }
+        else { el.textContent = T.espacioRestante.replace('{n}', restante); area.classList.remove('lleno'); }
     }
 
     async function manejarFotosEdit(input) {
         const totalActual = editImagenes.length + fotosEditPropiedad.length;
         const espacio = MAX_FOTOS - totalActual;
-        if (espacio <= 0) {
-            alert(T.alertMax);
-            input.value = '';
-            return;
-        }
+        if (espacio <= 0) { alert(T.alertMax); input.value = ''; return; }
         const seleccionadas = Array.from(input.files).slice(0, espacio);
-        if (input.files.length > espacio) {
-            alert(T.alertParcial.replace('{n}', seleccionadas.length));
-        }
+        if (input.files.length > espacio) alert(T.alertParcial.replace('{n}', seleccionadas.length));
         input.value = '';
-
         const areaEl = document.getElementById('uploadAreaEdit');
         const textoEl = areaEl.querySelector('.upload-texto');
         const textoOriginal = textoEl.textContent;
         textoEl.textContent = '⏳ ' + T.optimizando;
-
         for (const archivo of seleccionadas) {
-            try {
-                const comprimido = await comprimirImagen(archivo);
-                fotosEditPropiedad.push(comprimido);
-            } catch (e) {
-                fotosEditPropiedad.push(archivo);
-            }
+            try { fotosEditPropiedad.push(await comprimirImagen(archivo)); }
+            catch (e) { fotosEditPropiedad.push(archivo); }
         }
-
         textoEl.textContent = textoOriginal;
         actualizarInputFiles('inputFotosEdit', fotosEditPropiedad);
         renderPreviewArray(fotosEditPropiedad, 'previewGridEdit', 'edit');
@@ -687,13 +517,8 @@
         const restante = MAX_FOTOS - editImagenes.length - fotosEditPropiedad.length;
         const el = document.getElementById('espacioEdit');
         const area = document.getElementById('uploadAreaEdit');
-        if (restante <= 0) {
-            el.textContent = T.espacioMax;
-            area.classList.add('lleno');
-        } else {
-            el.textContent = T.espacioRestante.replace('{n}', restante);
-            area.classList.remove('lleno');
-        }
+        if (restante <= 0) { el.textContent = T.espacioMax; area.classList.add('lleno'); }
+        else { el.textContent = T.espacioRestante.replace('{n}', restante); area.classList.remove('lleno'); }
     }
 
     function abrirModal() {
@@ -712,9 +537,7 @@
     function cerrarEditar() {
         document.getElementById("modalEditar").style.display = "none";
         document.getElementById("previewGridEdit").innerHTML = "";
-        fotosEditPropiedad = [];
-        editImagenes = [];
-        editIdx = 0;
+        fotosEditPropiedad = []; editImagenes = []; editIdx = 0;
     }
 
     function cambiarFoto(propId, dir) {
@@ -731,6 +554,7 @@
         dots[fotoActual[propId]]?.classList.add('activo');
         if (contador) contador.textContent = `${fotoActual[propId]+1}/${imgs.length}`;
     }
+
     function irFoto(propId, index) {
         const galeria = document.getElementById(`galeria-${propId}`);
         const imgs = galeria.querySelectorAll('img');
@@ -754,15 +578,12 @@
         document.getElementById("detallePrecio").textContent = "$" + parseFloat(prop.precio).toLocaleString();
         document.getElementById("detalleUbicacion").textContent = "📍 " + prop.ubicacion;
         document.getElementById("detalleDescripcion").textContent = prop.descripcion || T.sinDescripcion;
-
-        const specsHTML = (prop.habitaciones || prop.banos || prop.metros2) ? `
+        document.getElementById("detalleSpecs").innerHTML = (prop.habitaciones || prop.banos || prop.metros2) ? `
             <div class="detalle-specs">
                 ${prop.habitaciones ? `<span>🛏️ ${prop.habitaciones}</span>` : ''}
                 ${prop.banos ? `<span>🚿 ${prop.banos}</span>` : ''}
                 ${prop.metros2 ? `<span>📐 ${prop.metros2} m²</span>` : ''}
             </div>` : '';
-        document.getElementById("detalleSpecs").innerHTML = specsHTML;
-
         const galeriaEl = document.getElementById("detalleGaleria");
         if (imagenes.length > 0) {
             galeriaEl.innerHTML = imagenes.map((url, i) =>
@@ -776,6 +597,7 @@
         }
         document.getElementById("modalDetalle").style.display = "block";
     }
+
     function cambiarDetalleImg(dir, total) {
         const galeria = document.getElementById("detalleGaleria");
         const imgs = galeria.querySelectorAll('img');
@@ -801,10 +623,7 @@
     function abrirEditar(propId) {
         const prop = propiedadesData.find(p => p.id == propId);
         if (!prop) return;
-        editIdx = 0;
-        editImagenes = parseImagenes(prop.imagen_url);
-        fotosEditPropiedad = [];
-
+        editIdx = 0; editImagenes = parseImagenes(prop.imagen_url); fotosEditPropiedad = [];
         document.getElementById("editTitulo").value = prop.titulo;
         document.getElementById("editDescripcion").value = prop.descripcion || '';
         document.getElementById("editPrecio").value = prop.precio;
@@ -817,42 +636,29 @@
         document.getElementById("btnEditar").disabled = false;
         document.getElementById("btnEditar").textContent = "💾 " + T.btnGuardarCambios;
         actualizarEspacioEdit();
-
         const cont = document.getElementById("galeriaEditImgs");
         const prevBtn = document.getElementById("editPrev");
         const nextBtn = document.getElementById("editNext");
         const contador = document.getElementById("editContador");
-
         if (editImagenes.length > 0) {
             cont.innerHTML = editImagenes.map((url, i) =>
                 `<img src="${url}" style="width:100%;height:200px;object-fit:contain;position:absolute;top:0;left:0;opacity:${i===0?1:0};transition:opacity 0.4s;">`
             ).join('');
             if (editImagenes.length > 1) {
-                prevBtn.style.display = 'flex';
-                nextBtn.style.display = 'flex';
-                contador.style.display = 'block';
-                contador.textContent = `1/${editImagenes.length}`;
-            } else {
-                prevBtn.style.display = 'none';
-                nextBtn.style.display = 'none';
-                contador.style.display = 'none';
-            }
+                prevBtn.style.display = 'flex'; nextBtn.style.display = 'flex';
+                contador.style.display = 'block'; contador.textContent = `1/${editImagenes.length}`;
+            } else { prevBtn.style.display = 'none'; nextBtn.style.display = 'none'; contador.style.display = 'none'; }
         } else {
             cont.innerHTML = `<div style="width:100%;height:200px;display:flex;align-items:center;justify-content:center;color:white;font-size:40px;">🏠</div>`;
-            prevBtn.style.display = 'none';
-            nextBtn.style.display = 'none';
-            contador.style.display = 'none';
+            prevBtn.style.display = 'none'; nextBtn.style.display = 'none'; contador.style.display = 'none';
         }
-
-        const fotosGrid = document.getElementById("fotosExistentesGrid");
-        fotosGrid.innerHTML = editImagenes.length > 0
+        document.getElementById("fotosExistentesGrid").innerHTML = editImagenes.length > 0
             ? editImagenes.map((url, i) => `
                 <div class="foto-existente" onclick="irEditFoto(${i})" style="cursor:pointer;">
                     <img src="${url}" alt="foto ${i+1}">
                     <div class="foto-existente-num">${T.fotoLabel} ${i+1}</div>
                 </div>`).join('')
             : `<p style="color:#999;font-size:12px;grid-column:1/-1;">${T.sinFotos}</p>`;
-
         document.getElementById("modalEditar").style.display = "block";
     }
 
@@ -860,9 +666,7 @@
         const cont = document.getElementById("galeriaEditImgs");
         const imgs = cont.querySelectorAll('img');
         if (!imgs.length) return;
-        imgs[editIdx].style.opacity = '0';
-        editIdx = index;
-        imgs[editIdx].style.opacity = '1';
+        imgs[editIdx].style.opacity = '0'; editIdx = index; imgs[editIdx].style.opacity = '1';
         const contador = document.getElementById("editContador");
         if (contador) contador.textContent = `${editIdx+1}/${editImagenes.length}`;
     }
@@ -896,41 +700,23 @@
 
     function filtrarPropiedades() {
         const termino = document.getElementById('buscarInput').value.toLowerCase().trim();
-        if (!termino) {
-            renderPropiedades(propiedadesData);
-            return;
-        }
-        const filtradas = propiedadesData.filter(p =>
+        if (!termino) { renderPropiedades(propiedadesData); return; }
+        renderPropiedades(propiedadesData.filter(p =>
             (p.titulo || '').toLowerCase().includes(termino) ||
             (p.ubicacion || '').toLowerCase().includes(termino)
-        );
-        renderPropiedades(filtradas);
+        ));
     }
 
     function renderPropiedades(lista) {
         const container = document.getElementById("propiedades-container");
-
         if (!propiedadesData || propiedadesData.length === 0) {
-            container.innerHTML = `
-                <div class="vacio">
-                    <div style="font-size:64px;margin-bottom:20px;">📭</div>
-                    <h2 style="color:#7f8c8d;margin-bottom:10px;">${T.vacioTitulo}</h2>
-                    <p>${T.vacioTexto}</p>
-                    <button class="btn btn-nuevo" onclick="abrirModal()" style="margin-top:20px;">➕ ${T.btnAgregar}</button>
-                </div>`;
+            container.innerHTML = `<div class="vacio"><div style="font-size:64px;margin-bottom:20px;">📭</div><h2 style="color:#7f8c8d;margin-bottom:10px;">${T.vacioTitulo}</h2><p>${T.vacioTexto}</p><button class="btn btn-nuevo" onclick="abrirModal()" style="margin-top:20px;">➕ ${T.btnAgregar}</button></div>`;
             return;
         }
-
         if (lista.length === 0) {
-            container.innerHTML = `
-                <div class="vacio">
-                    <div style="font-size:64px;margin-bottom:20px;">🔍</div>
-                    <h2 style="color:#7f8c8d;margin-bottom:10px;">${T.sinResultadosTitulo}</h2>
-                    <p>${T.sinResultadosTexto}</p>
-                </div>`;
+            container.innerHTML = `<div class="vacio"><div style="font-size:64px;margin-bottom:20px;">🔍</div><h2 style="color:#7f8c8d;margin-bottom:10px;">${T.sinResultadosTitulo}</h2><p>${T.sinResultadosTexto}</p></div>`;
             return;
         }
-
         container.innerHTML = lista.map(prop => {
             const imagenes = parseImagenes(prop.imagen_url);
             const galeriaHTML = imagenes.length > 0 ? `
@@ -939,20 +725,15 @@
                     ${imagenes.length > 1 ? `
                         <button type="button" class="galeria-btn prev" onclick="cambiarFoto('${prop.id}',-1)">‹</button>
                         <button type="button" class="galeria-btn next" onclick="cambiarFoto('${prop.id}',1)">›</button>
-                        <div class="galeria-nav">
-                            ${imagenes.map((_,i)=>`<button type="button" class="galeria-dot ${i===0?'activo':''}" onclick="irFoto('${prop.id}',${i})"></button>`).join('')}
-                        </div>
+                        <div class="galeria-nav">${imagenes.map((_,i)=>`<button type="button" class="galeria-dot ${i===0?'activo':''}" onclick="irFoto('${prop.id}',${i})"></button>`).join('')}</div>
                         <div class="contador-fotos">1/${imagenes.length}</div>` : ''}
-                </div>` :
-                `<div class="galeria"><div class="galeria-placeholder">🏠</div></div>`;
-
+                </div>` : `<div class="galeria"><div class="galeria-placeholder">🏠</div></div>`;
             const specsHTML = (prop.habitaciones || prop.banos || prop.metros2) ? `
                 <div class="propiedad-specs">
                     ${prop.habitaciones ? `<span>🛏️ ${prop.habitaciones}</span>` : ''}
                     ${prop.banos ? `<span>🚿 ${prop.banos}</span>` : ''}
                     ${prop.metros2 ? `<span>📐 ${prop.metros2} m²</span>` : ''}
                 </div>` : '';
-
             return `
                 <div class="propiedad-card">
                     ${galeriaHTML}
