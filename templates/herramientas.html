@@ -45,13 +45,6 @@
         }
         .btn-logout:hover { background: #c0392b; transform: translateY(-1px); }
 
-        .logout-bar {
-            background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px;
-            padding: 10px 16px; margin-bottom: 20px;
-            display: flex; align-items: center; gap: 8px;
-            font-size: 13px; color: #856404;
-        }
-        
         .container { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
         
         .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -99,37 +92,27 @@
     <a href="{{ url_for('logout', cliente_id=cliente.usuario) }}" class="btn-logout">{{ textos.btn_cerrar_sesion }}</a>
 </div>
 
-<div class="logout-bar">
-    ⚠️ {{ textos.msg_cerrar_sesion }}
-</div>
-
 <div class="header">
     <h1>🧮 {{ textos.herr_titulo }}</h1>
     <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="btn-back">{{ textos.herr_volver }}</a>
 </div>
 
 <div class="container">
-    <!-- CALCULADORA 1: RENTABILIDAD -->
     <div class="card">
         <h2>{{ textos.herr_calc1_titulo }}</h2>
-        
         <div class="input-group">
             <label>{{ textos.herr_precio_inicial }}</label>
             <input type="number" id="precio_inicial" placeholder="100000" value="100000">
         </div>
-        
         <div class="input-group">
             <label>{{ textos.herr_rentabilidad_anual }}</label>
             <input type="number" id="rentabilidad" placeholder="10" value="10" step="0.1">
         </div>
-        
         <div class="input-group">
             <label>{{ textos.herr_anos_proyectar }}</label>
             <input type="number" id="anos" placeholder="5" value="5" min="1" max="50">
         </div>
-        
         <button class="btn-calculate" onclick="calcularRentabilidad()">{{ textos.herr_btn_calc_rentabilidad }}</button>
-        
         <div id="resultado_rentabilidad" class="result">
             <table class="tabla-resultado">
                 <thead>
@@ -144,44 +127,34 @@
         </div>
     </div>
 
-    <!-- CALCULADORA 2: PRECIO POR M² -->
     <div class="card">
         <h2>{{ textos.herr_calc2_titulo }}</h2>
-        
         <div class="input-group">
             <label>{{ textos.herr_metraje }}</label>
             <input type="number" id="metraje" placeholder="100" value="100">
         </div>
-        
         <div class="input-group">
             <label>{{ textos.herr_precio_m2 }}</label>
             <input type="number" id="precio_m2" placeholder="1000" value="1000">
         </div>
-        
         <button class="btn-calculate" onclick="calcularMetros()">{{ textos.herr_btn_calc_metros }}</button>
-        
         <div id="resultado_metros" class="result">
             <div class="result-label">{{ textos.herr_precio_total_label }}</div>
             <div class="result-value" id="precio_total">$0</div>
         </div>
     </div>
 
-    <!-- CALCULADORA 3: ENGANCHE -->
     <div class="card">
         <h2>{{ textos.herr_calc3_titulo }}</h2>
-        
         <div class="input-group">
             <label>{{ textos.herr_precio_propiedad }}</label>
             <input type="number" id="precio_propiedad" placeholder="100000" value="100000">
         </div>
-        
         <div class="input-group">
             <label>{{ textos.herr_porcentaje_enganche }}</label>
             <input type="number" id="porcentaje_enganche" placeholder="20" value="20" step="5">
         </div>
-        
         <button class="btn-calculate" onclick="calcularEnganche()">{{ textos.herr_btn_calc_enganche }}</button>
-        
         <div id="resultado_enganche" class="result">
             <div style="margin-bottom: 15px;">
                 <div class="result-label">{{ textos.herr_monto_enganche_label }}</div>
@@ -208,10 +181,8 @@ function calcularRentabilidad() {
     const precio = parseFloat(document.getElementById('precio_inicial').value) || 0;
     const rentabilidad = parseFloat(document.getElementById('rentabilidad').value) || 0;
     const anos = parseInt(document.getElementById('anos').value) || 5;
-    
     let html = '';
     let valor_actual = precio;
-    
     for (let i = 1; i <= anos; i++) {
         valor_actual = precio * Math.pow(1 + (rentabilidad/100), i);
         const ganancia = valor_actual - precio;
@@ -221,7 +192,6 @@ function calcularRentabilidad() {
             <td>$${ganancia.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td>
         </tr>`;
     }
-    
     document.getElementById('tabla_rentabilidad').innerHTML = html;
     document.getElementById('resultado_rentabilidad').classList.add('show');
 }
@@ -230,7 +200,6 @@ function calcularMetros() {
     const metraje = parseFloat(document.getElementById('metraje').value) || 0;
     const precio_m2 = parseFloat(document.getElementById('precio_m2').value) || 0;
     const total = metraje * precio_m2;
-    
     document.getElementById('precio_total').textContent = '$' + total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     document.getElementById('resultado_metros').classList.add('show');
 }
@@ -238,15 +207,12 @@ function calcularMetros() {
 function calcularEnganche() {
     const precio = parseFloat(document.getElementById('precio_propiedad').value) || 0;
     const porcentaje = parseFloat(document.getElementById('porcentaje_enganche').value) || 0;
-    
     const enganche = precio * (porcentaje / 100);
     const saldo = precio - enganche;
-    
     document.getElementById('monto_enganche').textContent = '$' + enganche.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     document.getElementById('saldo_financiar').textContent = '$' + saldo.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     document.getElementById('resultado_enganche').classList.add('show');
 }
 </script>
-
 </body>
 </html>
