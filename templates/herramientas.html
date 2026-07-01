@@ -7,11 +7,6 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f2f6; padding: 20px; }
-        
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .header h1 { color: #2c3e50; font-size: 28px; }
-        .btn-back { background: #3498db; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; }
-        .btn-back:hover { background: #2980b9; }
 
         .top-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
 
@@ -45,28 +40,70 @@
         }
         .btn-logout:hover { background: #c0392b; transform: translateY(-1px); }
 
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header h1 { color: #2c3e50; font-size: 28px; }
+        .btn-back { background: #3498db; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: 0.2s; }
+        .btn-back:hover { background: #2980b9; }
+
         .container { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
-        
+
         .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .card h2 { color: #2c3e50; margin-bottom: 20px; font-size: 20px; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
-        
+
         .input-group { margin-bottom: 15px; }
         .input-group label { display: block; color: #2c3e50; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
-        .input-group input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
-        .input-group input:focus { outline: none; border-color: #3498db; background: #f0f7ff; }
-        
-        .btn-calculate { width: 100%; background: #27ae60; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.3s; }
-        .btn-calculate:hover { background: #229954; }
-        
+        .input-group input, .input-group select {
+            width: 100%; padding: 12px; border: 1px solid #ddd;
+            border-radius: 8px; font-size: 14px; font-family: inherit;
+            background: white; transition: 0.2s;
+        }
+        .input-group input:focus, .input-group select:focus { outline: none; border-color: #3498db; background: #f0f7ff; }
+
+        /* SELECTOR DE PERÍODO */
+        .periodo-tabs {
+            display: flex; gap: 6px; margin-bottom: 15px;
+            background: #f1f2f6; border-radius: 10px; padding: 4px;
+        }
+        .periodo-tab {
+            flex: 1; padding: 8px 6px; border: none; border-radius: 7px;
+            font-size: 12px; font-weight: 700; cursor: pointer;
+            background: transparent; color: #7f8c8d; transition: 0.2s;
+        }
+        .periodo-tab.activo {
+            background: white; color: #3498db;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        }
+        .periodo-tab:hover:not(.activo) { color: #2c3e50; }
+
+        .periodo-hint {
+            font-size: 11px; color: #95a5a6; margin-top: -10px; margin-bottom: 12px;
+        }
+
+        .btn-calculate {
+            width: 100%; background: #27ae60; color: white; border: none;
+            padding: 12px; border-radius: 8px; cursor: pointer;
+            font-weight: bold; font-size: 14px; transition: 0.3s;
+        }
+        .btn-calculate:hover { background: #229954; transform: translateY(-1px); }
+
         .result { background: #f0f7ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db; margin-top: 20px; display: none; }
         .result.show { display: block; }
-        .result-label { color: #7f8c8d; font-size: 12px; }
+        .result-label { color: #7f8c8d; font-size: 12px; margin-bottom: 4px; }
         .result-value { color: #27ae60; font-size: 24px; font-weight: bold; }
-        
-        .tabla-resultado { width: 100%; margin-top: 20px; border-collapse: collapse; font-size: 13px; }
+
+        .tabla-resultado { width: 100%; margin-top: 16px; border-collapse: collapse; font-size: 13px; }
         .tabla-resultado th { background: #2c3e50; color: white; padding: 10px; text-align: left; }
-        .tabla-resultado td { padding: 10px; border-bottom: 1px solid #eee; }
-        .tabla-resultado tr:hover { background: #f0f7ff; }
+        .tabla-resultado td { padding: 9px 10px; border-bottom: 1px solid #eee; }
+        .tabla-resultado tr:hover td { background: #f0f7ff; }
+        .tabla-resultado tr:last-child td { border-bottom: none; }
+
+        .resumen-final {
+            margin-top: 16px; padding: 14px; background: #e8f8f0;
+            border-radius: 8px; border-left: 4px solid #27ae60;
+        }
+        .resumen-final .label { font-size: 12px; color: #7f8c8d; }
+        .resumen-final .valor { font-size: 20px; font-weight: bold; color: #27ae60; }
+        .resumen-final .ganancia-total { font-size: 13px; color: #555; margin-top: 6px; }
     </style>
 </head>
 <body>
@@ -98,63 +135,91 @@
 </div>
 
 <div class="container">
+
+    <!-- CALCULADORA 1: RENTABILIDAD EN EL TIEMPO -->
     <div class="card">
-        <h2>{{ textos.herr_calc1_titulo }}</h2>
+        <h2>📈 Rentabilidad en el Tiempo</h2>
+
         <div class="input-group">
             <label>{{ textos.herr_precio_inicial }}</label>
             <input type="number" id="precio_inicial" placeholder="100000" value="100000">
         </div>
+
         <div class="input-group">
             <label>{{ textos.herr_rentabilidad_anual }}</label>
             <input type="number" id="rentabilidad" placeholder="10" value="10" step="0.1">
         </div>
+
         <div class="input-group">
-            <label>{{ textos.herr_anos_proyectar }}</label>
-            <input type="number" id="anos" placeholder="5" value="5" min="1" max="50">
+            <label>Período a proyectar</label>
+            <div class="periodo-tabs">
+                <button type="button" class="periodo-tab" onclick="setPeriodo('dias')">📅 Días</button>
+                <button type="button" class="periodo-tab" onclick="setPeriodo('meses')">🗓️ Meses</button>
+                <button type="button" class="periodo-tab activo" onclick="setPeriodo('anos')">📆 Años</button>
+            </div>
+            <input type="number" id="cantidad_periodos" placeholder="5" value="5" min="1">
+            <div class="periodo-hint" id="periodoHint">Proyectando en años (máx. 50)</div>
         </div>
+
         <button class="btn-calculate" onclick="calcularRentabilidad()">{{ textos.herr_btn_calc_rentabilidad }}</button>
+
         <div id="resultado_rentabilidad" class="result">
             <table class="tabla-resultado">
                 <thead>
                     <tr>
-                        <th>{{ textos.herr_tabla_anio }}</th>
+                        <th id="colPeriodo">Año</th>
                         <th>{{ textos.herr_tabla_valor }}</th>
                         <th>{{ textos.herr_tabla_ganancia }}</th>
                     </tr>
                 </thead>
                 <tbody id="tabla_rentabilidad"></tbody>
             </table>
+            <div class="resumen-final">
+                <div class="label">Valor final proyectado</div>
+                <div class="valor" id="valorFinal"></div>
+                <div class="ganancia-total" id="gananciaTotalLabel"></div>
+            </div>
         </div>
     </div>
 
+    <!-- CALCULADORA 2: PRECIO POR M² -->
     <div class="card">
         <h2>{{ textos.herr_calc2_titulo }}</h2>
+
         <div class="input-group">
             <label>{{ textos.herr_metraje }}</label>
             <input type="number" id="metraje" placeholder="100" value="100">
         </div>
+
         <div class="input-group">
             <label>{{ textos.herr_precio_m2 }}</label>
             <input type="number" id="precio_m2" placeholder="1000" value="1000">
         </div>
+
         <button class="btn-calculate" onclick="calcularMetros()">{{ textos.herr_btn_calc_metros }}</button>
+
         <div id="resultado_metros" class="result">
             <div class="result-label">{{ textos.herr_precio_total_label }}</div>
             <div class="result-value" id="precio_total">$0</div>
         </div>
     </div>
 
+    <!-- CALCULADORA 3: ENGANCHE -->
     <div class="card">
         <h2>{{ textos.herr_calc3_titulo }}</h2>
+
         <div class="input-group">
             <label>{{ textos.herr_precio_propiedad }}</label>
             <input type="number" id="precio_propiedad" placeholder="100000" value="100000">
         </div>
+
         <div class="input-group">
             <label>{{ textos.herr_porcentaje_enganche }}</label>
             <input type="number" id="porcentaje_enganche" placeholder="20" value="20" step="5">
         </div>
+
         <button class="btn-calculate" onclick="calcularEnganche()">{{ textos.herr_btn_calc_enganche }}</button>
+
         <div id="resultado_enganche" class="result">
             <div style="margin-bottom: 15px;">
                 <div class="result-label">{{ textos.herr_monto_enganche_label }}</div>
@@ -166,6 +231,7 @@
             </div>
         </div>
     </div>
+
 </div>
 
 <script>
@@ -177,40 +243,97 @@ document.addEventListener('click', function(e) {
     if (sel && !sel.contains(e.target)) sel.classList.remove('abierto');
 });
 
+// --- RENTABILIDAD EN EL TIEMPO ---
+let periodoActual = 'anos';
+
+function setPeriodo(tipo) {
+    periodoActual = tipo;
+    document.querySelectorAll('.periodo-tab').forEach(t => t.classList.remove('activo'));
+    event.target.classList.add('activo');
+
+    const hints = {
+        'dias':  'Proyectando en días (máx. 365)',
+        'meses': 'Proyectando en meses (máx. 120)',
+        'anos':  'Proyectando en años (máx. 50)'
+    };
+    const defaults = { 'dias': 30, 'meses': 12, 'anos': 5 };
+    const maximos  = { 'dias': 365, 'meses': 120, 'anos': 50 };
+
+    document.getElementById('periodoHint').textContent = hints[tipo];
+    document.getElementById('cantidad_periodos').value = defaults[tipo];
+    document.getElementById('cantidad_periodos').max = maximos[tipo];
+    document.getElementById('resultado_rentabilidad').classList.remove('show');
+}
+
 function calcularRentabilidad() {
-    const precio = parseFloat(document.getElementById('precio_inicial').value) || 0;
-    const rentabilidad = parseFloat(document.getElementById('rentabilidad').value) || 0;
-    const anos = parseInt(document.getElementById('anos').value) || 5;
-    let html = '';
-    let valor_actual = precio;
-    for (let i = 1; i <= anos; i++) {
-        valor_actual = precio * Math.pow(1 + (rentabilidad/100), i);
-        const ganancia = valor_actual - precio;
-        html += `<tr>
-            <td>${i}</td>
-            <td>$${valor_actual.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td>
-            <td>$${ganancia.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td>
-        </tr>`;
+    const precio       = parseFloat(document.getElementById('precio_inicial').value) || 0;
+    const rentAnual    = parseFloat(document.getElementById('rentabilidad').value) || 0;
+    const cantidad     = parseInt(document.getElementById('cantidad_periodos').value) || 1;
+
+    // Convertir la tasa anual al período seleccionado
+    let tasaPeriodo, labelPeriodo, totalPeriodos;
+    if (periodoActual === 'dias') {
+        tasaPeriodo  = rentAnual / 100 / 365;
+        labelPeriodo = 'Día';
+        totalPeriodos = Math.min(cantidad, 365);
+    } else if (periodoActual === 'meses') {
+        tasaPeriodo  = Math.pow(1 + rentAnual / 100, 1/12) - 1;
+        labelPeriodo = 'Mes';
+        totalPeriodos = Math.min(cantidad, 120);
+    } else {
+        tasaPeriodo  = rentAnual / 100;
+        labelPeriodo = 'Año';
+        totalPeriodos = Math.min(cantidad, 50);
     }
+
+    document.getElementById('colPeriodo').textContent = labelPeriodo;
+
+    // Mostrar cada N filas para no colapsar la tabla en días
+    const paso = periodoActual === 'dias' ? Math.ceil(totalPeriodos / 30) : 1;
+
+    let html = '';
+    let valorFinal = precio;
+    for (let i = 1; i <= totalPeriodos; i++) {
+        const valor   = precio * Math.pow(1 + tasaPeriodo, i);
+        const ganancia = valor - precio;
+        if (i % paso === 0 || i === totalPeriodos) {
+            html += `<tr>
+                <td>${i}</td>
+                <td>$${formatNum(valor)}</td>
+                <td style="color:#27ae60;">+$${formatNum(ganancia)}</td>
+            </tr>`;
+        }
+        valorFinal = valor;
+    }
+
     document.getElementById('tabla_rentabilidad').innerHTML = html;
+    document.getElementById('valorFinal').textContent = '$' + formatNum(valorFinal);
+    document.getElementById('gananciaTotalLabel').textContent =
+        'Ganancia total: +$' + formatNum(valorFinal - precio) +
+        ' (' + (((valorFinal - precio) / precio) * 100).toFixed(1) + '%)';
+
     document.getElementById('resultado_rentabilidad').classList.add('show');
 }
 
+function formatNum(n) {
+    return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// --- M² ---
 function calcularMetros() {
-    const metraje = parseFloat(document.getElementById('metraje').value) || 0;
+    const metraje   = parseFloat(document.getElementById('metraje').value) || 0;
     const precio_m2 = parseFloat(document.getElementById('precio_m2').value) || 0;
-    const total = metraje * precio_m2;
-    document.getElementById('precio_total').textContent = '$' + total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    document.getElementById('precio_total').textContent = '$' + formatNum(metraje * precio_m2);
     document.getElementById('resultado_metros').classList.add('show');
 }
 
+// --- ENGANCHE ---
 function calcularEnganche() {
-    const precio = parseFloat(document.getElementById('precio_propiedad').value) || 0;
+    const precio     = parseFloat(document.getElementById('precio_propiedad').value) || 0;
     const porcentaje = parseFloat(document.getElementById('porcentaje_enganche').value) || 0;
-    const enganche = precio * (porcentaje / 100);
-    const saldo = precio - enganche;
-    document.getElementById('monto_enganche').textContent = '$' + enganche.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    document.getElementById('saldo_financiar').textContent = '$' + saldo.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const enganche   = precio * (porcentaje / 100);
+    document.getElementById('monto_enganche').textContent = '$' + formatNum(enganche);
+    document.getElementById('saldo_financiar').textContent = '$' + formatNum(precio - enganche);
     document.getElementById('resultado_enganche').classList.add('show');
 }
 </script>
