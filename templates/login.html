@@ -4,40 +4,222 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ textos.login_titulo }} | {{ cliente.nombre }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .lang-wrapper {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 999;
+        }
+        .lang-selector { position: relative; display: inline-block; }
+        .lang-selector-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.95);
+            border: none; border-radius: 50px;
+            padding: 10px 16px; cursor: pointer;
+            font-size: 14px; font-weight: 700; color: #2c3e50;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transition: 0.2s;
+        }
+        .lang-selector-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,0,0,0.25); }
+        .lang-flag { font-size: 18px; }
+        .lang-nombre { font-size: 13px; color: #555; }
+        .lang-arrow { font-size: 10px; color: #999; transition: transform 0.2s; }
+        .lang-selector.abierto .lang-arrow { transform: rotate(180deg); }
+        .lang-menu {
+            display: none; position: absolute;
+            top: calc(100% + 8px); right: 0;
+            background: white; border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            min-width: 180px; overflow: hidden;
+        }
+        .lang-selector.abierto .lang-menu { display: block; }
+        .lang-menu a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 11px 16px; text-decoration: none;
+            color: #2c3e50; font-size: 14px; font-weight: 500; transition: 0.15s;
+        }
+        .lang-menu a:hover { background: #f0f4ff; color: #667eea; }
+        .lang-menu a.activo { background: #f0f4ff; font-weight: 700; color: #667eea; }
+
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            padding: 50px 40px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.5s ease-out;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-icon {
+            width: 70px; height: 70px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 32px; margin: 0 auto 20px;
+            box-shadow: 0 8px 20px rgba(102,126,234,0.4);
+        }
+        .login-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 6px;
+        }
+        .login-subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: #95a5a6;
+            margin-bottom: 35px;
+        }
+
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 7px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: 0.2s;
+            color: #2c3e50;
+            background: #f8f9fa;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102,126,234,0.1);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 8px;
+            box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+            letter-spacing: 0.5px;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(102,126,234,0.5);
+        }
+        .btn-login:active { transform: translateY(0); }
+
+        .error-msg {
+            background: #fdf2f2;
+            border: 1px solid #f5c6cb;
+            color: #e74c3c;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #bdc3c7;
+        }
+        .login-footer span { color: #667eea; font-weight: 600; }
+    </style>
 </head>
 <body>
-    <div class="lang-container">
-        <div class="lang-hint">
-            Selecciona tu idioma <span>➜</span>
-        </div>
 
-        <div class="lang-selected">
-            <span>🌐</span>
-            <span style="text-transform: uppercase;">{{ session.get('lang', 'ES') }}</span>
-        </div>
-        <div class="lang-dropdown">
-            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='login', cliente_id=cliente.usuario) }}"><span>🇪🇸</span> Español</a>
-            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='login', cliente_id=cliente.usuario) }}"><span>🇺🇸</span> English</a>
-            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='login', cliente_id=cliente.usuario) }}"><span>🇫🇷</span> Français</a>
-            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='login', cliente_id=cliente.usuario) }}"><span>🇩🇪</span> Deutsch</a>
-            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='login', cliente_id=cliente.usuario) }}"><span>🇵🇹</span> Português</a>
-            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='login', cliente_id=cliente.usuario) }}"><span>🇨🇳</span> 中文</a>
+<!-- SELECTOR DE IDIOMA -->
+<div class="lang-wrapper">
+    <div class="lang-selector" id="langSelector">
+        <button type="button" class="lang-selector-btn" onclick="toggleLang()">
+            <span class="lang-flag">
+                {% if session.get('idioma', 'es') == 'es' %}🇪🇸
+                {% elif session.get('idioma') == 'en' %}🇺🇸
+                {% elif session.get('idioma') == 'fr' %}🇫🇷
+                {% elif session.get('idioma') == 'de' %}🇩🇪
+                {% elif session.get('idioma') == 'pt' %}🇵🇹
+                {% elif session.get('idioma') == 'zh' %}🇨🇳
+                {% else %}🇪🇸{% endif %}
+            </span>
+            <span class="lang-nombre">{{ textos['btn_' + session.get('idioma', 'es')] if ('btn_' + session.get('idioma', 'es')) in textos else 'Idioma' }}</span>
+            <span class="lang-arrow">▾</span>
+        </button>
+        <div class="lang-menu">
+            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='login', cliente_id=cliente.usuario) }}" {% if session.get('idioma','es') == 'es' %}class="activo"{% endif %}>🇪🇸 {{ textos.btn_es }}</a>
+            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='login', cliente_id=cliente.usuario) }}" {% if session.get('idioma') == 'en' %}class="activo"{% endif %}>🇺🇸 {{ textos.btn_en }}</a>
+            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='login', cliente_id=cliente.usuario) }}" {% if session.get('idioma') == 'fr' %}class="activo"{% endif %}>🇫🇷 {{ textos.btn_fr }}</a>
+            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='login', cliente_id=cliente.usuario) }}" {% if session.get('idioma') == 'de' %}class="activo"{% endif %}>🇩🇪 {{ textos.btn_de }}</a>
+            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='login', cliente_id=cliente.usuario) }}" {% if session.get('idioma') == 'pt' %}class="activo"{% endif %}>🇵🇹 {{ textos.btn_pt }}</a>
+            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='login', cliente_id=cliente.usuario) }}" {% if session.get('idioma') == 'zh' %}class="activo"{% endif %}>🇨🇳 {{ textos.btn_zh }}</a>
         </div>
     </div>
+</div>
+
+<!-- TARJETA DE LOGIN -->
+<div class="login-card">
+    <div class="login-icon">🏠</div>
+    <div class="login-title">{{ cliente.nombre }}</div>
+    <div class="login-subtitle">{{ textos.login_titulo }}</div>
 
     <form method="POST">
-        <h2>{{ textos.login_titulo }}</h2>
-        
-        <input name="usuario" placeholder="{{ textos.placeholder_nombre if textos.placeholder_nombre else 'Usuario' }}" required autofocus>
-        
-        <input type="password" name="password" placeholder="******" required>
-        
-        <button type="submit">{{ textos.login_boton if textos.login_boton else 'Entrar' }}</button>
-        
+        <div class="form-group">
+            <label>{{ textos.placeholder_nombre }}</label>
+            <input name="usuario" type="text" required autofocus autocomplete="username">
+        </div>
+        <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn-login">{{ textos.login_boton }}</button>
         {% if error %}
-            <p style="color:#e74c3c; font-weight: 500; margin-top:15px;">{{ error }}</p>
+            <div class="error-msg">⚠️ {{ error }}</div>
         {% endif %}
     </form>
+
+    <div class="login-footer">
+        Powered by <span>PropTech Engine</span> 🌐
+    </div>
+</div>
+
+<script>
+function toggleLang() {
+    document.getElementById('langSelector').classList.toggle('abierto');
+}
+document.addEventListener('click', function(e) {
+    const sel = document.getElementById('langSelector');
+    if (sel && !sel.contains(e.target)) sel.classList.remove('abierto');
+});
+</script>
 </body>
 </html>
