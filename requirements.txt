@@ -6,5 +6,4 @@ requests
 reportlab
 cloudinary
 Flask-Limiter
-APScheduler
 werkzeug
