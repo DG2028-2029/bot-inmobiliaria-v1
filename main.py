@@ -3,7 +3,6 @@ from supabase import create_client
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.security import check_password_hash
-from apscheduler.schedulers.background import BackgroundScheduler
 import os
 import re
 import json
@@ -59,7 +58,6 @@ def verificar_password(password_ingresada, password_guardada):
 
 # --- SEGUIMIENTO AUTOMÁTICO ---
 def job_seguimiento_automatico():
-    """Corre cada día. Envía email a leads con más de 3 días sin convertirse."""
     print(f"🔄 [{datetime.now().strftime('%Y-%m-%d %H:%M')}] Ejecutando seguimiento automático...")
     try:
         hace_3_dias = (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d")
@@ -69,10 +67,8 @@ def job_seguimiento_automatico():
             .not_.ilike("clasificacion", "%CLIENTE%") \
             .lte("fecha", hace_3_dias + " 23:59") \
             .execute()
-
         leads = resultado.data or []
         print(f"📋 Leads para seguimiento: {len(leads)}")
-
         for lead in leads:
             email = lead.get("email", "").strip()
             if not email:
@@ -89,18 +85,13 @@ def job_seguimiento_automatico():
                 supabase.table("leads").update({"seguimiento_enviado": True}) \
                     .eq("id", lead["id"]).execute()
                 print(f"✅ Seguimiento enviado a {lead.get('nombre')} ({email})")
-
     except Exception as e:
         print(f"❌ Error en seguimiento automático: {e}")
 
-# Iniciar scheduler
-scheduler = BackgroundScheduler()
-scheduler.add_job(job_seguimiento_automatico, 'cron', hour=9, minute=0)
-scheduler.start()
-
+# --- VERIFICACIÓN DE SESIÓN ---
 @app.before_request
 def verificar_sesion():
-    rutas_publicas = ['formulario', 'index', 'seleccion_idioma_login', 'static', 'login', 'cambiar_idioma']
+    rutas_publicas = ['formulario', 'index', 'seleccion_idioma_login', 'static', 'login', 'cambiar_idioma', 'cron_seguimiento']
     if request.endpoint in rutas_publicas:
         return
     if 'cliente' in session:
@@ -115,6 +106,7 @@ def verificar_sesion():
             session.clear()
             return redirect(url_for('login', cliente_id=cliente_id or 'roberto'))
 
+# --- HEADERS DE SEGURIDAD ---
 @app.after_request
 def agregar_headers_seguridad(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -123,6 +115,7 @@ def agregar_headers_seguridad(response):
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     return response
 
+# --- MOTOR DE SCORING ---
 def calcular_entropia_mensaje(texto):
     if not texto or len(texto) < 10: return 0
     palabras = texto.lower().split()
@@ -251,6 +244,20 @@ def generar_pdf_leads(cliente_id, periodo="todo", cliente_nombre="", textos=None
     except Exception as e:
         print(f"Error generando PDF: {str(e)}")
         return None
+
+# --- CONTROLADORES DE RUTA ---
+
+@app.route("/cron/seguimiento/<secret_key>", methods=["GET"])
+def cron_seguimiento(secret_key):
+    """Ruta llamada por cron externo para disparar el seguimiento automático."""
+    clave_esperada = os.environ.get("CRON_SECRET", "seguimiento_secreto_roberto_2024")
+    if secret_key != clave_esperada:
+        return "No autorizado", 403
+    try:
+        job_seguimiento_automatico()
+        return f"✅ Seguimiento ejecutado: {datetime.now().strftime('%Y-%m-%d %H:%M')}", 200
+    except Exception as e:
+        return f"❌ Error: {e}", 500
 
 @app.route("/cliente/<cliente_id>")
 def seleccion_idioma(cliente_id):
