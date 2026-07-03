@@ -16,7 +16,6 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.units import inch
 import config
-from config_clientes import CLIENTES
 from traducciones import DICCIONARIO
 from email_service import (enviar_email_cliente, notificar_vendedor_lead_nuevo,
                            notificar_vendedor_cliente_marcado, enviar_seguimiento_automatico)
@@ -24,7 +23,6 @@ from stats import obtener_stats
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
-
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
@@ -46,6 +44,27 @@ IDIOMA_NOMBRE_A_CODIGO = {
     'portugués': 'pt', 'portugues': 'pt', 'chino': 'zh',
     'es': 'es', 'en': 'en', 'fr': 'fr', 'de': 'de', 'pt': 'pt', 'zh': 'zh'
 }
+
+# --- CARGA DE CLIENTES DESDE SUPABASE ---
+def cargar_clientes():
+    try:
+        resultado = supabase.table("clientes").select("*").eq("activo", True).execute()
+        clientes = {}
+        for c in resultado.data:
+            clientes[c['id']] = c
+        return clientes
+    except Exception as e:
+        print(f"❌ Error cargando clientes: {e}")
+        return {}
+
+def get_cliente(cliente_id):
+    try:
+        resultado = supabase.table("clientes").select("*").eq("id", cliente_id).eq("activo", True).execute()
+        if resultado.data:
+            return resultado.data[0]
+        return None
+    except:
+        return None
 
 def get_idioma_default(vendedor):
     nombre = vendedor.get('idioma_default', 'español').lower()
@@ -91,8 +110,13 @@ def job_seguimiento_automatico():
 # --- VERIFICACIÓN DE SESIÓN ---
 @app.before_request
 def verificar_sesion():
-    rutas_publicas = ['formulario', 'index', 'seleccion_idioma_login', 'static', 'login', 'cambiar_idioma', 'cron_seguimiento']
+    rutas_publicas = ['formulario', 'index', 'seleccion_idioma_login', 'static',
+                      'login', 'cambiar_idioma', 'cron_seguimiento', 'admin_login']
     if request.endpoint in rutas_publicas:
+        return
+    if request.endpoint and request.endpoint.startswith('admin'):
+        if not session.get('admin'):
+            return redirect(url_for('admin_login'))
         return
     if 'cliente' in session:
         login_time = session.get('login_time')
@@ -106,7 +130,6 @@ def verificar_sesion():
             session.clear()
             return redirect(url_for('login', cliente_id=cliente_id or 'roberto'))
 
-# --- HEADERS DE SEGURIDAD ---
 @app.after_request
 def agregar_headers_seguridad(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -245,11 +268,116 @@ def generar_pdf_leads(cliente_id, periodo="todo", cliente_nombre="", textos=None
         print(f"Error generando PDF: {str(e)}")
         return None
 
-# --- CONTROLADORES DE RUTA ---
+# ============================================================
+# PANEL DE ADMIN
+# ============================================================
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    error = None
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        admin_pass = os.environ.get("ADMIN_PASSWORD", "admin_diego_2024")
+        if password == admin_pass:
+            session["admin"] = True
+            session["admin_time"] = datetime.now().isoformat()
+            return redirect(url_for('admin_panel'))
+        error = "Contraseña incorrecta"
+    return render_template("admin_login.html", error=error)
+
+@app.route("/admin/logout")
+def admin_logout():
+    session.pop("admin", None)
+    session.pop("admin_time", None)
+    return redirect(url_for('admin_login'))
+
+@app.route("/admin")
+def admin_panel():
+    if not session.get("admin"):
+        return redirect(url_for('admin_login'))
+    try:
+        resultado = supabase.table("clientes").select("*").order("created_at", desc=True).execute()
+        clientes = resultado.data or []
+        # Contar leads por cliente
+        for c in clientes:
+            try:
+                leads_r = supabase.table("leads").select("id", count="exact").eq("vendedor", c['id']).execute()
+                c['total_leads'] = leads_r.count or 0
+            except:
+                c['total_leads'] = 0
+    except Exception as e:
+        clientes = []
+        print(f"Error cargando panel admin: {e}")
+    return render_template("admin.html", clientes=clientes)
+
+@app.route("/admin/cliente/nuevo", methods=["POST"])
+def admin_nuevo_cliente():
+    if not session.get("admin"):
+        return redirect(url_for('admin_login'))
+    try:
+        cliente_id = request.form.get("id", "").strip().lower().replace(" ", "_")
+        if not cliente_id:
+            return redirect(url_for('admin_panel'))
+        data = {
+            "id": cliente_id,
+            "nombre": request.form.get("nombre", "").strip(),
+            "email_vendedor": request.form.get("email_vendedor", "").strip(),
+            "whatsapp": request.form.get("whatsapp", "").strip(),
+            "usuario": request.form.get("usuario", "").strip(),
+            "password": request.form.get("password", "").strip(),
+            "idioma_default": request.form.get("idioma_default", "español"),
+            "color_primario": request.form.get("color_primario", "#667eea"),
+            "premium_email": True,
+            "email_api_key": request.form.get("email_api_key", "").strip(),
+            "activo": True
+        }
+        supabase.table("clientes").insert(data).execute()
+        print(f"✅ Cliente nuevo creado: {cliente_id}")
+    except Exception as e:
+        print(f"❌ Error creando cliente: {e}")
+    return redirect(url_for('admin_panel'))
+
+@app.route("/admin/cliente/editar/<cliente_id>", methods=["POST"])
+def admin_editar_cliente(cliente_id):
+    if not session.get("admin"):
+        return redirect(url_for('admin_login'))
+    try:
+        data = {
+            "nombre": request.form.get("nombre", "").strip(),
+            "email_vendedor": request.form.get("email_vendedor", "").strip(),
+            "whatsapp": request.form.get("whatsapp", "").strip(),
+            "usuario": request.form.get("usuario", "").strip(),
+            "idioma_default": request.form.get("idioma_default", "español"),
+            "color_primario": request.form.get("color_primario", "#667eea"),
+            "email_api_key": request.form.get("email_api_key", "").strip(),
+            "activo": request.form.get("activo") == "on"
+        }
+        nueva_password = request.form.get("password", "").strip()
+        if nueva_password:
+            data["password"] = nueva_password
+        supabase.table("clientes").update(data).eq("id", cliente_id).execute()
+        print(f"✅ Cliente editado: {cliente_id}")
+    except Exception as e:
+        print(f"❌ Error editando cliente: {e}")
+    return redirect(url_for('admin_panel'))
+
+@app.route("/admin/cliente/eliminar/<cliente_id>", methods=["POST"])
+def admin_eliminar_cliente(cliente_id):
+    if not session.get("admin"):
+        return redirect(url_for('admin_login'))
+    try:
+        supabase.table("clientes").update({"activo": False}).eq("id", cliente_id).execute()
+        print(f"✅ Cliente desactivado: {cliente_id}")
+    except Exception as e:
+        print(f"❌ Error desactivando cliente: {e}")
+    return redirect(url_for('admin_panel'))
+
+# ============================================================
+# RUTAS PRINCIPALES
+# ============================================================
 
 @app.route("/cron/seguimiento/<secret_key>", methods=["GET"])
 def cron_seguimiento(secret_key):
-    """Ruta llamada por cron externo para disparar el seguimiento automático."""
     clave_esperada = os.environ.get("CRON_SECRET", "seguimiento_secreto_roberto_2024")
     if secret_key != clave_esperada:
         return "No autorizado", 403
@@ -262,8 +390,8 @@ def cron_seguimiento(secret_key):
 @app.route("/cliente/<cliente_id>")
 def seleccion_idioma(cliente_id):
     id_clean = cliente_id.lower()
-    vendedor = CLIENTES.get(id_clean)
-    if not vendedor: return "Error 403: Acceso denegado a la plataforma.", 403
+    vendedor = get_cliente(id_clean)
+    if not vendedor: return "Error 403: Acceso denegado.", 403
     lang = session.get('idioma', request.accept_languages.best_match(['es', 'en', 'fr', 'de']) or 'es')
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     return render_template("bienvenida.html", cliente=vendedor, textos=textos)
@@ -271,7 +399,7 @@ def seleccion_idioma(cliente_id):
 @app.route("/form/<cliente_id>", methods=["GET","POST"])
 def formulario(cliente_id):
     id_clean = cliente_id.lower()
-    vendedor = CLIENTES.get(id_clean)
+    vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no configurado.", 404
     idioma_default = get_idioma_default(vendedor)
     lang = session.get('idioma', idioma_default)
@@ -320,7 +448,7 @@ def historial(cliente_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean:
         return redirect(url_for('login', cliente_id=id_clean))
-    vendedor = CLIENTES.get(id_clean)
+    vendedor = get_cliente(id_clean)
     idioma_default = get_idioma_default(vendedor)
     idioma = session.get('idioma', idioma_default)
     textos = DICCIONARIO.get(idioma, DICCIONARIO['es'])
@@ -335,7 +463,7 @@ def inventario(cliente_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean:
         return redirect(url_for('login', cliente_id=id_clean))
-    vendedor = CLIENTES.get(id_clean)
+    vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     idioma = session.get('idioma', get_idioma_default(vendedor))
     textos = DICCIONARIO.get(idioma, DICCIONARIO['es'])
@@ -347,7 +475,6 @@ def inventario(cliente_id):
                                propiedades_json=json.dumps(propiedades),
                                textos=textos, idioma_actual=idioma)
     except Exception as e:
-        print(f"Error cargando inventario: {e}")
         return render_template("inventario.html", cliente_id=id_clean,
                                cliente_nombre=vendedor['nombre'], propiedades_json='[]',
                                textos=textos, idioma_actual=idioma)
@@ -355,7 +482,7 @@ def inventario(cliente_id):
 @app.route("/propiedades/<cliente_id>", methods=["GET"])
 def inventario_publico(cliente_id):
     id_clean = cliente_id.lower()
-    vendedor = CLIENTES.get(id_clean)
+    vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: No encontrado.", 404
     try:
         resultado = supabase.table("propiedades").select("*").eq("vendedor", id_clean).eq("estado", "disponible").order("created_at", desc=True).execute()
@@ -370,7 +497,7 @@ def inventario_publico(cliente_id):
 def agregar_propiedad(cliente_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean: return "Error 403: No autorizado.", 403
-    vendedor = CLIENTES.get(id_clean)
+    vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
         imagenes_urls = []
@@ -404,7 +531,7 @@ def agregar_propiedad(cliente_id):
 def editar_propiedad(cliente_id, prop_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean: return "Error 403: No autorizado.", 403
-    vendedor = CLIENTES.get(id_clean)
+    vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
         prop_actual = supabase.table("propiedades").select("imagen_url").eq("id", prop_id).execute()
@@ -444,7 +571,7 @@ def editar_propiedad(cliente_id, prop_id):
 def eliminar_propiedad(cliente_id, prop_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean: return "Error 403: No autorizado.", 403
-    vendedor = CLIENTES.get(id_clean)
+    vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
         supabase.table("propiedades").delete().eq("id", prop_id).eq("vendedor", id_clean).execute()
@@ -457,7 +584,7 @@ def herramientas(cliente_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean:
         return redirect(url_for('login', cliente_id=id_clean))
-    vendedor = CLIENTES.get(id_clean)
+    vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     idioma = session.get('idioma', get_idioma_default(vendedor))
     textos = DICCIONARIO.get(idioma, DICCIONARIO['es'])
@@ -468,7 +595,7 @@ def stats(cliente_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean:
         return redirect(url_for('login', cliente_id=id_clean))
-    vendedor = CLIENTES.get(id_clean)
+    vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     periodo = request.args.get('periodo', 'todo')
     stats_data = obtener_stats(id_clean, periodo)
@@ -481,7 +608,7 @@ def stats(cliente_id):
 def descargar_pdf(cliente_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean: return "Error 403: No autorizado.", 403
-    vendedor = CLIENTES.get(id_clean)
+    vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     periodo = request.args.get('periodo', 'todo')
     idioma = session.get('idioma', get_idioma_default(vendedor))
@@ -499,7 +626,7 @@ def descargar_pdf(cliente_id):
 def marcar_cliente(cliente_id, lead_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean: return "Error 403: No autorizado.", 403
-    vendedor = CLIENTES.get(id_clean)
+    vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
         resultado = supabase.table("leads").select("*").eq("id", lead_id).execute()
@@ -521,7 +648,7 @@ def marcar_cliente(cliente_id, lead_id):
 def desmarcar_cliente(cliente_id, lead_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean: return "Error 403: No autorizado.", 403
-    vendedor = CLIENTES.get(id_clean)
+    vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
         resultado = supabase.table("leads").select("*").eq("id", lead_id).execute()
@@ -545,7 +672,7 @@ def desmarcar_cliente(cliente_id, lead_id):
 @app.route("/access/<cliente_id>")
 def seleccion_idioma_login(cliente_id):
     id_clean = cliente_id.lower()
-    vendedor = CLIENTES.get(id_clean)
+    vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 403", 403
     return render_template("bienvenida_login.html", cliente=vendedor)
 
@@ -553,7 +680,7 @@ def seleccion_idioma_login(cliente_id):
 @limiter.limit("5 per minute")
 def login(cliente_id):
     id_clean = cliente_id.lower()
-    vendedor = CLIENTES.get(id_clean)
+    vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404", 404
     lang = session.get('idioma', get_idioma_default(vendedor))
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
