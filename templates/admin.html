@@ -85,6 +85,12 @@
             font-size: 12px; font-weight: bold; transition: 0.2s;
         }
         .btn-desactivar:hover { background: #c0392b; }
+        .btn-reactivar {
+            flex: 1; background: #27ae60; color: white; border: none;
+            padding: 8px; border-radius: 6px; cursor: pointer;
+            font-size: 12px; font-weight: bold; transition: 0.2s;
+        }
+        .btn-reactivar:hover { background: #229954; }
         .btn-ver {
             flex: 1; background: #8e44ad; color: white; border: none;
             padding: 8px; border-radius: 6px; cursor: pointer;
@@ -93,7 +99,6 @@
         }
         .btn-ver:hover { background: #6c3483; }
 
-        /* MODAL */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); overflow-y: auto; }
         .modal-content {
             background: white; margin: 4% auto; padding: 30px;
@@ -106,7 +111,6 @@
         .close:hover { color: #e74c3c; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
         .form-grid .full { grid-column: 1/-1; }
-        .form-group { margin-bottom: 0; }
         .form-group label { display: block; font-size: 12px; font-weight: 600; color: #2c3e50; margin-bottom: 5px; }
         .form-group input, .form-group select {
             width: 100%; padding: 10px 12px; border: 1px solid #ddd;
@@ -126,7 +130,7 @@
         .btn-guardar:hover { transform: translateY(-1px); }
         .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
         .checkbox-row input { width: auto; }
-        .checkbox-row label { margin: 0; font-weight: normal; }
+        .checkbox-row label { margin: 0; font-weight: normal; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -160,7 +164,16 @@
 
     <div class="clientes-grid">
         {% for c in clientes %}
-        <div class="cliente-card">
+        <div class="cliente-card"
+            data-id="{{ c.id }}"
+            data-nombre="{{ c.nombre }}"
+            data-usuario="{{ c.usuario }}"
+            data-email="{{ c.email_vendedor or '' }}"
+            data-whatsapp="{{ c.whatsapp or '' }}"
+            data-idioma="{{ c.idioma_default or 'español' }}"
+            data-color="{{ c.color_primario or '#667eea' }}"
+            data-apikey="{{ c.email_api_key or '' }}"
+            data-activo="{{ 'true' if c.activo else 'false' }}">
             <div class="cliente-header">
                 <div class="cliente-color" style="background: {{ c.color_primario or '#667eea' }}20; border: 2px solid {{ c.color_primario or '#667eea' }};">
                     🏠
@@ -189,14 +202,22 @@
             </div>
             <div class="cliente-actions">
                 <a href="{{ url_for('historial', cliente_id=c.id) }}" class="btn-ver" target="_blank">👁️ Ver</a>
-                <button class="btn-editar" onclick="abrirModalEditar({{ c | tojson }})">✏️ Editar</button>
+                <button class="btn-editar" onclick="abrirModalEditar(this.closest('.cliente-card'))">✏️ Editar</button>
+                {% if c.activo %}
                 <form method="POST" action="{{ url_for('admin_eliminar_cliente', cliente_id=c.id) }}" style="flex:1" onsubmit="return confirm('¿Desactivar a {{ c.nombre }}?')">
+                    <input type="hidden" name="nuevo_estado" value="false">
                     <button type="submit" class="btn-desactivar" style="width:100%;">🚫 Desactivar</button>
                 </form>
+                {% else %}
+                <form method="POST" action="{{ url_for('admin_eliminar_cliente', cliente_id=c.id) }}" style="flex:1" onsubmit="return confirm('¿Reactivar a {{ c.nombre }}?')">
+                    <input type="hidden" name="nuevo_estado" value="true">
+                    <button type="submit" class="btn-reactivar" style="width:100%;">✅ Reactivar</button>
+                </form>
+                {% endif %}
             </div>
         </div>
         {% else %}
-        <p style="color:#999;grid-column:1/-1;text-align:center;padding:40px;">No hay clientes aún. Crea el primero.</p>
+        <p style="color:#999;grid-column:1/-1;text-align:center;padding:40px;">No hay clientes aún.</p>
         {% endfor %}
     </div>
 </div>
@@ -212,7 +233,7 @@
             <div class="form-grid">
                 <div class="form-group full">
                     <label>ID del cliente * (sin espacios, ej: roberto)</label>
-                    <input type="text" name="id" required placeholder="roberto" pattern="[a-z0-9_]+" title="Solo letras minúsculas, números y guión bajo">
+                    <input type="text" name="id" required placeholder="roberto">
                 </div>
                 <div class="form-group full">
                     <label>Nombre de la Inmobiliaria *</label>
@@ -280,7 +301,7 @@
                     <input type="text" name="usuario" id="editUsuario" required>
                 </div>
                 <div class="form-group">
-                    <label>Nueva contraseña (dejar vacío = no cambiar)</label>
+                    <label>Nueva contraseña (vacío = no cambiar)</label>
                     <input type="text" name="password" id="editPassword" placeholder="••••••••">
                 </div>
                 <div class="form-group">
@@ -330,19 +351,35 @@ function abrirModalNuevo() { document.getElementById('modalNuevo').style.display
 function cerrarModalNuevo() { document.getElementById('modalNuevo').style.display = 'none'; }
 function cerrarModalEditar() { document.getElementById('modalEditar').style.display = 'none'; }
 
-function abrirModalEditar(c) {
-    document.getElementById('formEditar').action = `/admin/cliente/editar/${c.id}`;
-    document.getElementById('editNombre').value = c.nombre || '';
-    document.getElementById('editUsuario').value = c.usuario || '';
+function abrirModalEditar(card) {
+    const id      = card.dataset.id;
+    const nombre  = card.dataset.nombre;
+    const usuario = card.dataset.usuario;
+    const email   = card.dataset.email;
+    const wa      = card.dataset.whatsapp;
+    const idioma  = card.dataset.idioma;
+    const color   = card.dataset.color;
+    const apikey  = card.dataset.apikey;
+    const activo  = card.dataset.activo === 'true';
+
+    document.getElementById('formEditar').action = '/admin/cliente/editar/' + id;
+    document.getElementById('editNombre').value   = nombre;
+    document.getElementById('editUsuario').value  = usuario;
     document.getElementById('editPassword').value = '';
-    document.getElementById('editEmail').value = c.email_vendedor || '';
-    document.getElementById('editWhatsapp').value = c.whatsapp || '';
-    document.getElementById('editIdioma').value = c.idioma_default || 'español';
-    document.getElementById('editApiKey').value = c.email_api_key || '';
-    document.getElementById('editActivo').checked = c.activo;
-    const color = c.color_primario || '#667eea';
-    document.getElementById('colorPickerEdit').value = color;
-    document.getElementById('colorTextEdit').value = color;
+    document.getElementById('editEmail').value    = email;
+    document.getElementById('editWhatsapp').value = wa;
+    document.getElementById('editApiKey').value   = apikey;
+    document.getElementById('editActivo').checked = activo;
+
+    const colorVal = color || '#667eea';
+    document.getElementById('colorPickerEdit').value = colorVal;
+    document.getElementById('colorTextEdit').value   = colorVal;
+
+    const sel = document.getElementById('editIdioma');
+    for (let i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === idioma) { sel.selectedIndex = i; break; }
+    }
+
     document.getElementById('modalEditar').style.display = 'block';
 }
 
