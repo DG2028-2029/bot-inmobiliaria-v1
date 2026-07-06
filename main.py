@@ -45,18 +45,6 @@ IDIOMA_NOMBRE_A_CODIGO = {
     'es': 'es', 'en': 'en', 'fr': 'fr', 'de': 'de', 'pt': 'pt', 'zh': 'zh'
 }
 
-# --- CARGA DE CLIENTES DESDE SUPABASE ---
-def cargar_clientes():
-    try:
-        resultado = supabase.table("clientes").select("*").eq("activo", True).execute()
-        clientes = {}
-        for c in resultado.data:
-            clientes[c['id']] = c
-        return clientes
-    except Exception as e:
-        print(f"❌ Error cargando clientes: {e}")
-        return {}
-
 def get_cliente(cliente_id):
     try:
         resultado = supabase.table("clientes").select("*").eq("id", cliente_id).eq("activo", True).execute()
@@ -298,7 +286,6 @@ def admin_panel():
     try:
         resultado = supabase.table("clientes").select("*").order("created_at", desc=True).execute()
         clientes = resultado.data or []
-        # Contar leads por cliente
         for c in clientes:
             try:
                 leads_r = supabase.table("leads").select("id", count="exact").eq("vendedor", c['id']).execute()
@@ -361,15 +348,35 @@ def admin_editar_cliente(cliente_id):
         print(f"❌ Error editando cliente: {e}")
     return redirect(url_for('admin_panel'))
 
-@app.route("/admin/cliente/eliminar/<cliente_id>", methods=["POST"])
-def admin_eliminar_cliente(cliente_id):
+@app.route("/admin/cliente/toggle/<cliente_id>", methods=["POST"])
+def admin_toggle_cliente(cliente_id):
+    """Activa o desactiva un cliente según su estado actual."""
     if not session.get("admin"):
         return redirect(url_for('admin_login'))
     try:
-        supabase.table("clientes").update({"activo": False}).eq("id", cliente_id).execute()
-        print(f"✅ Cliente desactivado: {cliente_id}")
+        nuevo_estado = request.form.get("nuevo_estado", "false") == "true"
+        supabase.table("clientes").update({"activo": nuevo_estado}).eq("id", cliente_id).execute()
+        estado_txt = "activado" if nuevo_estado else "desactivado"
+        print(f"✅ Cliente {estado_txt}: {cliente_id}")
     except Exception as e:
-        print(f"❌ Error desactivando cliente: {e}")
+        print(f"❌ Error: {e}")
+    return redirect(url_for('admin_panel'))
+
+@app.route("/admin/cliente/borrar/<cliente_id>", methods=["POST"])
+def admin_borrar_cliente(cliente_id):
+    """Elimina permanentemente un cliente y todos sus datos."""
+    if not session.get("admin"):
+        return redirect(url_for('admin_login'))
+    try:
+        # Eliminar leads del cliente
+        supabase.table("leads").delete().eq("vendedor", cliente_id).execute()
+        # Eliminar propiedades del cliente
+        supabase.table("propiedades").delete().eq("vendedor", cliente_id).execute()
+        # Eliminar el cliente
+        supabase.table("clientes").delete().eq("id", cliente_id).execute()
+        print(f"🗑️ Cliente eliminado permanentemente: {cliente_id}")
+    except Exception as e:
+        print(f"❌ Error eliminando cliente: {e}")
     return redirect(url_for('admin_panel'))
 
 # ============================================================
