@@ -13,12 +13,21 @@
             display: flex; justify-content: space-between; align-items: center;
         }
         .topbar h1 { font-size: 20px; }
-        .topbar a {
+        .topbar-buttons { display: flex; gap: 10px; align-items: center; }
+        .btn-topbar {
             color: #ecf0f1; text-decoration: none; font-size: 13px;
             background: rgba(255,255,255,0.15); padding: 7px 14px;
-            border-radius: 6px; transition: 0.2s;
+            border-radius: 6px; transition: 0.2s; border: none; cursor: pointer;
+            font-family: inherit;
         }
-        .topbar a:hover { background: rgba(255,255,255,0.25); }
+        .btn-topbar:hover { background: rgba(255,255,255,0.25); }
+        .btn-logout-top {
+            color: white; text-decoration: none; font-size: 13px;
+            background: #e74c3c; padding: 7px 14px;
+            border-radius: 6px; transition: 0.2s; border: none; cursor: pointer;
+            font-family: inherit; font-weight: bold;
+        }
+        .btn-logout-top:hover { background: #c0392b; }
         .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
         .stats-row {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -134,10 +143,14 @@
     </style>
 </head>
 <body>
+
 <div class="topbar">
     <h1>🔐 Panel de Administración — PropTech</h1>
-    <a href="{{ url_for('admin_logout') }}">Cerrar Sesión</a>
+    <div class="topbar-buttons">
+        <a href="{{ url_for('admin_logout') }}" class="btn-logout-top">🔒 Cerrar Sesión</a>
+    </div>
 </div>
+
 <div class="container">
     <div class="stats-row">
         <div class="stat-card">
@@ -382,7 +395,6 @@ function abrirModalEditar(card) {
     for (let i = 0; i < sel.options.length; i++) {
         if (sel.options[i].value === idioma) { sel.selectedIndex = i; break; }
     }
-
     document.getElementById('modalEditar').style.display = 'block';
 }
 
