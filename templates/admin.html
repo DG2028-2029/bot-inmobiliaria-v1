@@ -7,7 +7,6 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f2f6; }
-
         .topbar {
             background: linear-gradient(135deg, #2c3e50, #1a252f);
             color: white; padding: 16px 30px;
@@ -20,9 +19,7 @@
             border-radius: 6px; transition: 0.2s;
         }
         .topbar a:hover { background: rgba(255,255,255,0.25); }
-
         .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
-
         .stats-row {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 16px; margin-bottom: 30px;
@@ -33,7 +30,6 @@
         }
         .stat-card .num { font-size: 36px; font-weight: bold; color: #667eea; }
         .stat-card .lbl { color: #666; font-size: 13px; margin-top: 4px; }
-
         .section-header {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 16px;
@@ -45,7 +41,6 @@
             font-weight: bold; font-size: 14px; transition: 0.2s;
         }
         .btn-nuevo:hover { background: #229954; }
-
         .clientes-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 18px; margin-bottom: 40px;
@@ -72,33 +67,38 @@
         .cliente-row strong { color: #2c3e50; }
         .badge-activo { background: #e8f8f0; color: #27ae60; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
         .badge-inactivo { background: #fdf2f2; color: #e74c3c; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
-        .cliente-actions { padding: 12px 20px; background: #f8f9fa; display: flex; gap: 8px; }
+        .cliente-actions { padding: 12px 20px; background: #f8f9fa; display: flex; gap: 6px; flex-wrap: wrap; }
         .btn-editar {
             flex: 1; background: #3498db; color: white; border: none;
             padding: 8px; border-radius: 6px; cursor: pointer;
-            font-size: 12px; font-weight: bold; transition: 0.2s;
+            font-size: 12px; font-weight: bold; transition: 0.2s; min-width: 60px;
         }
         .btn-editar:hover { background: #2980b9; }
         .btn-desactivar {
             flex: 1; background: #e74c3c; color: white; border: none;
             padding: 8px; border-radius: 6px; cursor: pointer;
-            font-size: 12px; font-weight: bold; transition: 0.2s;
+            font-size: 12px; font-weight: bold; transition: 0.2s; min-width: 70px;
         }
         .btn-desactivar:hover { background: #c0392b; }
         .btn-reactivar {
             flex: 1; background: #27ae60; color: white; border: none;
             padding: 8px; border-radius: 6px; cursor: pointer;
-            font-size: 12px; font-weight: bold; transition: 0.2s;
+            font-size: 12px; font-weight: bold; transition: 0.2s; min-width: 70px;
         }
         .btn-reactivar:hover { background: #229954; }
+        .btn-borrar {
+            flex: 1; background: #7f0000; color: white; border: none;
+            padding: 8px; border-radius: 6px; cursor: pointer;
+            font-size: 12px; font-weight: bold; transition: 0.2s; min-width: 60px;
+        }
+        .btn-borrar:hover { background: #5c0000; }
         .btn-ver {
             flex: 1; background: #8e44ad; color: white; border: none;
             padding: 8px; border-radius: 6px; cursor: pointer;
             font-size: 12px; font-weight: bold; transition: 0.2s;
-            text-decoration: none; text-align: center;
+            text-decoration: none; text-align: center; min-width: 50px;
         }
         .btn-ver:hover { background: #6c3483; }
-
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); overflow-y: auto; }
         .modal-content {
             background: white; margin: 4% auto; padding: 30px;
@@ -134,14 +134,11 @@
     </style>
 </head>
 <body>
-
 <div class="topbar">
     <h1>🔐 Panel de Administración — PropTech</h1>
     <a href="{{ url_for('admin_logout') }}">Cerrar Sesión</a>
 </div>
-
 <div class="container">
-
     <div class="stats-row">
         <div class="stat-card">
             <div class="num">{{ clientes | selectattr('activo') | list | length }}</div>
@@ -203,21 +200,27 @@
             <div class="cliente-actions">
                 <a href="{{ url_for('historial', cliente_id=c.id) }}" class="btn-ver" target="_blank">👁️ Ver</a>
                 <button class="btn-editar" onclick="abrirModalEditar(this.closest('.cliente-card'))">✏️ Editar</button>
+
                 {% if c.activo %}
-                <form method="POST" action="{{ url_for('admin_eliminar_cliente', cliente_id=c.id) }}" style="flex:1" onsubmit="return confirm('¿Desactivar a {{ c.nombre }}?')">
+                <form method="POST" action="{{ url_for('admin_toggle_cliente', cliente_id=c.id) }}" style="flex:1" onsubmit="return confirm('¿Desactivar a {{ c.nombre }}?')">
                     <input type="hidden" name="nuevo_estado" value="false">
                     <button type="submit" class="btn-desactivar" style="width:100%;">🚫 Desactivar</button>
                 </form>
                 {% else %}
-                <form method="POST" action="{{ url_for('admin_eliminar_cliente', cliente_id=c.id) }}" style="flex:1" onsubmit="return confirm('¿Reactivar a {{ c.nombre }}?')">
+                <form method="POST" action="{{ url_for('admin_toggle_cliente', cliente_id=c.id) }}" style="flex:1" onsubmit="return confirm('¿Reactivar a {{ c.nombre }}?')">
                     <input type="hidden" name="nuevo_estado" value="true">
                     <button type="submit" class="btn-reactivar" style="width:100%;">✅ Reactivar</button>
                 </form>
                 {% endif %}
+
+                <form method="POST" action="{{ url_for('admin_borrar_cliente', cliente_id=c.id) }}" style="flex:1"
+                    onsubmit="return confirm('⚠️ ELIMINAR PERMANENTEMENTE a {{ c.nombre }}.\n\nEsto borrará también todos sus leads y propiedades.\n\n¿Estás absolutamente seguro?')">
+                    <button type="submit" class="btn-borrar" style="width:100%;">🗑️ Borrar</button>
+                </form>
             </div>
         </div>
         {% else %}
-        <p style="color:#999;grid-column:1/-1;text-align:center;padding:40px;">No hay clientes aún.</p>
+        <p style="color:#999;grid-column:1/-1;text-align:center;padding:40px;">No hay clientes aún. Crea el primero.</p>
         {% endfor %}
     </div>
 </div>
