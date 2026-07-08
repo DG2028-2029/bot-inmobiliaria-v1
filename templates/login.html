@@ -6,22 +6,21 @@
     <title>{{ textos.login_titulo }} | {{ cliente.nombre }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --color: {{ cliente.color_primario or '#667eea' }};
+        }
+
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--color) 0%, #1a1a2e 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
-
-        .lang-wrapper {
-            position: fixed;
-            top: 18px;
-            right: 18px;
-            z-index: 999;
-        }
+        .lang-wrapper { position: fixed; top: 18px; right: 18px; z-index: 999; }
         .lang-selector { position: relative; display: inline-block; }
         .lang-selector-btn {
             display: flex; align-items: center; gap: 8px;
@@ -29,10 +28,9 @@
             border: none; border-radius: 50px;
             padding: 10px 16px; cursor: pointer;
             font-size: 14px; font-weight: 700; color: #2c3e50;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            transition: 0.2s;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2); transition: 0.2s;
         }
-        .lang-selector-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,0,0,0.25); }
+        .lang-selector-btn:hover { transform: translateY(-1px); }
         .lang-flag { font-size: 18px; }
         .lang-nombre { font-size: 13px; color: #555; }
         .lang-arrow { font-size: 10px; color: #999; transition: transform 0.2s; }
@@ -50,8 +48,8 @@
             padding: 11px 16px; text-decoration: none;
             color: #2c3e50; font-size: 14px; font-weight: 500; transition: 0.15s;
         }
-        .lang-menu a:hover { background: #f0f4ff; color: #667eea; }
-        .lang-menu a.activo { background: #f0f4ff; font-weight: 700; color: #667eea; }
+        .lang-menu a:hover { background: #f0f4ff; color: var(--color); }
+        .lang-menu a.activo { background: #f0f4ff; font-weight: 700; color: var(--color); }
 
         .login-card {
             background: white;
@@ -67,99 +65,72 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        .login-logo {
+            display: flex; justify-content: center; margin-bottom: 20px;
+        }
+        .login-logo img {
+            width: 80px; height: 80px;
+            border-radius: 16px;
+            object-fit: contain;
+            border: 3px solid var(--color);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
         .login-icon {
             width: 70px; height: 70px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, var(--color), #1a1a2e);
             border-radius: 18px;
             display: flex; align-items: center; justify-content: center;
             font-size: 32px; margin: 0 auto 20px;
-            box-shadow: 0 8px 20px rgba(102,126,234,0.4);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
         .login-title {
-            text-align: center;
-            font-size: 24px;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 6px;
+            text-align: center; font-size: 24px;
+            font-weight: 700; color: #2c3e50; margin-bottom: 6px;
         }
         .login-subtitle {
-            text-align: center;
-            font-size: 14px;
-            color: #95a5a6;
-            margin-bottom: 35px;
+            text-align: center; font-size: 14px;
+            color: #95a5a6; margin-bottom: 35px;
         }
-
         .form-group { margin-bottom: 18px; }
         .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 7px;
+            display: block; font-size: 13px;
+            font-weight: 600; color: #2c3e50; margin-bottom: 7px;
         }
         .form-group input {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #ecf0f1;
-            border-radius: 10px;
-            font-size: 14px;
-            font-family: inherit;
-            transition: 0.2s;
-            color: #2c3e50;
-            background: #f8f9fa;
+            width: 100%; padding: 14px 16px;
+            border: 2px solid #ecf0f1; border-radius: 10px;
+            font-size: 14px; font-family: inherit; transition: 0.2s;
+            color: #2c3e50; background: #f8f9fa;
         }
         .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
-            box-shadow: 0 0 0 4px rgba(102,126,234,0.1);
+            outline: none; border-color: var(--color);
+            background: white; box-shadow: 0 0 0 4px color-mix(in srgb, var(--color) 15%, transparent);
         }
-
         .btn-login {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 8px;
-            box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, var(--color), #1a1a2e);
+            color: white; border: none; border-radius: 10px;
+            font-size: 15px; font-weight: 700; cursor: pointer;
+            transition: 0.3s; margin-top: 8px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
             letter-spacing: 0.5px;
         }
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 28px rgba(102,126,234,0.5);
-        }
+        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.3); }
         .btn-login:active { transform: translateY(0); }
-
         .error-msg {
-            background: #fdf2f2;
-            border: 1px solid #f5c6cb;
-            color: #e74c3c;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            margin-top: 16px;
-            text-align: center;
+            background: #fdf2f2; border: 1px solid #f5c6cb; color: #e74c3c;
+            padding: 12px 16px; border-radius: 8px; font-size: 13px;
+            font-weight: 500; margin-top: 16px; text-align: center;
         }
-
         .login-footer {
-            text-align: center;
-            margin-top: 30px;
-            font-size: 12px;
-            color: #bdc3c7;
+            text-align: center; margin-top: 30px;
+            font-size: 12px; color: #bdc3c7;
         }
-        .login-footer span { color: #667eea; font-weight: 600; }
+        .login-footer span { color: var(--color); font-weight: 600; }
     </style>
 </head>
 <body>
 
-<!-- SELECTOR DE IDIOMA -->
 <div class="lang-wrapper">
     <div class="lang-selector" id="langSelector">
         <button type="button" class="lang-selector-btn" onclick="toggleLang()">
@@ -186,9 +157,15 @@
     </div>
 </div>
 
-<!-- TARJETA DE LOGIN -->
 <div class="login-card">
+    {% if cliente.logo_url %}
+    <div class="login-logo">
+        <img src="{{ cliente.logo_url }}" alt="{{ cliente.nombre }}">
+    </div>
+    {% else %}
     <div class="login-icon">🏠</div>
+    {% endif %}
+
     <div class="login-title">{{ cliente.nombre }}</div>
     <div class="login-subtitle">{{ textos.login_titulo }}</div>
 
