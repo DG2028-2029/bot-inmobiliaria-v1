@@ -48,7 +48,14 @@
             font-size: 13px; color: #856404;
         }
 
-        /* HEADER CON LOGO Y COLOR */
+        /* ASESOR BANNER */
+        .asesor-banner {
+            background: linear-gradient(135deg, var(--color), #1a1a2e);
+            color: white; padding: 10px 16px; border-radius: 8px;
+            margin-bottom: 16px; font-size: 13px; font-weight: 600;
+            display: flex; align-items: center; gap: 8px;
+        }
+
         .header-container {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
@@ -57,10 +64,7 @@
             border-left: 5px solid var(--color);
         }
         .header-left { display: flex; align-items: center; gap: 14px; }
-        .header-logo {
-            width: 48px; height: 48px; border-radius: 10px;
-            object-fit: contain; border: 2px solid var(--color);
-        }
+        .header-logo { width: 48px; height: 48px; border-radius: 10px; object-fit: contain; border: 2px solid var(--color); }
         .header-logo-placeholder {
             width: 48px; height: 48px; border-radius: 10px;
             background: var(--color); display: flex; align-items: center;
@@ -70,12 +74,7 @@
         .header-container h2 span { color: var(--color); }
         .header-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
 
-        .btn-inventario {
-            background: var(--color); color: white; text-decoration: none;
-            padding: 11px 20px; border-radius: 8px; font-weight: bold;
-            transition: 0.3s; display: inline-flex; align-items: center; gap: 6px; font-size: 13px;
-            opacity: 1;
-        }
+        .btn-inventario { background: var(--color); color: white; text-decoration: none; padding: 11px 20px; border-radius: 8px; font-weight: bold; transition: 0.3s; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; opacity: 1; }
         .btn-inventario:hover { opacity: 0.85; transform: translateY(-2px); }
         .btn-herramientas { background: #f39c12; color: white; text-decoration: none; padding: 11px 20px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 10px rgba(243,156,18,0.3); transition: 0.3s; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
         .btn-herramientas:hover { background: #e67e22; transform: translateY(-2px); }
@@ -83,6 +82,8 @@
         .btn-stats:hover { background: #2980b9; transform: translateY(-2px); }
         .btn-excel { background: #27ae60; color: white; border: none; padding: 11px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(39,174,96,0.3); transition: 0.3s; font-size: 13px; }
         .btn-excel:hover { background: #219150; transform: translateY(-2px); }
+        .btn-asesores { background: #2c3e50; color: white; border: none; padding: 11px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-asesores:hover { background: #1a252f; transform: translateY(-2px); }
 
         .search-container { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; gap: 10px; align-items: center; }
         .search-container input { flex: 1; padding: 11px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
@@ -91,54 +92,130 @@
         .btn-clear { background: #ecf0f1; color: #555; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-size: 14px; display: flex; align-items: center; }
         .btn-clear:hover { background: #dfe6e9; }
 
-        .tabla-wrapper { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.07); }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: var(--color); color: white; padding: 14px 12px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
-        td { padding: 13px 12px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 13px; vertical-align: middle; }
+        .tabla-wrapper { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.07); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+        th { background: var(--color); color: white; padding: 13px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+        td { padding: 11px 10px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 12px; vertical-align: middle; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #fafbff; }
 
-        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
         .badge-alto { background: #fdf2f2; color: #e74c3c; border: 1px solid #f5b7b1; }
         .badge-medio { background: #fef9e7; color: #d68910; border: 1px solid #fad7a0; }
         .badge-bajo { background: #f4f6f7; color: #7f8c8d; border: 1px solid #d5dbdb; }
         .badge-cliente { background: #eaf4fb; color: #1a5276; border: 1px solid #aed6f1; }
 
-        .score-cell { min-width: 90px; }
-        .score-bar-wrap { background: #ecf0f1; border-radius: 6px; height: 7px; margin-bottom: 4px; overflow: hidden; }
-        .score-bar { height: 100%; border-radius: 6px; transition: width 0.4s; }
+        .score-cell { min-width: 80px; }
+        .score-bar-wrap { background: #ecf0f1; border-radius: 6px; height: 6px; margin-bottom: 3px; overflow: hidden; }
+        .score-bar { height: 100%; border-radius: 6px; }
         .score-bar.alto  { background: linear-gradient(90deg, #27ae60, #2ecc71); }
         .score-bar.medio { background: linear-gradient(90deg, #f39c12, #f1c40f); }
         .score-bar.bajo  { background: linear-gradient(90deg, #e74c3c, #ec7063); }
-        .score-num { font-size: 12px; font-weight: 700; }
+        .score-num { font-size: 11px; font-weight: 700; }
         .score-num.alto  { color: #27ae60; }
         .score-num.medio { color: #d68910; }
         .score-num.bajo  { color: #e74c3c; }
 
-        .temp-pill { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .temp-pill { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
         .temp-MUY_CALIENTE { background: #fdf2f2; color: #c0392b; border: 1px solid #f5b7b1; }
         .temp-CALIENTE     { background: #fef5ec; color: #d35400; border: 1px solid #fad7a0; }
         .temp-MEDIO        { background: #fefde7; color: #b7950b; border: 1px solid #f9e79f; }
         .temp-FRIO         { background: #eaf4fb; color: #1a5276; border: 1px solid #aed6f1; }
 
-        .btn-marcar-cliente {
-            background: var(--color); color: white; border: none; padding: 7px 14px;
-            border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;
-            transition: 0.2s; width: 100%; opacity: 1;
+        /* DÍAS BADGE */
+        .dias-badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+        .dias-nuevo  { background: #e8f8f0; color: #27ae60; border: 1px solid #a9dfbf; }
+        .dias-ok     { background: #fefde7; color: #b7950b; border: 1px solid #f9e79f; }
+        .dias-alerta { background: #fdf2f2; color: #c0392b; border: 1px solid #f5b7b1; }
+
+        /* NOTAS */
+        .nota-cell { max-width: 140px; }
+        .nota-texto {
+            font-size: 11px; color: #666; cursor: pointer;
+            padding: 4px 6px; border-radius: 4px; border: 1px dashed #ddd;
+            min-height: 28px; text-align: left; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis; max-width: 130px;
+            display: block; transition: 0.2s;
         }
-        .btn-marcar-cliente:hover { opacity: 0.85; transform: scale(1.03); }
-        .btn-desmarcar-cliente {
-            background: #e74c3c; color: white; border: none; padding: 7px 14px;
-            border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;
-            transition: 0.2s; width: 100%;
-        }
-        .btn-desmarcar-cliente:hover { background: #c0392b; transform: scale(1.03); }
-        .acciones-container { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .nota-texto:hover { border-color: var(--color); background: #f8f9ff; }
+        .nota-input { display: none; width: 100%; font-size: 11px; padding: 4px 6px; border: 1px solid var(--color); border-radius: 4px; font-family: inherit; resize: none; }
+
+        /* BOTONES ACCIÓN */
+        .btn-marcar-cliente { background: var(--color); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; transition: 0.2s; width: 100%; opacity: 1; }
+        .btn-marcar-cliente:hover { opacity: 0.85; }
+        .btn-desmarcar-cliente { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; transition: 0.2s; width: 100%; }
+        .btn-desmarcar-cliente:hover { background: #c0392b; }
+        .btn-respuesta { background: #f8f9fa; color: #2c3e50; border: 1px solid #ddd; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; transition: 0.2s; width: 100%; margin-top: 4px; }
+        .btn-respuesta:hover { background: #e8f4fd; border-color: var(--color); color: var(--color); }
+
+        /* ASIGNAR ASESOR */
+        .select-asesor { font-size: 11px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 6px; width: 100%; background: white; cursor: pointer; }
+        .select-asesor:focus { outline: none; border-color: var(--color); }
+
+        .acciones-container { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 110px; }
         .empty-state { text-align: center; padding: 50px; color: #95a5a6; font-size: 15px; }
+
+        /* MODAL RESPUESTA */
+        .modal-respuesta {
+            display: none; position: fixed; z-index: 2000; left: 0; top: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+        }
+        .modal-respuesta-content {
+            background: white; margin: 10% auto; padding: 30px;
+            border-radius: 12px; max-width: 520px; width: 90%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+        .modal-respuesta-titulo { font-size: 18px; font-weight: 700; color: #2c3e50; margin-bottom: 16px; }
+        .modal-respuesta-texto {
+            background: #f8f9fa; padding: 16px; border-radius: 8px;
+            font-size: 14px; color: #2c3e50; line-height: 1.7;
+            border-left: 4px solid var(--color); margin-bottom: 16px;
+        }
+        .btn-copiar {
+            background: var(--color); color: white; border: none;
+            padding: 10px 20px; border-radius: 8px; cursor: pointer;
+            font-weight: bold; font-size: 13px; width: 100%; transition: 0.2s;
+        }
+        .btn-copiar:hover { opacity: 0.88; }
+        .btn-cerrar-modal {
+            background: #ecf0f1; color: #555; border: none;
+            padding: 10px 20px; border-radius: 8px; cursor: pointer;
+            font-size: 13px; width: 100%; margin-top: 8px;
+        }
+
+        /* MODAL ASESORES */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); overflow-y: auto; }
+        .modal-content { background: white; margin: 4% auto; padding: 30px; border-radius: 12px; max-width: 600px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ecf0f1; padding-bottom: 14px; }
+        .modal-header h2 { color: #2c3e50; font-size: 20px; }
+        .close { font-size: 26px; cursor: pointer; color: #999; }
+        .close:hover { color: #e74c3c; }
+
+        .asesor-card { background: #f8f9fa; border-radius: 8px; padding: 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ecf0f1; }
+        .asesor-info h4 { color: #2c3e50; font-size: 14px; margin-bottom: 2px; }
+        .asesor-info span { color: #999; font-size: 12px; }
+        .asesor-acciones { display: flex; gap: 6px; }
+        .btn-asesor-editar { background: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-asesor-baja { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .badge-asesor-activo { background: #e8f8f0; color: #27ae60; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; }
+        .badge-asesor-inactivo { background: #fdf2f2; color: #e74c3c; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; }
+
+        .form-nuevo-asesor { background: white; border: 1px solid #ecf0f1; border-radius: 8px; padding: 16px; margin-top: 16px; }
+        .form-nuevo-asesor h3 { color: #2c3e50; font-size: 15px; margin-bottom: 14px; }
+        .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .form-group-modal label { display: block; font-size: 12px; font-weight: 600; color: #2c3e50; margin-bottom: 4px; }
+        .form-group-modal input { width: 100%; padding: 9px 11px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: inherit; background: #f8f9fa; }
+        .form-group-modal input:focus { outline: none; border-color: var(--color); background: white; }
+        .btn-crear-asesor { width: 100%; padding: 11px; margin-top: 12px; background: var(--color); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-crear-asesor:hover { opacity: 0.88; }
+
+        /* URL ASESOR */
+        .url-asesor { background: #eaf4fb; border: 1px solid #aed6f1; border-radius: 6px; padding: 8px 12px; font-size: 11px; color: #1a5276; font-family: monospace; margin-top: 6px; word-break: break-all; }
     </style>
 </head>
 <body>
 
+<!-- TOP BAR -->
 <div class="top-bar">
     <div class="lang-selector" id="langSelector">
         <button type="button" class="lang-selector-btn" onclick="toggleLangMenu()">
@@ -160,10 +237,17 @@
     <a href="{{ url_for('logout', cliente_id=cliente.usuario) }}" class="btn-logout">{{ textos.btn_cerrar_sesion }}</a>
 </div>
 
+{% if not es_dueno %}
+<div class="asesor-banner">
+    👤 Sesión de asesor: <strong>{{ asesor_nombre }}</strong> — Solo ves tus leads asignados
+</div>
+{% endif %}
+
 <div class="logout-bar">
     <span>⚠️ {{ textos.msg_cerrar_sesion }}</span>
 </div>
 
+<!-- HEADER -->
 <div class="header-container">
     <div class="header-left">
         {% if cliente.logo_url %}
@@ -178,9 +262,13 @@
         <a href="{{ url_for('herramientas', cliente_id=cliente.usuario) }}" class="btn-herramientas">{{ textos.btn_herramientas }}</a>
         <a href="{{ url_for('stats', cliente_id=cliente.usuario) }}" class="btn-stats">{{ textos.btn_estadisticas }}</a>
         <button onclick="descargarExcel()" class="btn-excel">📥 {{ textos.btn_descargar }}</button>
+        {% if es_dueno %}
+        <button onclick="abrirModalAsesores()" class="btn-asesores">👥 Asesores ({{ asesores | length }})</button>
+        {% endif %}
     </div>
 </div>
 
+<!-- BÚSQUEDA -->
 <div class="search-container">
     <form method="GET" style="display: flex; width: 100%; gap: 10px;">
         <input type="text" name="q" placeholder="{{ textos.btn_buscar }}" value="{{ request.args.get('q', '') }}">
@@ -189,11 +277,13 @@
     </form>
 </div>
 
+<!-- TABLA -->
 <div class="tabla-wrapper">
     <table id="tabla-leads">
         <thead>
             <tr>
                 <th>{{ textos.col_fecha }}</th>
+                <th>Días</th>
                 <th>{{ textos.placeholder_nombre }}</th>
                 <th>{{ textos.placeholder_tel }}</th>
                 <th>{{ textos.placeholder_zona }}</th>
@@ -201,7 +291,10 @@
                 <th>{{ textos.col_clasificacion }}</th>
                 <th>{{ textos.col_score }}</th>
                 <th>{{ textos.col_temperatura }}</th>
-                <th>{{ textos.col_mensaje }}</th>
+                <th>Notas</th>
+                {% if es_dueno and asesores %}
+                <th>Asesor</th>
+                {% endif %}
                 <th>{{ textos.col_acciones }}</th>
             </tr>
         </thead>
@@ -211,17 +304,24 @@
             {% set score_clase = 'alto' if score >= 65 else ('medio' if score >= 35 else 'bajo') %}
             {% set clasif = lead.clasificacion %}
             {% set badge_clase = 'badge-cliente' if 'CLIENTE' in clasif else ('badge-alto' if 'VIP' in clasif or 'PROSPECTO' in clasif else ('badge-medio' if 'SEGUIMIENTO' in clasif else 'badge-bajo')) %}
+            {% set dias = lead.dias %}
+            {% set dias_clase = 'dias-nuevo' if dias <= 1 else ('dias-ok' if dias <= 7 else 'dias-alerta') %}
             <tr>
-                <td style="color:#666;font-size:12px;">{{ lead.fecha }}</td>
+                <td style="color:#666;font-size:11px;">{{ lead.fecha[:10] }}</td>
+                <td>
+                    <span class="dias-badge {{ dias_clase }}">
+                        {% if dias == 0 %}Hoy{% elif dias == 1 %}1 día{% else %}{{ dias }}d{% endif %}
+                    </span>
+                </td>
                 <td><strong style="color:#2c3e50;">{{ lead.nombre }}</strong></td>
                 <td>
                     <a href="https://wa.me/{{ lead.telefono }}" target="_blank"
-                       style="color:#27ae60;text-decoration:none;font-weight:bold;font-size:12px;">
+                       style="color:#27ae60;text-decoration:none;font-weight:bold;font-size:11px;">
                         📱 {{ lead.telefono }}
                     </a>
                 </td>
-                <td style="color:#555;">{{ lead.zona_interes }}</td>
-                <td style="font-weight:600;color:#27ae60;">
+                <td style="color:#555;font-size:11px;">{{ lead.zona_interes }}</td>
+                <td style="font-weight:600;color:#27ae60;font-size:11px;">
                     ${{ "{:,.0f}".format(lead.presupuesto|float) if lead.presupuesto else "0" }}
                 </td>
                 <td>
@@ -240,37 +340,133 @@
                         {{ textos['temp_' + lead.temperatura] if ('temp_' + lead.temperatura) in textos else lead.temperatura }}
                     </span>
                 </td>
-                <td style="font-size:12px;color:#666;max-width:180px;text-align:left;">{{ lead.mensaje }}</td>
+                <td class="nota-cell">
+                    <span class="nota-texto" onclick="editarNota(this, {{ lead.id }})" title="Click para editar">
+                        {{ lead.notas or '+ Agregar nota...' }}
+                    </span>
+                    <textarea class="nota-input" rows="2" onblur="guardarNota(this, {{ lead.id }})">{{ lead.notas or '' }}</textarea>
+                </td>
+                {% if es_dueno and asesores %}
+                <td>
+                    <form method="POST" action="{{ url_for('asignar_asesor_lead', cliente_id=cliente.usuario, lead_id=lead.id) }}">
+                        <select name="asesor_id" class="select-asesor" onchange="this.form.submit()">
+                            <option value="">Sin asignar</option>
+                            {% for a in asesores %}
+                            {% if a.activo %}
+                            <option value="{{ a.id }}" {% if lead.asesor_id == a.id %}selected{% endif %}>{{ a.nombre }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </form>
+                </td>
+                {% endif %}
                 <td>
                     <div class="acciones-container">
                         {% if "CLIENTE" not in lead.clasificacion %}
-                        <form method="POST" action="{{ url_for('marcar_cliente', cliente_id=cliente.usuario, lead_id=lead.id) }}" style="display:inline;width:100%;">
+                        <form method="POST" action="{{ url_for('marcar_cliente', cliente_id=cliente.usuario, lead_id=lead.id) }}" style="width:100%;">
                             <button type="submit" class="btn-marcar-cliente"
                                 onclick="return confirm('{{ textos.confirm_marcar.replace('{nombre}', lead.nombre) }}')">
                                 💎 {{ textos.btn_marcar_cliente }}
                             </button>
                         </form>
                         {% else %}
-                        <form method="POST" action="{{ url_for('desmarcar_cliente', cliente_id=cliente.usuario, lead_id=lead.id) }}" style="display:inline;width:100%;">
+                        <form method="POST" action="{{ url_for('desmarcar_cliente', cliente_id=cliente.usuario, lead_id=lead.id) }}" style="width:100%;">
                             <button type="submit" class="btn-desmarcar-cliente"
                                 onclick="return confirm('{{ textos.confirm_desmarcar.replace('{nombre}', lead.nombre) }}')">
                                 ❌ {{ textos.btn_desmarcar }}
                             </button>
                         </form>
                         {% endif %}
+                        <button class="btn-respuesta" onclick="verRespuesta({{ lead.id }}, '{{ lead.nombre }}')">
+                            💬 ¿Qué decirle?
+                        </button>
                     </div>
                 </td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="10" class="empty-state">{{ textos.no_leads }}</td>
+                <td colspan="12" class="empty-state">{{ textos.no_leads }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 
+<!-- MODAL RESPUESTA SUGERIDA -->
+<div id="modalRespuesta" class="modal-respuesta">
+    <div class="modal-respuesta-content">
+        <div class="modal-respuesta-titulo">💬 ¿Qué decirle a <span id="nombreRespuesta"></span>?</div>
+        <div class="modal-respuesta-texto" id="textoRespuesta">Cargando...</div>
+        <button class="btn-copiar" onclick="copiarRespuesta()">📋 Copiar mensaje</button>
+        <button class="btn-cerrar-modal" onclick="cerrarModalRespuesta()">Cerrar</button>
+    </div>
+</div>
+
+<!-- MODAL ASESORES -->
+{% if es_dueno %}
+<div id="modalAsesores" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>👥 Gestión de Asesores</h2>
+            <span class="close" onclick="cerrarModalAsesores()">&times;</span>
+        </div>
+
+        {% if asesores %}
+        {% for a in asesores %}
+        <div class="asesor-card">
+            <div class="asesor-info">
+                <h4>{{ a.nombre }}
+                    <span class="{{ 'badge-asesor-activo' if a.activo else 'badge-asesor-inactivo' }}">
+                        {{ 'Activo' if a.activo else 'Inactivo' }}
+                    </span>
+                </h4>
+                <span>👤 {{ a.usuario }}{% if a.email %} · 📧 {{ a.email }}{% endif %}</span>
+                <div class="url-asesor">
+                    🔗 URL del formulario: /form/{{ cliente.usuario }}/{{ a.usuario }}
+                </div>
+            </div>
+            <div class="asesor-acciones">
+                <form method="POST" action="{{ url_for('eliminar_asesor', cliente_id=cliente.usuario, asesor_id=a.id) }}" onsubmit="return confirm('¿Desactivar a {{ a.nombre }}?')">
+                    <button type="submit" class="btn-asesor-baja">🚫 Desactivar</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p style="color:#999;text-align:center;padding:20px;">No hay asesores aún. Crea el primero abajo.</p>
+        {% endif %}
+
+        <div class="form-nuevo-asesor">
+            <h3>➕ Nuevo Asesor</h3>
+            <form method="POST" action="{{ url_for('crear_asesor', cliente_id=cliente.usuario) }}">
+                <div class="form-grid-2">
+                    <div class="form-group-modal">
+                        <label>Nombre completo *</label>
+                        <input type="text" name="nombre" required placeholder="Carlos López">
+                    </div>
+                    <div class="form-group-modal">
+                        <label>Usuario de acceso *</label>
+                        <input type="text" name="usuario" required placeholder="carlos">
+                    </div>
+                    <div class="form-group-modal">
+                        <label>Contraseña *</label>
+                        <input type="text" name="password" required placeholder="contraseña123">
+                    </div>
+                    <div class="form-group-modal">
+                        <label>Email (opcional)</label>
+                        <input type="email" name="email" placeholder="carlos@email.com">
+                    </div>
+                </div>
+                <button type="submit" class="btn-crear-asesor">✅ Crear Asesor</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <script>
+const clienteId = "{{ cliente.usuario }}";
+
 function toggleLangMenu() {
     document.getElementById('langSelector').classList.toggle('abierto');
 }
@@ -278,10 +474,74 @@ document.addEventListener('click', function(e) {
     const sel = document.getElementById('langSelector');
     if (sel && !sel.contains(e.target)) sel.classList.remove('abierto');
 });
+
 function descargarExcel() {
     var table = document.getElementById("tabla-leads");
     var wb = XLSX.utils.table_to_book(table, {sheet: "Prospectos"});
     XLSX.writeFile(wb, "Reporte_Leads_{{ cliente.nombre }}_" + new Date().toISOString().split('T')[0] + ".xlsx");
+}
+
+// --- NOTAS ---
+function editarNota(span, leadId) {
+    const cell = span.parentElement;
+    const textarea = cell.querySelector('.nota-input');
+    span.style.display = 'none';
+    textarea.style.display = 'block';
+    textarea.value = span.textContent.trim() === '+ Agregar nota...' ? '' : span.textContent.trim();
+    textarea.focus();
+}
+
+function guardarNota(textarea, leadId) {
+    const cell = textarea.parentElement;
+    const span = cell.querySelector('.nota-texto');
+    const nota = textarea.value.trim();
+    fetch(`/leads/${clienteId}/nota/${leadId}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `nota=${encodeURIComponent(nota)}`
+    }).then(r => r.json()).then(data => {
+        span.textContent = nota || '+ Agregar nota...';
+        span.style.display = 'block';
+        textarea.style.display = 'none';
+    });
+}
+
+// --- RESPUESTA SUGERIDA ---
+function verRespuesta(leadId, nombre) {
+    document.getElementById('nombreRespuesta').textContent = nombre;
+    document.getElementById('textoRespuesta').textContent = 'Analizando situación...';
+    document.getElementById('modalRespuesta').style.display = 'block';
+    fetch(`/leads/${clienteId}/respuesta/${leadId}`)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('textoRespuesta').textContent = data.respuesta;
+        });
+}
+
+function cerrarModalRespuesta() {
+    document.getElementById('modalRespuesta').style.display = 'none';
+}
+
+function copiarRespuesta() {
+    const texto = document.getElementById('textoRespuesta').textContent;
+    navigator.clipboard.writeText(texto).then(() => {
+        const btn = document.querySelector('.btn-copiar');
+        btn.textContent = '✅ ¡Copiado!';
+        setTimeout(() => btn.textContent = '📋 Copiar mensaje', 2000);
+    });
+}
+
+window.onclick = function(e) {
+    if (e.target == document.getElementById('modalRespuesta')) cerrarModalRespuesta();
+    if (e.target == document.getElementById('modalAsesores')) cerrarModalAsesores();
+}
+
+// --- MODAL ASESORES ---
+function abrirModalAsesores() {
+    document.getElementById('modalAsesores').style.display = 'block';
+}
+function cerrarModalAsesores() {
+    document.getElementById('modalAsesores').style.display = 'none';
 }
 </script>
 </body>
