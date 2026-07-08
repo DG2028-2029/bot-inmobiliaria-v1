@@ -5,6 +5,8 @@
     <title>{{ textos.historial_titulo }} | {{ cliente.nombre }}</title>
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <style>
+        :root { --color: {{ cliente.color_primario or '#667eea' }}; }
+
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f2f6; padding: 20px; }
 
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
@@ -16,7 +18,7 @@
             padding: 9px 14px; cursor: pointer; font-size: 14px; font-weight: 600; color: #2c3e50;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
-        .lang-selector-btn:hover { border-color: #2c3e50; }
+        .lang-selector-btn:hover { border-color: var(--color); }
         .lang-arrow { font-size: 10px; color: #999; transition: transform 0.2s; margin-left: 2px; }
         .lang-selector.abierto .lang-arrow { transform: rotate(180deg); }
         .lang-menu {
@@ -46,12 +48,35 @@
             font-size: 13px; color: #856404;
         }
 
-        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-        .header-container h2 { color: #2c3e50; font-size: 22px; }
+        /* HEADER CON LOGO Y COLOR */
+        .header-container {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+            background: white; padding: 16px 20px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+            border-left: 5px solid var(--color);
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .header-logo {
+            width: 48px; height: 48px; border-radius: 10px;
+            object-fit: contain; border: 2px solid var(--color);
+        }
+        .header-logo-placeholder {
+            width: 48px; height: 48px; border-radius: 10px;
+            background: var(--color); display: flex; align-items: center;
+            justify-content: center; font-size: 22px; flex-shrink: 0;
+        }
+        .header-container h2 { color: #2c3e50; font-size: 20px; }
+        .header-container h2 span { color: var(--color); }
         .header-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
 
-        .btn-inventario { background: #8e44ad; color: white; text-decoration: none; padding: 11px 20px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 10px rgba(142,68,173,0.3); transition: 0.3s; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
-        .btn-inventario:hover { background: #6c3483; transform: translateY(-2px); }
+        .btn-inventario {
+            background: var(--color); color: white; text-decoration: none;
+            padding: 11px 20px; border-radius: 8px; font-weight: bold;
+            transition: 0.3s; display: inline-flex; align-items: center; gap: 6px; font-size: 13px;
+            opacity: 1;
+        }
+        .btn-inventario:hover { opacity: 0.85; transform: translateY(-2px); }
         .btn-herramientas { background: #f39c12; color: white; text-decoration: none; padding: 11px 20px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 10px rgba(243,156,18,0.3); transition: 0.3s; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
         .btn-herramientas:hover { background: #e67e22; transform: translateY(-2px); }
         .btn-stats { background: #3498db; color: white; text-decoration: none; padding: 11px 20px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 10px rgba(52,152,219,0.3); transition: 0.3s; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
@@ -61,30 +86,24 @@
 
         .search-container { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; gap: 10px; align-items: center; }
         .search-container input { flex: 1; padding: 11px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
-        .search-container input:focus { outline: none; border-color: #667eea; }
+        .search-container input:focus { outline: none; border-color: var(--color); }
         .btn-search { background: #2c3e50; color: white; border: none; padding: 10px 22px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-clear { background: #ecf0f1; color: #555; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-size: 14px; display: flex; align-items: center; }
         .btn-clear:hover { background: #dfe6e9; }
 
-        /* TABLA */
         .tabla-wrapper { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.07); }
         table { width: 100%; border-collapse: collapse; }
-        th { background: #2c3e50; color: white; padding: 14px 12px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+        th { background: var(--color); color: white; padding: 14px 12px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
         td { padding: 13px 12px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 13px; vertical-align: middle; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #fafbff; }
 
-        /* CLASIFICACIÓN */
-        .badge {
-            display: inline-block; padding: 4px 10px;
-            border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
-        }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; }
         .badge-alto { background: #fdf2f2; color: #e74c3c; border: 1px solid #f5b7b1; }
         .badge-medio { background: #fef9e7; color: #d68910; border: 1px solid #fad7a0; }
         .badge-bajo { background: #f4f6f7; color: #7f8c8d; border: 1px solid #d5dbdb; }
         .badge-cliente { background: #eaf4fb; color: #1a5276; border: 1px solid #aed6f1; }
 
-        /* SCORE CON COLOR */
         .score-cell { min-width: 90px; }
         .score-bar-wrap { background: #ecf0f1; border-radius: 6px; height: 7px; margin-bottom: 4px; overflow: hidden; }
         .score-bar { height: 100%; border-radius: 6px; transition: width 0.4s; }
@@ -96,23 +115,18 @@
         .score-num.medio { color: #d68910; }
         .score-num.bajo  { color: #e74c3c; }
 
-        /* TEMPERATURA */
-        .temp-pill {
-            display: inline-block; padding: 4px 10px;
-            border-radius: 20px; font-size: 11px; font-weight: 700;
-        }
+        .temp-pill { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         .temp-MUY_CALIENTE { background: #fdf2f2; color: #c0392b; border: 1px solid #f5b7b1; }
         .temp-CALIENTE     { background: #fef5ec; color: #d35400; border: 1px solid #fad7a0; }
         .temp-MEDIO        { background: #fefde7; color: #b7950b; border: 1px solid #f9e79f; }
         .temp-FRIO         { background: #eaf4fb; color: #1a5276; border: 1px solid #aed6f1; }
 
-        /* BOTONES ACCIÓN */
         .btn-marcar-cliente {
-            background: #8e44ad; color: white; border: none; padding: 7px 14px;
+            background: var(--color); color: white; border: none; padding: 7px 14px;
             border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;
-            transition: 0.2s; width: 100%;
+            transition: 0.2s; width: 100%; opacity: 1;
         }
-        .btn-marcar-cliente:hover { background: #6c3483; transform: scale(1.03); }
+        .btn-marcar-cliente:hover { opacity: 0.85; transform: scale(1.03); }
         .btn-desmarcar-cliente {
             background: #e74c3c; color: white; border: none; padding: 7px 14px;
             border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;
@@ -120,13 +134,11 @@
         }
         .btn-desmarcar-cliente:hover { background: #c0392b; transform: scale(1.03); }
         .acciones-container { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-
         .empty-state { text-align: center; padding: 50px; color: #95a5a6; font-size: 15px; }
     </style>
 </head>
 <body>
 
-<!-- TOP BAR: IDIOMA + LOGOUT -->
 <div class="top-bar">
     <div class="lang-selector" id="langSelector">
         <button type="button" class="lang-selector-btn" onclick="toggleLangMenu()">
@@ -148,14 +160,19 @@
     <a href="{{ url_for('logout', cliente_id=cliente.usuario) }}" class="btn-logout">{{ textos.btn_cerrar_sesion }}</a>
 </div>
 
-<!-- BARRA AMARILLA SEGURIDAD -->
 <div class="logout-bar">
     <span>⚠️ {{ textos.msg_cerrar_sesion }}</span>
 </div>
 
-<!-- HEADER -->
 <div class="header-container">
-    <h2>📊 {{ textos.historial_titulo }}: {{ cliente.nombre }}</h2>
+    <div class="header-left">
+        {% if cliente.logo_url %}
+        <img src="{{ cliente.logo_url }}" alt="{{ cliente.nombre }}" class="header-logo">
+        {% else %}
+        <div class="header-logo-placeholder">🏠</div>
+        {% endif %}
+        <h2>📊 {{ textos.historial_titulo }}: <span>{{ cliente.nombre }}</span></h2>
+    </div>
     <div class="header-buttons">
         <a href="{{ url_for('inventario', cliente_id=cliente.usuario) }}" class="btn-inventario">{{ textos.btn_inventario }}</a>
         <a href="{{ url_for('herramientas', cliente_id=cliente.usuario) }}" class="btn-herramientas">{{ textos.btn_herramientas }}</a>
@@ -164,7 +181,6 @@
     </div>
 </div>
 
-<!-- BÚSQUEDA -->
 <div class="search-container">
     <form method="GET" style="display: flex; width: 100%; gap: 10px;">
         <input type="text" name="q" placeholder="{{ textos.btn_buscar }}" value="{{ request.args.get('q', '') }}">
@@ -173,7 +189,6 @@
     </form>
 </div>
 
-<!-- TABLA -->
 <div class="tabla-wrapper">
     <table id="tabla-leads">
         <thead>
@@ -263,13 +278,11 @@ document.addEventListener('click', function(e) {
     const sel = document.getElementById('langSelector');
     if (sel && !sel.contains(e.target)) sel.classList.remove('abierto');
 });
-
 function descargarExcel() {
     var table = document.getElementById("tabla-leads");
     var wb = XLSX.utils.table_to_book(table, {sheet: "Prospectos"});
     XLSX.writeFile(wb, "Reporte_Leads_{{ cliente.nombre }}_" + new Date().toISOString().split('T')[0] + ".xlsx");
 }
 </script>
-
 </body>
 </html>
