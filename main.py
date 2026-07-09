@@ -427,7 +427,7 @@ def admin_borrar_cliente(cliente_id):
     return redirect(url_for('admin_panel'))
 
 # ============================================================
-# GESTIÓN DE ASESORES (por el dueño desde historial)
+# GESTIÓN DE ASESORES
 # ============================================================
 
 @app.route("/asesores/<cliente_id>/nuevo", methods=["POST"])
@@ -450,6 +450,21 @@ def crear_asesor(cliente_id):
         print(f"❌ Error creando asesor: {e}")
     return redirect(url_for('historial', cliente_id=id_clean))
 
+@app.route("/asesores/<cliente_id>/toggle/<int:asesor_id>", methods=["POST"])
+def toggle_asesor(cliente_id, asesor_id):
+    """Activa o desactiva un asesor."""
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean or not es_dueno():
+        return "No autorizado", 403
+    try:
+        nuevo_estado = request.form.get("nuevo_estado", "false") == "true"
+        supabase.table("asesores").update({"activo": nuevo_estado}).eq("id", asesor_id).eq("cliente_id", id_clean).execute()
+        estado_txt = "activado" if nuevo_estado else "desactivado"
+        print(f"✅ Asesor {estado_txt}: {asesor_id}")
+    except Exception as e:
+        print(f"❌ Error toggling asesor: {e}")
+    return redirect(url_for('historial', cliente_id=id_clean))
+
 @app.route("/asesores/<cliente_id>/editar/<int:asesor_id>", methods=["POST"])
 def editar_asesor(cliente_id, asesor_id):
     id_clean = cliente_id.lower()
@@ -460,7 +475,6 @@ def editar_asesor(cliente_id, asesor_id):
             "nombre": request.form.get("nombre", "").strip(),
             "usuario": request.form.get("usuario", "").strip(),
             "email": request.form.get("email", "").strip(),
-            "activo": request.form.get("activo") == "on"
         }
         nueva_password = request.form.get("password", "").strip()
         if nueva_password:
@@ -468,17 +482,6 @@ def editar_asesor(cliente_id, asesor_id):
         supabase.table("asesores").update(data).eq("id", asesor_id).eq("cliente_id", id_clean).execute()
     except Exception as e:
         print(f"❌ Error editando asesor: {e}")
-    return redirect(url_for('historial', cliente_id=id_clean))
-
-@app.route("/asesores/<cliente_id>/eliminar/<int:asesor_id>", methods=["POST"])
-def eliminar_asesor(cliente_id, asesor_id):
-    id_clean = cliente_id.lower()
-    if session.get("cliente") != id_clean or not es_dueno():
-        return "No autorizado", 403
-    try:
-        supabase.table("asesores").update({"activo": False}).eq("id", asesor_id).execute()
-    except Exception as e:
-        print(f"❌ Error desactivando asesor: {e}")
     return redirect(url_for('historial', cliente_id=id_clean))
 
 @app.route("/leads/<cliente_id>/asignar/<int:lead_id>", methods=["POST"])
@@ -598,15 +601,17 @@ def formulario(cliente_id):
 
 @app.route("/form/<cliente_id>/<asesor_usuario>", methods=["GET","POST"])
 def formulario_asesor(cliente_id, asesor_usuario):
-    """Formulario específico de un asesor — los leads quedan asignados a él."""
     id_clean = cliente_id.lower()
     vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no configurado.", 404
+    asesor = None
     try:
-        asesor_r = supabase.table("asesores").select("*").eq("cliente_id", id_clean).eq("usuario", asesor_usuario).eq("activo", True).execute()
-        asesor = asesor_r.data[0] if asesor_r.data else None
+        asesor_r = supabase.table("asesores").select("*").eq("cliente_id", id_clean)\
+            .eq("usuario", asesor_usuario).eq("activo", True).execute()
+        if asesor_r.data:
+            asesor = asesor_r.data[0]
     except:
-        asesor = None
+        pass
     idioma_default = get_idioma_default(vendedor)
     lang = session.get('idioma', idioma_default)
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
@@ -659,20 +664,14 @@ def historial(cliente_id):
     idioma_default = get_idioma_default(vendedor)
     idioma = session.get('idioma', idioma_default)
     textos = DICCIONARIO.get(idioma, DICCIONARIO['es'])
-
     query = supabase.table("leads").select("*").eq("vendedor", id_clean)
-
-    # Si es asesor, solo ve sus propios leads
     asesor_id = session.get('asesor_id')
     if asesor_id:
         query = query.eq("asesor_id", asesor_id)
-
     q = request.args.get('q', '')
     if q: query = query.ilike("nombre", f"%{q}%")
     resultado = query.order("score", desc=True).execute()
     leads = resultado.data or []
-
-    # Agregar días transcurridos y respuesta sugerida preview a cada lead
     hoy = datetime.now()
     for lead in leads:
         try:
@@ -680,18 +679,12 @@ def historial(cliente_id):
             lead['dias'] = (hoy - fecha).days
         except:
             lead['dias'] = 0
-
-    # Cargar asesores si es dueño
     asesores = []
     if es_dueno():
         asesores = get_asesores_de_cliente(id_clean)
-
     return render_template("historial.html",
-                           leads=leads,
-                           cliente=vendedor,
-                           textos=textos,
-                           idioma_actual=idioma,
-                           asesores=asesores,
+                           leads=leads, cliente=vendedor, textos=textos,
+                           idioma_actual=idioma, asesores=asesores,
                            es_dueno=es_dueno(),
                            asesor_nombre=session.get('asesor_nombre', ''))
 
@@ -925,7 +918,7 @@ def login(cliente_id):
         usuario_form = request.form.get("usuario", "").strip()
         password_form = request.form.get("password", "").strip()
 
-        # Verificar si es el dueño
+        # 1. Verificar dueño primero
         if usuario_form == vendedor["usuario"] and \
            verificar_password(password_form, vendedor["password"]):
             session["cliente"] = id_clean
@@ -934,7 +927,7 @@ def login(cliente_id):
             session.pop("asesor_nombre", None)
             return redirect(url_for('seleccion_idioma', cliente_id=id_clean))
 
-        # Verificar si es un asesor
+        # 2. Verificar asesor — completamente aislado del login principal
         try:
             asesores_r = supabase.table("asesores").select("*") \
                 .eq("cliente_id", id_clean) \
@@ -949,7 +942,9 @@ def login(cliente_id):
                     session["asesor_nombre"] = asesor["nombre"]
                     return redirect(url_for('historial', cliente_id=id_clean))
         except Exception as e:
-            print(f"Error verificando asesor: {e}")
+            # Si falla la consulta de asesores, el login del dueño ya funcionó arriba
+            # Este error no debe afectar nada
+            print(f"⚠️ Error consultando asesores (no crítico): {e}")
 
         print(f"⚠️ Login fallido para {id_clean} desde {get_remote_address()}")
         return render_template("login.html", error="Credenciales Invalidas", cliente=vendedor, textos=textos)
