@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asesor: {{ asesor.nombre }}</title>
+    <style>
+        :root { --color: {{ color }}; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f2f6; padding: 20px; }
+
+        .header {
+            background: linear-gradient(135deg, var(--color), #1a1a2e);
+            color: white; padding: 24px 28px; border-radius: 14px;
+            margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .header-left h1 { font-size: 24px; margin-bottom: 6px; }
+        .header-left p { font-size: 14px; opacity: 0.8; }
+        .badge-estado { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-left: 10px; }
+        .activo { background: rgba(39,174,96,0.3); color: #a9dfbf; border: 1px solid #a9dfbf; }
+        .inactivo { background: rgba(231,76,60,0.3); color: #f5b7b1; border: 1px solid #f5b7b1; }
+        .btn-volver {
+            background: rgba(255,255,255,0.2); color: white; text-decoration: none;
+            padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 13px; transition: 0.2s;
+        }
+        .btn-volver:hover { background: rgba(255,255,255,0.3); }
+
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); text-align: center; }
+        .stat-num { font-size: 36px; font-weight: bold; color: var(--color); }
+        .stat-lbl { color: #666; font-size: 13px; margin-top: 4px; }
+
+        .info-card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); }
+        .info-card h3 { color: #2c3e50; font-size: 16px; margin-bottom: 14px; border-bottom: 2px solid var(--color); padding-bottom: 8px; }
+        .info-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; border-bottom: 1px solid #f5f5f5; }
+        .info-row:last-child { border-bottom: none; }
+        .info-row span { color: #999; }
+        .info-row strong { color: #2c3e50; }
+
+        .url-box { background: #eaf4fb; border: 1px solid #aed6f1; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #1a5276; font-family: monospace; word-break: break-all; margin-top: 12px; }
+
+        .tabla-wrapper { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.07); overflow-x: auto; }
+        .tabla-titulo { padding: 16px 20px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .tabla-titulo h3 { color: #2c3e50; font-size: 16px; }
+        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        th { background: var(--color); color: white; padding: 12px 10px; font-size: 11px; text-transform: uppercase; text-align: center; }
+        td { padding: 11px 10px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 12px; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fafbff; }
+
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+        .badge-alto { background: #fdf2f2; color: #e74c3c; border: 1px solid #f5b7b1; }
+        .badge-medio { background: #fef9e7; color: #d68910; border: 1px solid #fad7a0; }
+        .badge-bajo { background: #f4f6f7; color: #7f8c8d; border: 1px solid #d5dbdb; }
+        .badge-cliente { background: #eaf4fb; color: #1a5276; border: 1px solid #aed6f1; }
+
+        .score-bar-wrap { background: #ecf0f1; border-radius: 6px; height: 6px; margin-bottom: 3px; overflow: hidden; }
+        .score-bar { height: 100%; border-radius: 6px; }
+        .score-bar.alto  { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+        .score-bar.medio { background: linear-gradient(90deg, #f39c12, #f1c40f); }
+        .score-bar.bajo  { background: linear-gradient(90deg, #e74c3c, #ec7063); }
+        .score-num { font-size: 11px; font-weight: 700; }
+        .score-num.alto  { color: #27ae60; }
+        .score-num.medio { color: #d68910; }
+        .score-num.bajo  { color: #e74c3c; }
+
+        .temp-pill { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+        .temp-MUY_CALIENTE { background: #fdf2f2; color: #c0392b; border: 1px solid #f5b7b1; }
+        .temp-CALIENTE     { background: #fef5ec; color: #d35400; border: 1px solid #fad7a0; }
+        .temp-MEDIO        { background: #fefde7; color: #b7950b; border: 1px solid #f9e79f; }
+        .temp-FRIO         { background: #eaf4fb; color: #1a5276; border: 1px solid #aed6f1; }
+
+        .dias-badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+        .dias-nuevo  { background: #e8f8f0; color: #27ae60; border: 1px solid #a9dfbf; }
+        .dias-ok     { background: #fefde7; color: #b7950b; border: 1px solid #f9e79f; }
+        .dias-alerta { background: #fdf2f2; color: #c0392b; border: 1px solid #f5b7b1; }
+
+        .empty { text-align: center; padding: 40px; color: #95a5a6; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-left">
+        <h1>
+            👤 {{ asesor.nombre }}
+            <span class="badge-estado {{ 'activo' if asesor.activo else 'inactivo' }}">
+                {{ 'Activo' if asesor.activo else 'Inactivo' }}
+            </span>
+        </h1>
+        <p>{{ vendedor.nombre }} — Perfil de asesor</p>
+    </div>
+    <a href="{{ url_for('historial', cliente_id=cliente_id) }}" class="btn-volver">← Volver al Dashboard</a>
+</div>
+
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-num">{{ total }}</div>
+        <div class="stat-lbl">Total de Leads</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-num" style="color:#27ae60;">{{ clientes }}</div>
+        <div class="stat-lbl">Clientes Cerrados</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-num" style="color:#e74c3c;">{{ calientes }}</div>
+        <div class="stat-lbl">Leads Calientes</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-num">{{ tasa }}%</div>
+        <div class="stat-lbl">Tasa de Conversión</div>
+    </div>
+</div>
+
+<div class="info-card">
+    <h3>📋 Información del Asesor</h3>
+    <div class="info-row"><span>Nombre</span><strong>{{ asesor.nombre }}</strong></div>
+    <div class="info-row"><span>Usuario</span><strong>{{ asesor.usuario }}</strong></div>
+    <div class="info-row"><span>Email</span><strong>{{ asesor.email or '—' }}</strong></div>
+    <div class="info-row"><span>Estado</span><strong>{{ 'Activo ✅' if asesor.activo else 'Inactivo 🚫' }}</strong></div>
+    <div class="info-row"><span>Registrado desde</span><strong>{{ asesor.created_at[:10] if asesor.created_at else '—' }}</strong></div>
+    <div class="url-box">
+        🔗 URL de formulario exclusivo:<br>
+        <strong>/form/{{ cliente_id }}/{{ asesor.usuario }}</strong>
+    </div>
+</div>
+
+<div class="tabla-wrapper">
+    <div class="tabla-titulo">
+        <h3>📊 Leads Asignados ({{ total }})</h3>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Días</th>
+                <th>Nombre</th>
+                <th>Teléfono</th>
+                <th>Zona</th>
+                <th>Presupuesto</th>
+                <th>Clasificación</th>
+                <th>Score</th>
+                <th>Temperatura</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lead in leads %}
+            {% set score = lead.score | int %}
+            {% set score_clase = 'alto' if score >= 65 else ('medio' if score >= 35 else 'bajo') %}
+            {% set clasif = lead.clasificacion %}
+            {% set badge_clase = 'badge-cliente' if 'CLIENTE' in clasif else ('badge-alto' if 'VIP' in clasif or 'PROSPECTO' in clasif else ('badge-medio' if 'SEGUIMIENTO' in clasif else 'badge-bajo')) %}
+            {% set dias = lead.dias %}
+            {% set dias_clase = 'dias-nuevo' if dias <= 1 else ('dias-ok' if dias <= 7 else 'dias-alerta') %}
+            <tr>
+                <td style="color:#666;font-size:11px;">{{ lead.fecha[:10] }}</td>
+                <td><span class="dias-badge {{ dias_clase }}">{% if dias == 0 %}Hoy{% elif dias == 1 %}1d{% else %}{{ dias }}d{% endif %}</span></td>
+                <td><strong style="color:#2c3e50;">{{ lead.nombre }}</strong></td>
+                <td><a href="https://wa.me/{{ lead.telefono }}" target="_blank" style="color:#27ae60;text-decoration:none;font-weight:bold;font-size:11px;">📱 {{ lead.telefono }}</a></td>
+                <td style="color:#555;font-size:11px;">{{ lead.zona_interes }}</td>
+                <td style="font-weight:600;color:#27ae60;font-size:11px;">${{ "{:,.0f}".format(lead.presupuesto|float) if lead.presupuesto else "0" }}</td>
+                <td><span class="badge {{ badge_clase }}">{{ lead.clasificacion }}</span></td>
+                <td style="min-width:80px;">
+                    <div class="score-bar-wrap"><div class="score-bar {{ score_clase }}" style="width:{{ score }}%"></div></div>
+                    <span class="score-num {{ score_clase }}">{{ score }}/100</span>
+                </td>
+                <td><span class="temp-pill temp-{{ lead.temperatura }}">{{ lead.temperatura }}</span></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="9" class="empty">Este asesor no tiene leads asignados aún.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
