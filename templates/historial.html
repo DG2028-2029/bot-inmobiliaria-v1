@@ -6,11 +6,8 @@
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <style>
         :root { --color: {{ cliente.color_primario or '#667eea' }}; }
-
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f2f6; padding: 20px; }
-
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
-
         .lang-selector { position: relative; display: inline-block; }
         .lang-selector-btn {
             display: flex; align-items: center; gap: 8px;
@@ -27,12 +24,8 @@
             min-width: 170px; overflow: hidden; z-index: 200;
         }
         .lang-selector.abierto .lang-menu { display: block; }
-        .lang-menu a {
-            display: flex; align-items: center; gap: 8px;
-            padding: 10px 14px; text-decoration: none; color: #2c3e50; font-size: 13px;
-        }
+        .lang-menu a { display: flex; align-items: center; gap: 8px; padding: 10px 14px; text-decoration: none; color: #2c3e50; font-size: 13px; }
         .lang-menu a:hover { background: #f8f9fa; }
-
         .btn-logout {
             background: #e74c3c; color: white; text-decoration: none;
             padding: 9px 16px; border-radius: 8px; font-weight: bold; font-size: 13px;
@@ -40,21 +33,18 @@
             display: inline-flex; align-items: center; gap: 6px;
         }
         .btn-logout:hover { background: #c0392b; transform: translateY(-1px); }
-
         .logout-bar {
             background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px;
             padding: 10px 16px; margin-bottom: 16px;
-            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            display: flex; align-items: center; gap: 12px;
             font-size: 13px; color: #856404;
         }
-
         .asesor-banner {
             background: linear-gradient(135deg, var(--color), #1a1a2e);
             color: white; padding: 10px 16px; border-radius: 8px;
             margin-bottom: 16px; font-size: 13px; font-weight: 600;
             display: flex; align-items: center; gap: 8px;
         }
-
         .header-container {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
@@ -72,7 +62,6 @@
         .header-container h2 { color: #2c3e50; font-size: 20px; }
         .header-container h2 span { color: var(--color); }
         .header-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
-
         .btn-inventario { background: var(--color); color: white; text-decoration: none; padding: 11px 20px; border-radius: 8px; font-weight: bold; transition: 0.3s; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
         .btn-inventario:hover { opacity: 0.85; transform: translateY(-2px); }
         .btn-herramientas { background: #f39c12; color: white; text-decoration: none; padding: 11px 20px; border-radius: 8px; font-weight: bold; transition: 0.3s; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
@@ -83,27 +72,23 @@
         .btn-excel:hover { background: #219150; transform: translateY(-2px); }
         .btn-asesores { background: #2c3e50; color: white; border: none; padding: 11px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
         .btn-asesores:hover { background: #1a252f; transform: translateY(-2px); }
-
         .search-container { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; gap: 10px; align-items: center; }
         .search-container input { flex: 1; padding: 11px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
         .search-container input:focus { outline: none; border-color: var(--color); }
         .btn-search { background: #2c3e50; color: white; border: none; padding: 10px 22px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-clear { background: #ecf0f1; color: #555; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-size: 14px; display: flex; align-items: center; }
         .btn-clear:hover { background: #dfe6e9; }
-
         .tabla-wrapper { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.07); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 1100px; }
-        th { background: var(--color); color: white; padding: 13px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+        th { background: var(--color); color: white; padding: 13px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; white-space: nowrap; }
         td { padding: 11px 10px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 12px; vertical-align: middle; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #fafbff; }
-
         .badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
         .badge-alto { background: #fdf2f2; color: #e74c3c; border: 1px solid #f5b7b1; }
         .badge-medio { background: #fef9e7; color: #d68910; border: 1px solid #fad7a0; }
         .badge-bajo { background: #f4f6f7; color: #7f8c8d; border: 1px solid #d5dbdb; }
         .badge-cliente { background: #eaf4fb; color: #1a5276; border: 1px solid #aed6f1; }
-
         .score-cell { min-width: 80px; }
         .score-bar-wrap { background: #ecf0f1; border-radius: 6px; height: 6px; margin-bottom: 3px; overflow: hidden; }
         .score-bar { height: 100%; border-radius: 6px; }
@@ -114,18 +99,15 @@
         .score-num.alto  { color: #27ae60; }
         .score-num.medio { color: #d68910; }
         .score-num.bajo  { color: #e74c3c; }
-
         .temp-pill { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
         .temp-MUY_CALIENTE { background: #fdf2f2; color: #c0392b; border: 1px solid #f5b7b1; }
         .temp-CALIENTE     { background: #fef5ec; color: #d35400; border: 1px solid #fad7a0; }
         .temp-MEDIO        { background: #fefde7; color: #b7950b; border: 1px solid #f9e79f; }
         .temp-FRIO         { background: #eaf4fb; color: #1a5276; border: 1px solid #aed6f1; }
-
         .dias-badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
         .dias-nuevo  { background: #e8f8f0; color: #27ae60; border: 1px solid #a9dfbf; }
         .dias-ok     { background: #fefde7; color: #b7950b; border: 1px solid #f9e79f; }
         .dias-alerta { background: #fdf2f2; color: #c0392b; border: 1px solid #f5b7b1; }
-
         .nota-cell { max-width: 140px; }
         .nota-texto {
             font-size: 11px; color: #666; cursor: pointer;
@@ -136,40 +118,24 @@
         }
         .nota-texto:hover { border-color: var(--color); background: #f8f9ff; }
         .nota-input { display: none; width: 100%; font-size: 11px; padding: 4px 6px; border: 1px solid var(--color); border-radius: 4px; font-family: inherit; resize: none; }
-
         .btn-marcar-cliente { background: var(--color); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; transition: 0.2s; width: 100%; }
         .btn-marcar-cliente:hover { opacity: 0.85; }
         .btn-desmarcar-cliente { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; transition: 0.2s; width: 100%; }
         .btn-desmarcar-cliente:hover { background: #c0392b; }
         .btn-respuesta { background: #f8f9fa; color: #2c3e50; border: 1px solid #ddd; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; transition: 0.2s; width: 100%; margin-top: 4px; }
         .btn-respuesta:hover { background: #e8f4fd; border-color: var(--color); color: var(--color); }
-
         .select-asesor { font-size: 11px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 6px; width: 100%; background: white; cursor: pointer; }
         .select-asesor:focus { outline: none; border-color: var(--color); }
-
         .acciones-container { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 110px; }
         .empty-state { text-align: center; padding: 50px; color: #95a5a6; font-size: 15px; }
-
         /* MODAL RESPUESTA */
-        .modal-respuesta {
-            display: none; position: fixed; z-index: 2000; left: 0; top: 0;
-            width: 100%; height: 100%; background: rgba(0,0,0,0.5);
-        }
-        .modal-respuesta-content {
-            background: white; margin: 10% auto; padding: 30px;
-            border-radius: 12px; max-width: 520px; width: 90%;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-        }
+        .modal-respuesta { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal-respuesta-content { background: white; margin: 10% auto; padding: 30px; border-radius: 12px; max-width: 520px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
         .modal-respuesta-titulo { font-size: 18px; font-weight: 700; color: #2c3e50; margin-bottom: 16px; }
-        .modal-respuesta-texto {
-            background: #f8f9fa; padding: 16px; border-radius: 8px;
-            font-size: 14px; color: #2c3e50; line-height: 1.7;
-            border-left: 4px solid var(--color); margin-bottom: 16px;
-        }
+        .modal-respuesta-texto { background: #f8f9fa; padding: 16px; border-radius: 8px; font-size: 14px; color: #2c3e50; line-height: 1.7; border-left: 4px solid var(--color); margin-bottom: 16px; }
         .btn-copiar { background: var(--color); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; transition: 0.2s; }
         .btn-copiar:hover { opacity: 0.88; }
         .btn-cerrar-modal { background: #ecf0f1; color: #555; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; width: 100%; margin-top: 8px; }
-
         /* MODAL ASESORES */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); overflow-y: auto; }
         .modal-content { background: white; margin: 4% auto; padding: 30px; border-radius: 12px; max-width: 620px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
@@ -177,19 +143,16 @@
         .modal-header h2 { color: #2c3e50; font-size: 20px; }
         .close { font-size: 26px; cursor: pointer; color: #999; }
         .close:hover { color: #e74c3c; }
-
         .asesor-card { background: #f8f9fa; border-radius: 8px; padding: 14px; margin-bottom: 10px; border: 1px solid #ecf0f1; }
-        .asesor-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
-        .asesor-info h4 { color: #2c3e50; font-size: 14px; margin-bottom: 4px; }
-        .asesor-info span { color: #999; font-size: 12px; }
-        .asesor-acciones { display: flex; gap: 6px; flex-shrink: 0; }
-        .badge-asesor-activo { background: #e8f8f0; color: #27ae60; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; margin-left: 6px; }
-        .badge-asesor-inactivo { background: #fdf2f2; color: #e74c3c; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; margin-left: 6px; }
-        .btn-asesor-desactivar { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        .btn-asesor-reactivar { background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
-
+        .asesor-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .asesor-info { flex: 1; }
+        .asesor-info h4 { color: #2c3e50; font-size: 14px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .asesor-info .sub { color: #999; font-size: 12px; }
+        .badge-asesor-activo { background: #e8f8f0; color: #27ae60; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; }
+        .badge-asesor-inactivo { background: #fdf2f2; color: #e74c3c; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; }
+        .btn-asesor-desactivar { background: #e74c3c; color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; white-space: nowrap; }
+        .btn-asesor-reactivar { background: #27ae60; color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; white-space: nowrap; }
         .url-asesor { background: #eaf4fb; border: 1px solid #aed6f1; border-radius: 6px; padding: 6px 10px; font-size: 11px; color: #1a5276; font-family: monospace; margin-top: 8px; word-break: break-all; }
-
         .form-nuevo-asesor { background: white; border: 1px solid #ecf0f1; border-radius: 8px; padding: 16px; margin-top: 16px; }
         .form-nuevo-asesor h3 { color: #2c3e50; font-size: 15px; margin-bottom: 14px; }
         .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -396,19 +359,23 @@
 
         {% if asesores %}
             {% for a in asesores %}
+            {# FIX: usamos comparación explícita para evitar problemas con tipos de Supabase #}
+            {% set asesor_activo = a.activo == true or a.activo == True or a.activo == 'true' %}
             <div class="asesor-card">
                 <div class="asesor-card-top">
                     <div class="asesor-info">
                         <h4>
                             {{ a.nombre }}
-                            <span class="{{ 'badge-asesor-activo' if a.activo else 'badge-asesor-inactivo' }}">
-                                {{ 'Activo' if a.activo else 'Inactivo' }}
-                            </span>
+                            {% if asesor_activo %}
+                            <span class="badge-asesor-activo">Activo</span>
+                            {% else %}
+                            <span class="badge-asesor-inactivo">Inactivo</span>
+                            {% endif %}
                         </h4>
-                        <span>👤 {{ a.usuario }}{% if a.email %} · 📧 {{ a.email }}{% endif %}</span>
+                        <div class="sub">👤 {{ a.usuario }}{% if a.email %} · 📧 {{ a.email }}{% endif %}</div>
                     </div>
-                    <div class="asesor-acciones">
-                        {% if a.activo %}
+                    <div>
+                        {% if asesor_activo %}
                         <form method="POST" action="{{ url_for('toggle_asesor', cliente_id=cliente.usuario, asesor_id=a.id) }}"
                               onsubmit="return confirm('¿Desactivar a {{ a.nombre }}?')">
                             <input type="hidden" name="nuevo_estado" value="false">
@@ -494,7 +461,7 @@ function guardarNota(textarea, leadId) {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: `nota=${encodeURIComponent(nota)}`
-    }).then(r => r.json()).then(data => {
+    }).then(r => r.json()).then(() => {
         span.textContent = nota || '+ Agregar nota...';
         span.style.display = 'block';
         textarea.style.display = 'none';
