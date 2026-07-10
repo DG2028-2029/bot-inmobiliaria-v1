@@ -69,18 +69,33 @@ def es_dueno():
 def get_asesores_de_cliente(cliente_id):
     try:
         resultado = supabase.table("asesores").select("*").eq("cliente_id", cliente_id).execute()
-        return resultado.data or []
+        asesores = resultado.data or []
+        # Forzar conversión explícita del campo activo a bool Python
+        for a in asesores:
+            v = a.get('activo', False)
+            if isinstance(v, bool):
+                a['activo'] = v
+            elif isinstance(v, str):
+                a['activo'] = v.lower() in ('true', '1', 'yes')
+            else:
+                a['activo'] = bool(v)
+        return asesores
     except:
         return []
 
-# --- RESPUESTAS SUGERIDAS ---
+# --- RESPUESTAS SUGERIDAS CON TÉCNICAS DE VENTA ---
 def generar_respuesta_sugerida(lead):
-    nombre = lead.get('nombre', 'el cliente')
-    zona = lead.get('zona_interes', 'la zona de interés')
-    presupuesto = lead.get('presupuesto', '')
+    nombre    = lead.get('nombre', 'el cliente').split()[0]  # Solo primer nombre
+    zona      = lead.get('zona_interes', 'la zona de interés')
     temperatura = lead.get('temperatura', 'FRIO')
     clasificacion = lead.get('clasificacion', '')
     fecha_str = lead.get('fecha', '')
+    mensaje   = lead.get('mensaje', '').lower()
+
+    try:
+        presupuesto = float(re.sub(r'[^\d.]', '', str(lead.get('presupuesto', 0))))
+    except:
+        presupuesto = 0
 
     dias = 0
     if fecha_str:
@@ -90,32 +105,117 @@ def generar_respuesta_sugerida(lead):
         except:
             dias = 0
 
+    # Formatear presupuesto legible
+    if presupuesto >= 1000000:
+        presupuesto_txt = f"${presupuesto/1000000:.1f}M"
+    elif presupuesto >= 1000:
+        presupuesto_txt = f"${presupuesto/1000:.0f}K"
+    else:
+        presupuesto_txt = f"${presupuesto:.0f}" if presupuesto > 0 else "su presupuesto"
+
+    # Ya es cliente
     if 'CLIENTE' in clasificacion:
-        return f"✅ {nombre} ya es cliente. Mantén el contacto para fidelización y pedir referidos."
+        return (
+            f"✅ {nombre} ya es tu cliente. Mantén la relación activa:\n\n"
+            f"'Hola {nombre}, espero que todo vaya excelente con su propiedad. "
+            f"Tenemos clientes buscando propiedades en {zona} — si conoce a alguien interesado, "
+            f"con gusto les atiendo con la misma dedicación que a usted.'\n\n"
+            f"💡 Técnica: Referidos. Un cliente feliz es tu mejor vendedor."
+        )
 
+    # Lead nuevo — primer contacto
     if dias == 0:
-        return f"🔥 Lead nuevo. Contacta a {nombre} HOY — los primeros 30 minutos tienen 10x más probabilidad de conversión. WhatsApp: '¡Hola {nombre}! Vi tu interés en {zona}, ¿tienes unos minutos para hablar?'"
+        return (
+            f"🔥 LEAD NUEVO — Contacta en los próximos 30 minutos:\n\n"
+            f"'¡Hola {nombre}! Acabo de ver su consulta sobre propiedades en {zona}. "
+            f"Tengo algunas opciones que encajan perfectamente con lo que busca. "
+            f"¿Tiene 5 minutos ahora para que le cuente?'\n\n"
+            f"💡 Técnica: Velocidad de respuesta. El 78% de las ventas las cierra quien responde primero."
+        )
 
+    # 1 día — seguimiento cálido
     if dias <= 1:
         if temperatura in ['MUY_CALIENTE', 'CALIENTE']:
-            return f"⚡ {nombre} llegó ayer y está muy interesado. Llama directamente — no esperes más. Si no contesta, manda WhatsApp: 'Hola {nombre}, quería mostrarte opciones en {zona} que encajan con tu presupuesto.'"
-        return f"📱 Primer seguimiento para {nombre}. Manda WhatsApp: 'Hola {nombre}, soy [tu nombre] de [inmobiliaria]. Vi que te interesó {zona}, ¿puedo enviarte algunas opciones?'"
+            return (
+                f"⚡ {nombre} mostró mucho interés. Llama directamente:\n\n"
+                f"'Hola {nombre}, soy [tu nombre]. Le contacto porque ayer vi su interés en {zona} "
+                f"y justo hoy recibimos una propiedad que encaja con {presupuesto_txt}. "
+                f"¿Le puedo enviar los detalles ahora?'\n\n"
+                f"💡 Técnica: Escasez + oportunidad. Crea urgencia con una propiedad específica."
+            )
+        return (
+            f"📱 Primer seguimiento para {nombre}:\n\n"
+            f"'Hola {nombre}! Soy [tu nombre] de [inmobiliaria]. "
+            f"Vi que se interesó en propiedades en {zona}. "
+            f"¿Puedo hacerle una pregunta rápida para encontrar exactamente lo que busca?'\n\n"
+            f"💡 Técnica: Pregunta abierta. No vendas, primero escucha para conectar."
+        )
 
+    # 2-3 días — propuesta de valor
     if dias <= 3:
-        return f"📬 Han pasado {dias} días desde que {nombre} se registró. Envía: 'Hola {nombre}, tenemos nuevas propiedades en {zona} dentro de tu presupuesto. ¿Te mando la información?'"
+        if presupuesto >= 150000:
+            return (
+                f"💎 {nombre} tiene presupuesto de {presupuesto_txt} — lead de alto valor:\n\n"
+                f"'Hola {nombre}, le escribo porque con su presupuesto de {presupuesto_txt} "
+                f"en {zona} tiene acceso a propiedades con excelente potencial de valorización. "
+                f"Tengo 2 opciones que muy pocos conocen. ¿Le interesa que las revisemos juntos esta semana?'\n\n"
+                f"💡 Técnica: Exclusividad. Haz que sienta que tiene acceso a algo especial."
+            )
+        return (
+            f"📬 Han pasado {dias} días. Propuesta concreta:\n\n"
+            f"'Hola {nombre}, le tengo algo que podría interesarle en {zona}. "
+            f"¿Le puedo enviar 2-3 opciones con fotos ahora? Solo para que vea si alguna le llama la atención, "
+            f"sin compromiso.'\n\n"
+            f"💡 Técnica: Micro-compromiso. Pide algo pequeño para mantener la conversación."
+        )
 
+    # 4-7 días — reactivación con ángulo diferente
     if dias <= 7:
         if temperatura == 'FRIO':
-            return f"❄️ {nombre} lleva {dias} días sin responder. Intenta un ángulo diferente: '¿Sigues buscando en {zona}? Esta semana recibimos propiedades que quizás no habías visto.'"
-        return f"🟡 {nombre} lleva {dias} días. Ofrece algo concreto: '¿Podemos agendar una llamada de 10 minutos esta semana? Tengo opciones en {zona} que podrían interesarte.'"
+            return (
+                f"❄️ {nombre} lleva {dias} días sin responder. Cambia el ángulo:\n\n"
+                f"'Hola {nombre}, ¿cómo está? Le escribo rápido porque el mercado en {zona} "
+                f"cambió esta semana — bajaron 2 propiedades de precio. "
+                f"¿Sigue buscando o ya encontró algo?'\n\n"
+                f"💡 Técnica: Cambio de contexto. No menciones la consulta anterior, habla de algo nuevo."
+            )
+        return (
+            f"🟡 {nombre} lleva {dias} días. Ofrece una cita:\n\n"
+            f"'Hola {nombre}, sé que está ocupado. ¿Le parece si hacemos una llamada de 10 minutos "
+            f"esta semana? Le cuento sobre 2 propiedades en {zona} dentro de {presupuesto_txt} "
+            f"que acaban de entrar y creo que le van a gustar.'\n\n"
+            f"💡 Técnica: Especificidad + tiempo limitado. Sé concreto para generar respuesta."
+        )
 
+    # 8-14 días — urgencia real
     if dias <= 14:
-        return f"⏰ {nombre} lleva {dias} días — riesgo de perderlo. Último intento activo: 'Hola {nombre}, antes de cerrar tu expediente quería saber si aún buscas propiedad en {zona}. ¿Hay algo que pueda hacer para ayudarte?'"
+        return (
+            f"⏰ {nombre} lleva {dias} días — momento crítico:\n\n"
+            f"'Hola {nombre}, le escribo porque una de las propiedades que tenía en mente para usted "
+            f"en {zona} recibió una oferta hoy. Antes de que se cierre, ¿le gustaría verla? "
+            f"Si no es el momento, no hay problema — pero no quería que se quedara sin saberlo.'\n\n"
+            f"💡 Técnica: FOMO (Fear Of Missing Out). La pérdida motiva más que la ganancia."
+        )
 
+    # 15-30 días — reactivación blanda
     if dias <= 30:
-        return f"🔄 {nombre} lleva {dias} días inactivo. Reactívalo con algo de valor: 'Hola {nombre}, el mercado en {zona} cambió esta semana — hay opciones que podrían interesarte dentro de tu rango.'"
+        return (
+            f"🔄 {nombre} lleva {dias} días — intento de reactivación:\n\n"
+            f"'Hola {nombre}, espero que esté muy bien. Tengo una pregunta rápida: "
+            f"¿sigue considerando una propiedad en {zona} o sus planes cambiaron? "
+            f"Solo quiero asegurarme de enfocar mi búsqueda en lo que realmente necesita.'\n\n"
+            f"💡 Técnica: Honestidad desarmante. Preguntar directamente genera más respuesta que vender."
+        )
 
-    return f"📊 {nombre} lleva más de un mes ({dias} días). Considera archivarlo o hacer un último intento: '¿Sigues en búsqueda de propiedad? Queremos ayudarte si el momento es ahora.'"
+    # Más de 30 días — último intento
+    return (
+        f"📊 {nombre} lleva más de un mes ({dias} días):\n\n"
+        f"'Hola {nombre}, le escribo por última vez. Si ya encontró su propiedad, "
+        f"me alegra mucho. Si todavía busca algo en {zona}, estoy aquí. "
+        f"¿En qué momento del proceso está?'\n\n"
+        f"💡 Técnica: Última oportunidad honesta. Cierra el loop y da control al cliente. "
+        f"Muchos responden precisamente porque sienten que 'perderán' el contacto."
+    )
 
 # --- SEGUIMIENTO AUTOMÁTICO ---
 def job_seguimiento_automatico():
@@ -373,7 +473,6 @@ def admin_nuevo_cliente():
             "activo": True
         }
         supabase.table("clientes").insert(data).execute()
-        print(f"✅ Cliente nuevo creado: {cliente_id}")
     except Exception as e:
         print(f"❌ Error creando cliente: {e}")
     return redirect(url_for('admin_panel'))
@@ -421,7 +520,6 @@ def admin_borrar_cliente(cliente_id):
         supabase.table("propiedades").delete().eq("vendedor", cliente_id).execute()
         supabase.table("asesores").delete().eq("cliente_id", cliente_id).execute()
         supabase.table("clientes").delete().eq("id", cliente_id).execute()
-        print(f"🗑️ Cliente eliminado permanentemente: {cliente_id}")
     except Exception as e:
         print(f"❌ Error eliminando cliente: {e}")
     return redirect(url_for('admin_panel'))
@@ -452,37 +550,75 @@ def crear_asesor(cliente_id):
 
 @app.route("/asesores/<cliente_id>/toggle/<int:asesor_id>", methods=["POST"])
 def toggle_asesor(cliente_id, asesor_id):
-    """Activa o desactiva un asesor."""
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean or not es_dueno():
         return "No autorizado", 403
     try:
         nuevo_estado = request.form.get("nuevo_estado", "false") == "true"
-        supabase.table("asesores").update({"activo": nuevo_estado}).eq("id", asesor_id).eq("cliente_id", id_clean).execute()
-        estado_txt = "activado" if nuevo_estado else "desactivado"
-        print(f"✅ Asesor {estado_txt}: {asesor_id}")
+        supabase.table("asesores").update({"activo": nuevo_estado}) \
+            .eq("id", asesor_id).eq("cliente_id", id_clean).execute()
+        print(f"✅ Asesor {asesor_id} {'activado' if nuevo_estado else 'desactivado'}")
     except Exception as e:
         print(f"❌ Error toggling asesor: {e}")
     return redirect(url_for('historial', cliente_id=id_clean))
 
-@app.route("/asesores/<cliente_id>/editar/<int:asesor_id>", methods=["POST"])
-def editar_asesor(cliente_id, asesor_id):
+@app.route("/asesores/<cliente_id>/borrar/<int:asesor_id>", methods=["POST"])
+def borrar_asesor(cliente_id, asesor_id):
+    """Elimina permanentemente un asesor."""
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean or not es_dueno():
         return "No autorizado", 403
     try:
-        data = {
-            "nombre": request.form.get("nombre", "").strip(),
-            "usuario": request.form.get("usuario", "").strip(),
-            "email": request.form.get("email", "").strip(),
-        }
-        nueva_password = request.form.get("password", "").strip()
-        if nueva_password:
-            data["password"] = nueva_password
-        supabase.table("asesores").update(data).eq("id", asesor_id).eq("cliente_id", id_clean).execute()
+        # Desasignar sus leads
+        supabase.table("leads").update({"asesor_id": None}) \
+            .eq("asesor_id", asesor_id).execute()
+        # Eliminar el asesor
+        supabase.table("asesores").delete().eq("id", asesor_id).eq("cliente_id", id_clean).execute()
+        print(f"🗑️ Asesor {asesor_id} eliminado permanentemente")
     except Exception as e:
-        print(f"❌ Error editando asesor: {e}")
+        print(f"❌ Error eliminando asesor: {e}")
     return redirect(url_for('historial', cliente_id=id_clean))
+
+@app.route("/asesores/<cliente_id>/detalle/<int:asesor_id>")
+def detalle_asesor(cliente_id, asesor_id):
+    """Página de detalle de un asesor con sus leads y métricas."""
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean or not es_dueno():
+        return redirect(url_for('login', cliente_id=id_clean))
+    vendedor = get_cliente(id_clean)
+    if not vendedor: return "Error 404", 404
+    try:
+        asesor_r = supabase.table("asesores").select("*").eq("id", asesor_id).eq("cliente_id", id_clean).execute()
+        if not asesor_r.data: return "Asesor no encontrado", 404
+        asesor = asesor_r.data[0]
+        asesor['activo'] = bool(asesor.get('activo', False))
+
+        leads_r = supabase.table("leads").select("*").eq("asesor_id", asesor_id).order("score", desc=True).execute()
+        leads = leads_r.data or []
+
+        # Calcular métricas del asesor
+        total = len(leads)
+        clientes = sum(1 for l in leads if 'CLIENTE' in l.get('clasificacion', ''))
+        calientes = sum(1 for l in leads if l.get('temperatura') in ['MUY_CALIENTE', 'CALIENTE'])
+        tasa = round((clientes / total * 100), 1) if total > 0 else 0
+
+        hoy = datetime.now()
+        for lead in leads:
+            try:
+                fecha = datetime.strptime(lead.get("fecha", "").split(" ")[0], "%Y-%m-%d")
+                lead['dias'] = (hoy - fecha).days
+            except:
+                lead['dias'] = 0
+
+        color = vendedor.get('color_primario', '#667eea')
+        return render_template("asesor_detalle.html",
+                               asesor=asesor, leads=leads, vendedor=vendedor,
+                               cliente_id=id_clean, color=color,
+                               total=total, clientes=clientes,
+                               calientes=calientes, tasa=tasa)
+    except Exception as e:
+        print(f"Error en detalle asesor: {e}")
+        return f"Error: {e}", 500
 
 @app.route("/leads/<cliente_id>/asignar/<int:lead_id>", methods=["POST"])
 def asignar_asesor_lead(cliente_id, lead_id):
@@ -918,7 +1054,7 @@ def login(cliente_id):
         usuario_form = request.form.get("usuario", "").strip()
         password_form = request.form.get("password", "").strip()
 
-        # 1. Verificar dueño primero
+        # 1. Verificar dueño
         if usuario_form == vendedor["usuario"] and \
            verificar_password(password_form, vendedor["password"]):
             session["cliente"] = id_clean
@@ -927,7 +1063,7 @@ def login(cliente_id):
             session.pop("asesor_nombre", None)
             return redirect(url_for('seleccion_idioma', cliente_id=id_clean))
 
-        # 2. Verificar asesor — completamente aislado del login principal
+        # 2. Verificar asesor
         try:
             asesores_r = supabase.table("asesores").select("*") \
                 .eq("cliente_id", id_clean) \
@@ -942,9 +1078,7 @@ def login(cliente_id):
                     session["asesor_nombre"] = asesor["nombre"]
                     return redirect(url_for('historial', cliente_id=id_clean))
         except Exception as e:
-            # Si falla la consulta de asesores, el login del dueño ya funcionó arriba
-            # Este error no debe afectar nada
-            print(f"⚠️ Error consultando asesores (no crítico): {e}")
+            print(f"⚠️ Error consultando asesores: {e}")
 
         print(f"⚠️ Login fallido para {id_clean} desde {get_remote_address()}")
         return render_template("login.html", error="Credenciales Invalidas", cliente=vendedor, textos=textos)
