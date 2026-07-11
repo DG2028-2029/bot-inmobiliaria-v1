@@ -50,6 +50,33 @@
         td { padding: 11px 10px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 12px; vertical-align: middle; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #fafbff; }
+
+        /* FILAS EN RIESGO */
+        tr.en-riesgo td { background: #fff5f5 !important; }
+        tr.en-riesgo:hover td { background: #ffe8e8 !important; }
+        .dias-riesgo {
+            display: inline-block; padding: 3px 8px; border-radius: 20px;
+            font-size: 10px; font-weight: 700;
+            background: #7f0000; color: white; border: 1px solid #5c0000;
+            animation: pulso 1.5s infinite;
+        }
+        @keyframes pulso {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .alerta-riesgo {
+            background: linear-gradient(135deg, #7f0000, #c0392b);
+            color: white; padding: 14px 20px; border-radius: 10px;
+            margin-bottom: 16px; display: flex;
+            justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 15px rgba(192,57,43,0.3);
+            gap: 12px;
+        }
+        .alerta-riesgo .num { font-size: 32px; font-weight: bold; margin-right: 10px; flex-shrink: 0; }
+        .alerta-riesgo .texto { font-size: 13px; line-height: 1.5; }
+        .alerta-riesgo .texto strong { font-size: 15px; display: block; margin-bottom: 2px; }
+        .alerta-hint { font-size: 12px; opacity: 0.85; text-align: right; flex-shrink: 0; }
+
         .badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
         .badge-alto { background: #fdf2f2; color: #e74c3c; border: 1px solid #f5b7b1; }
         .badge-medio { background: #fef9e7; color: #d68910; border: 1px solid #fad7a0; }
@@ -88,15 +115,16 @@
         .select-asesor:focus { outline: none; border-color: var(--color); }
         .acciones-container { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 110px; }
         .empty-state { text-align: center; padding: 50px; color: #95a5a6; font-size: 15px; }
+
         /* MODAL RESPUESTA */
         .modal-respuesta { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
         .modal-respuesta-content { background: white; margin: 8% auto; padding: 30px; border-radius: 12px; max-width: 540px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
         .modal-respuesta-titulo { font-size: 18px; font-weight: 700; color: #2c3e50; margin-bottom: 16px; }
         .modal-respuesta-texto { background: #f8f9fa; padding: 16px; border-radius: 8px; font-size: 13px; color: #2c3e50; line-height: 1.8; border-left: 4px solid var(--color); margin-bottom: 16px; white-space: pre-line; }
-        .tecnica-box { background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 10px 14px; font-size: 12px; color: #856404; margin-bottom: 16px; }
         .btn-copiar { background: var(--color); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; transition: 0.2s; }
         .btn-copiar:hover { opacity: 0.88; }
         .btn-cerrar-modal { background: #ecf0f1; color: #555; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; width: 100%; margin-top: 8px; }
+
         /* MODAL ASESORES */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); overflow-y: auto; }
         .modal-content { background: white; margin: 4% auto; padding: 30px; border-radius: 12px; max-width: 640px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
@@ -171,6 +199,26 @@
     </div>
 </div>
 
+<!-- BANNER DE ALERTA DE RIESGO -->
+{% set leads_en_riesgo = [] %}
+{% for lead in leads %}
+    {% if lead.dias > 14 and 'CLIENTE' not in lead.clasificacion %}
+        {% set _ = leads_en_riesgo.append(lead) %}
+    {% endif %}
+{% endfor %}
+{% if leads_en_riesgo | length > 0 %}
+<div class="alerta-riesgo">
+    <div style="display:flex;align-items:center;gap:10px;">
+        <span class="num">🚨 {{ leads_en_riesgo | length }}</span>
+        <div class="texto">
+            <strong>Lead{{ 's' if leads_en_riesgo | length > 1 else '' }} en riesgo de perderse</strong>
+            Llevan más de 14 días sin convertirse — actúa hoy antes de que se enfríen para siempre.
+        </div>
+    </div>
+    <div class="alerta-hint">Usa 💬 ¿Qué decirle?<br>para el mensaje correcto</div>
+</div>
+{% endif %}
+
 <div class="search-container">
     <form method="GET" style="display: flex; width: 100%; gap: 10px;">
         <input type="text" name="q" placeholder="{{ textos.btn_buscar }}" value="{{ request.args.get('q', '') }}">
@@ -205,9 +253,18 @@
             {% set badge_clase = 'badge-cliente' if 'CLIENTE' in clasif else ('badge-alto' if 'VIP' in clasif or 'PROSPECTO' in clasif else ('badge-medio' if 'SEGUIMIENTO' in clasif else 'badge-bajo')) %}
             {% set dias = lead.dias %}
             {% set dias_clase = 'dias-nuevo' if dias <= 1 else ('dias-ok' if dias <= 7 else 'dias-alerta') %}
-            <tr>
+            {% set en_riesgo = dias > 14 and 'CLIENTE' not in clasif %}
+            <tr class="{{ 'en-riesgo' if en_riesgo else '' }}">
                 <td style="color:#666;font-size:11px;">{{ lead.fecha[:10] }}</td>
-                <td><span class="dias-badge {{ dias_clase }}">{% if dias == 0 %}Hoy{% elif dias == 1 %}1 día{% else %}{{ dias }}d{% endif %}</span></td>
+                <td>
+                    {% if en_riesgo %}
+                    <span class="dias-riesgo">🚨 {{ dias }}d</span>
+                    {% else %}
+                    <span class="dias-badge {{ dias_clase }}">
+                        {% if dias == 0 %}Hoy{% elif dias == 1 %}1 día{% else %}{{ dias }}d{% endif %}
+                    </span>
+                    {% endif %}
+                </td>
                 <td><strong style="color:#2c3e50;">{{ lead.nombre }}</strong></td>
                 <td><a href="https://wa.me/{{ lead.telefono }}" target="_blank" style="color:#27ae60;text-decoration:none;font-weight:bold;font-size:11px;">📱 {{ lead.telefono }}</a></td>
                 <td style="color:#555;font-size:11px;">{{ lead.zona_interes }}</td>
@@ -272,7 +329,6 @@
             <h2>👥 Gestión de Asesores</h2>
             <span class="close" onclick="cerrarModalAsesores()">&times;</span>
         </div>
-
         {% if asesores %}
             {% for a in asesores %}
             <div class="asesor-card">
@@ -286,28 +342,19 @@
                         <div class="sub">👤 {{ a.usuario }}{% if a.email %} · 📧 {{ a.email }}{% endif %}</div>
                     </div>
                     <div class="asesor-acciones">
-                        <!-- VER DETALLE -->
-                        <a href="{{ url_for('detalle_asesor', cliente_id=cliente.usuario, asesor_id=a.id) }}"
-                           class="btn-asesor-ver" target="_blank">👁️ Ver</a>
-
-                        <!-- TOGGLE ACTIVO/INACTIVO -->
+                        <a href="{{ url_for('detalle_asesor', cliente_id=cliente.usuario, asesor_id=a.id) }}" class="btn-asesor-ver" target="_blank">👁️ Ver</a>
                         {% if a.activo %}
-                        <form method="POST" action="{{ url_for('toggle_asesor', cliente_id=cliente.usuario, asesor_id=a.id) }}"
-                              onsubmit="return confirm('¿Desactivar a {{ a.nombre }}?')">
+                        <form method="POST" action="{{ url_for('toggle_asesor', cliente_id=cliente.usuario, asesor_id=a.id) }}" onsubmit="return confirm('¿Desactivar a {{ a.nombre }}?')">
                             <input type="hidden" name="nuevo_estado" value="false">
                             <button type="submit" class="btn-asesor-desactivar">🚫 Desactivar</button>
                         </form>
                         {% else %}
-                        <form method="POST" action="{{ url_for('toggle_asesor', cliente_id=cliente.usuario, asesor_id=a.id) }}"
-                              onsubmit="return confirm('¿Reactivar a {{ a.nombre }}?')">
+                        <form method="POST" action="{{ url_for('toggle_asesor', cliente_id=cliente.usuario, asesor_id=a.id) }}" onsubmit="return confirm('¿Reactivar a {{ a.nombre }}?')">
                             <input type="hidden" name="nuevo_estado" value="true">
                             <button type="submit" class="btn-asesor-reactivar">✅ Reactivar</button>
                         </form>
                         {% endif %}
-
-                        <!-- BORRAR PERMANENTE -->
-                        <form method="POST" action="{{ url_for('borrar_asesor', cliente_id=cliente.usuario, asesor_id=a.id) }}"
-                              onsubmit="return confirm('⚠️ Eliminar PERMANENTEMENTE a {{ a.nombre }}? Sus leads quedarán sin asignar.')">
+                        <form method="POST" action="{{ url_for('borrar_asesor', cliente_id=cliente.usuario, asesor_id=a.id) }}" onsubmit="return confirm('⚠️ Eliminar PERMANENTEMENTE a {{ a.nombre }}? Sus leads quedarán sin asignar.')">
                             <button type="submit" class="btn-asesor-borrar">🗑️ Borrar</button>
                         </form>
                     </div>
