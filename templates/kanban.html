@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipeline | {{ cliente.nombre }}</title>
+    <style>
+        :root { --color: {{ cliente.color_primario or '#667eea' }}; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f2f6; padding: 16px; min-height: 100vh; }
+
+        /* TOP BAR */
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+        .btn-logout { background: #e74c3c; color: white; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: bold; font-size: 13px; transition: 0.2s; }
+        .btn-logout:hover { background: #c0392b; }
+
+        /* BANNER ASESOR */
+        .asesor-banner { background: linear-gradient(135deg, var(--color), #1a1a2e); color: white; padding: 10px 16px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; font-weight: 600; }
+
+        /* HEADER */
+        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; background: white; padding: 14px 18px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); border-left: 5px solid var(--color); }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header-logo { width: 42px; height: 42px; border-radius: 10px; object-fit: contain; border: 2px solid var(--color); }
+        .header-logo-placeholder { width: 42px; height: 42px; border-radius: 10px; background: var(--color); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .header-container h2 { color: #2c3e50; font-size: 18px; }
+        .header-container h2 span { color: var(--color); }
+        .header-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-nav { color: white; text-decoration: none; padding: 9px 14px; border-radius: 8px; font-weight: bold; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-nav:hover { opacity: 0.85; transform: translateY(-1px); }
+
+        /* STATS ROW */
+        .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
+        .stat-pill { background: white; padding: 12px 16px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 3px solid var(--etapa-color, #667eea); }
+        .stat-pill .num { font-size: 24px; font-weight: bold; color: var(--etapa-color, #667eea); }
+        .stat-pill .lbl { font-size: 11px; color: #999; margin-top: 2px; }
+
+        /* KANBAN BOARD */
+        .kanban-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; align-items: start; }
+
+        .kanban-col { background: #f8f9fa; border-radius: 12px; padding: 12px; min-height: 400px; }
+        .kanban-col-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid var(--col-color); }
+        .kanban-col-titulo { font-size: 13px; font-weight: 700; color: #2c3e50; display: flex; align-items: center; gap: 6px; }
+        .kanban-col-count { background: var(--col-color); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; flex-shrink: 0; }
+
+        /* CARD */
+        .kanban-card { background: white; border-radius: 10px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 3px solid var(--col-color); cursor: grab; transition: 0.2s; position: relative; }
+        .kanban-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.14); transform: translateY(-2px); }
+        .kanban-card.dragging { opacity: 0.5; cursor: grabbing; }
+        .kanban-col.drag-over { background: #e8f4fd; outline: 2px dashed var(--color); }
+
+        .card-nombre { font-size: 13px; font-weight: 700; color: #2c3e50; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-zona { font-size: 11px; color: #999; margin-bottom: 6px; }
+        .card-presupuesto { font-size: 12px; font-weight: 700; color: #27ae60; margin-bottom: 8px; }
+
+        .card-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+        .badge { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+        .badge-alto { background: #fdf2f2; color: #e74c3c; border: 1px solid #f5b7b1; }
+        .badge-medio { background: #fef9e7; color: #d68910; border: 1px solid #fad7a0; }
+        .badge-bajo { background: #f4f6f7; color: #7f8c8d; border: 1px solid #d5dbdb; }
+        .badge-cliente { background: #eaf4fb; color: #1a5276; border: 1px solid #aed6f1; }
+
+        .card-score { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+        .score-bar-wrap { flex: 1; background: #ecf0f1; border-radius: 4px; height: 5px; overflow: hidden; }
+        .score-bar { height: 100%; border-radius: 4px; }
+        .score-bar.alto  { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+        .score-bar.medio { background: linear-gradient(90deg, #f39c12, #f1c40f); }
+        .score-bar.bajo  { background: linear-gradient(90deg, #e74c3c, #ec7063); }
+        .score-label { font-size: 10px; font-weight: 700; flex-shrink: 0; }
+        .score-label.alto { color: #27ae60; }
+        .score-label.medio { color: #d68910; }
+        .score-label.bajo { color: #e74c3c; }
+
+        .dias-badge { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+        .dias-nuevo  { background: #e8f8f0; color: #27ae60; }
+        .dias-ok     { background: #fefde7; color: #b7950b; }
+        .dias-alerta { background: #fdf2f2; color: #c0392b; }
+        .dias-riesgo { background: #7f0000; color: white; animation: pulso 1.5s infinite; }
+        @keyframes pulso { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+        .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f5f5f5; }
+        .card-tel { font-size: 11px; color: #27ae60; text-decoration: none; font-weight: bold; }
+        .card-tel:hover { text-decoration: underline; }
+
+        .card-actions { display: flex; gap: 4px; }
+        .btn-card { padding: 5px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 10px; font-weight: bold; transition: 0.2s; }
+        .btn-wa { background: #25D366; color: white; }
+        .btn-wa:hover { background: #128C7E; }
+        .btn-msg { background: #f0f4ff; color: var(--color); border: 1px solid var(--color); }
+        .btn-msg:hover { background: var(--color); color: white; }
+
+        /* SELECT ETAPA */
+        .etapa-select { width: 100%; font-size: 11px; padding: 5px 6px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer; margin-top: 6px; }
+        .etapa-select:focus { outline: none; border-color: var(--color); }
+
+        /* MODAL RESPUESTA */
+        .modal-respuesta { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); overflow-y: auto; }
+        .modal-respuesta-content { background: white; margin: 6% auto; padding: 24px; border-radius: 12px; max-width: 520px; width: 92%; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        .modal-titulo { font-size: 17px; font-weight: 700; color: #2c3e50; margin-bottom: 14px; }
+        .modal-texto { background: #f8f9fa; padding: 14px; border-radius: 8px; font-size: 13px; color: #2c3e50; line-height: 1.8; border-left: 4px solid var(--color); margin-bottom: 14px; white-space: pre-line; max-height: 220px; overflow-y: auto; }
+        .modal-btns { display: flex; flex-direction: column; gap: 8px; }
+        .btn-copiar { background: var(--color); color: white; border: none; padding: 11px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; }
+        .btn-whatsapp-modal { background: #25D366; color: white; border: none; padding: 11px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; }
+        .btn-cerrar { background: #ecf0f1; color: #555; border: none; padding: 11px; border-radius: 8px; cursor: pointer; font-size: 13px; width: 100%; }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .kanban-board { grid-template-columns: repeat(3, 1fr); }
+            .stats-row { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .kanban-board { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .header-buttons { gap: 6px; }
+            .btn-nav { padding: 7px 10px; font-size: 11px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div style="font-size:14px;font-weight:600;color:#2c3e50;">📋 Pipeline — {{ cliente.nombre }}</div>
+    <a href="{{ url_for('logout', cliente_id=cliente.usuario) }}" class="btn-logout">🔒 Cerrar Sesión</a>
+</div>
+
+{% if not es_dueno %}
+<div class="asesor-banner">👤 Sesión de asesor: <strong>{{ asesor_nombre }}</strong></div>
+{% endif %}
+
+<div class="header-container">
+    <div class="header-left">
+        {% if cliente.logo_url %}<img src="{{ cliente.logo_url }}" alt="{{ cliente.nombre }}" class="header-logo">
+        {% else %}<div class="header-logo-placeholder">🏠</div>{% endif %}
+        <h2>📋 Pipeline de Ventas: <span>{{ cliente.nombre }}</span></h2>
+    </div>
+    <div class="header-buttons">
+        <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="btn-nav" style="background:#2c3e50;">📊 Dashboard</a>
+        <a href="{{ url_for('inventario', cliente_id=cliente.usuario) }}" class="btn-nav" style="background:var(--color);">🏠 Inventario</a>
+        <a href="{{ url_for('stats', cliente_id=cliente.usuario) }}" class="btn-nav" style="background:#3498db;">📈 Estadísticas</a>
+    </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-row">
+    <div class="stat-pill" style="--etapa-color:#95a5a6;">
+        <div class="num">{{ etapas.nuevo | length }}</div>
+        <div class="lbl">🆕 Nuevos</div>
+    </div>
+    <div class="stat-pill" style="--etapa-color:#3498db;">
+        <div class="num">{{ etapas.contactado | length }}</div>
+        <div class="lbl">📞 Contactados</div>
+    </div>
+    <div class="stat-pill" style="--etapa-color:#f39c12;">
+        <div class="num">{{ etapas.visita | length }}</div>
+        <div class="lbl">🏠 Visitas</div>
+    </div>
+    <div class="stat-pill" style="--etapa-color:#8e44ad;">
+        <div class="num">{{ etapas.propuesta | length }}</div>
+        <div class="lbl">📄 Propuestas</div>
+    </div>
+    <div class="stat-pill" style="--etapa-color:#27ae60;">
+        <div class="num">{{ etapas.cerrado | length }}</div>
+        <div class="lbl">💎 Cerrados</div>
+    </div>
+</div>
+
+<!-- KANBAN BOARD -->
+<div class="kanban-board" id="kanbanBoard">
+
+    {% set columnas = [
+        ('nuevo',      '🆕 Nuevos',      '#95a5a6'),
+        ('contactado', '📞 Contactados',  '#3498db'),
+        ('visita',     '🏠 Visita',       '#f39c12'),
+        ('propuesta',  '📄 Propuesta',    '#8e44ad'),
+        ('cerrado',    '💎 Cerrado',      '#27ae60'),
+    ] %}
+
+    {% for etapa_key, etapa_nombre, etapa_color in columnas %}
+    <div class="kanban-col" data-etapa="{{ etapa_key }}" style="--col-color:{{ etapa_color }};"
+         ondragover="allowDrop(event)" ondrop="drop(event, '{{ etapa_key }}')">
+        <div class="kanban-col-header">
+            <span class="kanban-col-titulo">
+                {{ etapa_nombre }}
+            </span>
+            <span class="kanban-col-count">{{ etapas[etapa_key] | length }}</span>
+        </div>
+
+        {% for lead in etapas[etapa_key] %}
+        {% set score = lead.score | int %}
+        {% set score_clase = 'alto' if score >= 65 else ('medio' if score >= 35 else 'bajo') %}
+        {% set clasif = lead.clasificacion %}
+        {% set badge_clase = 'badge-cliente' if 'CLIENTE' in clasif else ('badge-alto' if 'VIP' in clasif or 'PROSPECTO' in clasif else ('badge-medio' if 'SEGUIMIENTO' in clasif else 'badge-bajo')) %}
+        {% set dias = lead.dias %}
+        {% set dias_clase = 'dias-riesgo' if dias > 14 and 'CLIENTE' not in clasif else ('dias-nuevo' if dias <= 1 else ('dias-ok' if dias <= 7 else 'dias-alerta')) %}
+        {% set dias_txt = '🚨 ' + dias|string + 'd' if dias > 14 and 'CLIENTE' not in clasif else ('Hoy' if dias == 0 else (dias|string + 'd')) %}
+
+        <div class="kanban-card" draggable="true" data-lead-id="{{ lead.id }}"
+             ondragstart="dragStart(event, {{ lead.id }})">
+            <div class="card-nombre" title="{{ lead.nombre }}">{{ lead.nombre }}</div>
+            <div class="card-zona">📍 {{ lead.zona_interes or '—' }}</div>
+            <div class="card-presupuesto">${{ "{:,.0f}".format(lead.presupuesto|float) if lead.presupuesto else "0" }}</div>
+
+            <div class="card-badges">
+                <span class="badge {{ badge_clase }}">{{ lead.clasificacion | truncate(15, True, '...') }}</span>
+                <span class="dias-badge {{ dias_clase }}">{{ dias_txt }}</span>
+            </div>
+
+            <div class="card-score">
+                <div class="score-bar-wrap">
+                    <div class="score-bar {{ score_clase }}" style="width:{{ score }}%"></div>
+                </div>
+                <span class="score-label {{ score_clase }}">{{ score }}</span>
+            </div>
+
+            {% if lead.notas %}
+            <div style="font-size:10px;color:#999;background:#f8f9fa;padding:4px 6px;border-radius:4px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                📝 {{ lead.notas }}
+            </div>
+            {% endif %}
+
+            <!-- SELECT ETAPA (alternativa al drag) -->
+            <select class="etapa-select" onchange="cambiarEtapa({{ lead.id }}, this.value, this)">
+                <option value="nuevo"      {% if lead.etapa == 'nuevo' %}selected{% endif %}>🆕 Nuevo</option>
+                <option value="contactado" {% if lead.etapa == 'contactado' %}selected{% endif %}>📞 Contactado</option>
+                <option value="visita"     {% if lead.etapa == 'visita' %}selected{% endif %}>🏠 Visita agendada</option>
+                <option value="propuesta"  {% if lead.etapa == 'propuesta' %}selected{% endif %}>📄 Propuesta enviada</option>
+                <option value="cerrado"    {% if lead.etapa == 'cerrado' %}selected{% endif %}>💎 Cerrado</option>
+            </select>
+
+            <div class="card-footer">
+                <a href="https://wa.me/{{ lead.telefono }}" target="_blank" class="card-tel">📱 {{ lead.telefono }}</a>
+                <div class="card-actions">
+                    <button class="btn-card btn-msg" onclick="verRespuesta({{ lead.id }}, '{{ lead.nombre }}', '{{ lead.telefono }}')">💬</button>
+                    <button class="btn-card btn-wa" onclick="abrirWhatsApp('{{ lead.telefono }}', {{ lead.id }})">📱</button>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div style="text-align:center;padding:30px 10px;color:#ccc;font-size:12px;">
+            Sin leads aquí
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+</div>
+
+<!-- MODAL RESPUESTA -->
+<div id="modalRespuesta" class="modal-respuesta">
+    <div class="modal-respuesta-content">
+        <div class="modal-titulo">💬 ¿Qué decirle a <span id="nombreRespuesta"></span>?</div>
+        <div class="modal-texto" id="textoRespuesta">Analizando situación...</div>
+        <div class="modal-btns">
+            <button class="btn-copiar" onclick="copiarRespuesta()">📋 Copiar mensaje</button>
+            <button class="btn-whatsapp-modal" onclick="enviarPorWhatsApp()">📱 Abrir en WhatsApp</button>
+            <button class="btn-cerrar" onclick="cerrarModal()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const clienteId = "{{ cliente.usuario }}";
+let telefonoActual = '';
+let mensajeActual = '';
+let draggedLeadId = null;
+
+// --- DRAG & DROP ---
+function dragStart(event, leadId) {
+    draggedLeadId = leadId;
+    event.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => event.target.classList.add('dragging'), 0);
+}
+
+function allowDrop(event) {
+    event.preventDefault();
+    event.currentTarget.classList.add('drag-over');
+}
+
+function drop(event, nuevaEtapa) {
+    event.preventDefault();
+    event.currentTarget.classList.remove('drag-over');
+    if (draggedLeadId) {
+        cambiarEtapaDirecto(draggedLeadId, nuevaEtapa);
+        draggedLeadId = null;
+    }
+}
+
+document.addEventListener('dragend', function(e) {
+    document.querySelectorAll('.kanban-card').forEach(c => c.classList.remove('dragging'));
+    document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
+});
+
+document.addEventListener('dragleave', function(e) {
+    if (e.target.classList.contains('kanban-col')) {
+        e.target.classList.remove('drag-over');
+    }
+});
+
+// --- CAMBIAR ETAPA VÍA SELECT ---
+function cambiarEtapa(leadId, nuevaEtapa, selectEl) {
+    fetch(`/leads/${clienteId}/etapa/${leadId}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `etapa=${encodeURIComponent(nuevaEtapa)}`
+    }).then(r => r.json()).then(data => {
+        if (data.ok) {
+            // Recargar para actualizar columnas
+            setTimeout(() => location.reload(), 300);
+        }
+    }).catch(() => {
+        location.reload();
+    });
+}
+
+// --- CAMBIAR ETAPA VÍA DRAG ---
+function cambiarEtapaDirecto(leadId, nuevaEtapa) {
+    fetch(`/leads/${clienteId}/etapa/${leadId}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `etapa=${encodeURIComponent(nuevaEtapa)}`
+    }).then(r => r.json()).then(data => {
+        if (data.ok) location.reload();
+    });
+}
+
+// --- RESPUESTA SUGERIDA ---
+function verRespuesta(leadId, nombre, telefono) {
+    telefonoActual = telefono;
+    mensajeActual = '';
+    document.getElementById('nombreRespuesta').textContent = nombre;
+    document.getElementById('textoRespuesta').textContent = 'Analizando situación...';
+    document.getElementById('modalRespuesta').style.display = 'block';
+    fetch(`/leads/${clienteId}/respuesta/${leadId}`)
+        .then(r => r.json())
+        .then(data => {
+            mensajeActual = data.respuesta;
+            document.getElementById('textoRespuesta').textContent = mensajeActual;
+        });
+}
+
+function abrirWhatsApp(telefono, leadId) {
+    fetch(`/leads/${clienteId}/respuesta/${leadId}`)
+        .then(r => r.json())
+        .then(data => {
+            const url = `https://wa.me/${telefono}?text=${encodeURIComponent(data.respuesta)}`;
+            window.open(url, '_blank');
+        });
+}
+
+function enviarPorWhatsApp() {
+    if (!telefonoActual || !mensajeActual) return;
+    window.open(`https://wa.me/${telefonoActual}?text=${encodeURIComponent(mensajeActual)}`, '_blank');
+}
+
+function copiarRespuesta() {
+    if (!mensajeActual) return;
+    navigator.clipboard.writeText(mensajeActual).then(() => {
+        const btn = document.querySelector('.btn-copiar');
+        btn.textContent = '✅ ¡Copiado!';
+        setTimeout(() => btn.textContent = '📋 Copiar mensaje', 2000);
+    });
+}
+
+function cerrarModal() {
+    document.getElementById('modalRespuesta').style.display = 'none';
+}
+
+window.onclick = function(e) {
+    if (e.target == document.getElementById('modalRespuesta')) cerrarModal();
+}
+</script>
+</body>
+</html>
