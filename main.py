@@ -70,7 +70,6 @@ def get_asesores_de_cliente(cliente_id):
     try:
         resultado = supabase.table("asesores").select("*").eq("cliente_id", cliente_id).execute()
         asesores = resultado.data or []
-        # Forzar conversión explícita del campo activo a bool Python
         for a in asesores:
             v = a.get('activo', False)
             if isinstance(v, bool):
@@ -85,12 +84,11 @@ def get_asesores_de_cliente(cliente_id):
 
 # --- RESPUESTAS SUGERIDAS CON TÉCNICAS DE VENTA ---
 def generar_respuesta_sugerida(lead):
-    nombre    = lead.get('nombre', 'el cliente').split()[0]  # Solo primer nombre
-    zona      = lead.get('zona_interes', 'la zona de interés')
+    nombre = lead.get('nombre', 'el cliente').split()[0]
+    zona = lead.get('zona_interes', 'la zona de interés')
     temperatura = lead.get('temperatura', 'FRIO')
     clasificacion = lead.get('clasificacion', '')
     fecha_str = lead.get('fecha', '')
-    mensaje   = lead.get('mensaje', '').lower()
 
     try:
         presupuesto = float(re.sub(r'[^\d.]', '', str(lead.get('presupuesto', 0))))
@@ -105,7 +103,6 @@ def generar_respuesta_sugerida(lead):
         except:
             dias = 0
 
-    # Formatear presupuesto legible
     if presupuesto >= 1000000:
         presupuesto_txt = f"${presupuesto/1000000:.1f}M"
     elif presupuesto >= 1000:
@@ -113,7 +110,6 @@ def generar_respuesta_sugerida(lead):
     else:
         presupuesto_txt = f"${presupuesto:.0f}" if presupuesto > 0 else "su presupuesto"
 
-    # Ya es cliente
     if 'CLIENTE' in clasificacion:
         return (
             f"✅ {nombre} ya es tu cliente. Mantén la relación activa:\n\n"
@@ -123,7 +119,6 @@ def generar_respuesta_sugerida(lead):
             f"💡 Técnica: Referidos. Un cliente feliz es tu mejor vendedor."
         )
 
-    # Lead nuevo — primer contacto
     if dias == 0:
         return (
             f"🔥 LEAD NUEVO — Contacta en los próximos 30 minutos:\n\n"
@@ -133,7 +128,6 @@ def generar_respuesta_sugerida(lead):
             f"💡 Técnica: Velocidad de respuesta. El 78% de las ventas las cierra quien responde primero."
         )
 
-    # 1 día — seguimiento cálido
     if dias <= 1:
         if temperatura in ['MUY_CALIENTE', 'CALIENTE']:
             return (
@@ -151,7 +145,6 @@ def generar_respuesta_sugerida(lead):
             f"💡 Técnica: Pregunta abierta. No vendas, primero escucha para conectar."
         )
 
-    # 2-3 días — propuesta de valor
     if dias <= 3:
         if presupuesto >= 150000:
             return (
@@ -169,7 +162,6 @@ def generar_respuesta_sugerida(lead):
             f"💡 Técnica: Micro-compromiso. Pide algo pequeño para mantener la conversación."
         )
 
-    # 4-7 días — reactivación con ángulo diferente
     if dias <= 7:
         if temperatura == 'FRIO':
             return (
@@ -187,7 +179,6 @@ def generar_respuesta_sugerida(lead):
             f"💡 Técnica: Especificidad + tiempo limitado. Sé concreto para generar respuesta."
         )
 
-    # 8-14 días — urgencia real
     if dias <= 14:
         return (
             f"⏰ {nombre} lleva {dias} días — momento crítico:\n\n"
@@ -197,7 +188,6 @@ def generar_respuesta_sugerida(lead):
             f"💡 Técnica: FOMO (Fear Of Missing Out). La pérdida motiva más que la ganancia."
         )
 
-    # 15-30 días — reactivación blanda
     if dias <= 30:
         return (
             f"🔄 {nombre} lleva {dias} días — intento de reactivación:\n\n"
@@ -207,7 +197,6 @@ def generar_respuesta_sugerida(lead):
             f"💡 Técnica: Honestidad desarmante. Preguntar directamente genera más respuesta que vender."
         )
 
-    # Más de 30 días — último intento
     return (
         f"📊 {nombre} lleva más de un mes ({dias} días):\n\n"
         f"'Hola {nombre}, le escribo por última vez. Si ya encontró su propiedad, "
@@ -543,7 +532,6 @@ def crear_asesor(cliente_id):
             "activo": True
         }
         supabase.table("asesores").insert(data).execute()
-        print(f"✅ Asesor creado para {id_clean}")
     except Exception as e:
         print(f"❌ Error creando asesor: {e}")
     return redirect(url_for('historial', cliente_id=id_clean))
@@ -557,31 +545,24 @@ def toggle_asesor(cliente_id, asesor_id):
         nuevo_estado = request.form.get("nuevo_estado", "false") == "true"
         supabase.table("asesores").update({"activo": nuevo_estado}) \
             .eq("id", asesor_id).eq("cliente_id", id_clean).execute()
-        print(f"✅ Asesor {asesor_id} {'activado' if nuevo_estado else 'desactivado'}")
     except Exception as e:
         print(f"❌ Error toggling asesor: {e}")
     return redirect(url_for('historial', cliente_id=id_clean))
 
 @app.route("/asesores/<cliente_id>/borrar/<int:asesor_id>", methods=["POST"])
 def borrar_asesor(cliente_id, asesor_id):
-    """Elimina permanentemente un asesor."""
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean or not es_dueno():
         return "No autorizado", 403
     try:
-        # Desasignar sus leads
-        supabase.table("leads").update({"asesor_id": None}) \
-            .eq("asesor_id", asesor_id).execute()
-        # Eliminar el asesor
+        supabase.table("leads").update({"asesor_id": None}).eq("asesor_id", asesor_id).execute()
         supabase.table("asesores").delete().eq("id", asesor_id).eq("cliente_id", id_clean).execute()
-        print(f"🗑️ Asesor {asesor_id} eliminado permanentemente")
     except Exception as e:
         print(f"❌ Error eliminando asesor: {e}")
     return redirect(url_for('historial', cliente_id=id_clean))
 
 @app.route("/asesores/<cliente_id>/detalle/<int:asesor_id>")
 def detalle_asesor(cliente_id, asesor_id):
-    """Página de detalle de un asesor con sus leads y métricas."""
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean or not es_dueno():
         return redirect(url_for('login', cliente_id=id_clean))
@@ -592,16 +573,12 @@ def detalle_asesor(cliente_id, asesor_id):
         if not asesor_r.data: return "Asesor no encontrado", 404
         asesor = asesor_r.data[0]
         asesor['activo'] = bool(asesor.get('activo', False))
-
         leads_r = supabase.table("leads").select("*").eq("asesor_id", asesor_id).order("score", desc=True).execute()
         leads = leads_r.data or []
-
-        # Calcular métricas del asesor
         total = len(leads)
         clientes = sum(1 for l in leads if 'CLIENTE' in l.get('clasificacion', ''))
         calientes = sum(1 for l in leads if l.get('temperatura') in ['MUY_CALIENTE', 'CALIENTE'])
         tasa = round((clientes / total * 100), 1) if total > 0 else 0
-
         hoy = datetime.now()
         for lead in leads:
             try:
@@ -609,7 +586,6 @@ def detalle_asesor(cliente_id, asesor_id):
                 lead['dias'] = (hoy - fecha).days
             except:
                 lead['dias'] = 0
-
         color = vendedor.get('color_primario', '#667eea')
         return render_template("asesor_detalle.html",
                                asesor=asesor, leads=leads, vendedor=vendedor,
@@ -617,7 +593,6 @@ def detalle_asesor(cliente_id, asesor_id):
                                total=total, clientes=clientes,
                                calientes=calientes, tasa=tasa)
     except Exception as e:
-        print(f"Error en detalle asesor: {e}")
         return f"Error: {e}", 500
 
 @app.route("/leads/<cliente_id>/asignar/<int:lead_id>", methods=["POST"])
@@ -663,6 +638,21 @@ def respuesta_sugerida(cliente_id, lead_id):
         return jsonify({"respuesta": "Lead no encontrado"}), 404
     except Exception as e:
         return jsonify({"respuesta": "Error generando respuesta"}), 500
+
+@app.route("/leads/<cliente_id>/etapa/<int:lead_id>", methods=["POST"])
+def actualizar_etapa(cliente_id, lead_id):
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return "No autorizado", 403
+    try:
+        nueva_etapa = request.form.get("etapa", "nuevo")
+        etapas_validas = ['nuevo', 'contactado', 'visita', 'propuesta', 'cerrado']
+        if nueva_etapa not in etapas_validas:
+            return "Etapa inválida", 400
+        supabase.table("leads").update({"etapa": nueva_etapa}).eq("id", lead_id).execute()
+        return jsonify({"ok": True, "etapa": nueva_etapa})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
 
 # ============================================================
 # RUTAS PRINCIPALES
@@ -716,7 +706,8 @@ def formulario(cliente_id):
             "temperatura": temperatura,
             "estado": "Nuevo",
             "email": email_prospecto,
-            "seguimiento_enviado": False
+            "seguimiento_enviado": False,
+            "etapa": "nuevo"
         }
         try:
             supabase.table("leads").insert(lead_data).execute()
@@ -772,7 +763,8 @@ def formulario_asesor(cliente_id, asesor_usuario):
             "estado": "Nuevo",
             "email": email_prospecto,
             "seguimiento_enviado": False,
-            "asesor_id": asesor["id"] if asesor else None
+            "asesor_id": asesor["id"] if asesor else None,
+            "etapa": "nuevo"
         }
         try:
             supabase.table("leads").insert(lead_data).execute()
@@ -820,6 +812,47 @@ def historial(cliente_id):
         asesores = get_asesores_de_cliente(id_clean)
     return render_template("historial.html",
                            leads=leads, cliente=vendedor, textos=textos,
+                           idioma_actual=idioma, asesores=asesores,
+                           es_dueno=es_dueno(),
+                           asesor_nombre=session.get('asesor_nombre', ''))
+
+@app.route("/kanban/<cliente_id>")
+def kanban(cliente_id):
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return redirect(url_for('login', cliente_id=id_clean))
+    vendedor = get_cliente(id_clean)
+    if not vendedor: return "Error 404", 404
+    idioma = session.get('idioma', get_idioma_default(vendedor))
+    textos = DICCIONARIO.get(idioma, DICCIONARIO['es'])
+    query = supabase.table("leads").select("*").eq("vendedor", id_clean)
+    asesor_id = session.get('asesor_id')
+    if asesor_id:
+        query = query.eq("asesor_id", asesor_id)
+    resultado = query.order("score", desc=True).execute()
+    leads = resultado.data or []
+    hoy = datetime.now()
+    for lead in leads:
+        try:
+            fecha = datetime.strptime(lead.get("fecha", "").split(" ")[0], "%Y-%m-%d")
+            lead['dias'] = (hoy - fecha).days
+        except:
+            lead['dias'] = 0
+        if not lead.get('etapa'):
+            lead['etapa'] = 'nuevo'
+    etapas = {
+        'nuevo':      [l for l in leads if l.get('etapa') == 'nuevo'],
+        'contactado': [l for l in leads if l.get('etapa') == 'contactado'],
+        'visita':     [l for l in leads if l.get('etapa') == 'visita'],
+        'propuesta':  [l for l in leads if l.get('etapa') == 'propuesta'],
+        'cerrado':    [l for l in leads if l.get('etapa') == 'cerrado'],
+    }
+    asesores = []
+    if es_dueno():
+        asesores = get_asesores_de_cliente(id_clean)
+    return render_template("kanban.html",
+                           etapas=etapas, leads=leads,
+                           cliente=vendedor, textos=textos,
                            idioma_actual=idioma, asesores=asesores,
                            es_dueno=es_dueno(),
                            asesor_nombre=session.get('asesor_nombre', ''))
@@ -1000,7 +1033,7 @@ def marcar_cliente(cliente_id, lead_id):
             lead = resultado.data[0]
             supabase.table("leads").update({
                 "temperatura": "MUY_CALIENTE", "clasificacion": "💎 CLIENTE",
-                "seguimiento_enviado": True
+                "seguimiento_enviado": True, "etapa": "cerrado"
             }).eq("id", lead_id).execute()
             notificar_vendedor_cliente_marcado(
                 cliente_id=id_clean, nombre=lead.get("nombre"), telefono=lead.get("telefono"),
@@ -1029,7 +1062,8 @@ def desmarcar_cliente(cliente_id, lead_id):
         clasificacion_nueva, temperatura_nueva = calificar_lead_profesional(score_nuevo)
         supabase.table("leads").update({
             "score": score_nuevo, "clasificacion": clasificacion_nueva,
-            "temperatura": temperatura_nueva, "seguimiento_enviado": False
+            "temperatura": temperatura_nueva, "seguimiento_enviado": False,
+            "etapa": "contactado"
         }).eq("id", lead_id).execute()
         return redirect(url_for('historial', cliente_id=id_clean))
     except Exception as e:
@@ -1053,8 +1087,6 @@ def login(cliente_id):
     if request.method == "POST":
         usuario_form = request.form.get("usuario", "").strip()
         password_form = request.form.get("password", "").strip()
-
-        # 1. Verificar dueño
         if usuario_form == vendedor["usuario"] and \
            verificar_password(password_form, vendedor["password"]):
             session["cliente"] = id_clean
@@ -1062,8 +1094,6 @@ def login(cliente_id):
             session.pop("asesor_id", None)
             session.pop("asesor_nombre", None)
             return redirect(url_for('seleccion_idioma', cliente_id=id_clean))
-
-        # 2. Verificar asesor
         try:
             asesores_r = supabase.table("asesores").select("*") \
                 .eq("cliente_id", id_clean) \
@@ -1079,7 +1109,6 @@ def login(cliente_id):
                     return redirect(url_for('historial', cliente_id=id_clean))
         except Exception as e:
             print(f"⚠️ Error consultando asesores: {e}")
-
         print(f"⚠️ Login fallido para {id_clean} desde {get_remote_address()}")
         return render_template("login.html", error="Credenciales Invalidas", cliente=vendedor, textos=textos)
     return render_template("login.html", cliente=vendedor, textos=textos)
