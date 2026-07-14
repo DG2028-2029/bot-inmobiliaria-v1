@@ -9,8 +9,6 @@
         :root { --color: {{ cliente.color_primario or '#667eea' }}; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f2f6; padding: 16px; }
-
-        /* TOP BAR */
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
         .lang-selector { position: relative; display: inline-block; }
         .lang-selector-btn { display: flex; align-items: center; gap: 6px; background: white; border: 1px solid #ddd; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 13px; font-weight: 600; color: #2c3e50; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
@@ -23,8 +21,6 @@
         .lang-menu a:hover { background: #f8f9fa; }
         .btn-logout { background: #e74c3c; color: white; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: bold; font-size: 13px; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .btn-logout:hover { background: #c0392b; }
-
-        /* BANNERS */
         .logout-bar { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 10px 16px; margin-bottom: 12px; font-size: 13px; color: #856404; }
         .asesor-banner { background: linear-gradient(135deg, var(--color), #1a1a2e); color: white; padding: 10px 16px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         .alerta-riesgo { background: linear-gradient(135deg, #7f0000, #c0392b); color: white; padding: 14px 20px; border-radius: 10px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(192,57,43,0.3); gap: 12px; flex-wrap: wrap; }
@@ -32,8 +28,6 @@
         .alerta-riesgo .texto strong { font-size: 15px; display: block; margin-bottom: 2px; }
         .alerta-riesgo .texto { font-size: 13px; line-height: 1.5; }
         .alerta-hint { font-size: 12px; opacity: 0.85; text-align: right; flex-shrink: 0; }
-
-        /* HEADER */
         .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; background: white; padding: 14px 18px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); border-left: 5px solid var(--color); }
         .header-left { display: flex; align-items: center; gap: 12px; }
         .header-logo { width: 44px; height: 44px; border-radius: 10px; object-fit: contain; border: 2px solid var(--color); }
@@ -51,25 +45,21 @@
         .btn-excel:hover { background: #219150; }
         .btn-asesores { background: #2c3e50; color: white; border: none; padding: 9px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; }
         .btn-asesores:hover { background: #1a252f; }
-
-        /* BÚSQUEDA */
+        .btn-pipeline { background: #9b59b6; color: white; text-decoration: none; padding: 9px 16px; border-radius: 8px; font-weight: bold; transition: 0.3s; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; }
+        .btn-pipeline:hover { background: #7d3c98; }
         .search-container { background: white; padding: 12px; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; gap: 8px; align-items: center; }
         .search-container input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; min-width: 0; }
         .search-container input:focus { outline: none; border-color: var(--color); }
         .btn-search { background: #2c3e50; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: bold; white-space: nowrap; }
         .btn-clear { background: #ecf0f1; color: #555; text-decoration: none; padding: 10px 14px; border-radius: 8px; font-size: 13px; display: flex; align-items: center; white-space: nowrap; }
-
-        /* TABLA DESKTOP */
         .tabla-wrapper { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.07); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1100px; }
         th { background: var(--color); color: white; padding: 12px 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; white-space: nowrap; }
         td { padding: 10px 8px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 11px; vertical-align: middle; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #fafbff; }
         tr.en-riesgo td { background: #fff5f5 !important; }
         tr.en-riesgo:hover td { background: #ffe8e8 !important; }
-
-        /* CARDS MÓVIL */
         .cards-mobile { display: none; }
         .lead-card { background: white; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--color); }
         .lead-card.en-riesgo { border-left-color: #7f0000; background: #fff5f5; }
@@ -81,16 +71,11 @@
         .lead-card-label { color: #999; }
         .lead-card-valor { color: #2c3e50; font-weight: 600; text-align: right; }
         .lead-card-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-        .lead-card-actions button, .lead-card-actions a { flex: 1; padding: 10px; border-radius: 8px; border: none; cursor: pointer; font-size: 12px; font-weight: bold; text-align: center; text-decoration: none; display: inline-block; min-width: 80px; }
-
-        /* BADGES */
         .badge { display: inline-block; padding: 3px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; }
         .badge-alto { background: #fdf2f2; color: #e74c3c; border: 1px solid #f5b7b1; }
         .badge-medio { background: #fef9e7; color: #d68910; border: 1px solid #fad7a0; }
         .badge-bajo { background: #f4f6f7; color: #7f8c8d; border: 1px solid #d5dbdb; }
         .badge-cliente { background: #eaf4fb; color: #1a5276; border: 1px solid #aed6f1; }
-
-        /* SCORE */
         .score-cell { min-width: 75px; }
         .score-bar-wrap { background: #ecf0f1; border-radius: 6px; height: 5px; margin-bottom: 3px; overflow: hidden; }
         .score-bar { height: 100%; border-radius: 6px; }
@@ -101,29 +86,26 @@
         .score-num.alto  { color: #27ae60; }
         .score-num.medio { color: #d68910; }
         .score-num.bajo  { color: #e74c3c; }
-
-        /* TEMP */
         .temp-pill { display: inline-block; padding: 3px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; }
         .temp-MUY_CALIENTE { background: #fdf2f2; color: #c0392b; border: 1px solid #f5b7b1; }
         .temp-CALIENTE     { background: #fef5ec; color: #d35400; border: 1px solid #fad7a0; }
         .temp-MEDIO        { background: #fefde7; color: #b7950b; border: 1px solid #f9e79f; }
         .temp-FRIO         { background: #eaf4fb; color: #1a5276; border: 1px solid #aed6f1; }
-
-        /* DÍAS */
         .dias-badge { display: inline-block; padding: 3px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; }
         .dias-nuevo  { background: #e8f8f0; color: #27ae60; border: 1px solid #a9dfbf; }
         .dias-ok     { background: #fefde7; color: #b7950b; border: 1px solid #f9e79f; }
         .dias-alerta { background: #fdf2f2; color: #c0392b; border: 1px solid #f5b7b1; }
         .dias-riesgo { display: inline-block; padding: 3px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; background: #7f0000; color: white; border: 1px solid #5c0000; animation: pulso 1.5s infinite; }
         @keyframes pulso { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-
-        /* NOTAS */
-        .nota-cell { max-width: 130px; }
-        .nota-texto { font-size: 11px; color: #666; cursor: pointer; padding: 4px 6px; border-radius: 4px; border: 1px dashed #ddd; min-height: 26px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; display: block; transition: 0.2s; }
+        /* EMAIL BADGE */
+        .email-si { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; background: #e8f8f0; color: #27ae60; border: 1px solid #a9dfbf; }
+        .email-no { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; background: #fdf2f2; color: #e74c3c; border: 1px solid #f5b7b1; }
+        .seguimiento-si { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; background: #eaf4fb; color: #1a5276; border: 1px solid #aed6f1; }
+        .seguimiento-no { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; background: #fef9e7; color: #d68910; border: 1px solid #fad7a0; }
+        .nota-cell { max-width: 120px; }
+        .nota-texto { font-size: 11px; color: #666; cursor: pointer; padding: 4px 6px; border-radius: 4px; border: 1px dashed #ddd; min-height: 26px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; display: block; transition: 0.2s; }
         .nota-texto:hover { border-color: var(--color); background: #f8f9ff; }
         .nota-input { display: none; width: 100%; font-size: 11px; padding: 4px 6px; border: 1px solid var(--color); border-radius: 4px; font-family: inherit; resize: none; }
-
-        /* BOTONES TABLA */
         .btn-marcar-cliente { background: var(--color); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; transition: 0.2s; width: 100%; }
         .btn-marcar-cliente:hover { opacity: 0.85; }
         .btn-desmarcar-cliente { background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; transition: 0.2s; width: 100%; }
@@ -132,13 +114,10 @@
         .btn-respuesta:hover { background: #e8f4fd; border-color: var(--color); color: var(--color); }
         .btn-whatsapp-quick { background: #25D366; color: white; border: none; padding: 5px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; width: 100%; margin-top: 4px; font-weight: bold; transition: 0.2s; }
         .btn-whatsapp-quick:hover { background: #128C7E; }
-
         .select-asesor { font-size: 11px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 6px; width: 100%; background: white; cursor: pointer; }
         .select-asesor:focus { outline: none; border-color: var(--color); }
         .acciones-container { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 105px; }
         .empty-state { text-align: center; padding: 50px; color: #95a5a6; font-size: 15px; }
-
-        /* MODAL RESPUESTA */
         .modal-respuesta { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); overflow-y: auto; }
         .modal-respuesta-content { background: white; margin: 5% auto; padding: 24px; border-radius: 12px; max-width: 520px; width: 92%; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
         .modal-respuesta-titulo { font-size: 17px; font-weight: 700; color: #2c3e50; margin-bottom: 14px; }
@@ -146,11 +125,9 @@
         .modal-btns { display: flex; gap: 8px; flex-direction: column; }
         .btn-copiar { background: var(--color); color: white; border: none; padding: 11px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; transition: 0.2s; }
         .btn-copiar:hover { opacity: 0.88; }
-        .btn-whatsapp-modal { background: #25D366; color: white; border: none; padding: 11px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-whatsapp-modal { background: #25D366; color: white; border: none; padding: 11px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; transition: 0.2s; }
         .btn-whatsapp-modal:hover { background: #128C7E; }
         .btn-cerrar-modal { background: #ecf0f1; color: #555; border: none; padding: 11px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; width: 100%; margin-top: 4px; }
-
-        /* MODAL ASESORES */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); overflow-y: auto; }
         .modal-content { background: white; margin: 4% auto; padding: 24px; border-radius: 12px; max-width: 620px; width: 92%; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 2px solid #ecf0f1; padding-bottom: 12px; }
@@ -178,34 +155,22 @@
         .form-group-modal input:focus { outline: none; border-color: var(--color); background: white; }
         .btn-crear-asesor { width: 100%; padding: 11px; margin-top: 12px; background: var(--color); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; }
         .btn-crear-asesor:hover { opacity: 0.88; }
-
-        /* ===================== RESPONSIVE MÓVIL ===================== */
         @media (max-width: 768px) {
             body { padding: 10px; }
-
             .header-container { padding: 12px 14px; }
             .header-container h2 { font-size: 15px; }
             .header-logo, .header-logo-placeholder { width: 36px; height: 36px; font-size: 16px; }
             .header-buttons { gap: 6px; }
-            .btn-inventario, .btn-herramientas, .btn-stats, .btn-excel, .btn-asesores {
-                padding: 8px 10px; font-size: 11px;
-            }
-
+            .btn-inventario, .btn-herramientas, .btn-stats, .btn-excel, .btn-asesores, .btn-pipeline { padding: 8px 10px; font-size: 11px; }
             .alerta-riesgo { flex-direction: column; }
             .alerta-hint { text-align: left; }
-
-            /* Ocultar tabla en móvil, mostrar cards */
             .tabla-wrapper { display: none; }
             .cards-mobile { display: block; }
-
             .form-grid-2 { grid-template-columns: 1fr; }
             .modal-content { margin: 2% auto; padding: 16px; }
             .modal-respuesta-content { margin: 2% auto; padding: 16px; }
         }
-
-        @media (min-width: 769px) {
-            .cards-mobile { display: none; }
-        }
+        @media (min-width: 769px) { .cards-mobile { display: none; } }
     </style>
 </head>
 <body>
@@ -242,9 +207,10 @@
         <h2>📊 {{ textos.historial_titulo }}: <span>{{ cliente.nombre }}</span></h2>
     </div>
     <div class="header-buttons">
-        <a href="{{ url_for('inventario', cliente_id=cliente.usuario) }}" class="btn-inventario">{{ textos.btn_inventario }}</a>
-        <a href="{{ url_for('herramientas', cliente_id=cliente.usuario) }}" class="btn-herramientas">{{ textos.btn_herramientas }}</a>
-        <a href="{{ url_for('stats', cliente_id=cliente.usuario) }}" class="btn-stats">{{ textos.btn_estadisticas }}</a>
+        <a href="{{ url_for('inventario', cliente_id=cliente.usuario) }}" class="btn-inventario">🏠 {{ textos.btn_inventario }}</a>
+        <a href="{{ url_for('herramientas', cliente_id=cliente.usuario) }}" class="btn-herramientas">🔧 {{ textos.btn_herramientas }}</a>
+        <a href="{{ url_for('stats', cliente_id=cliente.usuario) }}" class="btn-stats">📈 {{ textos.btn_estadisticas }}</a>
+        <a href="{{ url_for('kanban', cliente_id=cliente.usuario) }}" class="btn-pipeline">📋 Pipeline</a>
         <button onclick="descargarExcel()" class="btn-excel">📥 {{ textos.btn_descargar }}</button>
         {% if es_dueno %}
         <button onclick="abrirModalAsesores()" class="btn-asesores">👥 Asesores ({{ asesores | length }})</button>
@@ -294,6 +260,8 @@
                 <th>{{ textos.col_clasificacion }}</th>
                 <th>{{ textos.col_score }}</th>
                 <th>{{ textos.col_temperatura }}</th>
+                <th>📧 Email</th>
+                <th>✉️ Seg.</th>
                 <th>Notas</th>
                 {% if es_dueno and asesores %}<th>Asesor</th>{% endif %}
                 <th>{{ textos.col_acciones }}</th>
@@ -324,6 +292,20 @@
                     <span class="score-num {{ score_clase }}">{{ score }}/100</span>
                 </td>
                 <td><span class="temp-pill temp-{{ lead.temperatura }}">{{ textos['temp_' + lead.temperatura] if ('temp_' + lead.temperatura) in textos else lead.temperatura }}</span></td>
+                <td>
+                    {% if lead.email %}
+                    <span class="email-si" title="{{ lead.email }}">✅ Sí</span>
+                    {% else %}
+                    <span class="email-no">❌ No</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if lead.seguimiento_enviado %}
+                    <span class="seguimiento-si">✅ Enviado</span>
+                    {% else %}
+                    <span class="seguimiento-no">⏳ Pendiente</span>
+                    {% endif %}
+                </td>
                 <td class="nota-cell">
                     <span class="nota-texto" onclick="editarNota(this, {{ lead.id }})" title="Click para editar">{{ lead.notas or '+ Nota...' }}</span>
                     <textarea class="nota-input" rows="2" onblur="guardarNota(this, {{ lead.id }})">{{ lead.notas or '' }}</textarea>
@@ -350,12 +332,12 @@
                         </form>
                         {% endif %}
                         <button class="btn-respuesta" onclick="verRespuesta({{ lead.id }}, '{{ lead.nombre }}', '{{ lead.telefono }}')">💬 ¿Qué decirle?</button>
-                        <button class="btn-whatsapp-quick" onclick="abrirWhatsAppDirecto('{{ lead.telefono }}', {{ lead.id }}, '{{ lead.nombre }}')">📱 WhatsApp</button>
+                        <button class="btn-whatsapp-quick" onclick="abrirWhatsAppDirecto('{{ lead.telefono }}', {{ lead.id }})">📱 WhatsApp</button>
                     </div>
                 </td>
             </tr>
             {% else %}
-            <tr><td colspan="12" class="empty-state">{{ textos.no_leads }}</td></tr>
+            <tr><td colspan="14" class="empty-state">{{ textos.no_leads }}</td></tr>
             {% endfor %}
         </tbody>
     </table>
@@ -387,12 +369,9 @@
         <div class="lead-card-row"><span class="lead-card-label">📱 Teléfono</span><span class="lead-card-valor"><a href="https://wa.me/{{ lead.telefono }}" style="color:#27ae60;font-weight:bold;">{{ lead.telefono }}</a></span></div>
         <div class="lead-card-row"><span class="lead-card-label">📍 Zona</span><span class="lead-card-valor">{{ lead.zona_interes }}</span></div>
         <div class="lead-card-row"><span class="lead-card-label">💰 Presupuesto</span><span class="lead-card-valor" style="color:#27ae60;">${{ "{:,.0f}".format(lead.presupuesto|float) if lead.presupuesto else "0" }}</span></div>
-        <div class="lead-card-row">
-            <span class="lead-card-label">📊 Score</span>
-            <span class="lead-card-valor">
-                <span class="score-num {{ score_clase }}">{{ score }}/100</span>
-            </span>
-        </div>
+        <div class="lead-card-row"><span class="lead-card-label">📧 Email</span><span class="lead-card-valor">{% if lead.email %}<span class="email-si">✅ Sí</span>{% else %}<span class="email-no">❌ No</span>{% endif %}</span></div>
+        <div class="lead-card-row"><span class="lead-card-label">✉️ Seguimiento</span><span class="lead-card-valor">{% if lead.seguimiento_enviado %}<span class="seguimiento-si">✅</span>{% else %}<span class="seguimiento-no">⏳</span>{% endif %}</span></div>
+        <div class="lead-card-row"><span class="lead-card-label">📊 Score</span><span class="lead-card-valor"><span class="score-num {{ score_clase }}">{{ score }}/100</span></span></div>
         <div class="lead-card-row"><span class="lead-card-label">🌡️ Temperatura</span><span class="lead-card-valor"><span class="temp-pill temp-{{ lead.temperatura }}">{{ lead.temperatura }}</span></span></div>
         {% if lead.notas %}<div class="lead-card-row"><span class="lead-card-label">📝 Nota</span><span class="lead-card-valor" style="font-size:11px;">{{ lead.notas }}</span></div>{% endif %}
         <div class="lead-card-actions">
@@ -402,7 +381,7 @@
             </form>
             {% endif %}
             <button onclick="verRespuesta({{ lead.id }}, '{{ lead.nombre }}', '{{ lead.telefono }}')" style="background:#f8f9fa;color:#2c3e50;border:1px solid #ddd;flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:bold;">💬 ¿Qué decir?</button>
-            <button onclick="abrirWhatsAppDirecto('{{ lead.telefono }}', {{ lead.id }}, '{{ lead.nombre }}')" style="background:#25D366;color:white;flex:1;padding:10px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:bold;">📱 WhatsApp</button>
+            <button onclick="abrirWhatsAppDirecto('{{ lead.telefono }}', {{ lead.id }})" style="background:#25D366;color:white;flex:1;padding:10px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:bold;">📱 WhatsApp</button>
         </div>
     </div>
     {% else %}
@@ -417,9 +396,7 @@
         <div class="modal-respuesta-texto" id="textoRespuesta">Analizando situación...</div>
         <div class="modal-btns">
             <button class="btn-copiar" onclick="copiarRespuesta()">📋 Copiar mensaje</button>
-            <button class="btn-whatsapp-modal" onclick="enviarPorWhatsApp()" id="btnWhatsAppModal">
-                📱 Abrir en WhatsApp con este mensaje
-            </button>
+            <button class="btn-whatsapp-modal" onclick="enviarPorWhatsApp()">📱 Abrir en WhatsApp con este mensaje</button>
             <button class="btn-cerrar-modal" onclick="cerrarModalRespuesta()">Cerrar</button>
         </div>
     </div>
@@ -529,7 +506,6 @@ function guardarNota(textarea, leadId) {
     });
 }
 
-// RESPUESTA SUGERIDA — guarda teléfono para WhatsApp
 function verRespuesta(leadId, nombre, telefono) {
     telefonoActual = telefono;
     mensajeActual = '';
@@ -544,22 +520,18 @@ function verRespuesta(leadId, nombre, telefono) {
         });
 }
 
-// BOTÓN WHATSAPP DIRECTO — obtiene mensaje y abre WhatsApp
-function abrirWhatsAppDirecto(telefono, leadId, nombre) {
+function abrirWhatsAppDirecto(telefono, leadId) {
     telefonoActual = telefono;
     fetch(`/leads/${clienteId}/respuesta/${leadId}`)
         .then(r => r.json())
         .then(data => {
-            const msg = data.respuesta;
-            const url = `https://wa.me/${telefono}?text=${encodeURIComponent(msg)}`;
-            window.open(url, '_blank');
+            window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(data.respuesta)}`, '_blank');
         });
 }
 
 function enviarPorWhatsApp() {
     if (!telefonoActual || !mensajeActual) return;
-    const url = `https://wa.me/${telefonoActual}?text=${encodeURIComponent(mensajeActual)}`;
-    window.open(url, '_blank');
+    window.open(`https://wa.me/${telefonoActual}?text=${encodeURIComponent(mensajeActual)}`, '_blank');
 }
 
 function cerrarModalRespuesta() { document.getElementById('modalRespuesta').style.display = 'none'; }
