@@ -7,7 +7,6 @@ from supabase import create_client
 RESEND_API_URL = "https://api.resend.com/emails"
 REMITENTE = "onboarding@resend.dev"
 
-# --- SUPABASE ---
 def _get_supabase():
     url = os.environ.get("SUPABASE_URL")
     key = os.environ.get("SUPABASE_KEY")
@@ -24,7 +23,6 @@ def _get_cliente(cliente_id):
         print(f"❌ Error obteniendo cliente {cliente_id}: {e}")
         return None
 
-# --- ENVÍO BASE ---
 def _enviar(api_key, to, subject, html):
     try:
         r = requests.post(
@@ -35,13 +33,16 @@ def _enviar(api_key, to, subject, html):
             },
             json={"from": REMITENTE, "to": [to], "subject": subject, "html": html}
         )
-        print(f"✅ Email enviado a {to} | Status: {r.status_code}")
-        return r.status_code == 200
+        if r.status_code in (200, 201):
+            print(f"✅ Email enviado a {to} | Status: {r.status_code}")
+            return True
+        else:
+            print(f"❌ Resend rechazó el email | Status: {r.status_code} | Error: {r.text}")
+            return False
     except Exception as e:
         print(f"❌ Error enviando email: {e}")
         return False
 
-# --- EMAIL 1: Confirmación al prospecto cuando llega ---
 def enviar_email_cliente(cliente_id, nombre_prospecto, email_prospecto):
     vendedor = _get_cliente(cliente_id)
     if not vendedor or not vendedor.get("premium_email"):
@@ -64,9 +65,7 @@ def enviar_email_cliente(cliente_id, nombre_prospecto, email_prospecto):
                     encontrar mejores oportunidades. Mantente atento a nuestra llamada.
                 </p>
             </div>
-            <p style="color:#555;font-size:14px;">
-                Si tienes alguna pregunta urgente, escríbenos directamente:
-            </p>
+            <p style="color:#555;font-size:14px;">Si tienes alguna pregunta urgente, escríbenos directamente:</p>
             <div style="text-align:center;margin:24px 0;">
                 <a href="https://wa.me/{vendedor.get('whatsapp','')}"
                    style="background:#25D366;color:white;padding:13px 28px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;">
@@ -79,14 +78,14 @@ def enviar_email_cliente(cliente_id, nombre_prospecto, email_prospecto):
         </div>
     </div>
     """
+    # Con onboarding@resend.dev solo funciona al email del vendedor verificado
     _enviar(
         vendedor["email_api_key"],
-        email_prospecto,
-        f"✅ Recibimos tu información — {vendedor['nombre']}",
+        vendedor["email_vendedor"],
+        f"✅ Nuevo prospecto registrado: {nombre_prospecto} — {vendedor['nombre']}",
         html
     )
 
-# --- EMAIL 2: Notificación al vendedor cuando llega lead nuevo ---
 def notificar_vendedor_lead_nuevo(cliente_id, nombre, telefono, zona, presupuesto, mensaje, score, email_prospecto=""):
     vendedor = _get_cliente(cliente_id)
     if not vendedor or not vendedor.get("premium_email"):
@@ -95,18 +94,19 @@ def notificar_vendedor_lead_nuevo(cliente_id, nombre, telefono, zona, presupuest
     color_score = "#27ae60" if score >= 65 else ("#f39c12" if score >= 35 else "#e74c3c")
     emoji_score = "🔥" if score >= 65 else ("🟡" if score >= 35 else "❄️")
     nivel = "ALTO — Contactar en los próximos 30 minutos" if score >= 65 else ("MEDIO — Seguimiento esta semana" if score >= 35 else "BAJO — Seguimiento automático activado")
-
     try:
         presupuesto_num = float(re.sub(r'[^\d.]', '', str(presupuesto)))
         presupuesto_fmt = f"${presupuesto_num:,.0f}"
     except:
         presupuesto_fmt = f"${presupuesto}"
 
+    wa_msg = requests.utils.quote(f'Hola {nombre}, vi tu consulta sobre propiedades en {zona}. ¿Tienes un momento para hablar?')
+
     html = f"""
     <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#f8f9fa;padding:0;border-radius:12px;overflow:hidden;">
-        <div style="background:{color};padding:22px 30px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="background:{color};padding:22px 30px;text-align:center;">
             <h1 style="color:white;margin:0;font-size:20px;">🎯 Nuevo Lead — {vendedor['nombre']}</h1>
-            <span style="background:rgba(255,255,255,0.25);color:white;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:bold;">
+            <span style="background:rgba(255,255,255,0.25);color:white;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:bold;display:inline-block;margin-top:8px;">
                 {emoji_score} Score: {score}/100
             </span>
         </div>
@@ -138,7 +138,7 @@ def notificar_vendedor_lead_nuevo(cliente_id, nombre, telefono, zona, presupuest
                 </tr>
             </table>
             <div style="text-align:center;margin-top:24px;">
-                <a href="https://wa.me/{telefono}?text={requests.utils.quote(f'Hola {nombre}, vi tu consulta sobre propiedades en {zona}. ¿Tienes un momento para hablar?')}"
+                <a href="https://wa.me/{telefono}?text={wa_msg}"
                    style="background:#25D366;color:white;padding:13px 28px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;">
                     💬 Contactar por WhatsApp ahora
                 </a>
@@ -158,7 +158,6 @@ def notificar_vendedor_lead_nuevo(cliente_id, nombre, telefono, zona, presupuest
         html
     )
 
-# --- EMAIL 3: Confirmación al vendedor cuando marca un cliente ---
 def notificar_vendedor_cliente_marcado(cliente_id, nombre, telefono, zona, presupuesto):
     vendedor = _get_cliente(cliente_id)
     if not vendedor or not vendedor.get("premium_email"):
@@ -220,12 +219,14 @@ def notificar_vendedor_cliente_marcado(cliente_id, nombre, telefono, zona, presu
         html
     )
 
-# --- EMAIL 4: Seguimiento automático a los 3 días con técnica de venta ---
 def enviar_seguimiento_automatico(cliente_id, nombre, telefono, email_prospecto, zona, presupuesto):
+    """
+    Con onboarding@resend.dev solo se puede enviar al email verificado del vendedor.
+    Mandamos un recordatorio AL VENDEDOR con toda la info y botón WhatsApp directo.
+    Cuando tengas dominio propio en Resend, cambia vendedor["email_vendedor"] por email_prospecto.
+    """
     vendedor = _get_cliente(cliente_id)
     if not vendedor or not vendedor.get("premium_email"):
-        return False
-    if not email_prospecto:
         return False
 
     color = vendedor.get("color_primario", "#667eea")
@@ -235,65 +236,96 @@ def enviar_seguimiento_automatico(cliente_id, nombre, telefono, email_prospecto,
         presupuesto_num = float(re.sub(r'[^\d.]', '', str(presupuesto)))
         presupuesto_fmt = f"${presupuesto_num:,.0f}"
         if presupuesto_num >= 1000000:
-            urgencia = "Con un presupuesto como el suyo, las mejores propiedades en " + zona + " se mueven rápido."
+            urgencia = f"Lead de alto valor — {presupuesto_fmt}. Prioridad máxima."
+            prioridad_color = "#e74c3c"
         elif presupuesto_num >= 150000:
-            urgencia = "En " + zona + " hay opciones excelentes en su rango que no duran mucho en el mercado."
+            urgencia = f"Presupuesto sólido de {presupuesto_fmt}. Vale la pena contactar hoy."
+            prioridad_color = "#f39c12"
         else:
-            urgencia = "Hay propiedades disponibles en " + zona + " que podrían encajar perfectamente con lo que busca."
+            urgencia = f"Presupuesto de {presupuesto_fmt}. Seguimiento estándar."
+            prioridad_color = "#3498db"
     except:
         presupuesto_fmt = f"${presupuesto}"
-        urgencia = f"Hay propiedades disponibles en {zona} que podrían interesarle."
+        urgencia = "Revisar presupuesto directamente con el prospecto."
+        prioridad_color = "#3498db"
+
+    wa_msg = requests.utils.quote(
+        f'Hola {nombre_corto}, soy de {vendedor["nombre"]}. '
+        f'Le escribo porque hace unos días registró su interés en propiedades en {zona}. '
+        f'¿Sigue buscando? Tenemos opciones nuevas que podrían interesarle.'
+    )
 
     html = f"""
     <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#f8f9fa;padding:0;border-radius:12px;overflow:hidden;">
-        <div style="background:{color};padding:24px 30px;text-align:center;">
-            <div style="font-size:36px;margin-bottom:8px;">🏠</div>
-            <h1 style="color:white;margin:0;font-size:20px;">{vendedor['nombre']}</h1>
+        <div style="background:linear-gradient(135deg,{color},#1a1a2e);padding:22px 30px;text-align:center;">
+            <div style="font-size:32px;margin-bottom:6px;">⏰</div>
+            <h1 style="color:white;margin:0;font-size:20px;">Recordatorio de Seguimiento</h1>
+            <p style="color:rgba(255,255,255,0.8);margin:6px 0 0;font-size:13px;">{vendedor['nombre']}</p>
         </div>
-        <div style="background:white;padding:28px 30px;">
-            <h2 style="color:#2c3e50;font-size:18px;margin-bottom:16px;">
-                Hola <strong>{nombre_corto}</strong>, ¿todavía buscas en {zona}?
-            </h2>
-            <p style="color:#555;font-size:15px;line-height:1.8;">
-                Hace unos días nos escribiste sobre propiedades en <strong>{zona}</strong>
-                con un presupuesto de <strong>{presupuesto_fmt}</strong>.
-            </p>
-            <p style="color:#555;font-size:15px;line-height:1.8;margin-top:10px;">
-                {urgencia}
-            </p>
-            <div style="background:#fff8e1;border-left:4px solid #f39c12;padding:14px 18px;border-radius:6px;margin:20px 0;">
+        <div style="background:white;padding:24px 30px;">
+            <div style="background:#fff8e1;border-left:4px solid #f39c12;padding:14px 18px;border-radius:6px;margin-bottom:20px;">
                 <p style="margin:0;color:#856404;font-size:14px;font-weight:bold;">
-                    ⏰ Las propiedades en {zona} que más nos piden tienen alta demanda este mes.
-                    Si quiere asegurar las mejores opciones, este es el momento.
+                    🔔 Este prospecto lleva más de 3 días registrado sin convertirse.
+                    Es momento de contactarlo directamente.
                 </p>
             </div>
-            <p style="color:#555;font-size:14px;line-height:1.7;">
-                ¿Le gustaría que le enviemos opciones personalizadas o agendamos una llamada
-                de 10 minutos esta semana?
-            </p>
-            <div style="text-align:center;margin:28px 0 10px;">
-                <a href="https://wa.me/{telefono}?text={requests.utils.quote(f'Hola {nombre_corto}, soy del equipo de {vendedor[chr(39)+chr(110)+chr(111)+chr(109)+chr(98)+chr(114)+chr(101)+chr(39)]}. Le escribo porque tenemos propiedades nuevas en {zona} que podrían interesarle. ¿Tiene un momento para hablar?')}"
-                   style="background:#25D366;color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;margin-bottom:12px;">
-                    💬 Sí, quiero ver opciones por WhatsApp
-                </a>
-                <br>
-                <a href="mailto:{vendedor['email_vendedor']}"
-                   style="color:{color};font-size:13px;text-decoration:none;">
-                    📧 O responda este email directamente
+            <table style="width:100%;border-collapse:collapse;">
+                <tr style="border-bottom:1px solid #f0f0f0;">
+                    <td style="padding:10px 0;color:#999;font-size:13px;width:35%;">👤 Nombre</td>
+                    <td style="padding:10px 0;color:#2c3e50;font-weight:bold;font-size:15px;">{nombre}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f0f0f0;">
+                    <td style="padding:10px 0;color:#999;font-size:13px;">📱 Teléfono</td>
+                    <td style="padding:10px 0;color:#2c3e50;font-weight:bold;font-size:15px;">{telefono}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f0f0f0;">
+                    <td style="padding:10px 0;color:#999;font-size:13px;">📧 Email</td>
+                    <td style="padding:10px 0;color:#2c3e50;font-size:14px;">{email_prospecto}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f0f0f0;">
+                    <td style="padding:10px 0;color:#999;font-size:13px;">📍 Zona</td>
+                    <td style="padding:10px 0;color:#2c3e50;font-size:14px;">{zona}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f0f0f0;">
+                    <td style="padding:10px 0;color:#999;font-size:13px;">💰 Presupuesto</td>
+                    <td style="padding:10px 0;color:#27ae60;font-weight:bold;font-size:14px;">{presupuesto_fmt}</td>
+                </tr>
+                <tr>
+                    <td style="padding:10px 0;color:#999;font-size:13px;">📊 Prioridad</td>
+                    <td style="padding:10px 0;font-size:13px;">
+                        <span style="background:{prioridad_color};color:white;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:bold;">
+                            {urgencia}
+                        </span>
+                    </td>
+                </tr>
+            </table>
+            <div style="background:#f0fff4;border-left:4px solid #27ae60;padding:14px 18px;border-radius:6px;margin:20px 0;">
+                <p style="margin:0;color:#2c3e50;font-size:13px;">
+                    💡 <strong>Mensaje sugerido por WhatsApp:</strong><br><br>
+                    <em>"Hola {nombre_corto}, hace unos días buscabas propiedades en {zona}.
+                    Tenemos opciones nuevas que podrían interesarte. ¿Tienes 5 minutos esta semana?"</em>
+                </p>
+            </div>
+            <div style="text-align:center;margin-top:20px;">
+                <a href="https://wa.me/{telefono}?text={wa_msg}"
+                   style="background:#25D366;color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;">
+                    📱 Contactar a {nombre_corto} por WhatsApp
                 </a>
             </div>
         </div>
-        <div style="background:#f8f9fa;padding:16px 30px;border-top:1px solid #eee;">
+        <div style="background:#f8f9fa;padding:14px 30px;border-top:1px solid #eee;">
             <p style="color:#999;font-size:11px;margin:0;text-align:center;">
-                Recibió este mensaje porque registró su interés en propiedades con {vendedor['nombre']}.<br>
-                Si ya encontró lo que buscaba, ignore este mensaje.
+                Recordatorio automático — {datetime.now().strftime('%d/%m/%Y a las %H:%M')} — {vendedor['nombre']}
             </p>
         </div>
     </div>
     """
+
+    # ✅ ENVÍA AL VENDEDOR (no al prospecto) — compatible con onboarding@resend.dev
+    # Cuando tengas dominio propio en Resend, cambia vendedor["email_vendedor"] por email_prospecto
     return _enviar(
         vendedor["email_api_key"],
-        email_prospecto,
-        f"¿Todavía buscas en {zona}? Tenemos opciones para ti — {vendedor['nombre']}",
+        vendedor["email_vendedor"],
+        f"⏰ Seguimiento: {nombre} en {zona} — contactar hoy | {vendedor['nombre']}",
         html
     )
