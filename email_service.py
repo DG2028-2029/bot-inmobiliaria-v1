@@ -78,7 +78,6 @@ def enviar_email_cliente(cliente_id, nombre_prospecto, email_prospecto):
         </div>
     </div>
     """
-    # Con onboarding@resend.dev solo funciona al email del vendedor verificado
     _enviar(
         vendedor["email_api_key"],
         vendedor["email_vendedor"],
@@ -100,7 +99,9 @@ def notificar_vendedor_lead_nuevo(cliente_id, nombre, telefono, zona, presupuest
     except:
         presupuesto_fmt = f"${presupuesto}"
 
-    wa_msg = requests.utils.quote(f'Hola {nombre}, vi tu consulta sobre propiedades en {zona}. ¿Tienes un momento para hablar?')
+    wa_msg = requests.utils.quote(
+        f'Hola {nombre}, vi tu consulta sobre propiedades en {zona}. ¿Tienes un momento para hablar?'
+    )
 
     html = f"""
     <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#f8f9fa;padding:0;border-radius:12px;overflow:hidden;">
@@ -222,8 +223,8 @@ def notificar_vendedor_cliente_marcado(cliente_id, nombre, telefono, zona, presu
 def enviar_seguimiento_automatico(cliente_id, nombre, telefono, email_prospecto, zona, presupuesto):
     """
     Con onboarding@resend.dev solo se puede enviar al email verificado del vendedor.
-    Mandamos un recordatorio AL VENDEDOR con toda la info y botón WhatsApp directo.
-    Cuando tengas dominio propio en Resend, cambia vendedor["email_vendedor"] por email_prospecto.
+    Mandamos recordatorio AL VENDEDOR con info del prospecto y botón WhatsApp directo.
+    Cuando tengas dominio propio en Resend: cambia vendedor["email_vendedor"] por email_prospecto.
     """
     vendedor = _get_cliente(cliente_id)
     if not vendedor or not vendedor.get("premium_email"):
@@ -301,7 +302,7 @@ def enviar_seguimiento_automatico(cliente_id, nombre, telefono, email_prospecto,
             </table>
             <div style="background:#f0fff4;border-left:4px solid #27ae60;padding:14px 18px;border-radius:6px;margin:20px 0;">
                 <p style="margin:0;color:#2c3e50;font-size:13px;">
-                    💡 <strong>Mensaje sugerido por WhatsApp:</strong><br><br>
+                    💡 <strong>Mensaje sugerido:</strong><br><br>
                     <em>"Hola {nombre_corto}, hace unos días buscabas propiedades en {zona}.
                     Tenemos opciones nuevas que podrían interesarte. ¿Tienes 5 minutos esta semana?"</em>
                 </p>
@@ -320,9 +321,6 @@ def enviar_seguimiento_automatico(cliente_id, nombre, telefono, email_prospecto,
         </div>
     </div>
     """
-
-    # ✅ ENVÍA AL VENDEDOR (no al prospecto) — compatible con onboarding@resend.dev
-    # Cuando tengas dominio propio en Resend, cambia vendedor["email_vendedor"] por email_prospecto
     return _enviar(
         vendedor["email_api_key"],
         vendedor["email_vendedor"],
