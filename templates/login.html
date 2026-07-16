@@ -3,189 +3,494 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ textos.login_titulo }} | {{ cliente.nombre }}</title>
+    <title>{{ cliente.nombre }} — Acceso</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
         :root {
             --color: {{ cliente.color_primario or '#667eea' }};
+            --color-dark: color-mix(in srgb, var(--color) 70%, black);
+            --color-light: color-mix(in srgb, var(--color) 15%, white);
         }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, var(--color) 0%, #1a1a2e 100%);
+            font-family: 'Inter', 'Segoe UI', sans-serif;
             min-height: 100vh;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            background: #0a0a0f;
+            overflow: hidden;
         }
-        .lang-wrapper { position: fixed; top: 18px; right: 18px; z-index: 999; }
-        .lang-selector { position: relative; display: inline-block; }
+
+        /* PANEL IZQUIERDO — VISUAL */
+        .left-panel {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 48px;
+            overflow: hidden;
+        }
+
+        .left-bg {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--color) 0%, #0a0a0f 70%);
+        }
+
+        .left-bg::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, color-mix(in srgb, var(--color) 40%, transparent) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, rgba(255,255,255,0.03) 0%, transparent 50%);
+        }
+
+        /* GRID DECORATIVO */
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        /* CÍRCULOS FLOTANTES */
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(1px);
+            opacity: 0.12;
+        }
+        .circle-1 {
+            width: 400px; height: 400px;
+            border: 1px solid rgba(255,255,255,0.4);
+            top: -100px; left: -100px;
+        }
+        .circle-2 {
+            width: 250px; height: 250px;
+            border: 1px solid rgba(255,255,255,0.3);
+            top: 80px; left: 60px;
+        }
+        .circle-3 {
+            width: 160px; height: 160px;
+            background: var(--color);
+            bottom: 120px; right: 80px;
+            opacity: 0.2;
+            filter: blur(40px);
+        }
+
+        /* STATS DECORATIVAS */
+        .stat-cards {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 280px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 14px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            animation: float 6s ease-in-out infinite;
+        }
+        .stat-card:nth-child(2) { animation-delay: 2s; margin-left: 24px; }
+        .stat-card:nth-child(3) { animation-delay: 4s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .stat-icon {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .stat-icon.green { background: rgba(39,174,96,0.2); }
+        .stat-icon.blue { background: rgba(52,152,219,0.2); }
+        .stat-icon.purple { background: rgba(142,68,173,0.2); }
+
+        .stat-info { flex: 1; }
+        .stat-num { color: white; font-size: 20px; font-weight: 700; line-height: 1; }
+        .stat-lbl { color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 2px; }
+
+        /* TEXTO INFERIOR */
+        .left-content { position: relative; z-index: 1; }
+        .left-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 6px 14px;
+            font-size: 12px; color: rgba(255,255,255,0.8);
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        .left-badge span { width: 6px; height: 6px; background: #27ae60; border-radius: 50%; }
+
+        .left-title {
+            font-size: 36px; font-weight: 800;
+            color: white; line-height: 1.15;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+        .left-title em { color: var(--color); font-style: normal; }
+
+        .left-desc {
+            font-size: 15px; color: rgba(255,255,255,0.55);
+            line-height: 1.7; max-width: 360px;
+        }
+
+        /* PANEL DERECHO — FORM */
+        .right-panel {
+            width: 480px;
+            flex-shrink: 0;
+            background: #0f0f16;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 48px 44px;
+            position: relative;
+            border-left: 1px solid rgba(255,255,255,0.06);
+        }
+
+        /* SELECTOR DE IDIOMA */
+        .lang-wrapper {
+            position: absolute;
+            top: 24px; right: 24px;
+        }
+        .lang-selector { position: relative; }
         .lang-selector-btn {
             display: flex; align-items: center; gap: 8px;
-            background: rgba(255,255,255,0.95);
-            border: none; border-radius: 50px;
-            padding: 10px 16px; cursor: pointer;
-            font-size: 14px; font-weight: 700; color: #2c3e50;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2); transition: 0.2s;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px;
+            padding: 8px 12px; cursor: pointer;
+            font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.6);
+            transition: 0.2s; font-family: inherit;
         }
-        .lang-selector-btn:hover { transform: translateY(-1px); }
-        .lang-flag { font-size: 18px; }
-        .lang-nombre { font-size: 13px; color: #555; }
-        .lang-arrow { font-size: 10px; color: #999; transition: transform 0.2s; }
+        .lang-selector-btn:hover { border-color: rgba(255,255,255,0.2); color: white; }
+        .lang-arrow { font-size: 10px; color: rgba(255,255,255,0.3); transition: transform 0.2s; }
         .lang-selector.abierto .lang-arrow { transform: rotate(180deg); }
         .lang-menu {
             display: none; position: absolute;
             top: calc(100% + 8px); right: 0;
-            background: white; border-radius: 12px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            background: #1a1a24;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
             min-width: 180px; overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
         }
         .lang-selector.abierto .lang-menu { display: block; }
         .lang-menu a {
             display: flex; align-items: center; gap: 10px;
-            padding: 11px 16px; text-decoration: none;
-            color: #2c3e50; font-size: 14px; font-weight: 500; transition: 0.15s;
+            padding: 10px 14px; text-decoration: none;
+            color: rgba(255,255,255,0.6); font-size: 13px; transition: 0.15s;
         }
-        .lang-menu a:hover { background: #f0f4ff; color: var(--color); }
-        .lang-menu a.activo { background: #f0f4ff; font-weight: 700; color: var(--color); }
+        .lang-menu a:hover { background: rgba(255,255,255,0.05); color: white; }
+        .lang-menu a.activo { color: var(--color); }
 
-        .login-card {
-            background: white;
-            border-radius: 20px;
-            padding: 50px 40px;
-            max-width: 420px;
-            width: 100%;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
-            animation: slideUp 0.5s ease-out;
+        /* LOGO */
+        .logo-wrap {
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 40px;
         }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(40px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .login-logo {
-            display: flex; justify-content: center; margin-bottom: 20px;
-        }
-        .login-logo img {
-            width: 80px; height: 80px;
-            border-radius: 16px;
+        .logo-img {
+            width: 52px; height: 52px;
+            border-radius: 14px;
             object-fit: contain;
-            border: 3px solid var(--color);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        .login-icon {
-            width: 70px; height: 70px;
-            background: linear-gradient(135deg, var(--color), #1a1a2e);
-            border-radius: 18px;
+        .logo-icon {
+            width: 52px; height: 52px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--color), var(--color-dark));
             display: flex; align-items: center; justify-content: center;
-            font-size: 32px; margin: 0 auto 20px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            font-size: 24px;
+            box-shadow: 0 8px 24px color-mix(in srgb, var(--color) 30%, transparent);
         }
-        .login-title {
-            text-align: center; font-size: 24px;
-            font-weight: 700; color: #2c3e50; margin-bottom: 6px;
+        .logo-text { flex: 1; }
+        .logo-name {
+            font-size: 17px; font-weight: 700;
+            color: white; line-height: 1.2;
         }
-        .login-subtitle {
-            text-align: center; font-size: 14px;
-            color: #95a5a6; margin-bottom: 35px;
+        .logo-sub { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+
+        /* TÍTULO */
+        .form-title {
+            font-size: 28px; font-weight: 800;
+            color: white; letter-spacing: -0.5px;
+            margin-bottom: 6px;
         }
+        .form-sub {
+            font-size: 14px; color: rgba(255,255,255,0.4);
+            margin-bottom: 36px; line-height: 1.5;
+        }
+
+        /* INPUTS */
         .form-group { margin-bottom: 18px; }
         .form-group label {
-            display: block; font-size: 13px;
-            font-weight: 600; color: #2c3e50; margin-bottom: 7px;
+            display: block;
+            font-size: 12px; font-weight: 600;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .input-wrap { position: relative; }
+        .input-icon {
+            position: absolute; left: 14px; top: 50%;
+            transform: translateY(-50%);
+            font-size: 15px; opacity: 0.4;
+            pointer-events: none;
         }
         .form-group input {
-            width: 100%; padding: 14px 16px;
-            border: 2px solid #ecf0f1; border-radius: 10px;
-            font-size: 14px; font-family: inherit; transition: 0.2s;
-            color: #2c3e50; background: #f8f9fa;
+            width: 100%;
+            padding: 14px 14px 14px 42px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            font-size: 14px; font-family: inherit;
+            color: white;
+            transition: 0.2s;
         }
+        .form-group input::placeholder { color: rgba(255,255,255,0.2); }
         .form-group input:focus {
-            outline: none; border-color: var(--color);
-            background: white; box-shadow: 0 0 0 4px color-mix(in srgb, var(--color) 15%, transparent);
+            outline: none;
+            border-color: var(--color);
+            background: rgba(255,255,255,0.06);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--color) 20%, transparent);
         }
+
+        /* BOTÓN */
         .btn-login {
-            width: 100%; padding: 14px;
-            background: linear-gradient(135deg, var(--color), #1a1a2e);
-            color: white; border: none; border-radius: 10px;
-            font-size: 15px; font-weight: 700; cursor: pointer;
-            transition: 0.3s; margin-top: 8px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-            letter-spacing: 0.5px;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--color), var(--color-dark));
+            color: white; border: none;
+            border-radius: 12px;
+            font-size: 15px; font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 8px;
+            letter-spacing: 0.3px;
+            box-shadow: 0 8px 24px color-mix(in srgb, var(--color) 35%, transparent);
+            position: relative;
+            overflow: hidden;
         }
-        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.3); }
+        .btn-login::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+            opacity: 0;
+            transition: 0.3s;
+        }
+        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 12px 32px color-mix(in srgb, var(--color) 45%, transparent); }
+        .btn-login:hover::before { opacity: 1; }
         .btn-login:active { transform: translateY(0); }
+
+        /* ERROR */
         .error-msg {
-            background: #fdf2f2; border: 1px solid #f5c6cb; color: #e74c3c;
-            padding: 12px 16px; border-radius: 8px; font-size: 13px;
-            font-weight: 500; margin-top: 16px; text-align: center;
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(231,76,60,0.1);
+            border: 1px solid rgba(231,76,60,0.2);
+            color: #ff6b6b;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px; font-weight: 500;
+            margin-top: 16px;
         }
-        .login-footer {
-            text-align: center; margin-top: 30px;
-            font-size: 12px; color: #bdc3c7;
+
+        /* FOOTER */
+        .form-footer {
+            margin-top: 36px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            display: flex; align-items: center; justify-content: space-between;
         }
-        .login-footer span { color: var(--color); font-weight: 600; }
+        .footer-badge {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 11px; color: rgba(255,255,255,0.2);
+        }
+        .footer-dot { width: 5px; height: 5px; background: #27ae60; border-radius: 50%; }
+        .footer-security {
+            font-size: 11px; color: rgba(255,255,255,0.2);
+            display: flex; align-items: center; gap: 4px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .left-panel { display: none; }
+            .right-panel { width: 100%; padding: 40px 28px; }
+        }
     </style>
 </head>
 <body>
 
-<div class="lang-wrapper">
-    <div class="lang-selector" id="langSelector">
-        <button type="button" class="lang-selector-btn" onclick="toggleLang()">
-            <span class="lang-flag">
-                {% if session.get('idioma', 'es') == 'es' %}🇪🇸
-                {% elif session.get('idioma') == 'en' %}🇺🇸
-                {% elif session.get('idioma') == 'fr' %}🇫🇷
-                {% elif session.get('idioma') == 'de' %}🇩🇪
-                {% elif session.get('idioma') == 'pt' %}🇵🇹
-                {% elif session.get('idioma') == 'zh' %}🇨🇳
-                {% else %}🇪🇸{% endif %}
-            </span>
-            <span class="lang-nombre">{{ textos['btn_' + session.get('idioma', 'es')] if ('btn_' + session.get('idioma', 'es')) in textos else 'Idioma' }}</span>
-            <span class="lang-arrow">▾</span>
-        </button>
-        <div class="lang-menu">
-            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='login', cliente_id=cliente.usuario) }}" {% if session.get('idioma','es') == 'es' %}class="activo"{% endif %}>🇪🇸 {{ textos.btn_es }}</a>
-            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='login', cliente_id=cliente.usuario) }}" {% if session.get('idioma') == 'en' %}class="activo"{% endif %}>🇺🇸 {{ textos.btn_en }}</a>
-            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='login', cliente_id=cliente.usuario) }}" {% if session.get('idioma') == 'fr' %}class="activo"{% endif %}>🇫🇷 {{ textos.btn_fr }}</a>
-            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='login', cliente_id=cliente.usuario) }}" {% if session.get('idioma') == 'de' %}class="activo"{% endif %}>🇩🇪 {{ textos.btn_de }}</a>
-            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='login', cliente_id=cliente.usuario) }}" {% if session.get('idioma') == 'pt' %}class="activo"{% endif %}>🇵🇹 {{ textos.btn_pt }}</a>
-            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='login', cliente_id=cliente.usuario) }}" {% if session.get('idioma') == 'zh' %}class="activo"{% endif %}>🇨🇳 {{ textos.btn_zh }}</a>
+<!-- PANEL IZQUIERDO -->
+<div class="left-panel">
+    <div class="left-bg"></div>
+    <div class="grid-overlay"></div>
+    <div class="circle circle-1"></div>
+    <div class="circle circle-2"></div>
+    <div class="circle circle-3"></div>
+
+    <!-- STATS FLOTANTES -->
+    <div class="stat-cards">
+        <div class="stat-card">
+            <div class="stat-icon green">🎯</div>
+            <div class="stat-info">
+                <div class="stat-num">+94%</div>
+                <div class="stat-lbl">Tasa de clasificación automática</div>
+            </div>
         </div>
+        <div class="stat-card">
+            <div class="stat-icon blue">⚡</div>
+            <div class="stat-info">
+                <div class="stat-num">3 días</div>
+                <div class="stat-lbl">Seguimiento automático garantizado</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple">💎</div>
+            <div class="stat-info">
+                <div class="stat-num">24/7</div>
+                <div class="stat-lbl">Sistema activo sin intervención</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEXTO INFERIOR -->
+    <div class="left-content">
+        <div class="left-badge">
+            <span></span> Sistema activo
+        </div>
+        <h1 class="left-title">
+            Convierte más leads.<br>
+            <em>Cierra más ventas.</em>
+        </h1>
+        <p class="left-desc">
+            Tu CRM inmobiliario inteligente. Captura, clasifica y da seguimiento
+            a cada prospecto automáticamente — para que tú te concentres en cerrar.
+        </p>
     </div>
 </div>
 
-<div class="login-card">
-    {% if cliente.logo_url %}
-    <div class="login-logo">
-        <img src="{{ cliente.logo_url }}" alt="{{ cliente.nombre }}">
-    </div>
-    {% else %}
-    <div class="login-icon">🏠</div>
-    {% endif %}
+<!-- PANEL DERECHO — FORMULARIO -->
+<div class="right-panel">
 
-    <div class="login-title">{{ cliente.nombre }}</div>
-    <div class="login-subtitle">{{ textos.login_titulo }}</div>
-
-    <form method="POST">
-        <div class="form-group">
-            <label>{{ textos.placeholder_nombre }}</label>
-            <input name="usuario" type="text" required autofocus autocomplete="username">
+    <!-- IDIOMA -->
+    <div class="lang-wrapper">
+        <div class="lang-selector" id="langSelector">
+            <button type="button" class="lang-selector-btn" onclick="toggleLang()">
+                <span>
+                    {% if session.get('idioma', 'es') == 'es' %}🇪🇸
+                    {% elif session.get('idioma') == 'en' %}🇺🇸
+                    {% elif session.get('idioma') == 'fr' %}🇫🇷
+                    {% elif session.get('idioma') == 'de' %}🇩🇪
+                    {% elif session.get('idioma') == 'pt' %}🇵🇹
+                    {% elif session.get('idioma') == 'zh' %}🇨🇳
+                    {% else %}🇪🇸{% endif %}
+                </span>
+                <span class="lang-arrow">▾</span>
+            </button>
+            <div class="lang-menu">
+                <a href="{{ url_for('cambiar_idioma', lang='es', proximo='login', cliente_id=cliente.usuario) }}" {% if session.get('idioma','es') == 'es' %}class="activo"{% endif %}>🇪🇸 Español</a>
+                <a href="{{ url_for('cambiar_idioma', lang='en', proximo='login', cliente_id=cliente.usuario) }}" {% if session.get('idioma') == 'en' %}class="activo"{% endif %}>🇺🇸 English</a>
+                <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='login', cliente_id=cliente.usuario) }}" {% if session.get('idioma') == 'fr' %}class="activo"{% endif %}>🇫🇷 Français</a>
+                <a href="{{ url_for('cambiar_idioma', lang='de', proximo='login', cliente_id=cliente.usuario) }}" {% if session.get('idioma') == 'de' %}class="activo"{% endif %}>🇩🇪 Deutsch</a>
+                <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='login', cliente_id=cliente.usuario) }}" {% if session.get('idioma') == 'pt' %}class="activo"{% endif %}>🇵🇹 Português</a>
+                <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='login', cliente_id=cliente.usuario) }}" {% if session.get('idioma') == 'zh' %}class="activo"{% endif %}>🇨🇳 中文</a>
+            </div>
         </div>
+    </div>
+
+    <!-- LOGO -->
+    <div class="logo-wrap">
+        {% if cliente.logo_url %}
+        <img src="{{ cliente.logo_url }}" alt="{{ cliente.nombre }}" class="logo-img">
+        {% else %}
+        <div class="logo-icon">🏠</div>
+        {% endif %}
+        <div class="logo-text">
+            <div class="logo-name">{{ cliente.nombre }}</div>
+            <div class="logo-sub">Panel de gestión inmobiliaria</div>
+        </div>
+    </div>
+
+    <!-- TÍTULO -->
+    <div class="form-title">Bienvenido de vuelta</div>
+    <div class="form-sub">Ingresa tus credenciales para acceder al sistema</div>
+
+    <!-- FORMULARIO -->
+    <form method="POST" autocomplete="on">
+        <div class="form-group">
+            <label>Usuario</label>
+            <div class="input-wrap">
+                <span class="input-icon">👤</span>
+                <input
+                    name="usuario"
+                    type="text"
+                    placeholder="Tu usuario de acceso"
+                    required
+                    autofocus
+                    autocomplete="username"
+                >
+            </div>
+        </div>
+
         <div class="form-group">
             <label>Contraseña</label>
-            <input type="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+            <div class="input-wrap">
+                <span class="input-icon">🔒</span>
+                <input
+                    type="password"
+                    name="password"
+                    placeholder="••••••••••••"
+                    required
+                    autocomplete="current-password"
+                >
+            </div>
         </div>
-        <button type="submit" class="btn-login">{{ textos.login_boton }}</button>
+
+        <button type="submit" class="btn-login">
+            Iniciar Sesión →
+        </button>
+
         {% if error %}
-            <div class="error-msg">⚠️ {{ error }}</div>
+        <div class="error-msg">
+            ⚠️ {{ error }}
+        </div>
         {% endif %}
     </form>
 
-    <div class="login-footer">
-        Powered by <span>PropTech Engine</span> 🌐
+    <!-- FOOTER -->
+    <div class="form-footer">
+        <div class="footer-badge">
+            <div class="footer-dot"></div>
+            Sistema operativo
+        </div>
+        <div class="footer-security">
+            🔐 Conexión segura
+        </div>
     </div>
 </div>
 
