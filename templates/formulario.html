@@ -3,204 +3,344 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulario de Registro</title>
+    <title>{{ cliente_nombre }}</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        :root { --color: {{ textos.color if textos.color is defined else '#667eea' }}; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        body {
+            font-family: 'Inter', sans-serif;
             min-height: 100vh;
+            background: #0a0a0f;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 24px;
         }
 
-        /* SELECTOR DE IDIOMA MEJORADO */
-        .lang-wrapper {
-            position: fixed;
-            top: 18px;
-            right: 18px;
-            z-index: 999;
+        .bg-glow {
+            position: fixed; inset: 0; pointer-events: none;
+            background: radial-gradient(ellipse at 20% 20%, color-mix(in srgb, #667eea 12%, transparent) 0%, transparent 55%);
         }
-        .lang-selector { position: relative; display: inline-block; }
+        .grid-bg {
+            position: fixed; inset: 0; pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* SELECTOR DE IDIOMA */
+        .lang-wrapper { position: fixed; top: 20px; right: 20px; z-index: 999; }
+        .lang-selector { position: relative; }
         .lang-selector-btn {
             display: flex; align-items: center; gap: 8px;
-            background: white;
-            border: none;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
             border-radius: 50px;
-            padding: 10px 16px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 700;
-            color: #2c3e50;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-            transition: 0.2s;
-            white-space: nowrap;
+            padding: 9px 14px 9px 10px;
+            cursor: pointer; font-family: inherit;
+            font-size: 13px; font-weight: 600;
+            color: rgba(255,255,255,0.7);
+            transition: 0.2s; white-space: nowrap;
         }
-        .lang-selector-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
-        .lang-flag-actual { font-size: 20px; }
-        .lang-nombre { font-size: 13px; color: #555; }
-        .lang-arrow { font-size: 10px; color: #999; transition: transform 0.2s; }
-        .lang-selector.abierto .lang-arrow { transform: rotate(180deg); }
+        .lang-selector-btn:hover { border-color: rgba(255,255,255,0.3); color: white; }
+        .lang-flag { font-size: 18px; }
+        .lang-nombre { font-size: 12px; }
+        .lang-arrow-wrap {
+            width: 20px; height: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 9px; color: rgba(255,255,255,0.6);
+            transition: transform 0.2s;
+        }
+        .lang-selector.abierto .lang-arrow-wrap { transform: rotate(180deg); }
         .lang-menu {
-            display: none;
-            position: absolute;
-            top: calc(100% + 8px);
-            right: 0;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-            min-width: 180px;
-            overflow: hidden;
+            display: none; position: absolute;
+            top: calc(100% + 8px); right: 0;
+            background: #1a1a24;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            min-width: 180px; overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
         .lang-selector.abierto .lang-menu { display: block; }
         .lang-menu a {
             display: flex; align-items: center; gap: 10px;
-            padding: 11px 16px;
-            text-decoration: none;
-            color: #2c3e50;
-            font-size: 14px;
-            font-weight: 500;
-            transition: 0.15s;
+            padding: 11px 14px; text-decoration: none;
+            color: rgba(255,255,255,0.6); font-size: 13px;
+            font-weight: 500; transition: 0.15s;
         }
-        .lang-menu a:hover { background: #f0f4ff; color: #667eea; }
-        .lang-menu a.activo { background: #f0f4ff; font-weight: 700; color: #667eea; }
-        .lang-menu-flag { font-size: 18px; }
+        .lang-menu a:hover { background: rgba(255,255,255,0.05); color: white; }
+        .lang-menu a.activo { color: #667eea; }
 
-        .form-container {
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            max-width: 450px;
+        /* CONTENEDOR */
+        .wrapper {
+            position: relative; z-index: 1;
+            width: 100%; max-width: 500px;
+        }
+
+        /* BRAND */
+        .brand {
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 28px;
+            padding: 20px 24px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 18px;
+        }
+        .brand-logo {
+            width: 48px; height: 48px; border-radius: 14px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; flex-shrink: 0;
+        }
+        .brand-name { font-size: 16px; font-weight: 700; color: white; }
+        .brand-sub { font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 3px; }
+
+        /* FORM CARD */
+        .form-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            padding: 32px 28px;
+        }
+        .form-title { font-size: 20px; font-weight: 700; color: white; margin-bottom: 6px; }
+        .form-sub { font-size: 13px; color: rgba(255,255,255,0.35); margin-bottom: 28px; line-height: 1.6; }
+
+        /* INPUTS */
+        .form-group { margin-bottom: 16px; }
+        .form-label {
+            display: block;
+            font-size: 11px; font-weight: 600;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .input-wrap { position: relative; }
+        .input-icon {
+            position: absolute; left: 14px; top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px; opacity: 0.35;
+            pointer-events: none;
+        }
+        .form-group input,
+        .form-group textarea {
             width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            animation: slideIn 0.5s ease-out;
+            padding: 13px 14px 13px 40px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            font-size: 14px; font-family: inherit;
+            color: white; transition: 0.2s;
         }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+        .form-group textarea {
+            padding-top: 13px; resize: vertical; min-height: 90px;
         }
-        h2 { color: #2c3e50; font-size: 26px; margin-bottom: 12px; text-align: center; font-weight: 700; }
-        .subtitle { text-align: center; color: #7f8c8d; font-size: 13px; margin-bottom: 30px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; color: #2c3e50; font-weight: 600; font-size: 13px; margin-bottom: 5px; }
-        input, textarea {
-            width: 100%; padding: 12px; border: 1px solid #ddd;
-            border-radius: 8px; font-family: inherit; font-size: 14px; transition: 0.3s;
+        .form-group input::placeholder,
+        .form-group textarea::placeholder { color: rgba(255,255,255,0.2); }
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: rgba(102,126,234,0.5);
+            background: rgba(255,255,255,0.07);
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
         }
-        input:focus, textarea:focus { outline: none; border-color: #667eea; background: #f0f4ff; }
-        textarea { resize: vertical; min-height: 80px; }
-        .checkbox-group { display: flex; gap: 10px; margin: 20px 0; align-items: flex-start; }
-        .checkbox-group input { width: 18px; height: 18px; margin: 0; cursor: pointer; flex-shrink: 0; }
-        .checkbox-group label { margin: 0; font-size: 12px; color: #555; font-weight: normal; }
-        button {
-            width: 100%; padding: 12px; background: #667eea; color: white;
-            border: none; border-radius: 8px; font-weight: 600; font-size: 14px;
-            cursor: pointer; transition: 0.3s; margin-top: 10px;
+
+        /* CHECKBOX */
+        .checkbox-group {
+            display: flex; align-items: flex-start; gap: 12px;
+            margin: 20px 0;
+            padding: 14px 16px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
         }
-        button:hover { background: #5568d3; }
-        .success-message { text-align: center; padding: 40px 20px; }
-        .success-icon { font-size: 60px; margin-bottom: 15px; }
-        .success-title { color: #27ae60; font-size: 20px; font-weight: bold; margin-bottom: 10px; }
-        .success-text { color: #666; margin-bottom: 25px; }
-        .contact-button {
-            background: #25D366; color: white; text-decoration: none;
-            padding: 12px 25px; border-radius: 8px; display: block; margin-top: 12px;
-            font-weight: bold; text-align: center; transition: 0.3s;
+        .checkbox-group input[type="checkbox"] {
+            width: 18px; height: 18px;
+            padding: 0; margin-top: 1px;
+            flex-shrink: 0; cursor: pointer;
+            accent-color: #667eea;
         }
-        .contact-button:hover { background: #20ba5c; }
-        .inventario-button {
-            background: #8e44ad; color: white; text-decoration: none;
-            padding: 12px 25px; border-radius: 8px; display: block; margin-top: 12px;
-            font-weight: bold; text-align: center; transition: 0.3s;
+        .checkbox-group label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.35);
+            line-height: 1.6; cursor: pointer;
         }
-        .inventario-button:hover { background: #6c3483; }
+        .checkbox-group label a { color: #667eea; text-decoration: none; }
+
+        /* BOTÓN SUBMIT */
+        .btn-submit {
+            width: 100%; padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; border: none; border-radius: 12px;
+            font-size: 15px; font-weight: 700; font-family: inherit;
+            cursor: pointer; transition: 0.3s;
+            box-shadow: 0 8px 24px rgba(102,126,234,0.3);
+            position: relative; overflow: hidden;
+        }
+        .btn-submit::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+            opacity: 0; transition: 0.3s;
+        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(102,126,234,0.4); }
+        .btn-submit:hover::before { opacity: 1; }
+
+        /* ÉXITO */
+        .success-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            padding: 48px 32px;
+            text-align: center;
+        }
+        .success-icon-wrap {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: rgba(39,174,96,0.15);
+            border: 2px solid rgba(39,174,96,0.3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 36px; margin: 0 auto 24px;
+        }
+        .success-title { font-size: 22px; font-weight: 800; color: white; margin-bottom: 10px; }
+        .success-text { font-size: 14px; color: rgba(255,255,255,0.4); line-height: 1.7; margin-bottom: 28px; }
+        .success-btns { display: flex; flex-direction: column; gap: 10px; }
+        .btn-wa {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 14px 24px;
+            background: #25D366; color: white;
+            border-radius: 12px; text-decoration: none;
+            font-size: 14px; font-weight: 700; transition: 0.2s;
+        }
+        .btn-wa:hover { background: #20ba5c; transform: translateY(-2px); }
+        .btn-inv {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 14px 24px;
+            background: rgba(142,68,173,0.2);
+            border: 1px solid rgba(142,68,173,0.3);
+            color: #c39bd3;
+            border-radius: 12px; text-decoration: none;
+            font-size: 14px; font-weight: 600; transition: 0.2s;
+        }
+        .btn-inv:hover { background: rgba(142,68,173,0.3); color: white; }
+
+        @media (max-width: 480px) {
+            .form-card { padding: 24px 20px; }
+            .brand { padding: 16px 18px; }
+        }
     </style>
 </head>
 <body>
+<div class="bg-glow"></div>
+<div class="grid-bg"></div>
 
-<!-- SELECTOR DE IDIOMA MEJORADO -->
+<!-- SELECTOR DE IDIOMA -->
 <div class="lang-wrapper">
     <div class="lang-selector" id="langSelector">
         <button type="button" class="lang-selector-btn" onclick="toggleLang()">
-            <span class="lang-flag-actual">
+            <span class="lang-flag">
                 {% if idioma_actual == 'es' %}🇪🇸{% elif idioma_actual == 'en' %}🇺🇸{% elif idioma_actual == 'fr' %}🇫🇷{% elif idioma_actual == 'de' %}🇩🇪{% elif idioma_actual == 'pt' %}🇵🇹{% elif idioma_actual == 'zh' %}🇨🇳{% else %}🇪🇸{% endif %}
             </span>
             <span class="lang-nombre">{{ textos['btn_' + idioma_actual] if ('btn_' + idioma_actual) in textos else 'Idioma' }}</span>
-            <span class="lang-arrow">▾</span>
+            <span class="lang-arrow-wrap">▼</span>
         </button>
         <div class="lang-menu">
-            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'es' %}class="activo"{% endif %}>
-                <span class="lang-menu-flag">🇪🇸</span> {{ textos.btn_es }}
-            </a>
-            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'en' %}class="activo"{% endif %}>
-                <span class="lang-menu-flag">🇺🇸</span> {{ textos.btn_en }}
-            </a>
-            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'fr' %}class="activo"{% endif %}>
-                <span class="lang-menu-flag">🇫🇷</span> {{ textos.btn_fr }}
-            </a>
-            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'de' %}class="activo"{% endif %}>
-                <span class="lang-menu-flag">🇩🇪</span> {{ textos.btn_de }}
-            </a>
-            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'pt' %}class="activo"{% endif %}>
-                <span class="lang-menu-flag">🇵🇹</span> {{ textos.btn_pt }}
-            </a>
-            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'zh' %}class="activo"{% endif %}>
-                <span class="lang-menu-flag">🇨🇳</span> {{ textos.btn_zh }}
-            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'es' %}class="activo"{% endif %}>🇪🇸 {{ textos.btn_es }}</a>
+            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'en' %}class="activo"{% endif %}>🇺🇸 {{ textos.btn_en }}</a>
+            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'fr' %}class="activo"{% endif %}>🇫🇷 {{ textos.btn_fr }}</a>
+            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'de' %}class="activo"{% endif %}>🇩🇪 {{ textos.btn_de }}</a>
+            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'pt' %}class="activo"{% endif %}>🇵🇹 {{ textos.btn_pt }}</a>
+            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'zh' %}class="activo"{% endif %}>🇨🇳 {{ textos.btn_zh }}</a>
         </div>
     </div>
 </div>
 
-<div class="form-container">
+<div class="wrapper">
+    <!-- BRAND -->
+    <div class="brand">
+        <div class="brand-logo">🏠</div>
+        <div>
+            <div class="brand-name">{{ cliente_nombre }}</div>
+            <div class="brand-sub">Sistema de gestión inmobiliaria</div>
+        </div>
+    </div>
+
     {% if not enviado %}
-    
-    <h2>{{ cliente_nombre }}</h2>
-    <p class="subtitle">{{ textos.titulo_form }}</p>
-    
-    <form method="POST">
-        <div class="form-group">
-            <label>{{ textos.placeholder_nombre }}</label>
-            <input type="text" name="nombre" required>
-        </div>
-        <div class="form-group">
-            <label>{{ textos.placeholder_tel }}</label>
-            <input type="tel" name="telefono" required>
-        </div>
-        <div class="form-group">
-            <label>{{ textos.placeholder_zona }}</label>
-            <input type="text" name="zona" required>
-        </div>
-        <div class="form-group">
-            <label>{{ textos.placeholder_presupuesto }}</label>
-            <input type="number" name="presupuesto" required>
-        </div>
-        <div class="form-group">
-            <label>{{ textos.placeholder_propiedad }}</label>
-            <textarea name="mensaje" required></textarea>
-        </div>
-        <div class="form-group">
-            <label>Email (Opcional)</label>
-            <input type="email" name="email">
-        </div>
-        <div class="checkbox-group">
-            <input type="checkbox" id="terminos" name="terminos" required>
-            <label for="terminos">{{ textos.acepto_terminos }}</label>
-        </div>
-        <button type="submit">{{ textos.boton_enviar }}</button>
-    </form>
-    
+    <!-- FORMULARIO -->
+    <div class="form-card">
+        <div class="form-title">{{ textos.titulo_form }}</div>
+        <div class="form-sub">Completa el formulario y un asesor se comunicará contigo en breve.</div>
+
+        <form method="POST">
+            <div class="form-group">
+                <label class="form-label">{{ textos.placeholder_nombre }}</label>
+                <div class="input-wrap">
+                    <span class="input-icon">👤</span>
+                    <input type="text" name="nombre" placeholder="{{ textos.placeholder_nombre }}" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">{{ textos.placeholder_tel }}</label>
+                <div class="input-wrap">
+                    <span class="input-icon">📱</span>
+                    <input type="tel" name="telefono" placeholder="+502 0000 0000" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">{{ textos.placeholder_zona }}</label>
+                <div class="input-wrap">
+                    <span class="input-icon">📍</span>
+                    <input type="text" name="zona" placeholder="{{ textos.placeholder_zona }}" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">{{ textos.placeholder_presupuesto }}</label>
+                <div class="input-wrap">
+                    <span class="input-icon">💰</span>
+                    <input type="number" name="presupuesto" placeholder="$ 0.00" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">{{ textos.placeholder_propiedad }}</label>
+                <div class="input-wrap">
+                    <textarea name="mensaje" placeholder="{{ textos.placeholder_propiedad }}" required style="padding-left:40px;"></textarea>
+                    <span class="input-icon" style="top:16px;transform:none;">💬</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email (Opcional)</label>
+                <div class="input-wrap">
+                    <span class="input-icon">📧</span>
+                    <input type="email" name="email" placeholder="correo@ejemplo.com">
+                </div>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="terminos" name="terminos" required>
+                <label for="terminos">{{ textos.acepto_terminos }}</label>
+            </div>
+
+            <button type="submit" class="btn-submit">{{ textos.boton_enviar }} →</button>
+        </form>
+    </div>
+
     {% else %}
-    
-    <div class="success-message">
-        <div class="success-icon">✅</div>
+    <!-- ÉXITO -->
+    <div class="success-card">
+        <div class="success-icon-wrap">✅</div>
         <div class="success-title">{{ textos.mensaje_exito }}</div>
         <div class="success-text">{{ textos.subtitulo_exito }}</div>
-        <a href="https://wa.me/{{ whatsapp }}" target="_blank" class="contact-button">💬 {{ textos.btn_whatsapp }}</a>
-        <a href="/propiedades/{{ cliente_id }}" class="inventario-button">🏠 {{ textos.btn_ver_propiedades }}</a>
+        <div class="success-btns">
+            <a href="https://wa.me/{{ whatsapp }}" target="_blank" class="btn-wa">
+                💬 {{ textos.btn_whatsapp }}
+            </a>
+            <a href="/propiedades/{{ cliente_id }}" class="btn-inv">
+                🏠 {{ textos.btn_ver_propiedades }}
+            </a>
+        </div>
     </div>
-    
     {% endif %}
 </div>
 
@@ -213,6 +353,5 @@ document.addEventListener('click', function(e) {
     if (sel && !sel.contains(e.target)) sel.classList.remove('abierto');
 });
 </script>
-
 </body>
 </html>
