@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ cliente.nombre }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        :root { --color: {{ cliente.color_primario or '#667eea' }}; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: #0a0a0f;
+            overflow: hidden;
+        }
+
+        .bg-glow {
+            position: fixed; inset: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse at 30% 30%, color-mix(in srgb, var(--color) 20%, transparent) 0%, transparent 55%),
+                radial-gradient(ellipse at 70% 70%, rgba(255,255,255,0.02) 0%, transparent 50%);
+        }
+        .grid-bg {
+            position: fixed; inset: 0; pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        .wrapper {
+            position: relative; z-index: 1;
+            width: 100%; max-width: 580px;
+            text-align: center;
+        }
+
+        /* LOGO */
+        .brand {
+            display: flex; flex-direction: column;
+            align-items: center; margin-bottom: 40px;
+        }
+        .brand-logo {
+            width: 72px; height: 72px; border-radius: 20px;
+            background: linear-gradient(135deg, var(--color), color-mix(in srgb, var(--color) 60%, black));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 32px; margin-bottom: 16px;
+            box-shadow: 0 12px 32px color-mix(in srgb, var(--color) 35%, transparent);
+        }
+        .brand-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 20px; }
+        .brand-name { font-size: 26px; font-weight: 800; color: white; letter-spacing: -0.5px; }
+        .brand-sub { font-size: 14px; color: rgba(255,255,255,0.35); margin-top: 6px; }
+
+        /* CARD */
+        .card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            padding: 36px 32px;
+            backdrop-filter: blur(10px);
+        }
+        .card-title {
+            font-size: 20px; font-weight: 700; color: white;
+            margin-bottom: 8px;
+        }
+        .card-sub {
+            font-size: 14px; color: rgba(255,255,255,0.35);
+            margin-bottom: 32px; line-height: 1.6;
+        }
+
+        /* IDIOMAS */
+        .lang-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .lang-btn {
+            display: flex; flex-direction: column;
+            align-items: center; gap: 8px;
+            padding: 18px 12px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            text-decoration: none;
+            color: white;
+            font-family: inherit;
+            transition: 0.2s;
+            cursor: pointer;
+            position: relative; overflow: hidden;
+        }
+        .lang-btn::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--color) 20%, transparent), transparent);
+            opacity: 0; transition: 0.2s;
+        }
+        .lang-btn:hover {
+            border-color: color-mix(in srgb, var(--color) 60%, transparent);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+        .lang-btn:hover::before { opacity: 1; }
+        .lang-flag { font-size: 32px; position: relative; }
+        .lang-name { font-size: 13px; font-weight: 600; color: white; position: relative; }
+        .lang-native { font-size: 11px; color: rgba(255,255,255,0.35); position: relative; }
+
+        /* DIVIDER */
+        .divider {
+            display: flex; align-items: center; gap: 12px;
+            margin: 24px 0;
+        }
+        .divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.07); }
+        .divider-text { font-size: 12px; color: rgba(255,255,255,0.2); }
+
+        /* CONTINUAR SIN CAMBIAR */
+        .btn-continue {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            color: rgba(255,255,255,0.4);
+            text-decoration: none;
+            font-size: 13px; font-weight: 500;
+            transition: 0.2s;
+        }
+        .btn-continue:hover { color: white; border-color: rgba(255,255,255,0.15); }
+
+        @media (max-width: 480px) {
+            .lang-grid { grid-template-columns: repeat(2, 1fr); }
+            .card { padding: 24px 20px; }
+            .brand-name { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="grid-bg"></div>
+
+<div class="wrapper">
+    <div class="brand">
+        <div class="brand-logo">
+            {% if cliente.logo_url %}
+            <img src="{{ cliente.logo_url }}" alt="{{ cliente.nombre }}">
+            {% else %}🏠{% endif %}
+        </div>
+        <div class="brand-name">{{ cliente.nombre }}</div>
+        <div class="brand-sub">Real Estate · Propiedades exclusivas</div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Selecciona tu idioma</div>
+        <div class="card-sub">
+            Elige el idioma en el que quieres comunicarte.<br>
+            Select your preferred language to continue.
+        </div>
+
+        <div class="lang-grid">
+            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-btn">
+                <span class="lang-flag">🇪🇸</span>
+                <span class="lang-name">Español</span>
+                <span class="lang-native">Spanish</span>
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-btn">
+                <span class="lang-flag">🇺🇸</span>
+                <span class="lang-name">English</span>
+                <span class="lang-native">Inglés</span>
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-btn">
+                <span class="lang-flag">🇫🇷</span>
+                <span class="lang-name">Français</span>
+                <span class="lang-native">Francés</span>
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-btn">
+                <span class="lang-flag">🇩🇪</span>
+                <span class="lang-name">Deutsch</span>
+                <span class="lang-native">Alemán</span>
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-btn">
+                <span class="lang-flag">🇵🇹</span>
+                <span class="lang-name">Português</span>
+                <span class="lang-native">Portugués</span>
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-btn">
+                <span class="lang-flag">🇨🇳</span>
+                <span class="lang-name">中文</span>
+                <span class="lang-native">Chino</span>
+            </a>
+        </div>
+
+        <div class="divider">
+            <div class="divider-line"></div>
+            <div class="divider-text">o continúa sin cambiar</div>
+            <div class="divider-line"></div>
+        </div>
+
+        <a href="{{ url_for('formulario', cliente_id=cliente.usuario) }}" class="btn-continue">
+            Continuar →
+        </a>
+    </div>
+</div>
+</body>
+</html>
