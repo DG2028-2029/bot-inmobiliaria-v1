@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ idioma_actual }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ cliente_nombre }}</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        :root { --color: {{ textos.color if textos.color is defined else '#667eea' }}; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
@@ -17,10 +16,9 @@
             justify-content: center;
             padding: 24px;
         }
-
         .bg-glow {
             position: fixed; inset: 0; pointer-events: none;
-            background: radial-gradient(ellipse at 20% 20%, color-mix(in srgb, #667eea 12%, transparent) 0%, transparent 55%);
+            background: radial-gradient(ellipse at 20% 20%, rgba(102,126,234,0.12) 0%, transparent 55%);
         }
         .grid-bg {
             position: fixed; inset: 0; pointer-events: none;
@@ -35,206 +33,215 @@
         .lang-selector { position: relative; }
         .lang-selector-btn {
             display: flex; align-items: center; gap: 8px;
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
             border-radius: 50px;
             padding: 9px 14px 9px 10px;
             cursor: pointer; font-family: inherit;
             font-size: 13px; font-weight: 600;
-            color: rgba(255,255,255,0.7);
+            color: rgba(255,255,255,0.8);
             transition: 0.2s; white-space: nowrap;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
         }
-        .lang-selector-btn:hover { border-color: rgba(255,255,255,0.3); color: white; }
+        .lang-selector-btn:hover { border-color: rgba(255,255,255,0.35); color: white; background: rgba(255,255,255,0.12); }
         .lang-flag { font-size: 18px; }
-        .lang-nombre { font-size: 12px; }
+        .lang-nombre { font-size: 12px; font-weight: 600; }
         .lang-arrow-wrap {
-            width: 20px; height: 20px;
-            background: rgba(255,255,255,0.1);
+            width: 22px; height: 22px;
+            background: rgba(255,255,255,0.12);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 9px; color: rgba(255,255,255,0.6);
+            font-size: 9px; color: rgba(255,255,255,0.7);
             transition: transform 0.2s;
+            border: 1px solid rgba(255,255,255,0.1);
         }
         .lang-selector.abierto .lang-arrow-wrap { transform: rotate(180deg); }
         .lang-menu {
             display: none; position: absolute;
             top: calc(100% + 8px); right: 0;
             background: #1a1a24;
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 14px;
-            min-width: 180px; overflow: hidden;
+            min-width: 190px; overflow: hidden;
             box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
         .lang-selector.abierto .lang-menu { display: block; }
         .lang-menu a {
             display: flex; align-items: center; gap: 10px;
-            padding: 11px 14px; text-decoration: none;
+            padding: 11px 16px; text-decoration: none;
             color: rgba(255,255,255,0.6); font-size: 13px;
             font-weight: 500; transition: 0.15s;
         }
-        .lang-menu a:hover { background: rgba(255,255,255,0.05); color: white; }
-        .lang-menu a.activo { color: #667eea; }
+        .lang-menu a:hover { background: rgba(255,255,255,0.06); color: white; }
+        .lang-menu a.activo { color: #667eea; background: rgba(102,126,234,0.08); }
+        .lang-menu-flag { font-size: 20px; }
 
         /* CONTENEDOR */
-        .wrapper {
-            position: relative; z-index: 1;
-            width: 100%; max-width: 500px;
-        }
+        .wrapper { position: relative; z-index: 1; width: 100%; max-width: 500px; }
 
         /* BRAND */
         .brand {
             display: flex; align-items: center; gap: 14px;
-            margin-bottom: 28px;
-            padding: 20px 24px;
+            margin-bottom: 20px;
+            padding: 18px 22px;
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 18px;
+            border-radius: 16px;
         }
         .brand-logo {
-            width: 48px; height: 48px; border-radius: 14px;
+            width: 46px; height: 46px; border-radius: 13px;
             background: linear-gradient(135deg, #667eea, #764ba2);
             display: flex; align-items: center; justify-content: center;
-            font-size: 22px; flex-shrink: 0;
+            font-size: 21px; flex-shrink: 0;
+            box-shadow: 0 6px 20px rgba(102,126,234,0.3);
         }
-        .brand-name { font-size: 16px; font-weight: 700; color: white; }
-        .brand-sub { font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 3px; }
+        .brand-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 13px; }
+        .brand-name { font-size: 15px; font-weight: 700; color: white; }
+        .brand-sub { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 3px; }
 
         /* FORM CARD */
         .form-card {
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 24px;
-            padding: 32px 28px;
+            border-radius: 22px;
+            padding: 30px 26px;
         }
-        .form-title { font-size: 20px; font-weight: 700; color: white; margin-bottom: 6px; }
-        .form-sub { font-size: 13px; color: rgba(255,255,255,0.35); margin-bottom: 28px; line-height: 1.6; }
+        .form-title { font-size: 19px; font-weight: 700; color: white; margin-bottom: 6px; }
+        .form-sub { font-size: 13px; color: rgba(255,255,255,0.35); margin-bottom: 26px; line-height: 1.6; }
 
         /* INPUTS */
-        .form-group { margin-bottom: 16px; }
+        .form-group { margin-bottom: 14px; }
         .form-label {
             display: block;
-            font-size: 11px; font-weight: 600;
+            font-size: 10px; font-weight: 700;
             color: rgba(255,255,255,0.4);
-            text-transform: uppercase; letter-spacing: 0.5px;
-            margin-bottom: 8px;
+            text-transform: uppercase; letter-spacing: 0.6px;
+            margin-bottom: 7px;
         }
         .input-wrap { position: relative; }
         .input-icon {
-            position: absolute; left: 14px; top: 50%;
+            position: absolute; left: 13px; top: 50%;
             transform: translateY(-50%);
-            font-size: 14px; opacity: 0.35;
+            font-size: 14px; opacity: 0.3;
             pointer-events: none;
         }
         .form-group input,
         .form-group textarea {
             width: 100%;
-            padding: 13px 14px 13px 40px;
+            padding: 12px 13px 12px 38px;
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 12px;
+            border-radius: 11px;
             font-size: 14px; font-family: inherit;
             color: white; transition: 0.2s;
         }
-        .form-group textarea {
-            padding-top: 13px; resize: vertical; min-height: 90px;
-        }
+        .form-group textarea { padding-top: 12px; resize: vertical; min-height: 85px; }
         .form-group input::placeholder,
-        .form-group textarea::placeholder { color: rgba(255,255,255,0.2); }
+        .form-group textarea::placeholder { color: rgba(255,255,255,0.18); }
         .form-group input:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: rgba(102,126,234,0.5);
+            border-color: rgba(102,126,234,0.55);
             background: rgba(255,255,255,0.07);
             box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
         }
 
         /* CHECKBOX */
         .checkbox-group {
-            display: flex; align-items: flex-start; gap: 12px;
-            margin: 20px 0;
-            padding: 14px 16px;
+            display: flex; align-items: flex-start; gap: 11px;
+            margin: 18px 0;
+            padding: 13px 14px;
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.06);
             border-radius: 10px;
         }
         .checkbox-group input[type="checkbox"] {
-            width: 18px; height: 18px;
+            width: 17px; height: 17px;
             padding: 0; margin-top: 1px;
             flex-shrink: 0; cursor: pointer;
             accent-color: #667eea;
         }
-        .checkbox-group label {
-            font-size: 12px;
-            color: rgba(255,255,255,0.35);
-            line-height: 1.6; cursor: pointer;
-        }
-        .checkbox-group label a { color: #667eea; text-decoration: none; }
+        .checkbox-group label { font-size: 12px; color: rgba(255,255,255,0.33); line-height: 1.6; cursor: pointer; }
 
-        /* BOTÓN SUBMIT */
+        /* BOTÓN */
         .btn-submit {
-            width: 100%; padding: 15px;
+            width: 100%; padding: 14px;
             background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white; border: none; border-radius: 12px;
-            font-size: 15px; font-weight: 700; font-family: inherit;
+            color: white; border: none; border-radius: 11px;
+            font-size: 14px; font-weight: 700; font-family: inherit;
             cursor: pointer; transition: 0.3s;
             box-shadow: 0 8px 24px rgba(102,126,234,0.3);
-            position: relative; overflow: hidden;
-        }
-        .btn-submit::before {
-            content: '';
-            position: absolute; inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
-            opacity: 0; transition: 0.3s;
         }
         .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(102,126,234,0.4); }
-        .btn-submit:hover::before { opacity: 1; }
 
         /* ÉXITO */
         .success-card {
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 24px;
-            padding: 48px 32px;
-            text-align: center;
+            border-radius: 22px; padding: 44px 28px; text-align: center;
         }
         .success-icon-wrap {
-            width: 80px; height: 80px; border-radius: 50%;
+            width: 76px; height: 76px; border-radius: 50%;
             background: rgba(39,174,96,0.15);
             border: 2px solid rgba(39,174,96,0.3);
             display: flex; align-items: center; justify-content: center;
-            font-size: 36px; margin: 0 auto 24px;
+            font-size: 34px; margin: 0 auto 22px;
         }
-        .success-title { font-size: 22px; font-weight: 800; color: white; margin-bottom: 10px; }
-        .success-text { font-size: 14px; color: rgba(255,255,255,0.4); line-height: 1.7; margin-bottom: 28px; }
+        .success-title { font-size: 21px; font-weight: 800; color: white; margin-bottom: 10px; }
+        .success-text { font-size: 14px; color: rgba(255,255,255,0.4); line-height: 1.7; margin-bottom: 26px; }
         .success-btns { display: flex; flex-direction: column; gap: 10px; }
         .btn-wa {
             display: flex; align-items: center; justify-content: center; gap: 10px;
-            padding: 14px 24px;
-            background: #25D366; color: white;
-            border-radius: 12px; text-decoration: none;
+            padding: 13px 24px; background: #25D366; color: white;
+            border-radius: 11px; text-decoration: none;
             font-size: 14px; font-weight: 700; transition: 0.2s;
         }
         .btn-wa:hover { background: #20ba5c; transform: translateY(-2px); }
         .btn-inv {
             display: flex; align-items: center; justify-content: center; gap: 10px;
-            padding: 14px 24px;
+            padding: 13px 24px;
             background: rgba(142,68,173,0.2);
             border: 1px solid rgba(142,68,173,0.3);
-            color: #c39bd3;
-            border-radius: 12px; text-decoration: none;
+            color: #c39bd3; border-radius: 11px; text-decoration: none;
             font-size: 14px; font-weight: 600; transition: 0.2s;
         }
         .btn-inv:hover { background: rgba(142,68,173,0.3); color: white; }
 
         @media (max-width: 480px) {
-            .form-card { padding: 24px 20px; }
-            .brand { padding: 16px 18px; }
+            .form-card { padding: 22px 18px; }
+            .brand { padding: 14px 16px; }
         }
     </style>
 </head>
 <body>
 <div class="bg-glow"></div>
 <div class="grid-bg"></div>
+
+{% set sistema_label = {
+    'es': 'Sistema de gestión inmobiliaria',
+    'en': 'Real estate management system',
+    'fr': 'Système de gestion immobilière',
+    'de': 'Immobilienverwaltungssystem',
+    'pt': 'Sistema de gestão imobiliária',
+    'zh': '房地产管理系统'
+} %}
+
+{% set subtitulo_texts = {
+    'es': 'Completa el formulario y un asesor se comunicará contigo en breve.',
+    'en': 'Fill out the form and an advisor will contact you shortly.',
+    'fr': 'Remplissez le formulaire et un conseiller vous contactera sous peu.',
+    'de': 'Füllen Sie das Formular aus und ein Berater wird Sie kontaktieren.',
+    'pt': 'Preencha o formulário e um consultor entrará em contato em breve.',
+    'zh': '填写表格，顾问将很快与您联系。'
+} %}
+
+{% set email_label_texts = {
+    'es': 'Email (Opcional)', 'en': 'Email (Optional)',
+    'fr': 'Email (Optionnel)', 'de': 'E-Mail (Optional)',
+    'pt': 'Email (Opcional)', 'zh': '电子邮件（可选）'
+} %}
+
+{% set lang = idioma_actual if idioma_actual in sistema_label else 'es' %}
 
 <!-- SELECTOR DE IDIOMA -->
 <div class="lang-wrapper">
@@ -247,12 +254,24 @@
             <span class="lang-arrow-wrap">▼</span>
         </button>
         <div class="lang-menu">
-            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'es' %}class="activo"{% endif %}>🇪🇸 {{ textos.btn_es }}</a>
-            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'en' %}class="activo"{% endif %}>🇺🇸 {{ textos.btn_en }}</a>
-            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'fr' %}class="activo"{% endif %}>🇫🇷 {{ textos.btn_fr }}</a>
-            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'de' %}class="activo"{% endif %}>🇩🇪 {{ textos.btn_de }}</a>
-            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'pt' %}class="activo"{% endif %}>🇵🇹 {{ textos.btn_pt }}</a>
-            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'zh' %}class="activo"{% endif %}>🇨🇳 {{ textos.btn_zh }}</a>
+            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'es' %}class="activo"{% endif %}>
+                <span class="lang-menu-flag">🇪🇸</span> {{ textos.btn_es }}
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'en' %}class="activo"{% endif %}>
+                <span class="lang-menu-flag">🇺🇸</span> {{ textos.btn_en }}
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'fr' %}class="activo"{% endif %}>
+                <span class="lang-menu-flag">🇫🇷</span> {{ textos.btn_fr }}
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'de' %}class="activo"{% endif %}>
+                <span class="lang-menu-flag">🇩🇪</span> {{ textos.btn_de }}
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'pt' %}class="activo"{% endif %}>
+                <span class="lang-menu-flag">🇵🇹</span> {{ textos.btn_pt }}
+            </a>
+            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'zh' %}class="activo"{% endif %}>
+                <span class="lang-menu-flag">🇨🇳</span> {{ textos.btn_zh }}
+            </a>
         </div>
     </div>
 </div>
@@ -260,18 +279,19 @@
 <div class="wrapper">
     <!-- BRAND -->
     <div class="brand">
-        <div class="brand-logo">🏠</div>
+        <div class="brand-logo">
+            {% if cliente_nombre %}🏠{% endif %}
+        </div>
         <div>
             <div class="brand-name">{{ cliente_nombre }}</div>
-            <div class="brand-sub">Sistema de gestión inmobiliaria</div>
+            <div class="brand-sub">{{ sistema_label[lang] }}</div>
         </div>
     </div>
 
     {% if not enviado %}
-    <!-- FORMULARIO -->
     <div class="form-card">
         <div class="form-title">{{ textos.titulo_form }}</div>
-        <div class="form-sub">Completa el formulario y un asesor se comunicará contigo en breve.</div>
+        <div class="form-sub">{{ subtitulo_texts[lang] }}</div>
 
         <form method="POST">
             <div class="form-group">
@@ -305,29 +325,26 @@
             <div class="form-group">
                 <label class="form-label">{{ textos.placeholder_propiedad }}</label>
                 <div class="input-wrap">
-                    <textarea name="mensaje" placeholder="{{ textos.placeholder_propiedad }}" required style="padding-left:40px;"></textarea>
+                    <textarea name="mensaje" placeholder="{{ textos.placeholder_propiedad }}" required style="padding-left:38px;"></textarea>
                     <span class="input-icon" style="top:16px;transform:none;">💬</span>
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Email (Opcional)</label>
+                <label class="form-label">{{ email_label_texts[lang] }}</label>
                 <div class="input-wrap">
                     <span class="input-icon">📧</span>
                     <input type="email" name="email" placeholder="correo@ejemplo.com">
                 </div>
             </div>
-
             <div class="checkbox-group">
                 <input type="checkbox" id="terminos" name="terminos" required>
                 <label for="terminos">{{ textos.acepto_terminos }}</label>
             </div>
-
             <button type="submit" class="btn-submit">{{ textos.boton_enviar }} →</button>
         </form>
     </div>
 
     {% else %}
-    <!-- ÉXITO -->
     <div class="success-card">
         <div class="success-icon-wrap">✅</div>
         <div class="success-title">{{ textos.mensaje_exito }}</div>
