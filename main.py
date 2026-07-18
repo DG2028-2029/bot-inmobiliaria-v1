@@ -89,12 +89,10 @@ def generar_respuesta_sugerida(lead):
     temperatura = lead.get('temperatura', 'FRIO')
     clasificacion = lead.get('clasificacion', '')
     fecha_str = lead.get('fecha', '')
-
     try:
         presupuesto = float(re.sub(r'[^\d.]', '', str(lead.get('presupuesto', 0))))
     except:
         presupuesto = 0
-
     dias = 0
     if fecha_str:
         try:
@@ -102,14 +100,12 @@ def generar_respuesta_sugerida(lead):
             dias = (datetime.now() - fecha).days
         except:
             dias = 0
-
     if presupuesto >= 1000000:
         presupuesto_txt = f"${presupuesto/1000000:.1f}M"
     elif presupuesto >= 1000:
         presupuesto_txt = f"${presupuesto/1000:.0f}K"
     else:
         presupuesto_txt = f"${presupuesto:.0f}" if presupuesto > 0 else "su presupuesto"
-
     if 'CLIENTE' in clasificacion:
         return (
             f"✅ {nombre} ya es tu cliente. Mantén la relación activa:\n\n"
@@ -118,7 +114,6 @@ def generar_respuesta_sugerida(lead):
             f"con gusto les atiendo con la misma dedicación que a usted.'\n\n"
             f"💡 Técnica: Referidos. Un cliente feliz es tu mejor vendedor."
         )
-
     if dias == 0:
         return (
             f"🔥 LEAD NUEVO — Contacta en los próximos 30 minutos:\n\n"
@@ -127,7 +122,6 @@ def generar_respuesta_sugerida(lead):
             f"¿Tiene 5 minutos ahora para que le cuente?'\n\n"
             f"💡 Técnica: Velocidad de respuesta. El 78% de las ventas las cierra quien responde primero."
         )
-
     if dias <= 1:
         if temperatura in ['MUY_CALIENTE', 'CALIENTE']:
             return (
@@ -144,7 +138,6 @@ def generar_respuesta_sugerida(lead):
             f"¿Puedo hacerle una pregunta rápida para encontrar exactamente lo que busca?'\n\n"
             f"💡 Técnica: Pregunta abierta. No vendas, primero escucha para conectar."
         )
-
     if dias <= 3:
         if presupuesto >= 150000:
             return (
@@ -161,7 +154,6 @@ def generar_respuesta_sugerida(lead):
             f"sin compromiso.'\n\n"
             f"💡 Técnica: Micro-compromiso. Pide algo pequeño para mantener la conversación."
         )
-
     if dias <= 7:
         if temperatura == 'FRIO':
             return (
@@ -178,7 +170,6 @@ def generar_respuesta_sugerida(lead):
             f"que acaban de entrar y creo que le van a gustar.'\n\n"
             f"💡 Técnica: Especificidad + tiempo limitado. Sé concreto para generar respuesta."
         )
-
     if dias <= 14:
         return (
             f"⏰ {nombre} lleva {dias} días — momento crítico:\n\n"
@@ -187,7 +178,6 @@ def generar_respuesta_sugerida(lead):
             f"Si no es el momento, no hay problema — pero no quería que se quedara sin saberlo.'\n\n"
             f"💡 Técnica: FOMO (Fear Of Missing Out). La pérdida motiva más que la ganancia."
         )
-
     if dias <= 30:
         return (
             f"🔄 {nombre} lleva {dias} días — intento de reactivación:\n\n"
@@ -196,7 +186,6 @@ def generar_respuesta_sugerida(lead):
             f"Solo quiero asegurarme de enfocar mi búsqueda en lo que realmente necesita.'\n\n"
             f"💡 Técnica: Honestidad desarmante. Preguntar directamente genera más respuesta que vender."
         )
-
     return (
         f"📊 {nombre} lleva más de un mes ({dias} días):\n\n"
         f"'Hola {nombre}, le escribo por última vez. Si ya encontró su propiedad, "
@@ -241,8 +230,10 @@ def job_seguimiento_automatico():
 # --- VERIFICACIÓN DE SESIÓN ---
 @app.before_request
 def verificar_sesion():
+    # ✅ CAMBIO 1: agregado 'inicio_formulario' a rutas públicas
     rutas_publicas = ['formulario', 'formulario_asesor', 'index', 'seleccion_idioma_login',
-                      'static', 'login', 'cambiar_idioma', 'cron_seguimiento', 'admin_login']
+                      'static', 'login', 'cambiar_idioma', 'cron_seguimiento', 'admin_login',
+                      'inicio_formulario']
     if request.endpoint in rutas_publicas:
         return
     if request.endpoint and request.endpoint.startswith('admin'):
@@ -668,6 +659,14 @@ def cron_seguimiento(secret_key):
         return f"✅ Seguimiento ejecutado: {datetime.now().strftime('%Y-%m-%d %H:%M')}", 200
     except Exception as e:
         return f"❌ Error: {e}", 500
+
+# ✅ CAMBIO 2: nueva ruta para la página de selección de idioma del formulario público
+@app.route("/inicio/<cliente_id>")
+def inicio_formulario(cliente_id):
+    id_clean = cliente_id.lower()
+    vendedor = get_cliente(id_clean)
+    if not vendedor: return "Error 404", 404
+    return render_template("formulario_bienvenida.html", cliente=vendedor)
 
 @app.route("/cliente/<cliente_id>")
 def seleccion_idioma(cliente_id):
