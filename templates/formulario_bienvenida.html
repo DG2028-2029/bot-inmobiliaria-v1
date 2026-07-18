@@ -11,129 +11,111 @@
         body {
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
             background: #0a0a0f;
-            overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            padding: 24px; overflow: hidden;
         }
-
         .bg-glow {
             position: fixed; inset: 0; pointer-events: none;
             background:
-                radial-gradient(ellipse at 30% 30%, color-mix(in srgb, var(--color) 20%, transparent) 0%, transparent 55%),
-                radial-gradient(ellipse at 70% 70%, rgba(255,255,255,0.02) 0%, transparent 50%);
+                radial-gradient(ellipse at 30% 20%, color-mix(in srgb, var(--color) 18%, transparent) 0%, transparent 55%),
+                radial-gradient(ellipse at 75% 80%, rgba(118,75,162,0.08) 0%, transparent 50%);
         }
         .grid-bg {
             position: fixed; inset: 0; pointer-events: none;
             background-image:
-                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+                linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
             background-size: 50px 50px;
         }
+        .wrapper { position: relative; z-index: 1; width: 100%; max-width: 560px; text-align: center; }
 
-        .wrapper {
-            position: relative; z-index: 1;
-            width: 100%; max-width: 580px;
-            text-align: center;
-        }
-
-        /* LOGO */
-        .brand {
-            display: flex; flex-direction: column;
-            align-items: center; margin-bottom: 40px;
-        }
-        .brand-logo {
-            width: 72px; height: 72px; border-radius: 20px;
-            background: linear-gradient(135deg, var(--color), color-mix(in srgb, var(--color) 60%, black));
+        /* BRAND */
+        .brand { margin-bottom: 36px; }
+        .brand-logo-wrap {
+            width: 80px; height: 80px; border-radius: 22px; margin: 0 auto 18px;
+            background: linear-gradient(135deg, var(--color), color-mix(in srgb, var(--color) 55%, black));
             display: flex; align-items: center; justify-content: center;
-            font-size: 32px; margin-bottom: 16px;
-            box-shadow: 0 12px 32px color-mix(in srgb, var(--color) 35%, transparent);
+            font-size: 36px;
+            box-shadow:
+                0 16px 40px color-mix(in srgb, var(--color) 30%, transparent),
+                0 0 0 1px rgba(255,255,255,0.06);
         }
-        .brand-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 20px; }
-        .brand-name { font-size: 26px; font-weight: 800; color: white; letter-spacing: -0.5px; }
-        .brand-sub { font-size: 14px; color: rgba(255,255,255,0.35); margin-top: 6px; }
+        .brand-logo-wrap img { width: 100%; height: 100%; object-fit: contain; border-radius: 22px; }
+        .brand-name { font-size: 28px; font-weight: 800; color: white; letter-spacing: -0.5px; margin-bottom: 6px; }
+        .brand-tagline {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 50px; padding: 5px 14px;
+            font-size: 12px; color: rgba(255,255,255,0.4);
+        }
+        .brand-tagline-dot { width: 5px; height: 5px; background: #27ae60; border-radius: 50%; }
 
         /* CARD */
         .card {
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 24px;
-            padding: 36px 32px;
+            border-radius: 24px; padding: 36px 28px;
             backdrop-filter: blur(10px);
+            box-shadow: 0 24px 60px rgba(0,0,0,0.3);
         }
-        .card-title {
-            font-size: 20px; font-weight: 700; color: white;
-            margin-bottom: 8px;
-        }
-        .card-sub {
-            font-size: 14px; color: rgba(255,255,255,0.35);
-            margin-bottom: 32px; line-height: 1.6;
-        }
+        .card-title { font-size: 20px; font-weight: 700; color: white; margin-bottom: 8px; }
+        .card-sub { font-size: 13px; color: rgba(255,255,255,0.3); margin-bottom: 32px; line-height: 1.7; }
 
-        /* IDIOMAS */
-        .lang-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
+        /* GRID IDIOMAS */
+        .lang-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .lang-btn {
-            display: flex; flex-direction: column;
-            align-items: center; gap: 8px;
-            padding: 18px 12px;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            padding: 20px 12px;
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 14px;
-            text-decoration: none;
-            color: white;
-            font-family: inherit;
-            transition: 0.2s;
-            cursor: pointer;
-            position: relative; overflow: hidden;
+            border-radius: 16px; text-decoration: none; color: white;
+            transition: 0.22s; position: relative; overflow: hidden;
         }
-        .lang-btn::before {
+        .lang-btn::after {
             content: '';
             position: absolute; inset: 0;
             background: linear-gradient(135deg, color-mix(in srgb, var(--color) 20%, transparent), transparent);
-            opacity: 0; transition: 0.2s;
+            opacity: 0; transition: 0.22s;
         }
         .lang-btn:hover {
-            border-color: color-mix(in srgb, var(--color) 60%, transparent);
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            border-color: color-mix(in srgb, var(--color) 55%, transparent);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.25);
         }
-        .lang-btn:hover::before { opacity: 1; }
-        .lang-flag { font-size: 32px; position: relative; }
-        .lang-name { font-size: 13px; font-weight: 600; color: white; position: relative; }
-        .lang-native { font-size: 11px; color: rgba(255,255,255,0.35); position: relative; }
+        .lang-btn:hover::after { opacity: 1; }
+        .lang-flag {
+            font-size: 36px; position: relative; z-index: 1;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+            transition: transform 0.2s;
+        }
+        .lang-btn:hover .lang-flag { transform: scale(1.1); }
+        .lang-name { font-size: 13px; font-weight: 700; color: white; position: relative; z-index: 1; }
+        .lang-native { font-size: 10px; color: rgba(255,255,255,0.3); position: relative; z-index: 1; }
 
         /* DIVIDER */
-        .divider {
-            display: flex; align-items: center; gap: 12px;
-            margin: 24px 0;
-        }
+        .divider { display: flex; align-items: center; gap: 14px; margin: 28px 0 20px; }
         .divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.07); }
-        .divider-text { font-size: 12px; color: rgba(255,255,255,0.2); }
+        .divider-text { font-size: 11px; color: rgba(255,255,255,0.2); white-space: nowrap; }
 
-        /* CONTINUAR SIN CAMBIAR */
+        /* CONTINUAR */
         .btn-continue {
             display: inline-flex; align-items: center; gap: 8px;
-            padding: 12px 24px;
+            padding: 11px 22px;
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 10px;
-            color: rgba(255,255,255,0.4);
-            text-decoration: none;
-            font-size: 13px; font-weight: 500;
+            border-radius: 10px; color: rgba(255,255,255,0.35);
+            text-decoration: none; font-size: 13px; font-weight: 500;
             transition: 0.2s;
         }
-        .btn-continue:hover { color: white; border-color: rgba(255,255,255,0.15); }
+        .btn-continue:hover { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.15); }
 
         @media (max-width: 480px) {
             .lang-grid { grid-template-columns: repeat(2, 1fr); }
-            .card { padding: 24px 20px; }
-            .brand-name { font-size: 22px; }
+            .card { padding: 24px 18px; }
+            .brand-name { font-size: 24px; }
+            .brand-logo-wrap { width: 68px; height: 68px; font-size: 30px; }
         }
     </style>
 </head>
@@ -143,20 +125,23 @@
 
 <div class="wrapper">
     <div class="brand">
-        <div class="brand-logo">
+        <div class="brand-logo-wrap">
             {% if cliente.logo_url %}
             <img src="{{ cliente.logo_url }}" alt="{{ cliente.nombre }}">
             {% else %}🏠{% endif %}
         </div>
         <div class="brand-name">{{ cliente.nombre }}</div>
-        <div class="brand-sub">Real Estate · Propiedades exclusivas</div>
+        <div class="brand-tagline" style="margin-top:10px;">
+            <span class="brand-tagline-dot"></span>
+            Real Estate · Propiedades exclusivas
+        </div>
     </div>
 
     <div class="card">
-        <div class="card-title">Selecciona tu idioma</div>
+        <div class="card-title">🌐 Selecciona tu idioma</div>
         <div class="card-sub">
-            Elige el idioma en el que quieres comunicarte.<br>
-            Select your preferred language to continue.
+            Elige el idioma en el que quieres comunicarte<br>
+            <em style="color:rgba(255,255,255,0.2);">Select your preferred language to continue</em>
         </div>
 
         <div class="lang-grid">
@@ -199,7 +184,7 @@
         </div>
 
         <a href="{{ url_for('formulario', cliente_id=cliente.usuario) }}" class="btn-continue">
-            Continuar →
+            Continuar en español →
         </a>
     </div>
 </div>
