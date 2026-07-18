@@ -44,46 +44,14 @@ def _enviar(api_key, to, subject, html):
         return False
 
 def enviar_email_cliente(cliente_id, nombre_prospecto, email_prospecto):
-    vendedor = _get_cliente(cliente_id)
-    if not vendedor or not vendedor.get("premium_email"):
-        return
-    color = vendedor.get("color_primario", "#667eea")
-    html = f"""
-    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#f8f9fa;padding:0;border-radius:12px;overflow:hidden;">
-        <div style="background:{color};padding:28px 30px;text-align:center;">
-            <h1 style="color:white;margin:0;font-size:22px;">🏠 {vendedor['nombre']}</h1>
-        </div>
-        <div style="background:white;padding:28px 30px;">
-            <h2 style="color:#2c3e50;font-size:18px;">Hola, <strong>{nombre_prospecto}</strong> 👋</h2>
-            <p style="color:#555;font-size:15px;line-height:1.7;">
-                Recibimos tu información correctamente. Uno de nuestros asesores especializados
-                revisará tu consulta y se pondrá en contacto contigo <strong>en las próximas horas</strong>.
-            </p>
-            <div style="background:#f8f9fa;border-left:4px solid {color};padding:14px 18px;border-radius:6px;margin:20px 0;">
-                <p style="margin:0;color:#2c3e50;font-size:14px;">
-                    💡 <strong>¿Sabías que?</strong> Los compradores que responden rápido suelen
-                    encontrar mejores oportunidades. Mantente atento a nuestra llamada.
-                </p>
-            </div>
-            <p style="color:#555;font-size:14px;">Si tienes alguna pregunta urgente, escríbenos directamente:</p>
-            <div style="text-align:center;margin:24px 0;">
-                <a href="https://wa.me/{vendedor.get('whatsapp','')}"
-                   style="background:#25D366;color:white;padding:13px 28px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;">
-                    💬 Escribir por WhatsApp
-                </a>
-            </div>
-        </div>
-        <div style="background:#f8f9fa;padding:16px 30px;text-align:center;border-top:1px solid #eee;">
-            <p style="color:#999;font-size:12px;margin:0;">— Equipo {vendedor['nombre']}</p>
-        </div>
-    </div>
     """
-    _enviar(
-        vendedor["email_api_key"],
-        vendedor["email_vendedor"],
-        f"✅ Nuevo prospecto registrado: {nombre_prospecto} — {vendedor['nombre']}",
-        html
-    )
+    DESACTIVADO temporalmente — con onboarding@resend.dev no se puede mandar
+    al prospecto, solo al email verificado del vendedor. El vendedor ya recibe
+    la notificación completa via notificar_vendedor_lead_nuevo().
+    Cuando tengas dominio propio en Resend, reactiva esta función.
+    """
+    print(f"ℹ️ Email confirmación a prospecto omitido (sin dominio propio en Resend)")
+    return
 
 def notificar_vendedor_lead_nuevo(cliente_id, nombre, telefono, zona, presupuesto, mensaje, score, email_prospecto=""):
     vendedor = _get_cliente(cliente_id)
