@@ -82,7 +82,6 @@ def get_asesores_de_cliente(cliente_id):
     except:
         return []
 
-# --- RESPUESTAS SUGERIDAS CON TÉCNICAS DE VENTA ---
 def generar_respuesta_sugerida(lead):
     nombre = lead.get('nombre', 'el cliente').split()[0]
     zona = lead.get('zona_interes', 'la zona de interés')
@@ -195,7 +194,6 @@ def generar_respuesta_sugerida(lead):
         f"Muchos responden precisamente porque sienten que 'perderán' el contacto."
     )
 
-# --- SEGUIMIENTO AUTOMÁTICO ---
 def job_seguimiento_automatico():
     print(f"🔄 [{datetime.now().strftime('%Y-%m-%d %H:%M')}] Ejecutando seguimiento automático...")
     try:
@@ -227,10 +225,8 @@ def job_seguimiento_automatico():
     except Exception as e:
         print(f"❌ Error en seguimiento automático: {e}")
 
-# --- VERIFICACIÓN DE SESIÓN ---
 @app.before_request
 def verificar_sesion():
-    # ✅ CAMBIO 1: agregado 'inicio_formulario' a rutas públicas
     rutas_publicas = ['formulario', 'formulario_asesor', 'index', 'seleccion_idioma_login',
                       'static', 'login', 'cambiar_idioma', 'cron_seguimiento', 'admin_login',
                       'inicio_formulario']
@@ -260,7 +256,6 @@ def agregar_headers_seguridad(response):
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     return response
 
-# --- MOTOR DE SCORING ---
 def calcular_entropia_mensaje(texto):
     if not texto or len(texto) < 10: return 0
     palabras = texto.lower().split()
@@ -660,7 +655,6 @@ def cron_seguimiento(secret_key):
     except Exception as e:
         return f"❌ Error: {e}", 500
 
-# ✅ CAMBIO 2: nueva ruta para la página de selección de idioma del formulario público
 @app.route("/inicio/<cliente_id>")
 def inicio_formulario(cliente_id):
     id_clean = cliente_id.lower()
@@ -899,7 +893,7 @@ def agregar_propiedad(cliente_id):
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
         imagenes_urls = []
-        archivos = request.files.getlist("imagenes")[:5]
+        archivos = request.files.getlist("imagenes")[:7]  # ✅ cambiado de 5 a 7
         for archivo in archivos:
             if archivo and archivo.filename:
                 resultado = cloudinary.uploader.upload(archivo,
@@ -939,7 +933,7 @@ def editar_propiedad(cliente_id, prop_id):
                 imagenes_existentes = json.loads(prop_actual.data[0].get("imagen_url", "[]"))
                 if not isinstance(imagenes_existentes, list): imagenes_existentes = []
             except: pass
-        espacio_disponible = max(0, 5 - len(imagenes_existentes))
+        espacio_disponible = max(0, 7 - len(imagenes_existentes))  # ✅ cambiado de 5 a 7
         archivos = request.files.getlist("imagenes")[:espacio_disponible]
         for archivo in archivos:
             if archivo and archivo.filename:
