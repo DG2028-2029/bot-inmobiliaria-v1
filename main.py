@@ -669,7 +669,8 @@ def seleccion_idioma(cliente_id):
     if not vendedor: return "Error 403: Acceso denegado.", 403
     lang = session.get('idioma', request.accept_languages.best_match(['es', 'en', 'fr', 'de']) or 'es')
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
-    return render_template("bienvenida.html", cliente=vendedor, textos=textos)
+    # ✅ ÚNICO CAMBIO: agrega idioma_actual=lang
+    return render_template("bienvenida.html", cliente=vendedor, textos=textos, idioma_actual=lang)
 
 @app.route("/form/<cliente_id>", methods=["GET","POST"])
 def formulario(cliente_id):
@@ -893,7 +894,7 @@ def agregar_propiedad(cliente_id):
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
         imagenes_urls = []
-        archivos = request.files.getlist("imagenes")[:7]  # ✅ cambiado de 5 a 7
+        archivos = request.files.getlist("imagenes")[:7]
         for archivo in archivos:
             if archivo and archivo.filename:
                 resultado = cloudinary.uploader.upload(archivo,
@@ -933,7 +934,7 @@ def editar_propiedad(cliente_id, prop_id):
                 imagenes_existentes = json.loads(prop_actual.data[0].get("imagen_url", "[]"))
                 if not isinstance(imagenes_existentes, list): imagenes_existentes = []
             except: pass
-        espacio_disponible = max(0, 7 - len(imagenes_existentes))  # ✅ cambiado de 5 a 7
+        espacio_disponible = max(0, 7 - len(imagenes_existentes))
         archivos = request.files.getlist("imagenes")[:espacio_disponible]
         for archivo in archivos:
             if archivo and archivo.filename:
