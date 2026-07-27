@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ idioma_actual or 'es' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,15 +9,26 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f2f6; padding: 16px; min-height: 100vh; }
 
-        /* TOP BAR */
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+        .top-bar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+        /* LANG SELECTOR */
+        .lang-selector { position: relative; display: inline-block; }
+        .lang-selector-btn { display: flex; align-items: center; gap: 6px; background: white; border: 1px solid #ddd; border-radius: 8px; padding: 7px 12px; cursor: pointer; font-size: 13px; font-weight: 600; color: #2c3e50; box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-family: inherit; transition: 0.2s; }
+        .lang-selector-btn:hover { border-color: var(--color); }
+        .lang-arrow { font-size: 9px; color: #999; transition: transform 0.2s; }
+        .lang-selector.abierto .lang-arrow { transform: rotate(180deg); }
+        .lang-menu { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: white; border-radius: 10px; box-shadow: 0 8px 25px rgba(0,0,0,0.18); min-width: 170px; overflow: hidden; z-index: 200; }
+        .lang-selector.abierto .lang-menu { display: block; }
+        .lang-menu a { display: flex; align-items: center; gap: 8px; padding: 10px 14px; text-decoration: none; color: #2c3e50; font-size: 13px; transition: 0.15s; }
+        .lang-menu a:hover { background: #f8f9fa; }
+        .lang-menu a.activo { color: var(--color); background: #f0f4ff; }
+
         .btn-logout { background: #e74c3c; color: white; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: bold; font-size: 13px; transition: 0.2s; }
         .btn-logout:hover { background: #c0392b; }
 
-        /* BANNER ASESOR */
         .asesor-banner { background: linear-gradient(135deg, var(--color), #1a1a2e); color: white; padding: 10px 16px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; font-weight: 600; }
 
-        /* HEADER */
         .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; background: white; padding: 14px 18px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); border-left: 5px solid var(--color); }
         .header-left { display: flex; align-items: center; gap: 12px; }
         .header-logo { width: 42px; height: 42px; border-radius: 10px; object-fit: contain; border: 2px solid var(--color); }
@@ -28,21 +39,17 @@
         .btn-nav { color: white; text-decoration: none; padding: 9px 14px; border-radius: 8px; font-weight: bold; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; border: none; cursor: pointer; transition: 0.2s; }
         .btn-nav:hover { opacity: 0.85; transform: translateY(-1px); }
 
-        /* STATS ROW */
         .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
         .stat-pill { background: white; padding: 12px 16px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 3px solid var(--etapa-color, #667eea); }
         .stat-pill .num { font-size: 24px; font-weight: bold; color: var(--etapa-color, #667eea); }
         .stat-pill .lbl { font-size: 11px; color: #999; margin-top: 2px; }
 
-        /* KANBAN BOARD */
         .kanban-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; align-items: start; }
-
         .kanban-col { background: #f8f9fa; border-radius: 12px; padding: 12px; min-height: 400px; }
         .kanban-col-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid var(--col-color); }
         .kanban-col-titulo { font-size: 13px; font-weight: 700; color: #2c3e50; display: flex; align-items: center; gap: 6px; }
         .kanban-col-count { background: var(--col-color); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; flex-shrink: 0; }
 
-        /* CARD */
         .kanban-card { background: white; border-radius: 10px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 3px solid var(--col-color); cursor: grab; transition: 0.2s; position: relative; }
         .kanban-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.14); transform: translateY(-2px); }
         .kanban-card.dragging { opacity: 0.5; cursor: grabbing; }
@@ -88,11 +95,9 @@
         .btn-msg { background: #f0f4ff; color: var(--color); border: 1px solid var(--color); }
         .btn-msg:hover { background: var(--color); color: white; }
 
-        /* SELECT ETAPA */
         .etapa-select { width: 100%; font-size: 11px; padding: 5px 6px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer; margin-top: 6px; }
         .etapa-select:focus { outline: none; border-color: var(--color); }
 
-        /* MODAL RESPUESTA */
         .modal-respuesta { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); overflow-y: auto; }
         .modal-respuesta-content { background: white; margin: 6% auto; padding: 24px; border-radius: 12px; max-width: 520px; width: 92%; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
         .modal-titulo { font-size: 17px; font-weight: 700; color: #2c3e50; margin-bottom: 14px; }
@@ -102,7 +107,6 @@
         .btn-whatsapp-modal { background: #25D366; color: white; border: none; padding: 11px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; }
         .btn-cerrar { background: #ecf0f1; color: #555; border: none; padding: 11px; border-radius: 8px; cursor: pointer; font-size: 13px; width: 100%; }
 
-        /* RESPONSIVE */
         @media (max-width: 900px) {
             .kanban-board { grid-template-columns: repeat(3, 1fr); }
             .stats-row { grid-template-columns: repeat(3, 1fr); }
@@ -117,25 +121,209 @@
 </head>
 <body>
 
+{% set lang = idioma_actual if idioma_actual else 'es' %}
+{% set kn = {
+    'es': {
+        'titulo_top': 'Proceso de Ventas',
+        'cerrar': '🔒 Cerrar Sesión',
+        'asesor_sesion': 'Sesión de asesor:',
+        'titulo_header': 'Proceso de Ventas:',
+        'btn_dashboard': '📊 Dashboard',
+        'btn_inventario': '🏠 Inventario',
+        'btn_estadisticas': '📈 Estadísticas',
+        'col_nuevo': '🆕 Nuevos',
+        'col_contactado': '📞 Contactados',
+        'col_visita': '🏠 Visita',
+        'col_propuesta': '📄 Propuesta',
+        'col_cerrado': '💎 Cerrado',
+        'opt_nuevo': '🆕 Nuevo',
+        'opt_contactado': '📞 Contactado',
+        'opt_visita': '🏠 Visita agendada',
+        'opt_propuesta': '📄 Propuesta enviada',
+        'opt_cerrado': '💎 Cerrado',
+        'sin_leads': 'Sin leads aquí',
+        'hoy': 'Hoy',
+        'modal_titulo': '💬 ¿Qué decirle a ',
+        'analizando': 'Analizando situación...',
+        'copiar': '📋 Copiar mensaje',
+        'copiado': '✅ ¡Copiado!',
+        'whatsapp': '📱 Abrir en WhatsApp',
+        'cerrar_modal': 'Cerrar',
+    },
+    'en': {
+        'titulo_top': 'Sales Process',
+        'cerrar': '🔒 Log Out',
+        'asesor_sesion': 'Agent session:',
+        'titulo_header': 'Sales Process:',
+        'btn_dashboard': '📊 Dashboard',
+        'btn_inventario': '🏠 Inventory',
+        'btn_estadisticas': '📈 Statistics',
+        'col_nuevo': '🆕 New',
+        'col_contactado': '📞 Contacted',
+        'col_visita': '🏠 Visit',
+        'col_propuesta': '📄 Proposal',
+        'col_cerrado': '💎 Closed',
+        'opt_nuevo': '🆕 New',
+        'opt_contactado': '📞 Contacted',
+        'opt_visita': '🏠 Visit scheduled',
+        'opt_propuesta': '📄 Proposal sent',
+        'opt_cerrado': '💎 Closed',
+        'sin_leads': 'No leads here',
+        'hoy': 'Today',
+        'modal_titulo': '💬 What to say to ',
+        'analizando': 'Analyzing situation...',
+        'copiar': '📋 Copy message',
+        'copiado': '✅ Copied!',
+        'whatsapp': '📱 Open in WhatsApp',
+        'cerrar_modal': 'Close',
+    },
+    'fr': {
+        'titulo_top': 'Processus de Vente',
+        'cerrar': '🔒 Déconnexion',
+        'asesor_sesion': 'Session agent:',
+        'titulo_header': 'Processus de Vente:',
+        'btn_dashboard': '📊 Tableau de bord',
+        'btn_inventario': '🏠 Inventaire',
+        'btn_estadisticas': '📈 Statistiques',
+        'col_nuevo': '🆕 Nouveaux',
+        'col_contactado': '📞 Contactés',
+        'col_visita': '🏠 Visite',
+        'col_propuesta': '📄 Proposition',
+        'col_cerrado': '💎 Fermé',
+        'opt_nuevo': '🆕 Nouveau',
+        'opt_contactado': '📞 Contacté',
+        'opt_visita': '🏠 Visite planifiée',
+        'opt_propuesta': '📄 Proposition envoyée',
+        'opt_cerrado': '💎 Fermé',
+        'sin_leads': 'Aucun lead ici',
+        'hoy': "Aujourd'hui",
+        'modal_titulo': '💬 Quoi dire à ',
+        'analizando': 'Analyse en cours...',
+        'copiar': '📋 Copier message',
+        'copiado': '✅ Copié!',
+        'whatsapp': '📱 Ouvrir WhatsApp',
+        'cerrar_modal': 'Fermer',
+    },
+    'de': {
+        'titulo_top': 'Verkaufsprozess',
+        'cerrar': '🔒 Abmelden',
+        'asesor_sesion': 'Agenten-Sitzung:',
+        'titulo_header': 'Verkaufsprozess:',
+        'btn_dashboard': '📊 Dashboard',
+        'btn_inventario': '🏠 Inventar',
+        'btn_estadisticas': '📈 Statistiken',
+        'col_nuevo': '🆕 Neu',
+        'col_contactado': '📞 Kontaktiert',
+        'col_visita': '🏠 Besichtigung',
+        'col_propuesta': '📄 Angebot',
+        'col_cerrado': '💎 Abgeschlossen',
+        'opt_nuevo': '🆕 Neu',
+        'opt_contactado': '📞 Kontaktiert',
+        'opt_visita': '🏠 Besichtigung geplant',
+        'opt_propuesta': '📄 Angebot gesendet',
+        'opt_cerrado': '💎 Abgeschlossen',
+        'sin_leads': 'Keine Leads hier',
+        'hoy': 'Heute',
+        'modal_titulo': '💬 Was sagen zu ',
+        'analizando': 'Situation wird analysiert...',
+        'copiar': '📋 Nachricht kopieren',
+        'copiado': '✅ Kopiert!',
+        'whatsapp': '📱 In WhatsApp öffnen',
+        'cerrar_modal': 'Schließen',
+    },
+    'pt': {
+        'titulo_top': 'Processo de Vendas',
+        'cerrar': '🔒 Sair',
+        'asesor_sesion': 'Sessão de agente:',
+        'titulo_header': 'Processo de Vendas:',
+        'btn_dashboard': '📊 Dashboard',
+        'btn_inventario': '🏠 Inventário',
+        'btn_estadisticas': '📈 Estatísticas',
+        'col_nuevo': '🆕 Novos',
+        'col_contactado': '📞 Contactados',
+        'col_visita': '🏠 Visita',
+        'col_propuesta': '📄 Proposta',
+        'col_cerrado': '💎 Fechado',
+        'opt_nuevo': '🆕 Novo',
+        'opt_contactado': '📞 Contactado',
+        'opt_visita': '🏠 Visita agendada',
+        'opt_propuesta': '📄 Proposta enviada',
+        'opt_cerrado': '💎 Fechado',
+        'sin_leads': 'Sem leads aqui',
+        'hoy': 'Hoje',
+        'modal_titulo': '💬 O que dizer a ',
+        'analizando': 'Analisando situação...',
+        'copiar': '📋 Copiar mensagem',
+        'copiado': '✅ Copiado!',
+        'whatsapp': '📱 Abrir no WhatsApp',
+        'cerrar_modal': 'Fechar',
+    },
+    'zh': {
+        'titulo_top': '销售流程',
+        'cerrar': '🔒 退出登录',
+        'asesor_sesion': '顾问会话:',
+        'titulo_header': '销售流程:',
+        'btn_dashboard': '📊 仪表板',
+        'btn_inventario': '🏠 库存',
+        'btn_estadisticas': '📈 统计',
+        'col_nuevo': '🆕 新建',
+        'col_contactado': '📞 已联系',
+        'col_visita': '🏠 参观',
+        'col_propuesta': '📄 提案',
+        'col_cerrado': '💎 已成交',
+        'opt_nuevo': '🆕 新建',
+        'opt_contactado': '📞 已联系',
+        'opt_visita': '🏠 已安排参观',
+        'opt_propuesta': '📄 已发送提案',
+        'opt_cerrado': '💎 已成交',
+        'sin_leads': '这里没有线索',
+        'hoy': '今天',
+        'modal_titulo': '💬 对 ',
+        'analizando': '正在分析情况...',
+        'copiar': '📋 复制消息',
+        'copiado': '✅ 已复制！',
+        'whatsapp': '📱 在WhatsApp中打开',
+        'cerrar_modal': '关闭',
+    }
+} %}
+{% set t = kn[lang] if lang in kn else kn['es'] %}
+
 <div class="top-bar">
-    <div style="font-size:14px;font-weight:600;color:#2c3e50;">📋 Pipeline — {{ cliente.nombre }}</div>
-    <a href="{{ url_for('logout', cliente_id=cliente.usuario) }}" class="btn-logout">🔒 Cerrar Sesión</a>
+    <div style="font-size:14px;font-weight:600;color:#2c3e50;">📋 {{ t.titulo_top }} — {{ cliente.nombre }}</div>
+    <div class="top-bar-right">
+        <div class="lang-selector" id="langSelector">
+            <button type="button" class="lang-selector-btn" onclick="toggleLang()">
+                <span>{% if lang == 'es' %}🇪🇸{% elif lang == 'en' %}🇺🇸{% elif lang == 'fr' %}🇫🇷{% elif lang == 'de' %}🇩🇪{% elif lang == 'pt' %}🇵🇹{% elif lang == 'zh' %}🇨🇳{% else %}🇪🇸{% endif %}</span>
+                <span style="font-size:12px;">{% if lang == 'es' %}ES{% elif lang == 'en' %}EN{% elif lang == 'fr' %}FR{% elif lang == 'de' %}DE{% elif lang == 'pt' %}PT{% elif lang == 'zh' %}ZH{% else %}ES{% endif %}</span>
+                <span class="lang-arrow">▾</span>
+            </button>
+            <div class="lang-menu">
+                <a href="{{ url_for('cambiar_idioma', lang='es', proximo='kanban', cliente_id=cliente.usuario) }}" {% if lang == 'es' %}class="activo"{% endif %}>🇪🇸 Español</a>
+                <a href="{{ url_for('cambiar_idioma', lang='en', proximo='kanban', cliente_id=cliente.usuario) }}" {% if lang == 'en' %}class="activo"{% endif %}>🇺🇸 English</a>
+                <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='kanban', cliente_id=cliente.usuario) }}" {% if lang == 'fr' %}class="activo"{% endif %}>🇫🇷 Français</a>
+                <a href="{{ url_for('cambiar_idioma', lang='de', proximo='kanban', cliente_id=cliente.usuario) }}" {% if lang == 'de' %}class="activo"{% endif %}>🇩🇪 Deutsch</a>
+                <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='kanban', cliente_id=cliente.usuario) }}" {% if lang == 'pt' %}class="activo"{% endif %}>🇵🇹 Português</a>
+                <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='kanban', cliente_id=cliente.usuario) }}" {% if lang == 'zh' %}class="activo"{% endif %}>🇨🇳 中文</a>
+            </div>
+        </div>
+        <a href="{{ url_for('logout', cliente_id=cliente.usuario) }}" class="btn-logout">{{ t.cerrar }}</a>
+    </div>
 </div>
 
 {% if not es_dueno %}
-<div class="asesor-banner">👤 Sesión de asesor: <strong>{{ asesor_nombre }}</strong></div>
+<div class="asesor-banner">👤 {{ t.asesor_sesion }} <strong>{{ asesor_nombre }}</strong></div>
 {% endif %}
 
 <div class="header-container">
     <div class="header-left">
         {% if cliente.logo_url %}<img src="{{ cliente.logo_url }}" alt="{{ cliente.nombre }}" class="header-logo">
         {% else %}<div class="header-logo-placeholder">🏠</div>{% endif %}
-        <h2>📋 Pipeline de Ventas: <span>{{ cliente.nombre }}</span></h2>
+        <h2>📋 {{ t.titulo_header }} <span>{{ cliente.nombre }}</span></h2>
     </div>
     <div class="header-buttons">
-        <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="btn-nav" style="background:#2c3e50;">📊 Dashboard</a>
-        <a href="{{ url_for('inventario', cliente_id=cliente.usuario) }}" class="btn-nav" style="background:var(--color);">🏠 Inventario</a>
-        <a href="{{ url_for('stats', cliente_id=cliente.usuario) }}" class="btn-nav" style="background:#3498db;">📈 Estadísticas</a>
+        <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="btn-nav" style="background:#2c3e50;">{{ t.btn_dashboard }}</a>
+        <a href="{{ url_for('inventario', cliente_id=cliente.usuario) }}" class="btn-nav" style="background:var(--color);">{{ t.btn_inventario }}</a>
+        <a href="{{ url_for('stats', cliente_id=cliente.usuario) }}" class="btn-nav" style="background:#3498db;">{{ t.btn_estadisticas }}</a>
     </div>
 </div>
 
@@ -143,23 +331,23 @@
 <div class="stats-row">
     <div class="stat-pill" style="--etapa-color:#95a5a6;">
         <div class="num">{{ etapas.nuevo | length }}</div>
-        <div class="lbl">🆕 Nuevos</div>
+        <div class="lbl">{{ t.col_nuevo }}</div>
     </div>
     <div class="stat-pill" style="--etapa-color:#3498db;">
         <div class="num">{{ etapas.contactado | length }}</div>
-        <div class="lbl">📞 Contactados</div>
+        <div class="lbl">{{ t.col_contactado }}</div>
     </div>
     <div class="stat-pill" style="--etapa-color:#f39c12;">
         <div class="num">{{ etapas.visita | length }}</div>
-        <div class="lbl">🏠 Visitas</div>
+        <div class="lbl">{{ t.col_visita }}</div>
     </div>
     <div class="stat-pill" style="--etapa-color:#8e44ad;">
         <div class="num">{{ etapas.propuesta | length }}</div>
-        <div class="lbl">📄 Propuestas</div>
+        <div class="lbl">{{ t.col_propuesta }}</div>
     </div>
     <div class="stat-pill" style="--etapa-color:#27ae60;">
         <div class="num">{{ etapas.cerrado | length }}</div>
-        <div class="lbl">💎 Cerrados</div>
+        <div class="lbl">{{ t.col_cerrado }}</div>
     </div>
 </div>
 
@@ -167,20 +355,18 @@
 <div class="kanban-board" id="kanbanBoard">
 
     {% set columnas = [
-        ('nuevo',      '🆕 Nuevos',      '#95a5a6'),
-        ('contactado', '📞 Contactados',  '#3498db'),
-        ('visita',     '🏠 Visita',       '#f39c12'),
-        ('propuesta',  '📄 Propuesta',    '#8e44ad'),
-        ('cerrado',    '💎 Cerrado',      '#27ae60'),
+        ('nuevo',      t.col_nuevo,      '#95a5a6'),
+        ('contactado', t.col_contactado, '#3498db'),
+        ('visita',     t.col_visita,     '#f39c12'),
+        ('propuesta',  t.col_propuesta,  '#8e44ad'),
+        ('cerrado',    t.col_cerrado,    '#27ae60'),
     ] %}
 
     {% for etapa_key, etapa_nombre, etapa_color in columnas %}
     <div class="kanban-col" data-etapa="{{ etapa_key }}" style="--col-color:{{ etapa_color }};"
          ondragover="allowDrop(event)" ondrop="drop(event, '{{ etapa_key }}')">
         <div class="kanban-col-header">
-            <span class="kanban-col-titulo">
-                {{ etapa_nombre }}
-            </span>
+            <span class="kanban-col-titulo">{{ etapa_nombre }}</span>
             <span class="kanban-col-count">{{ etapas[etapa_key] | length }}</span>
         </div>
 
@@ -190,8 +376,9 @@
         {% set clasif = lead.clasificacion %}
         {% set badge_clase = 'badge-cliente' if 'CLIENTE' in clasif else ('badge-alto' if 'VIP' in clasif or 'PROSPECTO' in clasif else ('badge-medio' if 'SEGUIMIENTO' in clasif else 'badge-bajo')) %}
         {% set dias = lead.dias %}
-        {% set dias_clase = 'dias-riesgo' if dias > 14 and 'CLIENTE' not in clasif else ('dias-nuevo' if dias <= 1 else ('dias-ok' if dias <= 7 else 'dias-alerta')) %}
-        {% set dias_txt = '🚨 ' + dias|string + 'd' if dias > 14 and 'CLIENTE' not in clasif else ('Hoy' if dias == 0 else (dias|string + 'd')) %}
+        {% set en_riesgo = dias > 14 and 'CLIENTE' not in clasif %}
+        {% set dias_clase = 'dias-riesgo' if en_riesgo else ('dias-nuevo' if dias <= 1 else ('dias-ok' if dias <= 7 else 'dias-alerta')) %}
+        {% set dias_txt = '🚨 ' + dias|string + 'd' if en_riesgo else (t.hoy if dias == 0 else (dias|string + 'd')) %}
 
         <div class="kanban-card" draggable="true" data-lead-id="{{ lead.id }}"
              ondragstart="dragStart(event, {{ lead.id }})">
@@ -217,13 +404,12 @@
             </div>
             {% endif %}
 
-            <!-- SELECT ETAPA (alternativa al drag) -->
             <select class="etapa-select" onchange="cambiarEtapa({{ lead.id }}, this.value, this)">
-                <option value="nuevo"      {% if lead.etapa == 'nuevo' %}selected{% endif %}>🆕 Nuevo</option>
-                <option value="contactado" {% if lead.etapa == 'contactado' %}selected{% endif %}>📞 Contactado</option>
-                <option value="visita"     {% if lead.etapa == 'visita' %}selected{% endif %}>🏠 Visita agendada</option>
-                <option value="propuesta"  {% if lead.etapa == 'propuesta' %}selected{% endif %}>📄 Propuesta enviada</option>
-                <option value="cerrado"    {% if lead.etapa == 'cerrado' %}selected{% endif %}>💎 Cerrado</option>
+                <option value="nuevo"      {% if lead.etapa == 'nuevo' %}selected{% endif %}>{{ t.opt_nuevo }}</option>
+                <option value="contactado" {% if lead.etapa == 'contactado' %}selected{% endif %}>{{ t.opt_contactado }}</option>
+                <option value="visita"     {% if lead.etapa == 'visita' %}selected{% endif %}>{{ t.opt_visita }}</option>
+                <option value="propuesta"  {% if lead.etapa == 'propuesta' %}selected{% endif %}>{{ t.opt_propuesta }}</option>
+                <option value="cerrado"    {% if lead.etapa == 'cerrado' %}selected{% endif %}>{{ t.opt_cerrado }}</option>
             </select>
 
             <div class="card-footer">
@@ -236,45 +422,50 @@
         </div>
         {% else %}
         <div style="text-align:center;padding:30px 10px;color:#ccc;font-size:12px;">
-            Sin leads aquí
+            {{ t.sin_leads }}
         </div>
         {% endfor %}
     </div>
     {% endfor %}
-
 </div>
 
 <!-- MODAL RESPUESTA -->
 <div id="modalRespuesta" class="modal-respuesta">
     <div class="modal-respuesta-content">
-        <div class="modal-titulo">💬 ¿Qué decirle a <span id="nombreRespuesta"></span>?</div>
-        <div class="modal-texto" id="textoRespuesta">Analizando situación...</div>
+        <div class="modal-titulo" id="modalTitulo">{{ t.modal_titulo }}<span id="nombreRespuesta"></span>?</div>
+        <div class="modal-texto" id="textoRespuesta">{{ t.analizando }}</div>
         <div class="modal-btns">
-            <button class="btn-copiar" onclick="copiarRespuesta()">📋 Copiar mensaje</button>
-            <button class="btn-whatsapp-modal" onclick="enviarPorWhatsApp()">📱 Abrir en WhatsApp</button>
-            <button class="btn-cerrar" onclick="cerrarModal()">Cerrar</button>
+            <button class="btn-copiar" id="btnCopiar" onclick="copiarRespuesta()">{{ t.copiar }}</button>
+            <button class="btn-whatsapp-modal" onclick="enviarPorWhatsApp()">{{ t.whatsapp }}</button>
+            <button class="btn-cerrar" onclick="cerrarModal()">{{ t.cerrar_modal }}</button>
         </div>
     </div>
 </div>
 
 <script>
 const clienteId = "{{ cliente.usuario }}";
+const T_COPIAR = "{{ t.copiar }}";
+const T_COPIADO = "{{ t.copiado }}";
+const T_ANALIZANDO = "{{ t.analizando }}";
 let telefonoActual = '';
 let mensajeActual = '';
 let draggedLeadId = null;
 
-// --- DRAG & DROP ---
+function toggleLang() { document.getElementById('langSelector').classList.toggle('abierto'); }
+document.addEventListener('click', function(e) {
+    const sel = document.getElementById('langSelector');
+    if (sel && !sel.contains(e.target)) sel.classList.remove('abierto');
+});
+
 function dragStart(event, leadId) {
     draggedLeadId = leadId;
     event.dataTransfer.effectAllowed = 'move';
     setTimeout(() => event.target.classList.add('dragging'), 0);
 }
-
 function allowDrop(event) {
     event.preventDefault();
     event.currentTarget.classList.add('drag-over');
 }
-
 function drop(event, nuevaEtapa) {
     event.preventDefault();
     event.currentTarget.classList.remove('drag-over');
@@ -283,51 +474,36 @@ function drop(event, nuevaEtapa) {
         draggedLeadId = null;
     }
 }
-
-document.addEventListener('dragend', function(e) {
+document.addEventListener('dragend', function() {
     document.querySelectorAll('.kanban-card').forEach(c => c.classList.remove('dragging'));
     document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
 });
-
 document.addEventListener('dragleave', function(e) {
-    if (e.target.classList.contains('kanban-col')) {
-        e.target.classList.remove('drag-over');
-    }
+    if (e.target.classList.contains('kanban-col')) e.target.classList.remove('drag-over');
 });
 
-// --- CAMBIAR ETAPA VÍA SELECT ---
-function cambiarEtapa(leadId, nuevaEtapa, selectEl) {
+function cambiarEtapa(leadId, nuevaEtapa) {
     fetch(`/leads/${clienteId}/etapa/${leadId}`, {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: `etapa=${encodeURIComponent(nuevaEtapa)}`
     }).then(r => r.json()).then(data => {
-        if (data.ok) {
-            // Recargar para actualizar columnas
-            setTimeout(() => location.reload(), 300);
-        }
-    }).catch(() => {
-        location.reload();
-    });
+        if (data.ok) setTimeout(() => location.reload(), 300);
+    }).catch(() => location.reload());
 }
-
-// --- CAMBIAR ETAPA VÍA DRAG ---
 function cambiarEtapaDirecto(leadId, nuevaEtapa) {
     fetch(`/leads/${clienteId}/etapa/${leadId}`, {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: `etapa=${encodeURIComponent(nuevaEtapa)}`
-    }).then(r => r.json()).then(data => {
-        if (data.ok) location.reload();
-    });
+    }).then(r => r.json()).then(data => { if (data.ok) location.reload(); });
 }
 
-// --- RESPUESTA SUGERIDA ---
 function verRespuesta(leadId, nombre, telefono) {
     telefonoActual = telefono;
     mensajeActual = '';
     document.getElementById('nombreRespuesta').textContent = nombre;
-    document.getElementById('textoRespuesta').textContent = 'Analizando situación...';
+    document.getElementById('textoRespuesta').textContent = T_ANALIZANDO;
     document.getElementById('modalRespuesta').style.display = 'block';
     fetch(`/leads/${clienteId}/respuesta/${leadId}`)
         .then(r => r.json())
@@ -336,34 +512,24 @@ function verRespuesta(leadId, nombre, telefono) {
             document.getElementById('textoRespuesta').textContent = mensajeActual;
         });
 }
-
 function abrirWhatsApp(telefono, leadId) {
     fetch(`/leads/${clienteId}/respuesta/${leadId}`)
         .then(r => r.json())
-        .then(data => {
-            const url = `https://wa.me/${telefono}?text=${encodeURIComponent(data.respuesta)}`;
-            window.open(url, '_blank');
-        });
+        .then(data => window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(data.respuesta)}`, '_blank'));
 }
-
 function enviarPorWhatsApp() {
     if (!telefonoActual || !mensajeActual) return;
     window.open(`https://wa.me/${telefonoActual}?text=${encodeURIComponent(mensajeActual)}`, '_blank');
 }
-
 function copiarRespuesta() {
     if (!mensajeActual) return;
     navigator.clipboard.writeText(mensajeActual).then(() => {
-        const btn = document.querySelector('.btn-copiar');
-        btn.textContent = '✅ ¡Copiado!';
-        setTimeout(() => btn.textContent = '📋 Copiar mensaje', 2000);
+        const btn = document.getElementById('btnCopiar');
+        btn.textContent = T_COPIADO;
+        setTimeout(() => btn.textContent = T_COPIAR, 2000);
     });
 }
-
-function cerrarModal() {
-    document.getElementById('modalRespuesta').style.display = 'none';
-}
-
+function cerrarModal() { document.getElementById('modalRespuesta').style.display = 'none'; }
 window.onclick = function(e) {
     if (e.target == document.getElementById('modalRespuesta')) cerrarModal();
 }
