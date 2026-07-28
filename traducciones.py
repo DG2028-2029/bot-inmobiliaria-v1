@@ -103,7 +103,7 @@ DICCIONARIO = {
         'inv_label_habitaciones': 'Habitaciones',
         'inv_label_banos': 'Baños',
         'inv_label_m2': 'm²',
-        'inv_label_fotos': 'Fotos (máx. 5)',
+        'inv_label_fotos': 'Fotos (máx. 7)',  # ✅ actualizado de 5 a 7
         'inv_upload_click': 'Click para subir fotos',
         'inv_upload_sub': 'JPG, PNG, WEBP · Puedes subir varias veces',
         'inv_upload_click_editar': 'Click para agregar más fotos',
@@ -116,11 +116,11 @@ DICCIONARIO = {
         'inv_fotos_actuales': 'Fotos actuales',
         'inv_foto_label': 'Foto',
         'inv_sin_fotos': 'Sin fotos aún',
-        'inv_info_agrega': 'Las fotos nuevas se agregan a las existentes (máx. 5 en total)',
-        'inv_espacio_max': 'Alcanzaste el máximo de 5 fotos',
+        'inv_info_agrega': 'Las fotos nuevas se agregan a las existentes (máx. 7 en total)',  # ✅
+        'inv_espacio_max': 'Alcanzaste el máximo de 7 fotos',  # ✅
         'inv_espacio_restante': 'Puedes agregar {n} foto(s) más',
-        'inv_alert_max': 'Ya tienes el máximo de 5 fotos. Elimina alguna para agregar otra.',
-        'inv_alert_parcial': 'Solo se agregaron {n} foto(s). Máximo 5 fotos por propiedad.',
+        'inv_alert_max': 'Ya tienes el máximo de 7 fotos. Elimina alguna para agregar otra.',  # ✅
+        'inv_alert_parcial': 'Solo se agregaron {n} foto(s). Máximo 7 fotos por propiedad.',  # ✅
         'inv_detalle_precio': 'Precio',
         'inv_detalle_ubicacion': 'Ubicación',
         'temp_MUY_CALIENTE': '🔥 MUY CALIENTE', 'temp_CALIENTE': '🔥 CALIENTE', 'temp_MEDIO': '🟡 MEDIO', 'temp_FRIO': '❄️ FRÍO',
@@ -235,7 +235,7 @@ DICCIONARIO = {
         'inv_label_habitaciones': 'Bedrooms',
         'inv_label_banos': 'Bathrooms',
         'inv_label_m2': 'm²',
-        'inv_label_fotos': 'Photos (max. 5)',
+        'inv_label_fotos': 'Photos (max. 7)',  # ✅
         'inv_upload_click': 'Click to upload photos',
         'inv_upload_sub': 'JPG, PNG, WEBP · You can upload several times',
         'inv_upload_click_editar': 'Click to add more photos',
@@ -248,11 +248,11 @@ DICCIONARIO = {
         'inv_fotos_actuales': 'Current photos',
         'inv_foto_label': 'Photo',
         'inv_sin_fotos': 'No photos yet',
-        'inv_info_agrega': 'New photos will be added to the existing ones (max. 5 total)',
-        'inv_espacio_max': 'You reached the maximum of 5 photos',
+        'inv_info_agrega': 'New photos will be added to the existing ones (max. 7 total)',  # ✅
+        'inv_espacio_max': 'You reached the maximum of 7 photos',  # ✅
         'inv_espacio_restante': 'You can add {n} more photo(s)',
-        'inv_alert_max': 'You already have the maximum of 5 photos. Remove one to add another.',
-        'inv_alert_parcial': 'Only {n} photo(s) were added. Maximum 5 photos per property.',
+        'inv_alert_max': 'You already have the maximum of 7 photos. Remove one to add another.',  # ✅
+        'inv_alert_parcial': 'Only {n} photo(s) were added. Maximum 7 photos per property.',  # ✅
         'inv_detalle_precio': 'Price',
         'inv_detalle_ubicacion': 'Location',
         'temp_MUY_CALIENTE': '🔥 VERY HOT', 'temp_CALIENTE': '🔥 HOT', 'temp_MEDIO': '🟡 MEDIUM', 'temp_FRIO': '❄️ COLD',
@@ -367,7 +367,7 @@ DICCIONARIO = {
         'inv_label_habitaciones': 'Chambres',
         'inv_label_banos': 'Salles de bain',
         'inv_label_m2': 'm²',
-        'inv_label_fotos': 'Photos (max. 5)',
+        'inv_label_fotos': 'Photos (max. 7)',  # ✅
         'inv_upload_click': 'Cliquez pour ajouter des photos',
         'inv_upload_sub': 'JPG, PNG, WEBP · Vous pouvez en ajouter plusieurs fois',
         'inv_upload_click_editar': 'Cliquez pour ajouter plus de photos',
@@ -380,11 +380,11 @@ DICCIONARIO = {
         'inv_fotos_actuales': 'Photos actuelles',
         'inv_foto_label': 'Photo',
         'inv_sin_fotos': 'Aucune photo pour le moment',
-        'inv_info_agrega': "Les nouvelles photos s'ajouteront aux existantes (max. 5 au total)",
-        'inv_espacio_max': 'Vous avez atteint le maximum de 5 photos',
+        'inv_info_agrega': "Les nouvelles photos s'ajouteront aux existantes (max. 7 au total)",  # ✅
+        'inv_espacio_max': 'Vous avez atteint le maximum de 7 photos',  # ✅
         'inv_espacio_restante': 'Vous pouvez ajouter {n} photo(s) de plus',
-        'inv_alert_max': 'Vous avez déjà le maximum de 5 photos. Supprimez-en une pour en ajouter une autre.',
-        'inv_alert_parcial': 'Seulement {n} photo(s) ont été ajoutées. Maximum 5 photos par propriété.',
+        'inv_alert_max': 'Vous avez déjà le maximum de 7 photos. Supprimez-en une pour en ajouter une autre.',  # ✅
+        'inv_alert_parcial': 'Seulement {n} photo(s) ont été ajoutées. Maximum 7 photos par propriété.',  # ✅
         'inv_detalle_precio': 'Prix',
         'inv_detalle_ubicacion': 'Emplacement',
         'temp_MUY_CALIENTE': '🔥 TRÈS CHAUD', 'temp_CALIENTE': '🔥 CHAUD', 'temp_MEDIO': '🟡 MOYEN', 'temp_FRIO': '❄️ FROID',
@@ -499,7 +499,7 @@ DICCIONARIO = {
         'inv_label_habitaciones': 'Schlafzimmer',
         'inv_label_banos': 'Badezimmer',
         'inv_label_m2': 'm²',
-        'inv_label_fotos': 'Fotos (max. 5)',
+        'inv_label_fotos': 'Fotos (max. 7)',  # ✅
         'inv_upload_click': 'Klicken, um Fotos hochzuladen',
         'inv_upload_sub': 'JPG, PNG, WEBP · Sie können mehrmals hochladen',
         'inv_upload_click_editar': 'Klicken, um weitere Fotos hinzuzufügen',
@@ -512,11 +512,11 @@ DICCIONARIO = {
         'inv_fotos_actuales': 'Aktuelle Fotos',
         'inv_foto_label': 'Foto',
         'inv_sin_fotos': 'Noch keine Fotos',
-        'inv_info_agrega': 'Neue Fotos werden zu den vorhandenen hinzugefügt (max. 5 insgesamt)',
-        'inv_espacio_max': 'Sie haben das Maximum von 5 Fotos erreicht',
+        'inv_info_agrega': 'Neue Fotos werden zu den vorhandenen hinzugefügt (max. 7 insgesamt)',  # ✅
+        'inv_espacio_max': 'Sie haben das Maximum von 7 Fotos erreicht',  # ✅
         'inv_espacio_restante': 'Sie können noch {n} Foto(s) hinzufügen',
-        'inv_alert_max': 'Sie haben bereits das Maximum von 5 Fotos. Entfernen Sie eines, um ein weiteres hinzuzufügen.',
-        'inv_alert_parcial': 'Nur {n} Foto(s) wurden hinzugefügt. Maximal 5 Fotos pro Immobilie.',
+        'inv_alert_max': 'Sie haben bereits das Maximum von 7 Fotos. Entfernen Sie eines, um ein weiteres hinzuzufügen.',  # ✅
+        'inv_alert_parcial': 'Nur {n} Foto(s) wurden hinzugefügt. Maximal 7 Fotos pro Immobilie.',  # ✅
         'inv_detalle_precio': 'Preis',
         'inv_detalle_ubicacion': 'Standort',
         'temp_MUY_CALIENTE': '🔥 SEHR HEISS', 'temp_CALIENTE': '🔥 HEISS', 'temp_MEDIO': '🟡 MITTEL', 'temp_FRIO': '❄️ KALT',
@@ -631,7 +631,7 @@ DICCIONARIO = {
         'inv_label_habitaciones': 'Quartos',
         'inv_label_banos': 'Banheiros',
         'inv_label_m2': 'm²',
-        'inv_label_fotos': 'Fotos (máx. 5)',
+        'inv_label_fotos': 'Fotos (máx. 7)',  # ✅
         'inv_upload_click': 'Clique para enviar fotos',
         'inv_upload_sub': 'JPG, PNG, WEBP · Você pode enviar várias vezes',
         'inv_upload_click_editar': 'Clique para adicionar mais fotos',
@@ -644,11 +644,11 @@ DICCIONARIO = {
         'inv_fotos_actuales': 'Fotos atuais',
         'inv_foto_label': 'Foto',
         'inv_sin_fotos': 'Sem fotos ainda',
-        'inv_info_agrega': 'As novas fotos serão adicionadas às existentes (máx. 5 no total)',
-        'inv_espacio_max': 'Você atingiu o máximo de 5 fotos',
+        'inv_info_agrega': 'As novas fotos serão adicionadas às existentes (máx. 7 no total)',  # ✅
+        'inv_espacio_max': 'Você atingiu o máximo de 7 fotos',  # ✅
         'inv_espacio_restante': 'Você pode adicionar mais {n} foto(s)',
-        'inv_alert_max': 'Você já tem o máximo de 5 fotos. Remova uma para adicionar outra.',
-        'inv_alert_parcial': 'Apenas {n} foto(s) foram adicionadas. Máximo de 5 fotos por imóvel.',
+        'inv_alert_max': 'Você já tem o máximo de 7 fotos. Remova uma para adicionar outra.',  # ✅
+        'inv_alert_parcial': 'Apenas {n} foto(s) foram adicionadas. Máximo de 7 fotos por imóvel.',  # ✅
         'inv_detalle_precio': 'Preço',
         'inv_detalle_ubicacion': 'Localização',
         'temp_MUY_CALIENTE': '🔥 MUITO QUENTE', 'temp_CALIENTE': '🔥 QUENTE', 'temp_MEDIO': '🟡 MÉDIO', 'temp_FRIO': '❄️ FRIO',
@@ -763,7 +763,7 @@ DICCIONARIO = {
         'inv_label_habitaciones': '卧室',
         'inv_label_banos': '浴室',
         'inv_label_m2': '平方米',
-        'inv_label_fotos': '照片（最多5张）',
+        'inv_label_fotos': '照片（最多7张）',  # ✅
         'inv_upload_click': '点击上传照片',
         'inv_upload_sub': 'JPG、PNG、WEBP · 可多次上传',
         'inv_upload_click_editar': '点击添加更多照片',
@@ -776,11 +776,11 @@ DICCIONARIO = {
         'inv_fotos_actuales': '当前照片',
         'inv_foto_label': '照片',
         'inv_sin_fotos': '暂无照片',
-        'inv_info_agrega': '新照片将添加到现有照片中（共最多5张）',
-        'inv_espacio_max': '您已达到5张照片的上限',
+        'inv_info_agrega': '新照片将添加到现有照片中（共最多7张）',  # ✅
+        'inv_espacio_max': '您已达到7张照片的上限',  # ✅
         'inv_espacio_restante': '您还可以添加 {n} 张照片',
-        'inv_alert_max': '您已达到5张照片的上限。请删除一张以添加新照片。',
-        'inv_alert_parcial': '仅添加了 {n} 张照片。每个房产最多5张照片。',
+        'inv_alert_max': '您已达到7张照片的上限。请删除一张以添加新照片。',  # ✅
+        'inv_alert_parcial': '仅添加了 {n} 张照片。每个房产最多7张照片。',  # ✅
         'inv_detalle_precio': '价格',
         'inv_detalle_ubicacion': '位置',
         'temp_MUY_CALIENTE': '🔥 非常热', 'temp_CALIENTE': '🔥 热', 'temp_MEDIO': '🟡 中等', 'temp_FRIO': '❄️ 冷',
