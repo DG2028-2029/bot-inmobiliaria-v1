@@ -117,16 +117,25 @@
         .select-asesor:focus { outline: none; border-color: var(--color); }
         .acciones-container { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 105px; }
         .empty-state { text-align: center; padding: 50px; color: #95a5a6; font-size: 15px; }
+
+        /* ✅ MODAL RESPUESTA — nuevo diseño con 3 opciones */
         .modal-respuesta { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); overflow-y: auto; }
-        .modal-respuesta-content { background: white; margin: 5% auto; padding: 24px; border-radius: 12px; max-width: 520px; width: 92%; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
-        .modal-respuesta-titulo { font-size: 17px; font-weight: 700; color: #2c3e50; margin-bottom: 14px; }
-        .modal-respuesta-texto { background: #f8f9fa; padding: 14px; border-radius: 8px; font-size: 13px; color: #2c3e50; line-height: 1.8; border-left: 4px solid var(--color); margin-bottom: 12px; white-space: pre-line; max-height: 220px; overflow-y: auto; }
-        .modal-btns { display: flex; gap: 8px; flex-direction: column; }
-        .btn-copiar { background: var(--color); color: white; border: none; padding: 11px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; transition: 0.2s; }
-        .btn-copiar:hover { opacity: 0.88; }
-        .btn-whatsapp-modal { background: #25D366; color: white; border: none; padding: 11px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; transition: 0.2s; }
-        .btn-whatsapp-modal:hover { background: #128C7E; }
-        .btn-cerrar-modal { background: #ecf0f1; color: #555; border: none; padding: 11px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; width: 100%; margin-top: 4px; }
+        .modal-respuesta-content { background: white; margin: 4% auto; padding: 24px; border-radius: 12px; max-width: 560px; width: 92%; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        .modal-resp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .modal-resp-titulo { font-size: 17px; font-weight: 700; color: #2c3e50; }
+        .modal-resp-cerrar { background: none; border: none; font-size: 22px; cursor: pointer; color: #999; line-height: 1; }
+        .modal-resp-cerrar:hover { color: #e74c3c; }
+        .opcion-card { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 10px; padding: 14px; margin-bottom: 10px; border-left: 4px solid var(--color); }
+        .opcion-titulo { font-size: 13px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .recomendado-tag { background: #eaf4fb; color: var(--color); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; border: 1px solid #aed6f1; }
+        .opcion-msg { font-size: 13px; color: #444; line-height: 1.7; background: white; border-radius: 6px; padding: 10px 12px; margin-bottom: 10px; border: 1px solid #eee; }
+        .opcion-btns { display: flex; gap: 8px; }
+        .btn-copiar-op { flex: 1; padding: 9px; background: var(--color); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; font-family: inherit; }
+        .btn-copiar-op:hover { opacity: 0.85; }
+        .btn-wa-op { flex: 1; padding: 9px; background: #25D366; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; font-family: inherit; }
+        .btn-wa-op:hover { background: #128C7E; }
+        .btn-cerrar-modal { width: 100%; margin-top: 8px; padding: 11px; background: #ecf0f1; color: #555; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; }
+
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); overflow-y: auto; }
         .modal-content { background: white; margin: 4% auto; padding: 24px; border-radius: 12px; max-width: 620px; width: 92%; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 2px solid #ecf0f1; padding-bottom: 12px; }
@@ -168,12 +177,12 @@
             .form-grid-2 { grid-template-columns: 1fr; }
             .modal-content { margin: 2% auto; padding: 16px; }
             .modal-respuesta-content { margin: 2% auto; padding: 16px; }
+            .opcion-btns { flex-direction: column; }
         }
         @media (min-width: 769px) { .cards-mobile { display: none; } }
     </style>
 </head>
 <body>
-
 {% set tl = {
     'es': {
         'pipeline': '📊 Proceso de Ventas',
@@ -226,12 +235,14 @@
         'btn_cliente_m': '💎 Cliente',
         'btn_que_decir_m': '💬 ¿Qué decir?',
         'btn_wa_m': '📱 WhatsApp',
-        'btn_copiar': '📋 Copiar mensaje',
+        'btn_copiar': '📋 Copiar',
         'copiado': '✅ ¡Copiado!',
-        'btn_wa_modal': '📱 Abrir en WhatsApp',
+        'btn_wa_modal': '📱 WhatsApp',
         'cerrar': 'Cerrar',
         'analizando': 'Analizando situación...',
         'que_decirle': '💬 ¿Qué decirle a ',
+        'recomendado': '★ Recomendado',
+        'error_resp': 'Error al generar mensajes.',
     },
     'en': {
         'pipeline': '📊 Sales Process',
@@ -284,18 +295,20 @@
         'btn_cliente_m': '💎 Client',
         'btn_que_decir_m': '💬 What to say?',
         'btn_wa_m': '📱 WhatsApp',
-        'btn_copiar': '📋 Copy message',
+        'btn_copiar': '📋 Copy',
         'copiado': '✅ Copied!',
-        'btn_wa_modal': '📱 Open in WhatsApp',
+        'btn_wa_modal': '📱 WhatsApp',
         'cerrar': 'Close',
         'analizando': 'Analyzing situation...',
         'que_decirle': '💬 What to say to ',
+        'recomendado': '★ Recommended',
+        'error_resp': 'Error generating messages.',
     },
     'fr': {
         'pipeline': '📊 Processus de Vente',
         'riesgo_s': 'Lead en risque de se perdre',
         'riesgo_p': 'Leads en risque de se perdre',
-        'riesgo_desc': 'Plus de 14 jours sans conversion — agissez aujourd\'hui.',
+        'riesgo_desc': "Plus de 14 jours sans conversion — agissez aujourd'hui.",
         'riesgo_hint': 'Utilisez 💬 Quoi dire? pour le bon message',
         'col_dias': 'Jours',
         'col_notas': 'Notes',
@@ -303,7 +316,7 @@
         'col_email': '📧 Email',
         'col_seg': '✉️ Suivi',
         'sin_asignar': 'Non assigné',
-        'hoy': 'Aujourd\'hui',
+        'hoy': "Aujourd'hui",
         'email_si': '✅ Oui',
         'email_no': '❌ Non',
         'seg_env': '✅ Envoyé',
@@ -330,7 +343,7 @@
         'ph_pass': 'motdepasse123',
         'ph_email': 'jean@email.com',
         'btn_crear': '✅ Créer Agent',
-        'sin_asesores': 'Aucun agent pour l\'instant.',
+        'sin_asesores': "Aucun agent pour l'instant.",
         'card_tel': '📱 Téléphone',
         'card_zona': '📍 Zone',
         'card_presup': '💰 Budget',
@@ -342,12 +355,14 @@
         'btn_cliente_m': '💎 Client',
         'btn_que_decir_m': '💬 Quoi dire?',
         'btn_wa_m': '📱 WhatsApp',
-        'btn_copiar': '📋 Copier message',
+        'btn_copiar': '📋 Copier',
         'copiado': '✅ Copié!',
-        'btn_wa_modal': '📱 Ouvrir WhatsApp',
+        'btn_wa_modal': '📱 WhatsApp',
         'cerrar': 'Fermer',
         'analizando': 'Analyse en cours...',
         'que_decirle': '💬 Quoi dire à ',
+        'recomendado': '★ Recommandé',
+        'error_resp': 'Erreur lors de la génération.',
     },
     'de': {
         'pipeline': '📊 Verkaufsprozess',
@@ -400,12 +415,14 @@
         'btn_cliente_m': '💎 Kunde',
         'btn_que_decir_m': '💬 Was sagen?',
         'btn_wa_m': '📱 WhatsApp',
-        'btn_copiar': '📋 Nachricht kopieren',
+        'btn_copiar': '📋 Kopieren',
         'copiado': '✅ Kopiert!',
-        'btn_wa_modal': '📱 In WhatsApp öffnen',
+        'btn_wa_modal': '📱 WhatsApp',
         'cerrar': 'Schließen',
         'analizando': 'Situation wird analysiert...',
         'que_decirle': '💬 Was sagen zu ',
+        'recomendado': '★ Empfohlen',
+        'error_resp': 'Fehler beim Generieren.',
     },
     'pt': {
         'pipeline': '📊 Processo de Vendas',
@@ -458,12 +475,14 @@
         'btn_cliente_m': '💎 Cliente',
         'btn_que_decir_m': '💬 O que dizer?',
         'btn_wa_m': '📱 WhatsApp',
-        'btn_copiar': '📋 Copiar mensagem',
+        'btn_copiar': '📋 Copiar',
         'copiado': '✅ Copiado!',
-        'btn_wa_modal': '📱 Abrir no WhatsApp',
+        'btn_wa_modal': '📱 WhatsApp',
         'cerrar': 'Fechar',
         'analizando': 'Analisando situação...',
         'que_decirle': '💬 O que dizer a ',
+        'recomendado': '★ Recomendado',
+        'error_resp': 'Erro ao gerar mensagens.',
     },
     'zh': {
         'pipeline': '📊 销售流程',
@@ -516,12 +535,14 @@
         'btn_cliente_m': '💎 客户',
         'btn_que_decir_m': '💬 该说什么?',
         'btn_wa_m': '📱 WhatsApp',
-        'btn_copiar': '📋 复制消息',
+        'btn_copiar': '📋 复制',
         'copiado': '✅ 已复制！',
-        'btn_wa_modal': '📱 在WhatsApp中打开',
+        'btn_wa_modal': '📱 WhatsApp',
         'cerrar': '关闭',
         'analizando': '正在分析情况...',
         'que_decirle': '💬 对 ',
+        'recomendado': '★ 推荐',
+        'error_resp': '生成消息时出错。',
     }
 } %}
 {% set lang = idioma_actual if idioma_actual in tl else 'es' %}
@@ -570,7 +591,6 @@
     </div>
 </div>
 
-<!-- BANNER RIESGO -->
 {% set leads_en_riesgo = [] %}
 {% for lead in leads %}
     {% if lead.dias > 14 and 'CLIENTE' not in lead.clasificacion %}
@@ -735,16 +755,17 @@
     {% endfor %}
 </div>
 
-<!-- MODAL RESPUESTA SUGERIDA -->
+<!-- ✅ MODAL RESPUESTA — 3 opciones -->
 <div id="modalRespuesta" class="modal-respuesta">
     <div class="modal-respuesta-content">
-        <div class="modal-respuesta-titulo" id="tituloRespuesta">{{ tx.que_decirle }}<span id="nombreRespuesta"></span>?</div>
-        <div class="modal-respuesta-texto" id="textoRespuesta">{{ tx.analizando }}</div>
-        <div class="modal-btns">
-            <button class="btn-copiar" id="btnCopiar" onclick="copiarRespuesta()">{{ tx.btn_copiar }}</button>
-            <button class="btn-whatsapp-modal" onclick="enviarPorWhatsApp()">{{ tx.btn_wa_modal }}</button>
-            <button class="btn-cerrar-modal" onclick="cerrarModalRespuesta()">{{ tx.cerrar }}</button>
+        <div class="modal-resp-header">
+            <div class="modal-resp-titulo">{{ tx.que_decirle }}<span id="nombreRespuesta"></span>?</div>
+            <button class="modal-resp-cerrar" onclick="cerrarModalRespuesta()">✕</button>
         </div>
+        <div id="opcionesContainer">
+            <div style="text-align:center;padding:30px;color:#999;">⏳ {{ tx.analizando }}</div>
+        </div>
+        <button class="btn-cerrar-modal" onclick="cerrarModalRespuesta()">{{ tx.cerrar }}</button>
     </div>
 </div>
 
@@ -809,11 +830,12 @@
 
 <script>
 const clienteId = "{{ cliente.usuario }}";
-let telefonoActual = '';
-let mensajeActual = '';
-const COPIADO_TEXT = "{{ tx.copiado }}";
-const COPIAR_TEXT = "{{ tx.btn_copiar }}";
-const ANALIZANDO_TEXT = "{{ tx.analizando }}";
+const TX_COPIAR = "{{ tx.btn_copiar }}";
+const TX_COPIADO = "{{ tx.copiado }}";
+const TX_ANALIZANDO = "{{ tx.analizando }}";
+const TX_RECOMENDADO = "{{ tx.recomendado }}";
+const TX_ERROR = "{{ tx.error_resp }}";
+const TX_WA = "{{ tx.btn_wa_modal }}";
 
 function toggleLangMenu() { document.getElementById('langSelector').classList.toggle('abierto'); }
 document.addEventListener('click', function(e) {
@@ -855,45 +877,75 @@ function guardarNota(textarea, leadId) {
     });
 }
 
+// ✅ NUEVA función — muestra 3 opciones con copiar y WhatsApp individual
 function verRespuesta(leadId, nombre, telefono) {
-    telefonoActual = telefono;
-    mensajeActual = '';
     document.getElementById('nombreRespuesta').textContent = nombre;
-    document.getElementById('textoRespuesta').textContent = ANALIZANDO_TEXT;
+    document.getElementById('opcionesContainer').innerHTML =
+        `<div style="text-align:center;padding:30px;color:#999;">⏳ ${TX_ANALIZANDO}</div>`;
     document.getElementById('modalRespuesta').style.display = 'block';
+
     fetch(`/leads/${clienteId}/respuesta/${leadId}`)
         .then(r => r.json())
         .then(data => {
-            mensajeActual = data.respuesta;
-            document.getElementById('textoRespuesta').textContent = mensajeActual;
+            const respuestas = data.respuestas || [];
+            if (!respuestas.length) {
+                document.getElementById('opcionesContainer').innerHTML =
+                    `<p style="color:#e74c3c;text-align:center;">${TX_ERROR}</p>`;
+                return;
+            }
+            document.getElementById('opcionesContainer').innerHTML = respuestas.map((op, i) => `
+                <div class="opcion-card">
+                    <div class="opcion-titulo">
+                        ${op.titulo}
+                        ${i === 0 ? `<span class="recomendado-tag">${TX_RECOMENDADO}</span>` : ''}
+                    </div>
+                    <div class="opcion-msg" id="msg_h_${leadId}_${i}">${op.msg}</div>
+                    <div class="opcion-btns">
+                        <button class="btn-copiar-op" id="btnCopy_h_${leadId}_${i}"
+                            onclick="copiarOpcion('msg_h_${leadId}_${i}', 'btnCopy_h_${leadId}_${i}')">
+                            📋 ${TX_COPIAR}
+                        </button>
+                        <button class="btn-wa-op"
+                            onclick="waOpcion('msg_h_${leadId}_${i}', '${telefono}')">
+                            📱 ${TX_WA}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        })
+        .catch(() => {
+            document.getElementById('opcionesContainer').innerHTML =
+                `<p style="color:#e74c3c;text-align:center;">${TX_ERROR}</p>`;
         });
 }
 
 function abrirWhatsAppDirecto(telefono, leadId) {
-    telefonoActual = telefono;
     fetch(`/leads/${clienteId}/respuesta/${leadId}`)
         .then(r => r.json())
         .then(data => {
-            window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(data.respuesta)}`, '_blank');
+            const msg = (data.respuestas || [])[0]?.msg || '';
+            if (msg) window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(msg)}`, '_blank');
         });
 }
 
-function enviarPorWhatsApp() {
-    if (!telefonoActual || !mensajeActual) return;
-    window.open(`https://wa.me/${telefonoActual}?text=${encodeURIComponent(mensajeActual)}`, '_blank');
-}
-
-function cerrarModalRespuesta() { document.getElementById('modalRespuesta').style.display = 'none'; }
-
-function copiarRespuesta() {
-    if (!mensajeActual) return;
-    navigator.clipboard.writeText(mensajeActual).then(() => {
-        const btn = document.getElementById('btnCopiar');
-        btn.textContent = COPIADO_TEXT;
-        setTimeout(() => btn.textContent = COPIAR_TEXT, 2000);
+function copiarOpcion(msgId, btnId) {
+    const msg = document.getElementById(msgId)?.textContent || '';
+    navigator.clipboard.writeText(msg).then(() => {
+        const btn = document.getElementById(btnId);
+        if (btn) {
+            const orig = btn.textContent;
+            btn.textContent = TX_COPIADO;
+            setTimeout(() => btn.textContent = orig, 2000);
+        }
     });
 }
 
+function waOpcion(msgId, telefono) {
+    const msg = document.getElementById(msgId)?.textContent || '';
+    if (msg) window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function cerrarModalRespuesta() { document.getElementById('modalRespuesta').style.display = 'none'; }
 function abrirModalAsesores() { document.getElementById('modalAsesores').style.display = 'block'; }
 function cerrarModalAsesores() { document.getElementById('modalAsesores').style.display = 'none'; }
 
