@@ -82,7 +82,8 @@ def get_asesores_de_cliente(cliente_id):
     except:
         return []
 
-def generar_respuesta_sugerida(lead):
+# ✅ NUEVA función — devuelve lista de 3 opciones traducidas
+def generar_respuesta_sugerida(lead, lang='es'):
     nombre = lead.get('nombre', 'el cliente').split()[0]
     zona = lead.get('zona_interes', 'la zona de interés')
     temperatura = lead.get('temperatura', 'FRIO')
@@ -100,99 +101,285 @@ def generar_respuesta_sugerida(lead):
         except:
             dias = 0
     if presupuesto >= 1000000:
-        presupuesto_txt = f"${presupuesto/1000000:.1f}M"
+        p = f"${presupuesto/1000000:.1f}M"
     elif presupuesto >= 1000:
-        presupuesto_txt = f"${presupuesto/1000:.0f}K"
+        p = f"${presupuesto/1000:.0f}K"
     else:
-        presupuesto_txt = f"${presupuesto:.0f}" if presupuesto > 0 else "su presupuesto"
+        p = f"${presupuesto:.0f}" if presupuesto > 0 else ""
+
+    T = {
+        'es': {
+            'cliente': [
+                {'titulo': '💎 Referidos (recomendado)', 'msg': f"Hola {nombre}, espero que todo vaya excelente con su propiedad. ¿Conoce a alguien buscando en {zona}? Con gusto le atiendo con la misma dedicación."},
+                {'titulo': '🏠 Nueva oportunidad', 'msg': f"Hola {nombre}, acaba de entrar una propiedad exclusiva en {zona} que creo le puede interesar a usted o a alguien de su círculo. ¿Le cuento?"},
+                {'titulo': '✅ Check-in', 'msg': f"Hola {nombre}, ¿cómo va todo con su propiedad? Solo quería saludar y recordarle que sigo disponible para cualquier consulta futura."},
+            ],
+            'nuevo': [
+                {'titulo': '⚡ Velocidad (recomendado)', 'msg': f"¡Hola {nombre}! Acabo de ver tu consulta sobre propiedades en {zona}. Tengo opciones perfectas para ti. ¿Tienes 5 minutos ahora?"},
+                {'titulo': '💬 Consultivo', 'msg': f"Hola {nombre}, vi tu interés en propiedades en {zona}. Antes de enviarte opciones, ¿me puedes contar un poco más sobre lo que buscas? Así te mando exactamente lo que necesitas."},
+                {'titulo': '📸 Propuesta directa', 'msg': f"Hola {nombre}! Tengo 3 propiedades en {zona} que podrían encajar con lo que buscas. ¿Te las envío ahora mismo con fotos y precios?"},
+            ],
+            'dia1_caliente': [
+                {'titulo': '🔥 Llamada directa (recomendado)', 'msg': f"Hola {nombre}, le contacto porque ayer vi su interés en {zona} y hoy recibimos una propiedad que encaja perfectamente con {p}. ¿Le puedo enviar los detalles?"},
+                {'titulo': '🏠 Agendar visita', 'msg': f"Hola {nombre}! Tengo propiedades en {zona} listas para visitar esta semana. ¿Cuándo le queda bien? Puedo acompañarle personalmente."},
+                {'titulo': '💎 Exclusividad', 'msg': f"Hola {nombre}, tengo una propiedad en {zona} que acaba de entrar al mercado y aún no está publicada. Con su presupuesto de {p} encaja perfecto. ¿Le interesa verla primero?"},
+            ],
+            'dias3': [
+                {'titulo': '📬 Micro-compromiso (recomendado)', 'msg': f"Hola {nombre}, ¿le puedo enviar 2-3 opciones en {zona} con fotos ahora mismo? Sin compromiso, solo para que vea si algo le llama la atención."},
+                {'titulo': '💎 Alto valor', 'msg': f"Hola {nombre}, con un presupuesto de {p} en {zona} tiene acceso a propiedades con excelente potencial de valorización. Tengo 2 opciones exclusivas. ¿Las revisamos juntos esta semana?"},
+                {'titulo': '📞 Cita rápida', 'msg': f"Hola {nombre}, ¿me permite 10 minutos esta semana? Tengo opciones nuevas en {zona} que creo le van a interesar mucho. ¿Cuándo le queda bien?"},
+            ],
+            'dias7': [
+                {'titulo': '🔄 Nuevo contexto (recomendado)', 'msg': f"Hola {nombre}, ¿cómo está? Le escribo porque el mercado en {zona} cambió esta semana — bajaron 2 propiedades de precio. ¿Sigue buscando o ya encontró algo?"},
+                {'titulo': '❓ Pregunta honesta', 'msg': f"Hola {nombre}, ¿sigue interesado en propiedades en {zona} o sus planes cambiaron? Solo quiero saber para enfocar mi búsqueda correctamente."},
+                {'titulo': '📸 Novedad', 'msg': f"Hola {nombre}! Acaba de entrar una propiedad en {zona} que me recordó a lo que buscaba. ¿Se la muestro? No tiene ningún compromiso."},
+            ],
+            'dias14': [
+                {'titulo': '⏰ FOMO (recomendado)', 'msg': f"Hola {nombre}, una propiedad que tenía en mente para usted en {zona} recibió una oferta hoy. Antes de que se cierre, ¿le gustaría verla? Si no es el momento, no hay problema."},
+                {'titulo': '📞 Llamada directa', 'msg': f"Hola {nombre}, ¿podemos hablar 5 minutos esta semana? Tengo algo en {zona} dentro de {p} que creo que le va a gustar mucho."},
+                {'titulo': '💰 Precio bajó', 'msg': f"Hola {nombre}, buenas noticias — una propiedad en {zona} bajó de precio esta semana. ¿Le interesa verla ahora?"},
+            ],
+            'dias30': [
+                {'titulo': '🔄 Reactivación honesta (recomendado)', 'msg': f"Hola {nombre}, ¿sigue considerando una propiedad en {zona} o sus planes cambiaron? Solo quiero asegurarme de enfocar mi búsqueda en lo que realmente necesita."},
+                {'titulo': '🆕 Ángulo nuevo', 'msg': f"Hola {nombre}, han entrado propiedades nuevas en {zona} con características diferentes a lo que le había mostrado antes. ¿Vale la pena que le envíe algunas opciones?"},
+                {'titulo': '🤝 Sin presión', 'msg': f"Hola {nombre}, espero que esté muy bien. No le escribo para venderle nada — solo para saber si puedo serle útil en algo relacionado con propiedades en {zona}."},
+            ],
+            'ultimo': [
+                {'titulo': '📊 Última oportunidad (recomendado)', 'msg': f"Hola {nombre}, le escribo por última vez. Si ya encontró su propiedad, me alegra mucho. Si todavía busca en {zona}, estoy aquí. ¿En qué momento está?"},
+                {'titulo': '🚪 Puerta abierta', 'msg': f"Hola {nombre}, entiendo que el momento quizás no era el correcto. Cuando retome su búsqueda en {zona}, con gusto le ayudo. ¡Hasta pronto!"},
+                {'titulo': '🎯 Referidos', 'msg': f"Hola {nombre}, aunque quizás usted ya no busque en {zona}, ¿conoce a alguien que sí esté buscando? Con gusto le atiendo."},
+            ],
+        },
+        'en': {
+            'cliente': [
+                {'titulo': '💎 Referrals (recommended)', 'msg': f"Hi {nombre}, hope everything is great with your property. Do you know anyone looking in {zona}? I'd be happy to help them with the same dedication."},
+                {'titulo': '🏠 New opportunity', 'msg': f"Hi {nombre}, a new exclusive property just came in at {zona} that might interest you or someone you know. Want me to share the details?"},
+                {'titulo': '✅ Check-in', 'msg': f"Hi {nombre}, how's everything going with your property? Just wanted to say hi and remind you I'm always available for any future questions."},
+            ],
+            'nuevo': [
+                {'titulo': '⚡ Speed (recommended)', 'msg': f"Hi {nombre}! I just saw your inquiry about properties in {zona}. I have great options for you. Do you have 5 minutes right now?"},
+                {'titulo': '💬 Consultative', 'msg': f"Hi {nombre}, I saw your interest in properties in {zona}. Before I send you options, could you tell me a bit more about what you're looking for?"},
+                {'titulo': '📸 Direct proposal', 'msg': f"Hi {nombre}! I have 3 properties in {zona} that might fit what you're looking for. Want me to send them right now with photos and prices?"},
+            ],
+            'dia1_caliente': [
+                {'titulo': '🔥 Direct contact (recommended)', 'msg': f"Hi {nombre}, I'm reaching out because yesterday I saw your interest in {zona} and today we got a property that fits perfectly within {p}. Can I send you the details?"},
+                {'titulo': '🏠 Schedule a visit', 'msg': f"Hi {nombre}! I have properties in {zona} ready to visit this week. When works for you? I can accompany you personally."},
+                {'titulo': '💎 Exclusivity', 'msg': f"Hi {nombre}, I have a property in {zona} that just hit the market and isn't listed publicly yet. Your budget of {p} fits perfectly. Want to see it first?"},
+            ],
+            'dias3': [
+                {'titulo': '📬 Micro-commitment (recommended)', 'msg': f"Hi {nombre}, can I send you 2-3 options in {zona} with photos right now? No commitment, just to see if anything catches your eye."},
+                {'titulo': '💎 High value', 'msg': f"Hi {nombre}, with a budget of {p} in {zona} you have access to properties with excellent appreciation potential. I have 2 exclusive options. Want to review them together this week?"},
+                {'titulo': '📞 Quick call', 'msg': f"Hi {nombre}, can I have 10 minutes this week? I have new options in {zona} that I think you'll really like. When works for you?"},
+            ],
+            'dias7': [
+                {'titulo': '🔄 New context (recommended)', 'msg': f"Hi {nombre}, how are you? I'm reaching out because the market in {zona} changed this week — 2 properties dropped in price. Are you still looking?"},
+                {'titulo': '❓ Honest question', 'msg': f"Hi {nombre}, are you still interested in properties in {zona} or have your plans changed? Just want to know so I can focus my search correctly."},
+                {'titulo': '📸 New listing', 'msg': f"Hi {nombre}! A property just came in {zona} that reminded me of what you were looking for. Want me to show you? No commitment at all."},
+            ],
+            'dias14': [
+                {'titulo': '⏰ FOMO (recommended)', 'msg': f"Hi {nombre}, a property I had in mind for you in {zona} received an offer today. Before it closes, would you like to see it? If it's not the right time, no problem at all."},
+                {'titulo': '📞 Direct call', 'msg': f"Hi {nombre}, could we talk for 5 minutes this week? I have something in {zona} within {p} that I think you'll really like."},
+                {'titulo': '💰 Price dropped', 'msg': f"Hi {nombre}, good news — a property in {zona} dropped in price this week. Are you interested in seeing it now?"},
+            ],
+            'dias30': [
+                {'titulo': '🔄 Honest reactivation (recommended)', 'msg': f"Hi {nombre}, are you still considering a property in {zona} or have your plans changed? I just want to make sure I'm focusing my search on what you really need."},
+                {'titulo': '🆕 New angle', 'msg': f"Hi {nombre}, new properties have come in at {zona} with different features from what I had shown you before. Worth sending you some options?"},
+                {'titulo': '🤝 No pressure', 'msg': f"Hi {nombre}, hope you're doing great. I'm not writing to sell you anything — just to know if I can be helpful with anything related to properties in {zona}."},
+            ],
+            'ultimo': [
+                {'titulo': '📊 Last chance (recommended)', 'msg': f"Hi {nombre}, this is my last message. If you've already found your property, I'm really glad. If you're still looking in {zona}, I'm here. Where are you in the process?"},
+                {'titulo': '🚪 Open door', 'msg': f"Hi {nombre}, I understand the timing might not have been right. Whenever you resume your search in {zona}, I'll be happy to help. Take care!"},
+                {'titulo': '🎯 Referrals', 'msg': f"Hi {nombre}, even if you're no longer looking in {zona}, do you know anyone who might be? I'd be glad to help them."},
+            ],
+        },
+        'fr': {
+            'cliente': [
+                {'titulo': '💎 Références (recommandé)', 'msg': f"Bonjour {nombre}, j'espère que tout se passe bien avec votre propriété. Connaissez-vous quelqu'un qui cherche à {zona}? Je serais ravi de les aider."},
+                {'titulo': '🏠 Nouvelle opportunité', 'msg': f"Bonjour {nombre}, une propriété exclusive vient d'arriver à {zona} qui pourrait vous intéresser ou intéresser quelqu'un de votre entourage. Je vous en parle?"},
+                {'titulo': '✅ Prise de nouvelles', 'msg': f"Bonjour {nombre}, comment se passe votre propriété? Je voulais juste vous saluer et vous rappeler que je reste disponible pour toute question."},
+            ],
+            'nuevo': [
+                {'titulo': '⚡ Rapidité (recommandé)', 'msg': f"Bonjour {nombre}! Je viens de voir votre demande concernant des propriétés à {zona}. J'ai des options parfaites pour vous. Avez-vous 5 minutes maintenant?"},
+                {'titulo': '💬 Consultatif', 'msg': f"Bonjour {nombre}, j'ai vu votre intérêt pour des propriétés à {zona}. Avant de vous envoyer des options, pouvez-vous me dire ce que vous recherchez exactement?"},
+                {'titulo': '📸 Proposition directe', 'msg': f"Bonjour {nombre}! J'ai 3 propriétés à {zona} qui pourraient correspondre à ce que vous cherchez. Je vous les envoie maintenant avec photos et prix?"},
+            ],
+            'dia1_caliente': [
+                {'titulo': '🔥 Appel direct (recommandé)', 'msg': f"Bonjour {nombre}, je vous contacte car hier j'ai vu votre intérêt pour {zona} et aujourd'hui nous avons une propriété qui correspond parfaitement à {p}. Je vous envoie les détails?"},
+                {'titulo': '🏠 Planifier une visite', 'msg': f"Bonjour {nombre}! J'ai des propriétés à {zona} disponibles pour visite cette semaine. Quand êtes-vous disponible? Je peux vous accompagner."},
+                {'titulo': '💎 Exclusivité', 'msg': f"Bonjour {nombre}, j'ai une propriété à {zona} qui vient d'arriver et n'est pas encore publiée. Votre budget de {p} correspond parfaitement. Vous voulez la voir en premier?"},
+            ],
+            'dias3': [
+                {'titulo': '📬 Micro-engagement (recommandé)', 'msg': f"Bonjour {nombre}, puis-je vous envoyer 2-3 options à {zona} avec photos maintenant? Sans engagement, juste pour voir si quelque chose vous plaît."},
+                {'titulo': '💎 Haute valeur', 'msg': f"Bonjour {nombre}, avec un budget de {p} à {zona} vous avez accès à des propriétés avec excellent potentiel de valorisation. J'ai 2 options exclusives. On les revoit ensemble?"},
+                {'titulo': '📞 Appel rapide', 'msg': f"Bonjour {nombre}, puis-je avoir 10 minutes cette semaine? J'ai de nouvelles options à {zona} qui je crois vont beaucoup vous plaire."},
+            ],
+            'dias7': [
+                {'titulo': '🔄 Nouveau contexte (recommandé)', 'msg': f"Bonjour {nombre}, comment allez-vous? Je vous écris car le marché à {zona} a changé cette semaine — 2 propriétés ont baissé de prix. Cherchez-vous toujours?"},
+                {'titulo': '❓ Question honnête', 'msg': f"Bonjour {nombre}, êtes-vous toujours intéressé par des propriétés à {zona} ou vos projets ont-ils changé?"},
+                {'titulo': '📸 Nouveauté', 'msg': f"Bonjour {nombre}! Une propriété vient d'arriver à {zona} qui m'a rappelé ce que vous cherchiez. Je vous la montre? Aucun engagement."},
+            ],
+            'dias14': [
+                {'titulo': '⏰ FOMO (recommandé)', 'msg': f"Bonjour {nombre}, une propriété que j'avais en tête pour vous à {zona} a reçu une offre aujourd'hui. Avant qu'elle se ferme, souhaitez-vous la voir?"},
+                {'titulo': '📞 Appel direct', 'msg': f"Bonjour {nombre}, pouvons-nous parler 5 minutes cette semaine? J'ai quelque chose à {zona} dans {p} qui je crois va beaucoup vous plaire."},
+                {'titulo': '💰 Prix baissé', 'msg': f"Bonjour {nombre}, bonne nouvelle — une propriété à {zona} a baissé de prix cette semaine. Vous êtes intéressé à la voir maintenant?"},
+            ],
+            'dias30': [
+                {'titulo': '🔄 Réactivation honnête (recommandé)', 'msg': f"Bonjour {nombre}, envisagez-vous toujours une propriété à {zona} ou vos projets ont-ils changé? Je veux juste m'assurer d'orienter ma recherche vers ce dont vous avez vraiment besoin."},
+                {'titulo': '🆕 Nouvel angle', 'msg': f"Bonjour {nombre}, de nouvelles propriétés sont arrivées à {zona} avec des caractéristiques différentes. Ça vaut la peine que je vous envoie quelques options?"},
+                {'titulo': '🤝 Sans pression', 'msg': f"Bonjour {nombre}, j'espère que vous allez bien. Je ne vous écris pas pour vendre — juste pour savoir si je peux vous être utile pour des propriétés à {zona}."},
+            ],
+            'ultimo': [
+                {'titulo': '📊 Dernière chance (recommandé)', 'msg': f"Bonjour {nombre}, c'est mon dernier message. Si vous avez déjà trouvé votre propriété, je suis vraiment content. Si vous cherchez encore à {zona}, je suis là."},
+                {'titulo': '🚪 Porte ouverte', 'msg': f"Bonjour {nombre}, je comprends que le moment n'était peut-être pas le bon. Quand vous reprendrez votre recherche à {zona}, je serai heureux de vous aider."},
+                {'titulo': '🎯 Références', 'msg': f"Bonjour {nombre}, même si vous ne cherchez plus à {zona}, connaissez-vous quelqu'un qui cherche? Je serais ravi de les aider."},
+            ],
+        },
+        'de': {
+            'cliente': [
+                {'titulo': '💎 Empfehlungen (empfohlen)', 'msg': f"Hallo {nombre}, ich hoffe alles läuft gut mit Ihrer Immobilie. Kennen Sie jemanden, der in {zona} sucht? Ich helfe gerne mit der gleichen Hingabe."},
+                {'titulo': '🏠 Neue Gelegenheit', 'msg': f"Hallo {nombre}, eine exklusive Immobilie in {zona} ist gerade auf den Markt gekommen. Soll ich Ihnen Details schicken?"},
+                {'titulo': '✅ Check-in', 'msg': f"Hallo {nombre}, wie läuft alles mit Ihrer Immobilie? Ich wollte mich nur melden und daran erinnern, dass ich immer zur Verfügung stehe."},
+            ],
+            'nuevo': [
+                {'titulo': '⚡ Schnelligkeit (empfohlen)', 'msg': f"Hallo {nombre}! Ich habe gerade Ihre Anfrage zu Immobilien in {zona} gesehen. Ich habe perfekte Optionen für Sie. Haben Sie jetzt 5 Minuten?"},
+                {'titulo': '💬 Beratend', 'msg': f"Hallo {nombre}, ich habe Ihr Interesse an Immobilien in {zona} gesehen. Könnten Sie mir etwas mehr darüber erzählen, was Sie suchen?"},
+                {'titulo': '📸 Direktes Angebot', 'msg': f"Hallo {nombre}! Ich habe 3 Immobilien in {zona}, die zu Ihnen passen könnten. Soll ich sie Ihnen jetzt mit Fotos und Preisen schicken?"},
+            ],
+            'dia1_caliente': [
+                {'titulo': '🔥 Direkter Anruf (empfohlen)', 'msg': f"Hallo {nombre}, ich melde mich, weil ich gestern Ihr Interesse an {zona} gesehen habe und wir heute eine Immobilie bekommen haben, die perfekt zu {p} passt."},
+                {'titulo': '🏠 Besichtigung planen', 'msg': f"Hallo {nombre}! Ich habe Immobilien in {zona}, die diese Woche besichtigt werden können. Wann hätten Sie Zeit?"},
+                {'titulo': '💎 Exklusivität', 'msg': f"Hallo {nombre}, ich habe eine Immobilie in {zona}, die noch nicht öffentlich ist. Ihr Budget von {p} passt perfekt. Möchten Sie sie zuerst sehen?"},
+            ],
+            'dias3': [
+                {'titulo': '📬 Micro-Commitment (empfohlen)', 'msg': f"Hallo {nombre}, darf ich Ihnen jetzt 2-3 Optionen in {zona} mit Fotos schicken? Ohne Verpflichtung, nur um zu sehen, ob etwas Ihr Interesse weckt."},
+                {'titulo': '💎 Hoher Wert', 'msg': f"Hallo {nombre}, mit einem Budget von {p} in {zona} haben Sie Zugang zu Immobilien mit ausgezeichnetem Wertsteigerungspotenzial. Sollen wir sie diese Woche besprechen?"},
+                {'titulo': '📞 Schneller Anruf', 'msg': f"Hallo {nombre}, darf ich Sie diese Woche 10 Minuten in Anspruch nehmen? Ich habe neue Optionen in {zona}, die Ihnen sehr gefallen werden."},
+            ],
+            'dias7': [
+                {'titulo': '🔄 Neuer Kontext (empfohlen)', 'msg': f"Hallo {nombre}, wie geht es Ihnen? Ich schreibe, weil sich der Markt in {zona} diese Woche verändert hat — 2 Immobilien sind im Preis gefallen. Suchen Sie noch?"},
+                {'titulo': '❓ Ehrliche Frage', 'msg': f"Hallo {nombre}, interessieren Sie sich noch für Immobilien in {zona} oder haben sich Ihre Pläne geändert?"},
+                {'titulo': '📸 Neuheit', 'msg': f"Hallo {nombre}! Eine Immobilie in {zona} ist gerade reingekommen, die mich an das erinnerte, was Sie suchten. Soll ich sie Ihnen zeigen?"},
+            ],
+            'dias14': [
+                {'titulo': '⏰ FOMO (empfohlen)', 'msg': f"Hallo {nombre}, eine Immobilie in {zona}, die ich für Sie im Sinn hatte, hat heute ein Angebot erhalten. Möchten Sie sie sehen, bevor sie abgeschlossen wird?"},
+                {'titulo': '📞 Direkter Anruf', 'msg': f"Hallo {nombre}, könnten wir diese Woche 5 Minuten sprechen? Ich habe etwas in {zona} für {p}, das Ihnen sehr gefallen wird."},
+                {'titulo': '💰 Preis gesunken', 'msg': f"Hallo {nombre}, gute Nachrichten — eine Immobilie in {zona} ist diese Woche im Preis gesunken. Möchten Sie sie jetzt sehen?"},
+            ],
+            'dias30': [
+                {'titulo': '🔄 Ehrliche Reaktivierung (empfohlen)', 'msg': f"Hallo {nombre}, denken Sie noch an eine Immobilie in {zona} oder haben sich Ihre Pläne geändert?"},
+                {'titulo': '🆕 Neuer Ansatz', 'msg': f"Hallo {nombre}, es sind neue Immobilien in {zona} mit anderen Merkmalen reingekommen. Lohnt es sich, Ihnen einige Optionen zu schicken?"},
+                {'titulo': '🤝 Kein Druck', 'msg': f"Hallo {nombre}, ich hoffe, es geht Ihnen gut. Ich schreibe nicht um zu verkaufen — nur um zu wissen, ob ich Ihnen bei Immobilien in {zona} behilflich sein kann."},
+            ],
+            'ultimo': [
+                {'titulo': '📊 Letzte Chance (empfohlen)', 'msg': f"Hallo {nombre}, dies ist meine letzte Nachricht. Wenn Sie bereits Ihre Immobilie gefunden haben, freue ich mich. Wenn Sie noch in {zona} suchen, bin ich hier."},
+                {'titulo': '🚪 Offene Tür', 'msg': f"Hallo {nombre}, ich verstehe, dass der Zeitpunkt vielleicht nicht der richtige war. Wenn Sie Ihre Suche in {zona} wieder aufnehmen, helfe ich gerne."},
+                {'titulo': '🎯 Empfehlungen', 'msg': f"Hallo {nombre}, auch wenn Sie nicht mehr in {zona} suchen, kennen Sie jemanden, der sucht?"},
+            ],
+        },
+        'pt': {
+            'cliente': [
+                {'titulo': '💎 Indicações (recomendado)', 'msg': f"Olá {nombre}, espero que tudo esteja ótimo com seu imóvel. Você conhece alguém buscando em {zona}? Ficaria feliz em ajudá-lo com a mesma dedicação."},
+                {'titulo': '🏠 Nova oportunidade', 'msg': f"Olá {nombre}, acabou de chegar um imóvel exclusivo em {zona} que pode te interessar ou a alguém do seu círculo. Quero te contar?"},
+                {'titulo': '✅ Check-in', 'msg': f"Olá {nombre}, como está tudo com seu imóvel? Só queria dar um oi e lembrar que continuo disponível para qualquer dúvida futura."},
+            ],
+            'nuevo': [
+                {'titulo': '⚡ Velocidade (recomendado)', 'msg': f"Olá {nombre}! Acabei de ver sua consulta sobre imóveis em {zona}. Tenho opções perfeitas para você. Tem 5 minutos agora?"},
+                {'titulo': '💬 Consultivo', 'msg': f"Olá {nombre}, vi seu interesse em imóveis em {zona}. Antes de enviar opções, pode me contar mais sobre o que procura?"},
+                {'titulo': '📸 Proposta direta', 'msg': f"Olá {nombre}! Tenho 3 imóveis em {zona} que podem combinar com o que você procura. Te envio agora com fotos e preços?"},
+            ],
+            'dia1_caliente': [
+                {'titulo': '🔥 Contato direto (recomendado)', 'msg': f"Olá {nombre}, estou entrando em contato porque ontem vi seu interesse em {zona} e hoje recebemos um imóvel que encaixa perfeitamente em {p}. Posso te enviar os detalhes?"},
+                {'titulo': '🏠 Agendar visita', 'msg': f"Olá {nombre}! Tenho imóveis em {zona} prontos para visitar esta semana. Quando fica bom para você?"},
+                {'titulo': '💎 Exclusividade', 'msg': f"Olá {nombre}, tenho um imóvel em {zona} que acabou de entrar no mercado e ainda não foi publicado. Seu orçamento de {p} encaixa perfeitamente. Quer ver primeiro?"},
+            ],
+            'dias3': [
+                {'titulo': '📬 Micro-compromisso (recomendado)', 'msg': f"Olá {nombre}, posso te enviar 2-3 opções em {zona} com fotos agora? Sem compromisso, só para ver se algo chama atenção."},
+                {'titulo': '💎 Alto valor', 'msg': f"Olá {nombre}, com orçamento de {p} em {zona} você tem acesso a imóveis com excelente potencial de valorização. Revisamos juntos esta semana?"},
+                {'titulo': '📞 Ligação rápida', 'msg': f"Olá {nombre}, posso ter 10 minutos esta semana? Tenho opções novas em {zona} que acho que vai gostar muito."},
+            ],
+            'dias7': [
+                {'titulo': '🔄 Novo contexto (recomendado)', 'msg': f"Olá {nombre}, tudo bem? Estou escrevendo porque o mercado em {zona} mudou esta semana — 2 imóveis baixaram de preço. Ainda está procurando?"},
+                {'titulo': '❓ Pergunta honesta', 'msg': f"Olá {nombre}, ainda tem interesse em imóveis em {zona} ou seus planos mudaram?"},
+                {'titulo': '📸 Novidade', 'msg': f"Olá {nombre}! Acabou de entrar um imóvel em {zona} que me lembrou do que você procurava. Te mostro? Sem nenhum compromisso."},
+            ],
+            'dias14': [
+                {'titulo': '⏰ FOMO (recomendado)', 'msg': f"Olá {nombre}, um imóvel que eu tinha em mente para você em {zona} recebeu uma proposta hoje. Antes de fechar, gostaria de ver?"},
+                {'titulo': '📞 Ligação direta', 'msg': f"Olá {nombre}, podemos conversar 5 minutos esta semana? Tenho algo em {zona} dentro de {p} que acho que vai gostar muito."},
+                {'titulo': '💰 Preço caiu', 'msg': f"Olá {nombre}, boa notícia — um imóvel em {zona} baixou de preço esta semana. Tem interesse em ver agora?"},
+            ],
+            'dias30': [
+                {'titulo': '🔄 Reativação honesta (recomendado)', 'msg': f"Olá {nombre}, ainda está pensando em um imóvel em {zona} ou seus planos mudaram?"},
+                {'titulo': '🆕 Novo ângulo', 'msg': f"Olá {nombre}, entraram imóveis novos em {zona} com características diferentes. Vale a pena te enviar algumas opções?"},
+                {'titulo': '🤝 Sem pressão', 'msg': f"Olá {nombre}, espero que esteja bem. Não estou escrevendo para vender — só para saber se posso ser útil com algo em {zona}."},
+            ],
+            'ultimo': [
+                {'titulo': '📊 Última chance (recomendado)', 'msg': f"Olá {nombre}, esta é minha última mensagem. Se já encontrou seu imóvel, fico muito feliz. Se ainda procura em {zona}, estou aqui."},
+                {'titulo': '🚪 Porta aberta', 'msg': f"Olá {nombre}, entendo que talvez o momento não fosse o certo. Quando retomar sua busca em {zona}, terei prazer em ajudar."},
+                {'titulo': '🎯 Indicações', 'msg': f"Olá {nombre}, mesmo que não esteja mais procurando em {zona}, conhece alguém que esteja?"},
+            ],
+        },
+        'zh': {
+            'cliente': [
+                {'titulo': '💎 推荐（推荐）', 'msg': f"您好 {nombre}，希望您的房产一切顺利。您认识在{zona}找房的人吗？我很乐意以同样的热情为他们服务。"},
+                {'titulo': '🏠 新机会', 'msg': f"您好 {nombre}，{zona}刚到了一套独家房源，可能您或您认识的人会感兴趣。要我告诉您详情吗？"},
+                {'titulo': '✅ 问候', 'msg': f"您好 {nombre}，您的房产一切都好吗？只是想问候一下，提醒您我随时可以回答您的问题。"},
+            ],
+            'nuevo': [
+                {'titulo': '⚡ 速度（推荐）', 'msg': f"您好 {nombre}！我刚看到您在{zona}找房的咨询。我有非常适合您的选择。您现在有5分钟时间吗？"},
+                {'titulo': '💬 顾问式', 'msg': f"您好 {nombre}，我看到您对{zona}的房产感兴趣。在发送选项之前，您能告诉我更多您在寻找什么吗？"},
+                {'titulo': '📸 直接提案', 'msg': f"您好 {nombre}！我在{zona}有3套可能符合您需求的房产。现在就把带照片和价格的信息发给您吗？"},
+            ],
+            'dia1_caliente': [
+                {'titulo': '🔥 直接联系（推荐）', 'msg': f"您好 {nombre}，我联系您是因为昨天看到您对{zona}感兴趣，今天我们收到了一套完全符合{p}预算的房产。我可以发详情给您吗？"},
+                {'titulo': '🏠 安排参观', 'msg': f"您好 {nombre}！我在{zona}有本周可以参观的房产。什么时候方便？我可以亲自陪您。"},
+                {'titulo': '💎 独家', 'msg': f"您好 {nombre}，我在{zona}有一套刚上市尚未公开的房产。您{p}的预算非常匹配。想第一个看吗？"},
+            ],
+            'dias3': [
+                {'titulo': '📬 微承诺（推荐）', 'msg': f"您好 {nombre}，我可以现在发给您{zona}的2-3个带照片的选项吗？没有任何义务，只是看看是否有您感兴趣的。"},
+                {'titulo': '💎 高价值', 'msg': f"您好 {nombre}，凭借{p}的预算在{zona}，您可以获得具有出色升值潜力的房产。这周一起看看？"},
+                {'titulo': '📞 快速通话', 'msg': f"您好 {nombre}，这周能给我10分钟吗？我在{zona}有新选项，我认为您会非常喜欢。"},
+            ],
+            'dias7': [
+                {'titulo': '🔄 新背景（推荐）', 'msg': f"您好 {nombre}，您好吗？{zona}的市场本周发生了变化——有2套房产降价了。您还在找吗？"},
+                {'titulo': '❓ 诚实的问题', 'msg': f"您好 {nombre}，您还对{zona}的房产感兴趣吗，还是您的计划改变了？"},
+                {'titulo': '📸 新房源', 'msg': f"您好 {nombre}！{zona}刚来了一套房产，让我想起了您在寻找的。我给您看看吗？完全没有任何义务。"},
+            ],
+            'dias14': [
+                {'titulo': '⏰ 紧迫感（推荐）', 'msg': f"您好 {nombre}，我在{zona}为您考虑的一套房产今天收到了报价。在成交之前，您想看看吗？"},
+                {'titulo': '📞 直接通话', 'msg': f"您好 {nombre}，这周我们能通话5分钟吗？我在{zona}有一套在{p}范围内的房产，我认为您会非常喜欢。"},
+                {'titulo': '💰 降价了', 'msg': f"您好 {nombre}，好消息——{zona}的一套房产本周降价了。您现在有兴趣看看吗？"},
+            ],
+            'dias30': [
+                {'titulo': '🔄 诚实的重新激活（推荐）', 'msg': f"您好 {nombre}，您还在考虑在{zona}买房吗，还是您的计划改变了？"},
+                {'titulo': '🆕 新角度', 'msg': f"您好 {nombre}，{zona}来了一些具有不同特点的新房产。值得给您发一些选项吗？"},
+                {'titulo': '🤝 无压力', 'msg': f"您好 {nombre}，希望您一切都好。我写信不是为了推销——只是想知道我是否能在{zona}方面为您提供帮助。"},
+            ],
+            'ultimo': [
+                {'titulo': '📊 最后机会（推荐）', 'msg': f"您好 {nombre}，这是我最后一条消息。如果您已经找到了房产，我真的很高兴。如果您还在{zona}找，我在这里。"},
+                {'titulo': '🚪 开放的大门', 'msg': f"您好 {nombre}，我明白时机可能不合适。当您恢复在{zona}的搜索时，我很乐意帮助您。"},
+                {'titulo': '🎯 推荐', 'msg': f"您好 {nombre}，即使您不再在{zona}找房，您认识有人在找吗？"},
+            ],
+        },
+    }
+
+    t = T.get(lang, T['es'])
+
     if 'CLIENTE' in clasificacion:
-        return (
-            f"✅ {nombre} ya es tu cliente. Mantén la relación activa:\n\n"
-            f"'Hola {nombre}, espero que todo vaya excelente con su propiedad. "
-            f"Tenemos clientes buscando propiedades en {zona} — si conoce a alguien interesado, "
-            f"con gusto les atiendo con la misma dedicación que a usted.'\n\n"
-            f"💡 Técnica: Referidos. Un cliente feliz es tu mejor vendedor."
-        )
+        return t['cliente']
     if dias == 0:
-        return (
-            f"🔥 LEAD NUEVO — Contacta en los próximos 30 minutos:\n\n"
-            f"'¡Hola {nombre}! Acabo de ver su consulta sobre propiedades en {zona}. "
-            f"Tengo algunas opciones que encajan perfectamente con lo que busca. "
-            f"¿Tiene 5 minutos ahora para que le cuente?'\n\n"
-            f"💡 Técnica: Velocidad de respuesta. El 78% de las ventas las cierra quien responde primero."
-        )
-    if dias <= 1:
-        if temperatura in ['MUY_CALIENTE', 'CALIENTE']:
-            return (
-                f"⚡ {nombre} mostró mucho interés. Llama directamente:\n\n"
-                f"'Hola {nombre}, soy [tu nombre]. Le contacto porque ayer vi su interés en {zona} "
-                f"y justo hoy recibimos una propiedad que encaja con {presupuesto_txt}. "
-                f"¿Le puedo enviar los detalles ahora?'\n\n"
-                f"💡 Técnica: Escasez + oportunidad. Crea urgencia con una propiedad específica."
-            )
-        return (
-            f"📱 Primer seguimiento para {nombre}:\n\n"
-            f"'Hola {nombre}! Soy [tu nombre] de [inmobiliaria]. "
-            f"Vi que se interesó en propiedades en {zona}. "
-            f"¿Puedo hacerle una pregunta rápida para encontrar exactamente lo que busca?'\n\n"
-            f"💡 Técnica: Pregunta abierta. No vendas, primero escucha para conectar."
-        )
+        return t['nuevo']
+    if dias <= 1 and temperatura in ['MUY_CALIENTE', 'CALIENTE']:
+        return t['dia1_caliente']
     if dias <= 3:
-        if presupuesto >= 150000:
-            return (
-                f"💎 {nombre} tiene presupuesto de {presupuesto_txt} — lead de alto valor:\n\n"
-                f"'Hola {nombre}, le escribo porque con su presupuesto de {presupuesto_txt} "
-                f"en {zona} tiene acceso a propiedades con excelente potencial de valorización. "
-                f"Tengo 2 opciones que muy pocos conocen. ¿Le interesa que las revisemos juntos esta semana?'\n\n"
-                f"💡 Técnica: Exclusividad. Haz que sienta que tiene acceso a algo especial."
-            )
-        return (
-            f"📬 Han pasado {dias} días. Propuesta concreta:\n\n"
-            f"'Hola {nombre}, le tengo algo que podría interesarle en {zona}. "
-            f"¿Le puedo enviar 2-3 opciones con fotos ahora? Solo para que vea si alguna le llama la atención, "
-            f"sin compromiso.'\n\n"
-            f"💡 Técnica: Micro-compromiso. Pide algo pequeño para mantener la conversación."
-        )
+        return t['dias3']
     if dias <= 7:
-        if temperatura == 'FRIO':
-            return (
-                f"❄️ {nombre} lleva {dias} días sin responder. Cambia el ángulo:\n\n"
-                f"'Hola {nombre}, ¿cómo está? Le escribo rápido porque el mercado en {zona} "
-                f"cambió esta semana — bajaron 2 propiedades de precio. "
-                f"¿Sigue buscando o ya encontró algo?'\n\n"
-                f"💡 Técnica: Cambio de contexto. No menciones la consulta anterior, habla de algo nuevo."
-            )
-        return (
-            f"🟡 {nombre} lleva {dias} días. Ofrece una cita:\n\n"
-            f"'Hola {nombre}, sé que está ocupado. ¿Le parece si hacemos una llamada de 10 minutos "
-            f"esta semana? Le cuento sobre 2 propiedades en {zona} dentro de {presupuesto_txt} "
-            f"que acaban de entrar y creo que le van a gustar.'\n\n"
-            f"💡 Técnica: Especificidad + tiempo limitado. Sé concreto para generar respuesta."
-        )
+        return t['dias7']
     if dias <= 14:
-        return (
-            f"⏰ {nombre} lleva {dias} días — momento crítico:\n\n"
-            f"'Hola {nombre}, le escribo porque una de las propiedades que tenía en mente para usted "
-            f"en {zona} recibió una oferta hoy. Antes de que se cierre, ¿le gustaría verla? "
-            f"Si no es el momento, no hay problema — pero no quería que se quedara sin saberlo.'\n\n"
-            f"💡 Técnica: FOMO (Fear Of Missing Out). La pérdida motiva más que la ganancia."
-        )
+        return t['dias14']
     if dias <= 30:
-        return (
-            f"🔄 {nombre} lleva {dias} días — intento de reactivación:\n\n"
-            f"'Hola {nombre}, espero que esté muy bien. Tengo una pregunta rápida: "
-            f"¿sigue considerando una propiedad en {zona} o sus planes cambiaron? "
-            f"Solo quiero asegurarme de enfocar mi búsqueda en lo que realmente necesita.'\n\n"
-            f"💡 Técnica: Honestidad desarmante. Preguntar directamente genera más respuesta que vender."
-        )
-    return (
-        f"📊 {nombre} lleva más de un mes ({dias} días):\n\n"
-        f"'Hola {nombre}, le escribo por última vez. Si ya encontró su propiedad, "
-        f"me alegra mucho. Si todavía busca algo en {zona}, estoy aquí. "
-        f"¿En qué momento del proceso está?'\n\n"
-        f"💡 Técnica: Última oportunidad honesta. Cierra el loop y da control al cliente. "
-        f"Muchos responden precisamente porque sienten que 'perderán' el contacto."
-    )
+        return t['dias30']
+    return t['ultimo']
+
 
 def job_seguimiento_automatico():
     print(f"🔄 [{datetime.now().strftime('%Y-%m-%d %H:%M')}] Ejecutando seguimiento automático...")
@@ -224,6 +411,7 @@ def job_seguimiento_automatico():
                 print(f"✅ Seguimiento enviado a {lead.get('nombre')} ({email})")
     except Exception as e:
         print(f"❌ Error en seguimiento automático: {e}")
+
 
 @app.before_request
 def verificar_sesion():
@@ -611,19 +799,21 @@ def guardar_nota(cliente_id, lead_id):
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
+# ✅ RUTA ACTUALIZADA — devuelve lista de 3 opciones
 @app.route("/leads/<cliente_id>/respuesta/<int:lead_id>")
 def respuesta_sugerida(cliente_id, lead_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean:
         return "No autorizado", 403
     try:
+        lang = session.get('idioma', 'es')
         resultado = supabase.table("leads").select("*").eq("id", lead_id).execute()
         if resultado.data:
-            respuesta = generar_respuesta_sugerida(resultado.data[0])
-            return jsonify({"respuesta": respuesta})
-        return jsonify({"respuesta": "Lead no encontrado"}), 404
+            respuestas = generar_respuesta_sugerida(resultado.data[0], lang)
+            return jsonify({"respuestas": respuestas})
+        return jsonify({"respuestas": []}), 404
     except Exception as e:
-        return jsonify({"respuesta": "Error generando respuesta"}), 500
+        return jsonify({"respuestas": []}), 500
 
 @app.route("/leads/<cliente_id>/etapa/<int:lead_id>", methods=["POST"])
 def actualizar_etapa(cliente_id, lead_id):
@@ -669,7 +859,6 @@ def seleccion_idioma(cliente_id):
     if not vendedor: return "Error 403: Acceso denegado.", 403
     lang = session.get('idioma', request.accept_languages.best_match(['es', 'en', 'fr', 'de']) or 'es')
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
-    # ✅ ÚNICO CAMBIO: agrega idioma_actual=lang
     return render_template("bienvenida.html", cliente=vendedor, textos=textos, idioma_actual=lang)
 
 @app.route("/form/<cliente_id>", methods=["GET","POST"])
