@@ -82,7 +82,6 @@ def get_asesores_de_cliente(cliente_id):
     except:
         return []
 
-# ✅ NUEVA función — devuelve lista de 3 opciones traducidas
 def generar_respuesta_sugerida(lead, lang='es'):
     nombre = lead.get('nombre', 'el cliente').split()[0]
     zona = lead.get('zona_interes', 'la zona de interés')
@@ -761,11 +760,13 @@ def detalle_asesor(cliente_id, asesor_id):
             except:
                 lead['dias'] = 0
         color = vendedor.get('color_primario', '#667eea')
+        # ✅ CAMBIO: agrega idioma_actual
         return render_template("asesor_detalle.html",
                                asesor=asesor, leads=leads, vendedor=vendedor,
                                cliente_id=id_clean, color=color,
                                total=total, clientes=clientes,
-                               calientes=calientes, tasa=tasa)
+                               calientes=calientes, tasa=tasa,
+                               idioma_actual=session.get('idioma', get_idioma_default(vendedor)))
     except Exception as e:
         return f"Error: {e}", 500
 
@@ -799,7 +800,6 @@ def guardar_nota(cliente_id, lead_id):
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
-# ✅ RUTA ACTUALIZADA — devuelve lista de 3 opciones
 @app.route("/leads/<cliente_id>/respuesta/<int:lead_id>")
 def respuesta_sugerida(cliente_id, lead_id):
     id_clean = cliente_id.lower()
@@ -1069,9 +1069,12 @@ def inventario_publico(cliente_id):
     try:
         resultado = supabase.table("propiedades").select("*").eq("vendedor", id_clean).eq("estado", "disponible").order("created_at", desc=True).execute()
         propiedades = resultado.data or []
+        # ✅ CAMBIO: agrega idioma_actual
+        idioma = session.get('idioma', get_idioma_default(vendedor))
         return render_template("inventario_publico.html", cliente_id=id_clean,
                                cliente_nombre=vendedor['nombre'], whatsapp=vendedor['whatsapp'],
-                               propiedades_json=json.dumps(propiedades))
+                               propiedades_json=json.dumps(propiedades),
+                               idioma_actual=idioma)
     except Exception as e:
         return f"Error: {e}", 500
 
