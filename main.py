@@ -6,6 +6,7 @@ from werkzeug.security import check_password_hash
 import os
 import re
 import json
+import urllib.request  # ✅ NUEVO
 import cloudinary
 import cloudinary.uploader
 from datetime import datetime, timedelta
@@ -414,9 +415,10 @@ def job_seguimiento_automatico():
 
 @app.before_request
 def verificar_sesion():
+    # ✅ chat_inmobiliario agregado a rutas públicas
     rutas_publicas = ['formulario', 'formulario_asesor', 'index', 'seleccion_idioma_login',
                       'static', 'login', 'cambiar_idioma', 'cron_seguimiento', 'admin_login',
-                      'inicio_formulario']
+                      'inicio_formulario', 'chat_inmobiliario']
     if request.endpoint in rutas_publicas:
         return
     if request.endpoint and request.endpoint.startswith('admin'):
@@ -760,7 +762,6 @@ def detalle_asesor(cliente_id, asesor_id):
             except:
                 lead['dias'] = 0
         color = vendedor.get('color_primario', '#667eea')
-        # ✅ CAMBIO: agrega idioma_actual
         return render_template("asesor_detalle.html",
                                asesor=asesor, leads=leads, vendedor=vendedor,
                                cliente_id=id_clean, color=color,
@@ -1069,7 +1070,6 @@ def inventario_publico(cliente_id):
     try:
         resultado = supabase.table("propiedades").select("*").eq("vendedor", id_clean).eq("estado", "disponible").order("created_at", desc=True).execute()
         propiedades = resultado.data or []
-        # ✅ CAMBIO: agrega idioma_actual
         idioma = session.get('idioma', get_idioma_default(vendedor))
         return render_template("inventario_publico.html", cliente_id=id_clean,
                                cliente_nombre=vendedor['nombre'], whatsapp=vendedor['whatsapp'],
@@ -1308,6 +1308,79 @@ def logout(cliente_id):
 def cambiar_idioma(lang, proximo, cliente_id):
     session['idioma'] = lang
     return redirect(url_for(proximo, cliente_id=cliente_id.lower()))
+
+# ✅ NUEVA RUTA — Chatbot con Gemini
+@app.route("/api/chat/<cliente_id>", methods=["POST"])
+def chat_inmobiliario(cliente_id):
+    id_clean = cliente_id.lower()
+    vendedor = get_cliente(id_clean)
+    if not vendedor:
+        return jsonify({"response": "Lo siento, no pude conectarme."}), 200
+    try:
+        data = request.get_json()
+        messages = data.get("messages", [])
+        lang = data.get("lang", "es")
+        gemini_key = os.environ.get("GEMINI_API_KEY", "")
+        if not gemini_key:
+            return jsonify({"response": "Servicio no disponible temporalmente."}), 200
+        props_result = supabase.table("propiedades").select("*").eq("vendedor", id_clean).eq("estado", "disponible").execute()
+        propiedades = props_result.data or []
+        props_text = ""
+        for p in propiedades[:8]:
+            try:
+                precio = float(p.get('precio', 0))
+                line = f"• {p.get('titulo', 'Propiedad')}: ${precio:,.0f}, {p.get('ubicacion', '')}"
+            except:
+                line = f"• {p.get('titulo', 'Propiedad')}: {p.get('ubicacion', '')}"
+            if p.get('habitaciones'): line += f", {p.get('habitaciones')} hab"
+            if p.get('banos'): line += f", {p.get('banos')} baños"
+            if p.get('metros2'): line += f", {p.get('metros2')}m²"
+            if p.get('descripcion'): line += f". {str(p.get('descripcion',''))[:80]}"
+            props_text += line + "\n"
+        if not props_text:
+            props_text = "No hay propiedades listadas actualmente, pero podemos ayudar a encontrar lo ideal."
+        system_prompt = f"""Eres un asesor inmobiliario virtual experto y carismático de {vendedor.get('nombre', 'la inmobiliaria')}. Tu misión es convertir visitantes en prospectos calificados.
+
+PROPIEDADES DISPONIBLES:
+{props_text}
+
+OBJETIVOS EN ORDEN:
+1. Saludar cálidamente y preguntar qué busca
+2. Identificar zona, tipo de propiedad, presupuesto y urgencia con preguntas naturales
+3. Recomendar propiedades específicas del inventario que encajen
+4. Crear urgencia y deseo de contactar
+5. Dirigir al formulario: "¡Perfecto! Llena el formulario de contacto arriba y te llamamos hoy mismo 📝"
+
+REGLAS:
+- Responde SIEMPRE en el idioma del usuario
+- Máximo 3 oraciones por respuesta — sé conciso y directo
+- Haz solo UNA pregunta por mensaje para calificar al prospecto
+- Usa emojis ocasionalmente para ser amigable 🏠✨
+- Solo menciona propiedades del inventario real
+- Si preguntan por WhatsApp: {vendedor.get('whatsapp', '')}
+- Sé proactivo, cálido y profesional — como un asesor de lujo
+
+EMPRESA: {vendedor.get('nombre', 'Inmobiliaria')}"""
+
+        contents = []
+        for msg in messages:
+            role = "user" if msg["role"] == "user" else "model"
+            contents.append({"role": role, "parts": [{"text": msg["content"]}]})
+        payload = {
+            "system_instruction": {"parts": [{"text": system_prompt}]},
+            "contents": contents,
+            "generationConfig": {"temperature": 0.75, "maxOutputTokens": 250}
+        }
+        api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+        req_data = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(api_url, data=req_data, headers={"Content-Type": "application/json"}, method="POST")
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            result = json.loads(resp.read().decode('utf-8'))
+        text = result["candidates"][0]["content"]["parts"][0]["text"]
+        return jsonify({"response": text})
+    except Exception as e:
+        print(f"❌ Error chat Gemini: {e}")
+        return jsonify({"response": "Lo siento, tuve un problema técnico. ¿Me escribes directamente por WhatsApp? 💬"}), 200
 
 @app.route("/")
 def index():
