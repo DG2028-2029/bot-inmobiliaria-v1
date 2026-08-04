@@ -6,7 +6,7 @@ from werkzeug.security import check_password_hash
 import os
 import re
 import json
-import urllib.request  # ✅ NUEVO
+import urllib.request
 import cloudinary
 import cloudinary.uploader
 from datetime import datetime, timedelta
@@ -224,14 +224,14 @@ def generar_respuesta_sugerida(lead, lang='es'):
                 {'titulo': '💰 Prix baissé', 'msg': f"Bonjour {nombre}, bonne nouvelle — une propriété à {zona} a baissé de prix cette semaine. Vous êtes intéressé à la voir maintenant?"},
             ],
             'dias30': [
-                {'titulo': '🔄 Réactivation honnête (recommandé)', 'msg': f"Bonjour {nombre}, envisagez-vous toujours une propriété à {zona} ou vos projets ont-ils changé? Je veux juste m'assurer d'orienter ma recherche vers ce dont vous avez vraiment besoin."},
+                {'titulo': '🔄 Réactivation honnête (recommandé)', 'msg': f"Bonjour {nombre}, envisagez-vous toujours une propriété à {zona} ou vos projets ont-ils changé?"},
                 {'titulo': '🆕 Nouvel angle', 'msg': f"Bonjour {nombre}, de nouvelles propriétés sont arrivées à {zona} avec des caractéristiques différentes. Ça vaut la peine que je vous envoie quelques options?"},
                 {'titulo': '🤝 Sans pression', 'msg': f"Bonjour {nombre}, j'espère que vous allez bien. Je ne vous écris pas pour vendre — juste pour savoir si je peux vous être utile pour des propriétés à {zona}."},
             ],
             'ultimo': [
                 {'titulo': '📊 Dernière chance (recommandé)', 'msg': f"Bonjour {nombre}, c'est mon dernier message. Si vous avez déjà trouvé votre propriété, je suis vraiment content. Si vous cherchez encore à {zona}, je suis là."},
                 {'titulo': '🚪 Porte ouverte', 'msg': f"Bonjour {nombre}, je comprends que le moment n'était peut-être pas le bon. Quand vous reprendrez votre recherche à {zona}, je serai heureux de vous aider."},
-                {'titulo': '🎯 Références', 'msg': f"Bonjour {nombre}, même si vous ne cherchez plus à {zona}, connaissez-vous quelqu'un qui cherche? Je serais ravi de les aider."},
+                {'titulo': '🎯 Références', 'msg': f"Bonjour {nombre}, même si vous ne cherchez plus à {zona}, connaissez-vous quelqu'un qui cherche?"},
             ],
         },
         'de': {
@@ -415,7 +415,6 @@ def job_seguimiento_automatico():
 
 @app.before_request
 def verificar_sesion():
-    # ✅ chat_inmobiliario agregado a rutas públicas
     rutas_publicas = ['formulario', 'formulario_asesor', 'index', 'seleccion_idioma_login',
                       'static', 'login', 'cambiar_idioma', 'cron_seguimiento', 'admin_login',
                       'inicio_formulario', 'chat_inmobiliario']
@@ -1309,7 +1308,7 @@ def cambiar_idioma(lang, proximo, cliente_id):
     session['idioma'] = lang
     return redirect(url_for(proximo, cliente_id=cliente_id.lower()))
 
-# ✅ NUEVA RUTA — Chatbot con Gemini
+# ✅ CHATBOT CON GEMINI — idioma forzado en system prompt
 @app.route("/api/chat/<cliente_id>", methods=["POST"])
 def chat_inmobiliario(cliente_id):
     id_clean = cliente_id.lower()
@@ -1323,6 +1322,14 @@ def chat_inmobiliario(cliente_id):
         gemini_key = os.environ.get("GEMINI_API_KEY", "")
         if not gemini_key:
             return jsonify({"response": "Servicio no disponible temporalmente."}), 200
+
+        # ✅ Mapeo de idioma para forzarlo en el prompt
+        lang_nombres = {
+            'es': 'español', 'en': 'English', 'fr': 'français',
+            'de': 'Deutsch', 'pt': 'português', 'zh': '中文'
+        }
+        lang_actual = lang_nombres.get(lang, 'español')
+
         props_result = supabase.table("propiedades").select("*").eq("vendedor", id_clean).eq("estado", "disponible").execute()
         propiedades = props_result.data or []
         props_text = ""
@@ -1339,37 +1346,42 @@ def chat_inmobiliario(cliente_id):
             props_text += line + "\n"
         if not props_text:
             props_text = "No hay propiedades listadas actualmente, pero podemos ayudar a encontrar lo ideal."
-        system_prompt = f"""Eres un asesor inmobiliario virtual experto y carismático de {vendedor.get('nombre', 'la inmobiliaria')}. Tu misión es convertir visitantes en prospectos calificados.
 
-PROPIEDADES DISPONIBLES:
+        # ✅ Idioma forzado al inicio del prompt
+        system_prompt = f"""CRITICAL INSTRUCTION: You MUST respond ONLY in {lang_actual}. No exceptions whatsoever. Every single word of your response must be in {lang_actual}.
+
+You are a charismatic virtual real estate advisor for {vendedor.get('nombre', 'the agency')}. Your mission is to convert visitors into qualified prospects.
+
+AVAILABLE PROPERTIES:
 {props_text}
 
-OBJETIVOS EN ORDEN:
-1. Saludar cálidamente y preguntar qué busca
-2. Identificar zona, tipo de propiedad, presupuesto y urgencia con preguntas naturales
-3. Recomendar propiedades específicas del inventario que encajen
-4. Crear urgencia y deseo de contactar
-5. Dirigir al formulario: "¡Perfecto! Llena el formulario de contacto arriba y te llamamos hoy mismo 📝"
+GOALS IN ORDER:
+1. Greet warmly and ask what they're looking for
+2. Identify area, property type, budget and urgency with natural questions
+3. Recommend specific properties from the inventory that match
+4. Create urgency and desire to contact
+5. Direct to the form above: fill out the contact form and we'll call you today!
 
-REGLAS:
-- Responde SIEMPRE en el idioma del usuario
-- Máximo 3 oraciones por respuesta — sé conciso y directo
-- Haz solo UNA pregunta por mensaje para calificar al prospecto
-- Usa emojis ocasionalmente para ser amigable 🏠✨
-- Solo menciona propiedades del inventario real
-- Si preguntan por WhatsApp: {vendedor.get('whatsapp', '')}
-- Sé proactivo, cálido y profesional — como un asesor de lujo
+RULES:
+- RESPOND ONLY IN {lang_actual} — this is non-negotiable
+- Maximum 3 sentences per response — be concise and direct
+- Ask only ONE question per message to qualify the prospect
+- Use emojis occasionally 🏠✨
+- Only mention properties from the real inventory
+- WhatsApp contact: {vendedor.get('whatsapp', '')}
+- Be proactive, warm and professional
 
-EMPRESA: {vendedor.get('nombre', 'Inmobiliaria')}"""
+COMPANY: {vendedor.get('nombre', 'Real Estate Agency')}"""
 
         contents = []
         for msg in messages:
             role = "user" if msg["role"] == "user" else "model"
             contents.append({"role": role, "parts": [{"text": msg["content"]}]})
+
         payload = {
             "system_instruction": {"parts": [{"text": system_prompt}]},
             "contents": contents,
-            "generationConfig": {"temperature": 0.75, "maxOutputTokens": 250}
+            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 250}
         }
         api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
         req_data = json.dumps(payload).encode('utf-8')
@@ -1380,7 +1392,17 @@ EMPRESA: {vendedor.get('nombre', 'Inmobiliaria')}"""
         return jsonify({"response": text})
     except Exception as e:
         print(f"❌ Error chat Gemini: {e}")
-        return jsonify({"response": "Lo siento, tuve un problema técnico. ¿Me escribes directamente por WhatsApp? 💬"}), 200
+        error_msgs = {
+            'es': "Lo siento, tuve un problema técnico. ¿Me escribes por WhatsApp? 💬",
+            'en': "Sorry, I had a technical issue. Write us on WhatsApp? 💬",
+            'fr': "Désolé, j'ai eu un problème technique. Écrivez-nous sur WhatsApp? 💬",
+            'de': "Entschuldigung, technisches Problem. WhatsApp? 💬",
+            'pt': "Desculpe, problema técnico. WhatsApp? 💬",
+            'zh': "抱歉，技术问题。WhatsApp联系？💬"
+        }
+        lang = request.get_json(silent=True, force=True) or {}
+        l = lang.get('lang', 'es') if isinstance(lang, dict) else 'es'
+        return jsonify({"response": error_msgs.get(l, error_msgs['es'])}), 200
 
 @app.route("/")
 def index():
