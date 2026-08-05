@@ -363,21 +363,13 @@ def generar_respuesta_sugerida(lead, lang='es'):
     }
 
     t = T.get(lang, T['es'])
-
-    if 'CLIENTE' in clasificacion:
-        return t['cliente']
-    if dias == 0:
-        return t['nuevo']
-    if dias <= 1 and temperatura in ['MUY_CALIENTE', 'CALIENTE']:
-        return t['dia1_caliente']
-    if dias <= 3:
-        return t['dias3']
-    if dias <= 7:
-        return t['dias7']
-    if dias <= 14:
-        return t['dias14']
-    if dias <= 30:
-        return t['dias30']
+    if 'CLIENTE' in clasificacion: return t['cliente']
+    if dias == 0: return t['nuevo']
+    if dias <= 1 and temperatura in ['MUY_CALIENTE', 'CALIENTE']: return t['dia1_caliente']
+    if dias <= 3: return t['dias3']
+    if dias <= 7: return t['dias7']
+    if dias <= 14: return t['dias14']
+    if dias <= 30: return t['dias30']
     return t['ultimo']
 
 
@@ -417,7 +409,7 @@ def job_seguimiento_automatico():
 def verificar_sesion():
     rutas_publicas = ['formulario', 'formulario_asesor', 'index', 'seleccion_idioma_login',
                       'static', 'login', 'cambiar_idioma', 'cron_seguimiento', 'admin_login',
-                      'inicio_formulario', 'chat_inmobiliario']
+                      'inicio_formulario', 'chat_inmobiliario', 'test_gemini']
     if request.endpoint in rutas_publicas:
         return
     if request.endpoint and request.endpoint.startswith('admin'):
@@ -1308,7 +1300,32 @@ def cambiar_idioma(lang, proximo, cliente_id):
     session['idioma'] = lang
     return redirect(url_for(proximo, cliente_id=cliente_id.lower()))
 
-# ✅ CHATBOT CON GEMINI — idioma forzado en system prompt
+# ✅ RUTA DE DIAGNÓSTICO — para ver el error exacto del API key
+@app.route("/test-gemini/<cliente_id>")
+def test_gemini(cliente_id):
+    gemini_key = os.environ.get("GEMINI_API_KEY", "NO KEY")
+    try:
+        payload = {
+            "contents": [{"role": "user", "parts": [{"text": "Hola, responde solo: OK"}]}],
+            "generationConfig": {"maxOutputTokens": 10}
+        }
+        api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+        req_data = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(
+            api_url, data=req_data,
+            headers={"Content-Type": "application/json"}, method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            result = json.loads(resp.read().decode('utf-8'))
+        text = result["candidates"][0]["content"]["parts"][0]["text"]
+        return jsonify({"ok": True, "key_prefix": gemini_key[:12], "response": text})
+    except urllib.error.HTTPError as e:
+        body = e.read().decode('utf-8')
+        return jsonify({"ok": False, "key_prefix": gemini_key[:12], "http_error": e.code, "detail": body})
+    except Exception as e:
+        return jsonify({"ok": False, "key_prefix": gemini_key[:12], "error": str(e)})
+
+# ✅ CHATBOT CON GEMINI
 @app.route("/api/chat/<cliente_id>", methods=["POST"])
 def chat_inmobiliario(cliente_id):
     id_clean = cliente_id.lower()
@@ -1323,7 +1340,6 @@ def chat_inmobiliario(cliente_id):
         if not gemini_key:
             return jsonify({"response": "Servicio no disponible temporalmente."}), 200
 
-        # ✅ Mapeo de idioma para forzarlo en el prompt
         lang_nombres = {
             'es': 'español', 'en': 'English', 'fr': 'français',
             'de': 'Deutsch', 'pt': 'português', 'zh': '中文'
@@ -1345,33 +1361,31 @@ def chat_inmobiliario(cliente_id):
             if p.get('descripcion'): line += f". {str(p.get('descripcion',''))[:80]}"
             props_text += line + "\n"
         if not props_text:
-            props_text = "No hay propiedades listadas actualmente, pero podemos ayudar a encontrar lo ideal."
+            props_text = "No hay propiedades listadas actualmente."
 
-        # ✅ Idioma forzado al inicio del prompt
-        system_prompt = f"""CRITICAL INSTRUCTION: You MUST respond ONLY in {lang_actual}. No exceptions whatsoever. Every single word of your response must be in {lang_actual}.
+        system_prompt = f"""CRITICAL: You MUST respond ONLY in {lang_actual}. Every word must be in {lang_actual}. No exceptions.
 
-You are a charismatic virtual real estate advisor for {vendedor.get('nombre', 'the agency')}. Your mission is to convert visitors into qualified prospects.
+You are a charismatic virtual real estate advisor for {vendedor.get('nombre', 'the agency')}. Convert visitors into qualified prospects.
 
 AVAILABLE PROPERTIES:
 {props_text}
 
-GOALS IN ORDER:
+GOALS:
 1. Greet warmly and ask what they're looking for
-2. Identify area, property type, budget and urgency with natural questions
-3. Recommend specific properties from the inventory that match
-4. Create urgency and desire to contact
-5. Direct to the form above: fill out the contact form and we'll call you today!
+2. Identify area, property type, budget and urgency naturally
+3. Recommend specific properties from inventory
+4. Create urgency
+5. Direct to the contact form above
 
 RULES:
-- RESPOND ONLY IN {lang_actual} — this is non-negotiable
-- Maximum 3 sentences per response — be concise and direct
-- Ask only ONE question per message to qualify the prospect
+- RESPOND ONLY IN {lang_actual}
+- Max 3 sentences per response
+- Only ONE question per message
 - Use emojis occasionally 🏠✨
-- Only mention properties from the real inventory
-- WhatsApp contact: {vendedor.get('whatsapp', '')}
-- Be proactive, warm and professional
+- Only mention properties from real inventory
+- WhatsApp: {vendedor.get('whatsapp', '')}
 
-COMPANY: {vendedor.get('nombre', 'Real Estate Agency')}"""
+COMPANY: {vendedor.get('nombre', 'Real Estate')}"""
 
         contents = []
         for msg in messages:
@@ -1385,24 +1399,35 @@ COMPANY: {vendedor.get('nombre', 'Real Estate Agency')}"""
         }
         api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
         req_data = json.dumps(payload).encode('utf-8')
-        req = urllib.request.Request(api_url, data=req_data, headers={"Content-Type": "application/json"}, method="POST")
+        req = urllib.request.Request(
+            api_url, data=req_data,
+            headers={"Content-Type": "application/json"}, method="POST"
+        )
         with urllib.request.urlopen(req, timeout=15) as resp:
             result = json.loads(resp.read().decode('utf-8'))
         text = result["candidates"][0]["content"]["parts"][0]["text"]
         return jsonify({"response": text})
-    except Exception as e:
-        print(f"❌ Error chat Gemini: {e}")
+
+    except urllib.error.HTTPError as e:
+        body = e.read().decode('utf-8')
+        print(f"❌ Gemini HTTPError {e.code}: {body}")
         error_msgs = {
-            'es': "Lo siento, tuve un problema técnico. ¿Me escribes por WhatsApp? 💬",
-            'en': "Sorry, I had a technical issue. Write us on WhatsApp? 💬",
-            'fr': "Désolé, j'ai eu un problème technique. Écrivez-nous sur WhatsApp? 💬",
+            'es': "Lo siento, problema técnico. ¿WhatsApp? 💬",
+            'en': "Sorry, technical issue. WhatsApp? 💬",
+            'fr': "Désolé, problème technique. WhatsApp? 💬",
             'de': "Entschuldigung, technisches Problem. WhatsApp? 💬",
             'pt': "Desculpe, problema técnico. WhatsApp? 💬",
-            'zh': "抱歉，技术问题。WhatsApp联系？💬"
+            'zh': "抱歉，技术问题。WhatsApp？💬"
         }
-        lang = request.get_json(silent=True, force=True) or {}
-        l = lang.get('lang', 'es') if isinstance(lang, dict) else 'es'
+        try:
+            l = request.get_json(silent=True).get('lang', 'es')
+        except:
+            l = 'es'
         return jsonify({"response": error_msgs.get(l, error_msgs['es'])}), 200
+
+    except Exception as e:
+        print(f"❌ Error chat Gemini: {e}")
+        return jsonify({"response": "Lo siento, problema técnico. ¿WhatsApp? 💬"}), 200
 
 @app.route("/")
 def index():
