@@ -609,7 +609,7 @@ def admin_panel():
 @app.route("/admin/cliente/nuevo", methods=["POST"])
 def admin_nuevo_cliente():
     if not session.get("admin"):
-        return redirect(url_for('admin_login'))
+        return redirect(url_for('admin_panel'))
     try:
         cliente_id = request.form.get("id", "").strip().lower().replace(" ", "_")
         if not cliente_id:
@@ -635,7 +635,7 @@ def admin_nuevo_cliente():
 @app.route("/admin/cliente/editar/<cliente_id>", methods=["POST"])
 def admin_editar_cliente(cliente_id):
     if not session.get("admin"):
-        return redirect(url_for('admin_login'))
+        return redirect(url_for('admin_panel'))
     try:
         data = {
             "nombre": request.form.get("nombre", "").strip(),
@@ -658,7 +658,7 @@ def admin_editar_cliente(cliente_id):
 @app.route("/admin/cliente/toggle/<cliente_id>", methods=["POST"])
 def admin_toggle_cliente(cliente_id):
     if not session.get("admin"):
-        return redirect(url_for('admin_login'))
+        return redirect(url_for('admin_panel'))
     try:
         nuevo_estado = request.form.get("nuevo_estado", "false") == "true"
         supabase.table("clientes").update({"activo": nuevo_estado}).eq("id", cliente_id).execute()
@@ -669,7 +669,7 @@ def admin_toggle_cliente(cliente_id):
 @app.route("/admin/cliente/borrar/<cliente_id>", methods=["POST"])
 def admin_borrar_cliente(cliente_id):
     if not session.get("admin"):
-        return redirect(url_for('admin_login'))
+        return redirect(url_for('admin_panel'))
     try:
         supabase.table("leads").delete().eq("vendedor", cliente_id).execute()
         supabase.table("propiedades").delete().eq("vendedor", cliente_id).execute()
@@ -1300,7 +1300,7 @@ def cambiar_idioma(lang, proximo, cliente_id):
     session['idioma'] = lang
     return redirect(url_for(proximo, cliente_id=cliente_id.lower()))
 
-# ✅ RUTA DE DIAGNÓSTICO — para ver el error exacto del API key
+# ✅ DIAGNÓSTICO — ver error exacto del API key
 @app.route("/test-gemini/<cliente_id>")
 def test_gemini(cliente_id):
     gemini_key = os.environ.get("GEMINI_API_KEY", "NO KEY")
@@ -1309,7 +1309,8 @@ def test_gemini(cliente_id):
             "contents": [{"role": "user", "parts": [{"text": "Hola, responde solo: OK"}]}],
             "generationConfig": {"maxOutputTokens": 10}
         }
-        api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+        # ✅ CAMBIADO: gemini-pro en vez de gemini-1.5-flash
+        api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={gemini_key}"
         req_data = json.dumps(payload).encode('utf-8')
         req = urllib.request.Request(
             api_url, data=req_data,
@@ -1397,7 +1398,8 @@ COMPANY: {vendedor.get('nombre', 'Real Estate')}"""
             "contents": contents,
             "generationConfig": {"temperature": 0.7, "maxOutputTokens": 250}
         }
-        api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+        # ✅ CAMBIADO: gemini-pro en vez de gemini-1.5-flash
+        api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={gemini_key}"
         req_data = json.dumps(payload).encode('utf-8')
         req = urllib.request.Request(
             api_url, data=req_data,
