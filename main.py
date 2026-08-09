@@ -409,7 +409,7 @@ def job_seguimiento_automatico():
 def verificar_sesion():
     rutas_publicas = ['formulario', 'formulario_asesor', 'index', 'seleccion_idioma_login',
                       'static', 'login', 'cambiar_idioma', 'cron_seguimiento', 'admin_login',
-                      'inicio_formulario', 'chat_inmobiliario', 'test_gemini']
+                      'inicio_formulario', 'chat_inmobiliario', 'test_chat']
     if request.endpoint in rutas_publicas:
         return
     if request.endpoint and request.endpoint.startswith('admin'):
@@ -1300,52 +1300,63 @@ def cambiar_idioma(lang, proximo, cliente_id):
     session['idioma'] = lang
     return redirect(url_for(proximo, cliente_id=cliente_id.lower()))
 
-# ✅ DIAGNÓSTICO — prueba varios modelos para encontrar cuál funciona
-@app.route("/test-gemini/<cliente_id>")
-def test_gemini(cliente_id):
-    gemini_key = os.environ.get("GEMINI_API_KEY", "NO KEY")
-    # ✅ Lista de modelos a probar en orden
+# ============================================================
+# ✅ CHATBOT CON OPENROUTER — gratis, sin límites
+# ============================================================
+
+def llamar_openrouter(api_key, messages_payload):
+    """Llama a OpenRouter con fallback de modelos gratuitos"""
     modelos = [
-        "gemini-2.0-flash-lite",
-        "gemini-2.0-flash",
-        "gemini-1.5-flash",
-        "gemini-1.5-flash-latest",
-        "gemini-1.0-pro",
+        "meta-llama/llama-3.1-8b-instruct:free",
+        "mistralai/mistral-7b-instruct:free",
+        "microsoft/phi-3-mini-128k-instruct:free",
+        "google/gemma-2-9b-it:free",
     ]
-    resultados = {}
     for modelo in modelos:
         try:
             payload = {
-                "contents": [{"role": "user", "parts": [{"text": "Say: OK"}]}],
-                "generationConfig": {"maxOutputTokens": 10}
+                "model": modelo,
+                "messages": messages_payload,
+                "max_tokens": 300,
+                "temperature": 0.7
             }
-            api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent?key={gemini_key}"
-            req_data = json.dumps(payload).encode('utf-8')
+            data = json.dumps(payload).encode('utf-8')
             req = urllib.request.Request(
-                api_url, data=req_data,
-                headers={"Content-Type": "application/json"}, method="POST"
+                "https://openrouter.ai/api/v1/chat/completions",
+                data=data,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {api_key}",
+                    "HTTP-Referer": "https://bot-inmobiliaria-v1.onrender.com",
+                    "X-Title": "Bot Inmobiliaria"
+                },
+                method="POST"
             )
-            with urllib.request.urlopen(req, timeout=10) as resp:
+            with urllib.request.urlopen(req, timeout=20) as resp:
                 result = json.loads(resp.read().decode('utf-8'))
-            text = result["candidates"][0]["content"]["parts"][0]["text"]
-            resultados[modelo] = {"ok": True, "response": text}
+            text = result["choices"][0]["message"]["content"]
+            print(f"✅ OpenRouter modelo exitoso: {modelo}")
+            return text
         except urllib.error.HTTPError as e:
-            resultados[modelo] = {"ok": False, "code": e.code}
+            print(f"⚠️ OpenRouter {modelo} falló: {e.code}")
+            continue
         except Exception as e:
-            resultados[modelo] = {"ok": False, "error": str(e)[:80]}
-    return jsonify({"key_prefix": gemini_key[:12], "results": resultados})
+            print(f"⚠️ OpenRouter {modelo} error: {e}")
+            continue
+    return None
 
-# ✅ CHATBOT CON GEMINI — modelo dinámico
-def llamar_gemini(gemini_key, modelo, payload):
-    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent?key={gemini_key}"
-    req_data = json.dumps(payload).encode('utf-8')
-    req = urllib.request.Request(
-        api_url, data=req_data,
-        headers={"Content-Type": "application/json"}, method="POST"
-    )
-    with urllib.request.urlopen(req, timeout=15) as resp:
-        result = json.loads(resp.read().decode('utf-8'))
-    return result["candidates"][0]["content"]["parts"][0]["text"]
+@app.route("/test-chat/<cliente_id>")
+def test_chat(cliente_id):
+    api_key = os.environ.get("OPENROUTER_API_KEY", "NO KEY")
+    try:
+        result = llamar_openrouter(api_key, [
+            {"role": "user", "content": "Say exactly: WORKING"}
+        ])
+        if result:
+            return jsonify({"ok": True, "response": result, "key_prefix": api_key[:12]})
+        return jsonify({"ok": False, "error": "Ningún modelo respondió", "key_prefix": api_key[:12]})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e), "key_prefix": api_key[:12]})
 
 @app.route("/api/chat/<cliente_id>", methods=["POST"])
 def chat_inmobiliario(cliente_id):
@@ -1357,8 +1368,8 @@ def chat_inmobiliario(cliente_id):
         data = request.get_json()
         messages = data.get("messages", [])
         lang = data.get("lang", "es")
-        gemini_key = os.environ.get("GEMINI_API_KEY", "")
-        if not gemini_key:
+        api_key = os.environ.get("OPENROUTER_API_KEY", "")
+        if not api_key:
             return jsonify({"response": "Servicio no disponible temporalmente."}), 200
 
         lang_nombres = {
@@ -1368,6 +1379,7 @@ def chat_inmobiliario(cliente_id):
         lang_actual = lang_nombres.get(lang, 'español')
         wa = vendedor.get('whatsapp', '')
 
+        # Propiedades disponibles
         props_result = supabase.table("propiedades").select("*").eq("vendedor", id_clean).eq("estado", "disponible").execute()
         propiedades = props_result.data or []
         props_text = ""
@@ -1387,74 +1399,44 @@ def chat_inmobiliario(cliente_id):
 
         # CTA según idioma
         cta = {
-            'es': f"¡Perfecto! 📝 Por favor llena el formulario de contacto arriba para que un asesor te llame hoy mismo. También puedes escribirnos directamente por WhatsApp al {wa} 💬",
-            'en': f"Perfect! 📝 Please fill out the contact form above so an advisor can call you today. You can also reach us directly on WhatsApp at {wa} 💬",
-            'fr': f"Parfait! 📝 Veuillez remplir le formulaire de contact ci-dessus pour qu'un conseiller vous rappelle aujourd'hui. Vous pouvez aussi nous écrire sur WhatsApp au {wa} 💬",
-            'de': f"Perfekt! 📝 Bitte füllen Sie das Kontaktformular oben aus, damit ein Berater Sie heute zurückruft. Sie können uns auch direkt auf WhatsApp unter {wa} schreiben 💬",
-            'pt': f"Perfeito! 📝 Por favor preencha o formulário de contato acima para que um consultor ligue para você hoje. Você também pode nos escrever pelo WhatsApp no {wa} 💬",
-            'zh': f"太好了！📝 请填写上方的联系表格，顾问将在今天给您回电。您也可以直接在WhatsApp上联系我们：{wa} 💬"
-        }.get(lang, f"¡Perfecto! 📝 Llena el formulario arriba o escríbenos por WhatsApp al {wa} 💬")
+            'es': f"¡Perfecto! 📝 Llena el formulario de contacto arriba y un asesor te llamará hoy mismo. También puedes escribirnos por WhatsApp: {wa} 💬",
+            'en': f"Perfect! 📝 Fill out the contact form above and an advisor will call you today. You can also reach us on WhatsApp: {wa} 💬",
+            'fr': f"Parfait! 📝 Remplissez le formulaire ci-dessus et un conseiller vous rappellera aujourd'hui. Vous pouvez aussi nous écrire sur WhatsApp: {wa} 💬",
+            'de': f"Perfekt! 📝 Füllen Sie das Formular oben aus und ein Berater ruft Sie heute zurück. WhatsApp: {wa} 💬",
+            'pt': f"Perfeito! 📝 Preencha o formulário acima e um consultor ligará para você hoje. WhatsApp: {wa} 💬",
+            'zh': f"太好了！📝 请填写上方表格，顾问今天会给您回电。WhatsApp: {wa} 💬"
+        }.get(lang, f"¡Perfecto! 📝 Llena el formulario arriba o escríbenos por WhatsApp: {wa} 💬")
 
-        system_prompt = f"""CRITICAL: You MUST respond ONLY in {lang_actual}. Every single word must be in {lang_actual}. No exceptions.
+        system_prompt = f"""CRITICAL INSTRUCTION: You MUST respond ONLY in {lang_actual}. Every single word must be in {lang_actual}. Absolutely no other language.
 
-You are a charismatic virtual real estate advisor for {vendedor.get('nombre', 'the agency')}. Your mission: convert visitors into qualified prospects who fill the contact form.
+You are a charismatic virtual real estate advisor for {vendedor.get('nombre', 'the agency')}. Your mission: qualify prospects and get them to fill the contact form.
 
 AVAILABLE PROPERTIES:
 {props_text}
 
-CONVERSATION FLOW:
+CONVERSATION STRATEGY:
 1. Greet warmly and ask what they're looking for
-2. Ask ONE question per message to qualify: zone/area, property type, budget, timeline
-3. After 3-4 exchanges, recommend a specific property from the inventory
-4. Then push them to fill the form with this EXACT message:
+2. Ask ONE question per message to qualify: zone, property type, budget, timeline
+3. After 3-4 exchanges OR when you have enough info, recommend a specific property
+4. Then send this EXACT call-to-action:
 {cta}
 
-RULES:
-- RESPOND ONLY IN {lang_actual} — absolutely no other language
-- Max 3 sentences per response
-- ONE question per message only
+STRICT RULES:
+- Respond ONLY in {lang_actual} — no exceptions
+- Maximum 3 sentences per response
+- Only ONE question per message
+- Only mention real properties from the inventory above
 - Use emojis occasionally 🏠✨
-- Only mention properties from the real inventory above
-- After recommending a property, always end with the CTA to fill the form
-- WhatsApp: {wa}
+- Be warm, professional, like a luxury advisor
+- Always end with the CTA after recommending a property"""
 
-COMPANY: {vendedor.get('nombre', 'Real Estate')}"""
-
-        # System prompt como primera vuelta de conversación (compatible con todos los modelos)
-        contents = [
-            {"role": "user", "parts": [{"text": f"[SYSTEM INSTRUCTIONS - FOLLOW EXACTLY]: {system_prompt}"}]},
-            {"role": "model", "parts": [{"text": f"Understood. I will respond only in {lang_actual} and follow all instructions precisely."}]}
-        ]
+        # Construir mensajes para OpenRouter (formato OpenAI)
+        messages_payload = [{"role": "system", "content": system_prompt}]
         for msg in messages:
-            role = "user" if msg["role"] == "user" else "model"
-            contents.append({"role": role, "parts": [{"text": msg["content"]}]})
+            role = "user" if msg["role"] == "user" else "assistant"
+            messages_payload.append({"role": role, "content": msg["content"]})
 
-        payload = {
-            "contents": contents,
-            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 300}
-        }
-
-        # ✅ Intenta modelos en orden hasta que uno funcione
-        modelos_a_intentar = [
-            "gemini-2.0-flash-lite",
-            "gemini-2.0-flash",
-            "gemini-1.5-flash",
-            "gemini-1.5-flash-latest",
-            "gemini-1.0-pro",
-        ]
-
-        text = None
-        for modelo in modelos_a_intentar:
-            try:
-                text = llamar_gemini(gemini_key, modelo, payload)
-                print(f"✅ Modelo exitoso: {modelo}")
-                break
-            except urllib.error.HTTPError as e:
-                print(f"⚠️ Modelo {modelo} falló con {e.code}")
-                continue
-            except Exception as e:
-                print(f"⚠️ Modelo {modelo} error: {e}")
-                continue
+        text = llamar_openrouter(api_key, messages_payload)
 
         if text:
             return jsonify({"response": text})
@@ -1462,14 +1444,15 @@ COMPANY: {vendedor.get('nombre', 'Real Estate')}"""
             raise Exception("Ningún modelo disponible")
 
     except Exception as e:
-        print(f"❌ Error chat Gemini: {e}")
+        print(f"❌ Error chat OpenRouter: {e}")
+        wa = vendedor.get('whatsapp', '') if vendedor else ''
         error_msgs = {
-            'es': f"Estamos teniendo un problema técnico momentáneo 🔧 Por favor escríbenos directamente por WhatsApp y con gusto te atendemos: {vendedor.get('whatsapp', '')} 💬",
-            'en': f"We're experiencing a temporary technical issue 🔧 Please write us directly on WhatsApp and we'll be happy to help: {vendedor.get('whatsapp', '')} 💬",
-            'fr': f"Nous avons un problème technique momentané 🔧 Veuillez nous écrire directement sur WhatsApp et nous serons ravis de vous aider: {vendedor.get('whatsapp', '')} 💬",
-            'de': f"Wir haben ein vorübergehendes technisches Problem 🔧 Bitte schreiben Sie uns direkt auf WhatsApp: {vendedor.get('whatsapp', '')} 💬",
-            'pt': f"Estamos com um problema técnico momentâneo 🔧 Por favor nos escreva diretamente pelo WhatsApp: {vendedor.get('whatsapp', '')} 💬",
-            'zh': f"我们遇到了暂时的技术问题 🔧 请直接通过WhatsApp联系我们：{vendedor.get('whatsapp', '')} 💬"
+            'es': f"Estamos teniendo un problema técnico momentáneo 🔧 Por favor escríbenos por WhatsApp y te atendemos de inmediato: {wa} 💬",
+            'en': f"We're experiencing a temporary technical issue 🔧 Please write us on WhatsApp and we'll help you right away: {wa} 💬",
+            'fr': f"Problème technique momentané 🔧 Écrivez-nous sur WhatsApp: {wa} 💬",
+            'de': f"Technisches Problem 🔧 WhatsApp: {wa} 💬",
+            'pt': f"Problema técnico momentâneo 🔧 WhatsApp: {wa} 💬",
+            'zh': f"技术问题 🔧 WhatsApp: {wa} 💬"
         }
         try:
             l = request.get_json(silent=True).get('lang', 'es')
