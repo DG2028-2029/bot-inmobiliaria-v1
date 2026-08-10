@@ -7,6 +7,7 @@ import os
 import re
 import json
 import urllib.request
+import time
 import cloudinary
 import cloudinary.uploader
 from datetime import datetime, timedelta
@@ -923,7 +924,7 @@ def formulario_asesor(cliente_id, asesor_usuario):
             "telefono": request.form.get("telefono").strip(),
             "zona_interes": request.form.get("zona").strip(),
             "presupuesto": request.form.get("presupuesto").strip(),
-                        "mensaje": request.form.get("mensaje").strip(),
+            "mensaje": request.form.get("mensaje").strip(),
             "vendedor": id_clean
         }
         score_final = motor_scoring_global(d)
@@ -1305,7 +1306,6 @@ def cambiar_idioma(lang, proximo, cliente_id):
 # ============================================================
 
 def llamar_openrouter(api_key, messages_payload):
-    # ✅ MODELOS ACTUALIZADOS con los que aparecen gratis en agosto 2026
     modelos = [
         "inclusionai/ling-3.0-tiny:free",
         "meta-llama/llama-3.3-8b-instruct:free",
@@ -1318,9 +1318,9 @@ def llamar_openrouter(api_key, messages_payload):
             payload = {
                 "model": modelo,
                 "messages": messages_payload,
-                "max_tokens": 300,
+                "max_tokens": 250,
                 "temperature": 0.7
-}
+            }
             data = json.dumps(payload).encode('utf-8')
             req = urllib.request.Request(
                 "https://openrouter.ai/api/v1/chat/completions",
@@ -1340,6 +1340,7 @@ def llamar_openrouter(api_key, messages_payload):
             return text
         except urllib.error.HTTPError as e:
             print(f"⚠️ OpenRouter {modelo} falló: {e.code}")
+            time.sleep(1)
             continue
         except Exception as e:
             print(f"⚠️ OpenRouter {modelo} error: {e}")
@@ -1371,7 +1372,7 @@ def chat_inmobiliario(cliente_id):
         lang = data.get("lang", "es")
         api_key = os.environ.get("OPENROUTER_API_KEY", "")
         if not api_key:
-            return jsonify({"response": "Servicio no disponible temporalmente."}), 200
+            return jsonify({"response": "Servicio no disponible."}), 200
 
         lang_nombres = {
             'es': 'español', 'en': 'English', 'fr': 'français',
@@ -1383,54 +1384,44 @@ def chat_inmobiliario(cliente_id):
         props_result = supabase.table("propiedades").select("*").eq("vendedor", id_clean).eq("estado", "disponible").execute()
         propiedades = props_result.data or []
         props_text = ""
-        for p in propiedades[:8]:
+        for p in propiedades[:6]:
             try:
                 precio = float(p.get('precio', 0))
-                line = f"• {p.get('titulo', 'Propiedad')}: ${precio:,.0f}, {p.get('ubicacion', '')}"
+                line = f"• {p.get('titulo','')}: ${precio:,.0f}, {p.get('ubicacion','')}"
             except:
-                line = f"• {p.get('titulo', 'Propiedad')}: {p.get('ubicacion', '')}"
-            if p.get('habitaciones'): line += f", {p.get('habitaciones')} hab"
-            if p.get('banos'): line += f", {p.get('banos')} baños"
+                line = f"• {p.get('titulo','')}: {p.get('ubicacion','')}"
+            if p.get('habitaciones'): line += f", {p.get('habitaciones')}hab"
             if p.get('metros2'): line += f", {p.get('metros2')}m²"
-            if p.get('descripcion'): line += f". {str(p.get('descripcion',''))[:80]}"
             props_text += line + "\n"
         if not props_text:
-            props_text = "No hay propiedades listadas actualmente."
+            props_text = "Sin propiedades listadas actualmente."
 
         cta = {
-            'es': f"¡Perfecto! 📝 Llena el formulario de contacto arriba y un asesor te llamará hoy mismo. También puedes escribirnos por WhatsApp: {wa} 💬",
-            'en': f"Perfect! 📝 Fill out the contact form above and an advisor will call you today. You can also reach us on WhatsApp: {wa} 💬",
-            'fr': f"Parfait! 📝 Remplissez le formulaire ci-dessus et un conseiller vous rappellera aujourd'hui. WhatsApp: {wa} 💬",
-            'de': f"Perfekt! 📝 Füllen Sie das Formular oben aus und ein Berater ruft Sie heute zurück. WhatsApp: {wa} 💬",
-            'pt': f"Perfeito! 📝 Preencha o formulário acima e um consultor ligará para você hoje. WhatsApp: {wa} 💬",
-            'zh': f"太好了！📝 请填写上方表格，顾问今天会给您回电。WhatsApp: {wa} 💬"
-        }.get(lang, f"¡Perfecto! 📝 Llena el formulario arriba o escríbenos por WhatsApp: {wa} 💬")
+            'es': f"¡Perfecto! 📝 Llena el formulario arriba y te llamamos hoy. O escríbenos por WhatsApp: {wa} 💬",
+            'en': f"Perfect! 📝 Fill the form above and we'll call you today. Or WhatsApp: {wa} 💬",
+            'fr': f"Parfait! 📝 Remplissez le formulaire ci-dessus. WhatsApp: {wa} 💬",
+            'de': f"Perfekt! 📝 Füllen Sie das Formular aus. WhatsApp: {wa} 💬",
+            'pt': f"Perfeito! 📝 Preencha o formulário acima. WhatsApp: {wa} 💬",
+            'zh': f"太好了！📝 请填写上方表格。WhatsApp: {wa} 💬"
+        }.get(lang, f"¡Perfecto! 📝 Llena el formulario arriba. WhatsApp: {wa} 💬")
 
-        system_prompt = f"""CRITICAL: You MUST respond ONLY in {lang_actual}. Every single word must be in {lang_actual}. No exceptions.
+        # ✅ SISTEMA: pregunta todo de una sola vez en el primer mensaje
+        system_prompt = f"""You are a real estate advisor for {vendedor.get('nombre','')}. Respond ONLY in {lang_actual}.
 
-You are a charismatic virtual real estate advisor for {vendedor.get('nombre', 'the agency')}. Your mission: qualify prospects and get them to fill the contact form.
-
-AVAILABLE PROPERTIES:
+PROPERTIES:
 {props_text}
 
-CONVERSATION STRATEGY:
-1. Greet warmly and ask what they're looking for
-2. Ask ONE question per message to qualify: zone, property type, budget, timeline
-3. After 3-4 exchanges OR when you have enough info, recommend a specific property
-4. Then send this EXACT call-to-action:
-{cta}
+INSTRUCTIONS:
+- In your FIRST message: greet warmly, then ask ALL these questions in ONE message: name, country, zone/city, budget, property type (house/apartment/land), timeline to buy.
+- In your SECOND message: based on answers, recommend 1-2 specific properties and send this: {cta}
+- Keep responses under 4 sentences. Be warm and professional like a luxury advisor.
+- ONLY respond in {lang_actual}."""
 
-STRICT RULES:
-- Respond ONLY in {lang_actual} — no exceptions
-- Maximum 3 sentences per response
-- Only ONE question per message
-- Only mention real properties from the inventory above
-- Use emojis occasionally 🏠✨
-- Be warm, professional, like a luxury advisor
-- Always end with the CTA after recommending a property"""
+        # ✅ Solo últimos 4 mensajes para evitar rate limit
+        messages_recientes = messages[-4:] if len(messages) > 4 else messages
 
         messages_payload = [{"role": "system", "content": system_prompt}]
-        for msg in messages:
+        for msg in messages_recientes:
             role = "user" if msg["role"] == "user" else "assistant"
             messages_payload.append({"role": role, "content": msg["content"]})
 
@@ -1439,18 +1430,18 @@ STRICT RULES:
         if text:
             return jsonify({"response": text})
         else:
-            raise Exception("Ningún modelo disponible")
+            raise Exception("Sin respuesta")
 
     except Exception as e:
-        print(f"❌ Error chat OpenRouter: {e}")
+        print(f"❌ Error chat: {e}")
         wa = vendedor.get('whatsapp', '') if vendedor else ''
         error_msgs = {
-            'es': f"Estamos teniendo un problema técnico momentáneo 🔧 Por favor escríbenos por WhatsApp y te atendemos de inmediato: {wa} 💬",
-            'en': f"We're experiencing a temporary technical issue 🔧 Please write us on WhatsApp: {wa} 💬",
-            'fr': f"Problème technique momentané 🔧 WhatsApp: {wa} 💬",
-            'de': f"Technisches Problem 🔧 WhatsApp: {wa} 💬",
-            'pt': f"Problema técnico momentâneo 🔧 WhatsApp: {wa} 💬",
-            'zh': f"技术问题 🔧 WhatsApp: {wa} 💬"
+            'es': f"Nuestro asistente está ocupado en este momento 🔧 Escríbenos directamente por WhatsApp y te atendemos al instante: {wa} 💬",
+            'en': f"Our assistant is busy right now 🔧 Write us directly on WhatsApp for instant help: {wa} 💬",
+            'fr': f"Notre assistant est occupé 🔧 Écrivez-nous sur WhatsApp: {wa} 💬",
+            'de': f"Unser Assistent ist beschäftigt 🔧 WhatsApp: {wa} 💬",
+            'pt': f"Nosso assistente está ocupado 🔧 WhatsApp: {wa} 💬",
+            'zh': f"我们的助手很忙 🔧 WhatsApp: {wa} 💬"
         }
         try:
             l = request.get_json(silent=True).get('lang', 'es')
