@@ -923,7 +923,7 @@ def formulario_asesor(cliente_id, asesor_usuario):
             "telefono": request.form.get("telefono").strip(),
             "zona_interes": request.form.get("zona").strip(),
             "presupuesto": request.form.get("presupuesto").strip(),
-            "mensaje": request.form.get("mensaje").strip(),
+                        "mensaje": request.form.get("mensaje").strip(),
             "vendedor": id_clean
         }
         score_final = motor_scoring_global(d)
@@ -1301,16 +1301,17 @@ def cambiar_idioma(lang, proximo, cliente_id):
     return redirect(url_for(proximo, cliente_id=cliente_id.lower()))
 
 # ============================================================
-# ✅ CHATBOT CON OPENROUTER — gratis, sin límites
+# ✅ CHATBOT CON OPENROUTER
 # ============================================================
 
 def llamar_openrouter(api_key, messages_payload):
-    """Llama a OpenRouter con fallback de modelos gratuitos"""
+    # ✅ MODELOS ACTUALIZADOS con los que aparecen gratis en agosto 2026
     modelos = [
-        "meta-llama/llama-3.1-8b-instruct:free",
+        "inclusionai/ling-3.0-tiny:free",
+        "meta-llama/llama-3.3-8b-instruct:free",
         "mistralai/mistral-7b-instruct:free",
-        "microsoft/phi-3-mini-128k-instruct:free",
         "google/gemma-2-9b-it:free",
+        "nousresearch/hermes-3-llama-3.1-405b:free",
     ]
     for modelo in modelos:
         try:
@@ -1319,160 +1320,3 @@ def llamar_openrouter(api_key, messages_payload):
                 "messages": messages_payload,
                 "max_tokens": 300,
                 "temperature": 0.7
-            }
-            data = json.dumps(payload).encode('utf-8')
-            req = urllib.request.Request(
-                "https://openrouter.ai/api/v1/chat/completions",
-                data=data,
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {api_key}",
-                    "HTTP-Referer": "https://bot-inmobiliaria-v1.onrender.com",
-                    "X-Title": "Bot Inmobiliaria"
-                },
-                method="POST"
-            )
-            with urllib.request.urlopen(req, timeout=20) as resp:
-                result = json.loads(resp.read().decode('utf-8'))
-            text = result["choices"][0]["message"]["content"]
-            print(f"✅ OpenRouter modelo exitoso: {modelo}")
-            return text
-        except urllib.error.HTTPError as e:
-            print(f"⚠️ OpenRouter {modelo} falló: {e.code}")
-            continue
-        except Exception as e:
-            print(f"⚠️ OpenRouter {modelo} error: {e}")
-            continue
-    return None
-
-@app.route("/test-chat/<cliente_id>")
-def test_chat(cliente_id):
-    api_key = os.environ.get("OPENROUTER_API_KEY", "NO KEY")
-    try:
-        result = llamar_openrouter(api_key, [
-            {"role": "user", "content": "Say exactly: WORKING"}
-        ])
-        if result:
-            return jsonify({"ok": True, "response": result, "key_prefix": api_key[:12]})
-        return jsonify({"ok": False, "error": "Ningún modelo respondió", "key_prefix": api_key[:12]})
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e), "key_prefix": api_key[:12]})
-
-@app.route("/api/chat/<cliente_id>", methods=["POST"])
-def chat_inmobiliario(cliente_id):
-    id_clean = cliente_id.lower()
-    vendedor = get_cliente(id_clean)
-    if not vendedor:
-        return jsonify({"response": "Lo siento, no pude conectarme."}), 200
-    try:
-        data = request.get_json()
-        messages = data.get("messages", [])
-        lang = data.get("lang", "es")
-        api_key = os.environ.get("OPENROUTER_API_KEY", "")
-        if not api_key:
-            return jsonify({"response": "Servicio no disponible temporalmente."}), 200
-
-        lang_nombres = {
-            'es': 'español', 'en': 'English', 'fr': 'français',
-            'de': 'Deutsch', 'pt': 'português', 'zh': '中文'
-        }
-        lang_actual = lang_nombres.get(lang, 'español')
-        wa = vendedor.get('whatsapp', '')
-
-        # Propiedades disponibles
-        props_result = supabase.table("propiedades").select("*").eq("vendedor", id_clean).eq("estado", "disponible").execute()
-        propiedades = props_result.data or []
-        props_text = ""
-        for p in propiedades[:8]:
-            try:
-                precio = float(p.get('precio', 0))
-                line = f"• {p.get('titulo', 'Propiedad')}: ${precio:,.0f}, {p.get('ubicacion', '')}"
-            except:
-                line = f"• {p.get('titulo', 'Propiedad')}: {p.get('ubicacion', '')}"
-            if p.get('habitaciones'): line += f", {p.get('habitaciones')} hab"
-            if p.get('banos'): line += f", {p.get('banos')} baños"
-            if p.get('metros2'): line += f", {p.get('metros2')}m²"
-            if p.get('descripcion'): line += f". {str(p.get('descripcion',''))[:80]}"
-            props_text += line + "\n"
-        if not props_text:
-            props_text = "No hay propiedades listadas actualmente."
-
-        # CTA según idioma
-        cta = {
-            'es': f"¡Perfecto! 📝 Llena el formulario de contacto arriba y un asesor te llamará hoy mismo. También puedes escribirnos por WhatsApp: {wa} 💬",
-            'en': f"Perfect! 📝 Fill out the contact form above and an advisor will call you today. You can also reach us on WhatsApp: {wa} 💬",
-            'fr': f"Parfait! 📝 Remplissez le formulaire ci-dessus et un conseiller vous rappellera aujourd'hui. Vous pouvez aussi nous écrire sur WhatsApp: {wa} 💬",
-            'de': f"Perfekt! 📝 Füllen Sie das Formular oben aus und ein Berater ruft Sie heute zurück. WhatsApp: {wa} 💬",
-            'pt': f"Perfeito! 📝 Preencha o formulário acima e um consultor ligará para você hoje. WhatsApp: {wa} 💬",
-            'zh': f"太好了！📝 请填写上方表格，顾问今天会给您回电。WhatsApp: {wa} 💬"
-        }.get(lang, f"¡Perfecto! 📝 Llena el formulario arriba o escríbenos por WhatsApp: {wa} 💬")
-
-        system_prompt = f"""CRITICAL INSTRUCTION: You MUST respond ONLY in {lang_actual}. Every single word must be in {lang_actual}. Absolutely no other language.
-
-You are a charismatic virtual real estate advisor for {vendedor.get('nombre', 'the agency')}. Your mission: qualify prospects and get them to fill the contact form.
-
-AVAILABLE PROPERTIES:
-{props_text}
-
-CONVERSATION STRATEGY:
-1. Greet warmly and ask what they're looking for
-2. Ask ONE question per message to qualify: zone, property type, budget, timeline
-3. After 3-4 exchanges OR when you have enough info, recommend a specific property
-4. Then send this EXACT call-to-action:
-{cta}
-
-STRICT RULES:
-- Respond ONLY in {lang_actual} — no exceptions
-- Maximum 3 sentences per response
-- Only ONE question per message
-- Only mention real properties from the inventory above
-- Use emojis occasionally 🏠✨
-- Be warm, professional, like a luxury advisor
-- Always end with the CTA after recommending a property"""
-
-        # Construir mensajes para OpenRouter (formato OpenAI)
-        messages_payload = [{"role": "system", "content": system_prompt}]
-        for msg in messages:
-            role = "user" if msg["role"] == "user" else "assistant"
-            messages_payload.append({"role": role, "content": msg["content"]})
-
-        text = llamar_openrouter(api_key, messages_payload)
-
-        if text:
-            return jsonify({"response": text})
-        else:
-            raise Exception("Ningún modelo disponible")
-
-    except Exception as e:
-        print(f"❌ Error chat OpenRouter: {e}")
-        wa = vendedor.get('whatsapp', '') if vendedor else ''
-        error_msgs = {
-            'es': f"Estamos teniendo un problema técnico momentáneo 🔧 Por favor escríbenos por WhatsApp y te atendemos de inmediato: {wa} 💬",
-            'en': f"We're experiencing a temporary technical issue 🔧 Please write us on WhatsApp and we'll help you right away: {wa} 💬",
-            'fr': f"Problème technique momentané 🔧 Écrivez-nous sur WhatsApp: {wa} 💬",
-            'de': f"Technisches Problem 🔧 WhatsApp: {wa} 💬",
-            'pt': f"Problema técnico momentâneo 🔧 WhatsApp: {wa} 💬",
-            'zh': f"技术问题 🔧 WhatsApp: {wa} 💬"
-        }
-        try:
-            l = request.get_json(silent=True).get('lang', 'es')
-        except:
-            l = 'es'
-        return jsonify({"response": error_msgs.get(l, error_msgs['es'])}), 200
-
-@app.route("/")
-def index():
-    return "PropTech Global Engine V4.0 [Active Mode] 🌐🚀"
-
-@app.errorhandler(429)
-def demasiados_intentos(e):
-    return """
-    <html><body style='font-family:sans-serif;text-align:center;padding:50px;background:#f8f9fa'>
-    <h2 style='color:#e74c3c'>⛔ Demasiados intentos</h2>
-    <p>Has excedido el límite de intentos de acceso.</p>
-    <p>Por favor espera 1 minuto antes de intentar de nuevo.</p>
-    </body></html>
-    """, 429
-
-if __name__ == "__main__":
-    app.run(debug=False)
