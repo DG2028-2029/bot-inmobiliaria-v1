@@ -89,7 +89,6 @@
             font-size: 21px; flex-shrink: 0;
             box-shadow: 0 6px 20px rgba(102,126,234,0.3);
         }
-        .brand-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 13px; }
         .brand-name { font-size: 15px; font-weight: 700; color: white; }
         .brand-sub { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 3px; }
         .form-card {
@@ -194,183 +193,6 @@
             .form-card { padding: 22px 18px; }
             .brand { padding: 14px 16px; }
         }
-
-        /* ============ CHAT WIDGET ============ */
-        #chatWidget {
-            position: fixed; bottom: 24px; right: 24px;
-            z-index: 9999; font-family: 'Inter', sans-serif;
-        }
-        #chatToggle {
-            width: 62px; height: 62px; border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border: none; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 26px;
-            box-shadow: 0 8px 28px rgba(102,126,234,0.5);
-            transition: all 0.3s; position: relative;
-        }
-        #chatToggle:hover { transform: scale(1.08); box-shadow: 0 12px 36px rgba(102,126,234,0.6); }
-        #chatToggle.open { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-        .chat-pulse {
-            position: absolute; inset: -5px; border-radius: 50%;
-            border: 2px solid rgba(102,126,234,0.35);
-            animation: chatPulse 2.5s infinite;
-            pointer-events: none;
-        }
-        @keyframes chatPulse { 0%,100%{transform:scale(1);opacity:0.7} 50%{transform:scale(1.18);opacity:0} }
-        .chat-notif {
-            position: absolute; top: -2px; right: -2px;
-            width: 22px; height: 22px;
-            background: #e74c3c; color: white;
-            border-radius: 50%; font-size: 12px; font-weight: 700;
-            display: flex; align-items: center; justify-content: center;
-            border: 2px solid #0a0a0f;
-        }
-        #chatPanel {
-            position: absolute; bottom: 76px; right: 0;
-            width: 360px;
-            background: rgba(10,10,18,0.97);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 22px;
-            box-shadow: 0 30px 70px rgba(0,0,0,0.7), 0 0 0 1px rgba(102,126,234,0.08);
-            overflow: hidden;
-            display: none; flex-direction: column;
-            backdrop-filter: blur(24px);
-        }
-        #chatPanel.open { display: flex; animation: chatSlideUp 0.3s ease; }
-        @keyframes chatSlideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
-        .chat-header {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 16px 18px;
-            background: linear-gradient(135deg, rgba(102,126,234,0.12), rgba(118,75,162,0.08));
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-        }
-        .chat-agent-info { display: flex; align-items: center; gap: 12px; }
-        .chat-avatar {
-            width: 42px; height: 42px; border-radius: 13px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 19px;
-            box-shadow: 0 4px 14px rgba(102,126,234,0.35);
-        }
-        .chat-agent-name { font-size: 14px; font-weight: 700; color: white; }
-        .chat-agent-status { font-size: 11px; color: #2ecc71; margin-top: 2px; display: flex; align-items: center; gap: 5px; }
-        .status-dot { width: 7px; height: 7px; background: #2ecc71; border-radius: 50%; animation: statusPulse 2s infinite; }
-        @keyframes statusPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-        .chat-header-btns { display: flex; gap: 7px; }
-        .chat-hbtn {
-            width: 32px; height: 32px;
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.09);
-            border-radius: 9px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 14px; color: rgba(255,255,255,0.45);
-            transition: 0.2s;
-        }
-        .chat-hbtn:hover { background: rgba(255,255,255,0.12); color: white; }
-        .chat-hbtn.active { background: rgba(102,126,234,0.18); color: #667eea; border-color: rgba(102,126,234,0.3); }
-        .chat-messages {
-            flex: 1; overflow-y: auto; padding: 16px;
-            display: flex; flex-direction: column; gap: 12px;
-            max-height: 340px; min-height: 180px;
-            scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent;
-        }
-        .chat-messages::-webkit-scrollbar { width: 4px; }
-        .chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
-        .chat-msg { display: flex; flex-direction: column; max-width: 86%; }
-        .chat-msg.user { align-self: flex-end; align-items: flex-end; }
-        .chat-msg.bot { align-self: flex-start; align-items: flex-start; }
-        .chat-bubble {
-            padding: 10px 14px; border-radius: 15px;
-            font-size: 13px; line-height: 1.65; word-break: break-word;
-        }
-        .chat-msg.user .chat-bubble {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white; border-bottom-right-radius: 4px;
-        }
-        .chat-msg.bot .chat-bubble {
-            background: rgba(255,255,255,0.065);
-            border: 1px solid rgba(255,255,255,0.09);
-            color: rgba(255,255,255,0.9);
-            border-bottom-left-radius: 4px;
-        }
-        .chat-time { font-size: 10px; color: rgba(255,255,255,0.22); margin-top: 5px; }
-        .typing-bubble {
-            background: rgba(255,255,255,0.065);
-            border: 1px solid rgba(255,255,255,0.09);
-            border-radius: 15px 15px 15px 4px;
-            padding: 12px 16px;
-            display: flex; gap: 5px; align-items: center;
-        }
-        .tdot {
-            width: 7px; height: 7px; border-radius: 50%;
-            background: rgba(255,255,255,0.35);
-            animation: tBounce 1.2s infinite;
-        }
-        .tdot:nth-child(2) { animation-delay: 0.18s; }
-        .tdot:nth-child(3) { animation-delay: 0.36s; }
-        @keyframes tBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-7px)} }
-        .voice-bar {
-            padding: 8px 16px;
-            background: rgba(231,76,60,0.12);
-            border-top: 1px solid rgba(231,76,60,0.18);
-            display: none; align-items: center; gap: 9px;
-            font-size: 12px; color: #e74c3c; font-weight: 600;
-        }
-        .voice-bar.show { display: flex; }
-        .vdot {
-            width: 9px; height: 9px; border-radius: 50%;
-            background: #e74c3c; flex-shrink: 0;
-            animation: vPulse 0.9s infinite;
-        }
-        @keyframes vPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.85)} }
-        .chat-input-area {
-            display: flex; align-items: center; gap: 8px;
-            padding: 12px 14px;
-            border-top: 1px solid rgba(255,255,255,0.055);
-            background: rgba(255,255,255,0.02);
-        }
-        #chatInput {
-            flex: 1; background: rgba(255,255,255,0.065);
-            border: 1px solid rgba(255,255,255,0.09);
-            border-radius: 10px; padding: 10px 13px;
-            font-size: 13px; font-family: inherit; color: white; outline: none; transition: 0.2s;
-        }
-        #chatInput::placeholder { color: rgba(255,255,255,0.22); }
-        #chatInput:focus { border-color: rgba(102,126,234,0.45); background: rgba(255,255,255,0.09); }
-        .cibtn {
-            width: 38px; height: 38px; border-radius: 10px; border: none; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 15px; transition: 0.2s; flex-shrink: 0;
-        }
-        #micBtn {
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.09);
-            color: rgba(255,255,255,0.45);
-        }
-        #micBtn:hover { background: rgba(255,255,255,0.12); color: white; }
-        #micBtn.on {
-            background: rgba(231,76,60,0.18);
-            border-color: rgba(231,76,60,0.35);
-            color: #e74c3c;
-            animation: micGlow 1s infinite;
-        }
-        @keyframes micGlow { 0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,0.25)} 50%{box-shadow:0 0 0 6px rgba(231,76,60,0)} }
-        #sendBtn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            box-shadow: 0 4px 14px rgba(102,126,234,0.3);
-        }
-        #sendBtn:hover { transform: scale(1.06); }
-        .chat-powered {
-            text-align: center; padding: 7px;
-            font-size: 10px; color: rgba(255,255,255,0.15);
-            border-top: 1px solid rgba(255,255,255,0.04);
-        }
-        @media (max-width: 480px) {
-            #chatPanel { width: calc(100vw - 32px); right: 0; }
-            #chatWidget { right: 16px; bottom: 16px; }
-        }
     </style>
 </head>
 <body>
@@ -400,7 +222,6 @@
 } %}
 {% set lang = idioma_actual if idioma_actual in sistema_label else 'es' %}
 
-<!-- SELECTOR DE IDIOMA -->
 <div class="lang-wrapper">
     <div class="lang-selector" id="langSelector">
         <button type="button" class="lang-selector-btn" onclick="toggleLang()">
@@ -435,9 +256,7 @@
 
 <div class="wrapper">
     <div class="brand">
-        <div class="brand-logo">
-            {% if cliente_nombre %}🏠{% endif %}
-        </div>
+        <div class="brand-logo">🏠</div>
         <div>
             <div class="brand-name">{{ cliente_nombre }}</div>
             <div class="brand-sub">{{ sistema_label[lang] }}</div>
@@ -448,39 +267,39 @@
     <div class="form-card">
         <div class="form-title">{{ textos.titulo_form }}</div>
         <div class="form-sub">{{ subtitulo_texts[lang] }}</div>
-        <form method="POST" id="mainForm">
+        <form method="POST">
             <div class="form-group">
                 <label class="form-label">{{ textos.placeholder_nombre }}</label>
                 <div class="input-wrap">
                     <span class="input-icon">👤</span>
-                    <input type="text" name="nombre" id="inputNombre" placeholder="{{ textos.placeholder_nombre }}" required>
+                    <input type="text" name="nombre" placeholder="{{ textos.placeholder_nombre }}" required>
                 </div>
             </div>
             <div class="form-group">
                 <label class="form-label">{{ textos.placeholder_tel }}</label>
                 <div class="input-wrap">
                     <span class="input-icon">📱</span>
-                    <input type="tel" name="telefono" id="inputTelefono" placeholder="+502 0000 0000" required>
+                    <input type="tel" name="telefono" placeholder="+502 0000 0000" required>
                 </div>
             </div>
             <div class="form-group">
                 <label class="form-label">{{ textos.placeholder_zona }}</label>
                 <div class="input-wrap">
                     <span class="input-icon">📍</span>
-                    <input type="text" name="zona" id="inputZona" placeholder="{{ textos.placeholder_zona }}" required>
+                    <input type="text" name="zona" placeholder="{{ textos.placeholder_zona }}" required>
                 </div>
             </div>
             <div class="form-group">
                 <label class="form-label">{{ textos.placeholder_presupuesto }}</label>
                 <div class="input-wrap">
                     <span class="input-icon">💰</span>
-                    <input type="number" name="presupuesto" id="inputPresupuesto" placeholder="$ 0.00" required>
+                    <input type="number" name="presupuesto" placeholder="$ 0.00" required>
                 </div>
             </div>
             <div class="form-group">
                 <label class="form-label">{{ textos.placeholder_propiedad }}</label>
                 <div class="input-wrap">
-                    <textarea name="mensaje" id="inputMensaje" placeholder="{{ textos.placeholder_propiedad }}" required style="padding-left:38px;"></textarea>
+                    <textarea name="mensaje" placeholder="{{ textos.placeholder_propiedad }}" required style="padding-left:38px;"></textarea>
                     <span class="input-icon" style="top:16px;transform:none;">💬</span>
                 </div>
             </div>
@@ -515,314 +334,12 @@
     {% endif %}
 </div>
 
-<!-- ============ CHAT WIDGET ============ -->
-<div id="chatWidget">
-    <div id="chatPanel">
-        <!-- Header -->
-        <div class="chat-header">
-            <div class="chat-agent-info">
-                <div class="chat-avatar">🏠</div>
-                <div>
-                    <div class="chat-agent-name">{{ cliente_nombre }}</div>
-                    <div class="chat-agent-status">
-                        <div class="status-dot"></div>
-                        <span id="agentStatusText">En línea</span>
-                    </div>
-                </div>
-            </div>
-            <div class="chat-header-btns">
-                <button class="chat-hbtn" id="speakerBtn" onclick="toggleSpeaker()" title="Voz">🔊</button>
-                <button class="chat-hbtn" onclick="toggleChat()" title="Cerrar">✕</button>
-            </div>
-        </div>
-
-        <!-- Messages -->
-        <div id="chatMessages" class="chat-messages"></div>
-
-        <!-- Voice bar -->
-        <div class="voice-bar" id="voiceBar">
-            <div class="vdot"></div>
-            <span id="voiceBarText">Escuchando...</span>
-        </div>
-
-        <!-- Input -->
-        <div class="chat-input-area">
-            <button class="cibtn" id="micBtn" onclick="toggleVoice()" title="Hablar">🎤</button>
-            <input type="text" id="chatInput" placeholder="Escribe tu mensaje..."
-                   onkeypress="if(event.key==='Enter')sendMessage()">
-            <button class="cibtn" id="sendBtn" onclick="sendMessage()">➤</button>
-        </div>
-        <div class="chat-powered">Powered by Gemini AI ✨</div>
-    </div>
-
-    <button id="chatToggle" onclick="toggleChat()">
-        <div class="chat-pulse"></div>
-        <span id="chatIcon">💬</span>
-        <span class="chat-notif" id="chatNotif">1</span>
-    </button>
-</div>
-
 <script>
-// ============ LANG SELECTOR ============
 function toggleLang() { document.getElementById('langSelector').classList.toggle('abierto'); }
 document.addEventListener('click', function(e) {
     const sel = document.getElementById('langSelector');
     if (sel && !sel.contains(e.target)) sel.classList.remove('abierto');
 });
-
-// ============ CHAT CONFIG ============
-const CLIENTE_ID = "{{ cliente_id }}";
-const CHAT_LANG = "{{ idioma_actual or 'es' }}";
-const EMPRESA = "{{ cliente_nombre }}";
-
-const VOICE_LANGS = {
-    'es':'es-ES','en':'en-US','fr':'fr-FR','de':'de-DE','pt':'pt-BR','zh':'zh-CN'
-};
-
-const UI_TEXT = {
-    'es': {
-        online: 'En línea', listening: '🎤 Escuchando...', typing: 'Escribiendo...',
-        placeholder: 'Escribe tu mensaje...',
-        welcome: '¡Hola! 👋 Soy el asistente de ',
-        welcome2: '. ¿En qué puedo ayudarte hoy?',
-        init: 'Hola, quiero conocer las propiedades disponibles',
-        error: 'Tuve un problema técnico. ¿Me escribes por WhatsApp? 💬',
-        voice_no: '🎤 Tu navegador no soporta voz. Prueba Chrome o Edge.'
-    },
-    'en': {
-        online: 'Online', listening: '🎤 Listening...', typing: 'Typing...',
-        placeholder: 'Type your message...',
-        welcome: 'Hello! 👋 I\'m the assistant of ',
-        welcome2: '. How can I help you today?',
-        init: 'Hello, I want to see available properties',
-        error: 'I had a technical issue. Write us on WhatsApp? 💬',
-        voice_no: '🎤 Your browser doesn\'t support voice. Try Chrome or Edge.'
-    },
-    'fr': {
-        online: 'En ligne', listening: '🎤 Écoute...', typing: 'En train d\'écrire...',
-        placeholder: 'Écrivez votre message...',
-        welcome: 'Bonjour! 👋 Je suis l\'assistant de ',
-        welcome2: '. Comment puis-je vous aider?',
-        init: 'Bonjour, je veux voir les propriétés disponibles',
-        error: 'J\'ai eu un problème. Contactez-nous sur WhatsApp? 💬',
-        voice_no: '🎤 Votre navigateur ne supporte pas la voix. Essayez Chrome.'
-    },
-    'de': {
-        online: 'Online', listening: '🎤 Hört zu...', typing: 'Schreibt...',
-        placeholder: 'Nachricht schreiben...',
-        welcome: 'Hallo! 👋 Ich bin der Assistent von ',
-        welcome2: '. Wie kann ich helfen?',
-        init: 'Hallo, ich möchte verfügbare Immobilien sehen',
-        error: 'Technischer Fehler. WhatsApp? 💬',
-        voice_no: '🎤 Ihr Browser unterstützt keine Sprache. Chrome verwenden.'
-    },
-    'pt': {
-        online: 'Online', listening: '🎤 Ouvindo...', typing: 'Digitando...',
-        placeholder: 'Escreva sua mensagem...',
-        welcome: 'Olá! 👋 Sou o assistente de ',
-        welcome2: '. Como posso ajudar?',
-        init: 'Olá, quero ver imóveis disponíveis',
-        error: 'Tive um problema técnico. WhatsApp? 💬',
-        voice_no: '🎤 Seu navegador não suporta voz. Tente o Chrome.'
-    },
-    'zh': {
-        online: '在线', listening: '🎤 聆听中...', typing: '正在输入...',
-        placeholder: '输入消息...',
-        welcome: '您好! 👋 我是 ',
-        welcome2: ' 的虚拟助手。有什么可以帮您？',
-        init: '您好，我想了解可用的房产',
-        error: '遇到技术问题。WhatsApp联系？ 💬',
-        voice_no: '🎤 您的浏览器不支持语音。请使用Chrome。'
-    }
-};
-
-const T = UI_TEXT[CHAT_LANG] || UI_TEXT['es'];
-
-let history = [];
-let chatOpen = false;
-let initialized = false;
-let isListening = false;
-let speakerOn = false;
-let recognition = null;
-
-// Update status text
-document.getElementById('agentStatusText').textContent = T.online;
-document.getElementById('chatInput').placeholder = T.placeholder;
-
-// ============ TOGGLE ============
-function toggleChat() {
-    chatOpen = !chatOpen;
-    const panel = document.getElementById('chatPanel');
-    const icon = document.getElementById('chatIcon');
-    const toggle = document.getElementById('chatToggle');
-    const notif = document.getElementById('chatNotif');
-
-    if (chatOpen) {
-        panel.classList.add('open');
-        icon.textContent = '✕';
-        toggle.classList.add('open');
-        notif.style.display = 'none';
-        document.querySelector('.chat-pulse').style.display = 'none';
-        if (!initialized) { initialized = true; initChat(); }
-        setTimeout(scrollDown, 100);
-    } else {
-        panel.classList.remove('open');
-        icon.textContent = '💬';
-        toggle.classList.remove('open');
-        stopVoice();
-    }
-}
-
-// ============ INIT ============
-function initChat() {
-    // Immediate welcome
-    addMsg('bot', T.welcome + EMPRESA + T.welcome2);
-    // Then AI greeting
-    setTimeout(() => {
-        history.push({role:'user', content: T.init});
-        callGemini(true);
-    }, 700);
-}
-
-// ============ SEND ============
-function sendMessage() {
-    const inp = document.getElementById('chatInput');
-    const text = inp.value.trim();
-    if (!text) return;
-    inp.value = '';
-    addMsg('user', text);
-    history.push({role:'user', content: text});
-    callGemini(false);
-}
-
-// ============ GEMINI ============
-async function callGemini(silent) {
-    showTyping();
-    try {
-        const res = await fetch(`/api/chat/${CLIENTE_ID}`, {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({messages: history, lang: CHAT_LANG})
-        });
-        const data = await res.json();
-        hideTyping();
-        const txt = data.response || T.error;
-        history.push({role:'assistant', content: txt});
-        addMsg('bot', txt);
-        if (speakerOn) speak(txt);
-        // Auto-fill form fields if user mentioned data
-        autoFillForm(txt);
-    } catch(e) {
-        hideTyping();
-        addMsg('bot', T.error);
-    }
-}
-
-// ============ AUTO-FILL ============
-function autoFillForm(botText) {
-    // If conversation has user data, try to populate form
-    const allUserText = history.filter(m => m.role === 'user').map(m => m.content).join(' ');
-    
-    // Extract phone (simple pattern)
-    const phoneMatch = allUserText.match(/\+?[\d\s\-]{8,15}/);
-    if (phoneMatch && document.getElementById('inputTelefono') && !document.getElementById('inputTelefono').value) {
-        document.getElementById('inputTelefono').value = phoneMatch[0].trim();
-    }
-    
-    // Extract budget
-    const budgetMatch = allUserText.match(/\$?\s*(\d[\d,\.]*)\s*(mil|k|millón|million|M)?/i);
-    if (budgetMatch && document.getElementById('inputPresupuesto') && !document.getElementById('inputPresupuesto').value) {
-        let amount = parseFloat(budgetMatch[1].replace(/,/g,''));
-        const unit = (budgetMatch[2] || '').toLowerCase();
-        if (unit.includes('mil') || unit === 'k') amount *= 1000;
-        if (unit.includes('mill') || unit === 'm') amount *= 1000000;
-        if (amount > 0) document.getElementById('inputPresupuesto').value = amount;
-    }
-}
-
-// ============ MESSAGES UI ============
-function addMsg(role, text) {
-    const c = document.getElementById('chatMessages');
-    const now = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-    const d = document.createElement('div');
-    d.className = `chat-msg ${role}`;
-    d.innerHTML = `<div class="chat-bubble">${text.replace(/\n/g,'<br>')}</div><div class="chat-time">${now}</div>`;
-    c.appendChild(d);
-    scrollDown();
-}
-
-function showTyping() {
-    const c = document.getElementById('chatMessages');
-    const d = document.createElement('div');
-    d.id = 'typingEl'; d.className = 'chat-msg bot';
-    d.innerHTML = `<div class="typing-bubble"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>`;
-    c.appendChild(d); scrollDown();
-}
-
-function hideTyping() {
-    const t = document.getElementById('typingEl');
-    if (t) t.remove();
-}
-
-function scrollDown() {
-    const c = document.getElementById('chatMessages');
-    c.scrollTop = c.scrollHeight;
-}
-
-// ============ VOICE INPUT ============
-function toggleVoice() {
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRec) { addMsg('bot', T.voice_no); return; }
-    if (isListening) { stopVoice(); return; }
-    recognition = new SpeechRec();
-    recognition.lang = VOICE_LANGS[CHAT_LANG] || 'es-ES';
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.onstart = () => {
-        isListening = true;
-        document.getElementById('micBtn').classList.add('on');
-        document.getElementById('voiceBar').classList.add('show');
-        document.getElementById('voiceBarText').textContent = T.listening;
-    };
-    recognition.onresult = (e) => {
-        let t = '';
-        for (let i = e.resultIndex; i < e.results.length; i++) t += e.results[i][0].transcript;
-        document.getElementById('chatInput').value = t;
-    };
-    recognition.onend = () => {
-        stopVoice();
-        const v = document.getElementById('chatInput').value.trim();
-        if (v) sendMessage();
-    };
-    recognition.onerror = stopVoice;
-    recognition.start();
-}
-
-function stopVoice() {
-    isListening = false;
-    if (recognition) { try{recognition.stop();}catch(e){} recognition = null; }
-    document.getElementById('micBtn').classList.remove('on');
-    document.getElementById('voiceBar').classList.remove('show');
-}
-
-// ============ VOICE OUTPUT ============
-function toggleSpeaker() {
-    speakerOn = !speakerOn;
-    const btn = document.getElementById('speakerBtn');
-    btn.classList.toggle('active', speakerOn);
-    btn.textContent = speakerOn ? '🔊' : '🔇';
-    if (!speakerOn && window.speechSynthesis) window.speechSynthesis.cancel();
-}
-
-function speak(text) {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const clean = text.replace(/[🏠💬✨🎯💎🔥⚡📱📍💰📸👤🌟🏡✅❌📋🔍]/g,'');
-    const u = new SpeechSynthesisUtterance(clean);
-    u.lang = VOICE_LANGS[CHAT_LANG] || 'es-ES';
-    u.rate = 0.95; u.pitch = 1.05;
-    window.speechSynthesis.speak(u);
-}
 </script>
 </body>
 </html>
