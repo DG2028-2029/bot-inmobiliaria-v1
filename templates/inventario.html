@@ -7,103 +7,38 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', 'Segoe UI', sans-serif;
-            background: #0a0a0f; min-height: 100vh; padding: 16px;
-        }
-        .bg-glow {
-            position: fixed; inset: 0; pointer-events: none;
-            background: radial-gradient(ellipse at 15% 15%, rgba(102,126,234,0.1) 0%, transparent 55%);
-        }
+        body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #0a0a0f; min-height: 100vh; padding: 16px; }
+        .bg-glow { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 15% 15%, rgba(102,126,234,0.1) 0%, transparent 55%); }
         .container { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
-
-        /* TOP ROW */
         .top-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
         .lang-selector { position: relative; display: inline-block; }
-        .lang-selector-btn {
-            display: flex; align-items: center; gap: 6px;
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px; padding: 8px 12px;
-            cursor: pointer; font-size: 13px; font-weight: 600;
-            color: rgba(255,255,255,0.7); font-family: inherit; transition: 0.2s;
-        }
+        .lang-selector-btn { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.7); font-family: inherit; transition: 0.2s; }
         .lang-selector-btn:hover { color: white; border-color: rgba(255,255,255,0.25); }
         .lang-arrow { font-size: 9px; color: rgba(255,255,255,0.3); transition: transform 0.2s; }
         .lang-selector.abierto .lang-arrow { transform: rotate(180deg); }
-        .lang-menu {
-            display: none; position: absolute; top: calc(100% + 6px); left: 0;
-            background: #1a1a24; border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 10px; min-width: 170px; overflow: hidden;
-            box-shadow: 0 16px 40px rgba(0,0,0,0.5); z-index: 200;
-        }
+        .lang-menu { display: none; position: absolute; top: calc(100% + 6px); left: 0; background: #1a1a24; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; min-width: 170px; overflow: hidden; box-shadow: 0 16px 40px rgba(0,0,0,0.5); z-index: 200; }
         .lang-selector.abierto .lang-menu { display: block; }
-        .lang-menu a {
-            display: flex; align-items: center; gap: 8px;
-            padding: 10px 14px; text-decoration: none;
-            color: rgba(255,255,255,0.6); font-size: 13px; transition: 0.15s;
-        }
+        .lang-menu a { display: flex; align-items: center; gap: 8px; padding: 10px 14px; text-decoration: none; color: rgba(255,255,255,0.6); font-size: 13px; transition: 0.15s; }
         .lang-menu a:hover { background: rgba(255,255,255,0.05); color: white; }
-        .btn-logout {
-            background: rgba(231,76,60,0.12);
-            border: 1px solid rgba(231,76,60,0.2);
-            color: #ff6b6b; text-decoration: none;
-            padding: 8px 14px; border-radius: 8px;
-            font-weight: 600; font-size: 13px; transition: 0.2s;
-        }
+        .btn-logout { background: rgba(231,76,60,0.12); border: 1px solid rgba(231,76,60,0.2); color: #ff6b6b; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; transition: 0.2s; }
         .btn-logout:hover { background: rgba(231,76,60,0.22); }
-
-        /* HEADER */
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 16px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.07);
-            padding: 18px 20px; border-radius: 16px; flex-wrap: wrap; gap: 12px;
-        }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); padding: 18px 20px; border-radius: 16px; flex-wrap: wrap; gap: 12px; }
         .header h1 { color: white; font-size: 20px; font-weight: 700; }
         .header p { color: rgba(255,255,255,0.35); margin-top: 4px; font-size: 13px; }
         .header-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
-        .btn {
-            padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer;
-            font-size: 13px; font-weight: 600; transition: 0.2s; font-family: inherit;
-            text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
-        }
+        .btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; font-family: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
         .btn-nuevo { background: rgba(39,174,96,0.2); border: 1px solid rgba(39,174,96,0.3); color: #69d08a; }
         .btn-nuevo:hover { background: rgba(39,174,96,0.3); color: white; }
         .btn-volver { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); }
         .btn-volver:hover { color: white; }
-
-        /* BUSCADOR */
-        .search-bar {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.07);
-            padding: 12px 16px; border-radius: 12px; margin-bottom: 16px;
-        }
-        .search-bar input {
-            width: 100%; padding: 10px 14px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 8px; font-size: 14px; font-family: inherit;
-            color: white;
-        }
+        .search-bar { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; }
+        .search-bar input { width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 14px; font-family: inherit; color: white; }
         .search-bar input::placeholder { color: rgba(255,255,255,0.2); }
         .search-bar input:focus { outline: none; border-color: rgba(102,126,234,0.4); }
-
-        /* GRID PROPIEDADES */
-        .propiedades-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 16px; margin-bottom: 30px;
-        }
-        .propiedad-card {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 16px; overflow: hidden; transition: 0.25s;
-        }
+        .propiedades-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 30px; }
+        .propiedad-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; overflow: hidden; transition: 0.25s; position: relative; }
         .propiedad-card:hover { border-color: rgba(102,126,234,0.3); transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.3); }
-
-        /* GALERIA */
+        .propiedad-card.seleccionada { border-color: #667eea; box-shadow: 0 0 0 2px #667eea, 0 16px 40px rgba(102,126,234,0.2); transform: translateY(-4px); }
         .galeria { position: relative; width: 100%; height: 220px; background: #111118; overflow: hidden; }
         .galeria img { width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.4s; }
         .galeria img.activa { opacity: 1; }
@@ -116,8 +51,8 @@
         .galeria-btn.prev { left: 8px; }
         .galeria-btn.next { right: 8px; }
         .contador-fotos { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.65); color: white; font-size: 11px; padding: 3px 8px; border-radius: 10px; z-index: 2; }
-
-        /* CONTENIDO CARD */
+        .compara-badge { position: absolute; top: 10px; left: 10px; z-index: 5; background: #667eea; color: white; border-radius: 50%; width: 26px; height: 26px; display: none; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; box-shadow: 0 2px 8px rgba(102,126,234,0.5); }
+        .compara-badge.visible { display: flex; }
         .propiedad-contenido { padding: 16px; }
         .propiedad-titulo { font-size: 15px; font-weight: 700; color: white; margin-bottom: 6px; }
         .propiedad-precio { font-size: 18px; color: #69d08a; font-weight: 700; margin-bottom: 6px; }
@@ -125,39 +60,30 @@
         .propiedad-specs { display: flex; gap: 12px; margin-bottom: 10px; font-size: 12px; color: rgba(255,255,255,0.5); flex-wrap: wrap; }
         .propiedad-specs span { display: flex; align-items: center; gap: 4px; }
         .propiedad-descripcion { color: rgba(255,255,255,0.35); font-size: 12px; line-height: 1.6; margin-bottom: 14px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
-        .card-botones { display: flex; gap: 6px; }
+        .card-botones { display: flex; gap: 6px; margin-bottom: 8px; }
         .btn-ver { flex: 1; padding: 9px 8px; background: rgba(52,152,219,0.15); border: 1px solid rgba(52,152,219,0.25); color: #74b9ff; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; transition: 0.2s; }
         .btn-ver:hover { background: rgba(52,152,219,0.25); color: white; }
         .btn-editar { flex: 1; padding: 9px 8px; background: rgba(243,156,18,0.12); border: 1px solid rgba(243,156,18,0.2); color: #f9ca74; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; transition: 0.2s; }
         .btn-editar:hover { background: rgba(243,156,18,0.22); color: white; }
         .btn-eliminar { flex: 1; padding: 9px 8px; background: rgba(231,76,60,0.12); border: 1px solid rgba(231,76,60,0.2); color: #ff6b6b; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; transition: 0.2s; width: 100%; }
         .btn-eliminar:hover { background: rgba(231,76,60,0.22); color: white; }
+        .btn-comparar-card { width: 100%; padding: 8px; background: rgba(102,126,234,0.1); border: 1px solid rgba(102,126,234,0.25); color: #a0b4ff; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; transition: 0.2s; }
+        .btn-comparar-card:hover { background: rgba(102,126,234,0.2); color: white; }
+        .btn-comparar-card.activo { background: rgba(102,126,234,0.3); border-color: #667eea; color: white; }
         .vacio { text-align: center; padding: 60px 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; color: rgba(255,255,255,0.3); grid-column: 1/-1; }
-
-        /* MODALES */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); overflow-y: auto; }
         .modal-contenido { background: #14141e; border: 1px solid rgba(255,255,255,0.08); margin: 3% auto; padding: 24px; border-radius: 16px; width: 92%; max-width: 600px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.07); padding-bottom: 14px; }
         .modal-header h2 { color: white; font-size: 18px; }
         .close { font-size: 26px; font-weight: bold; color: rgba(255,255,255,0.3); cursor: pointer; line-height: 1; transition: 0.2s; }
         .close:hover { color: #ff6b6b; }
-
-        /* FORM MODAL */
         .form-group { margin-bottom: 14px; }
         .form-group label, .form-row-3 label { display: block; margin-bottom: 6px; color: rgba(255,255,255,0.5); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .form-group input, .form-group textarea, .form-row-3 input {
-            width: 100%; padding: 11px 13px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 10px; font-family: inherit; font-size: 13px;
-            color: white; transition: 0.2s;
-        }
+        .form-group input, .form-group textarea, .form-row-3 input { width: 100%; padding: 11px 13px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; font-family: inherit; font-size: 13px; color: white; transition: 0.2s; }
         .form-group input::placeholder, .form-group textarea::placeholder, .form-row-3 input::placeholder { color: rgba(255,255,255,0.2); }
         .form-group input:focus, .form-group textarea:focus, .form-row-3 input:focus { outline: none; border-color: rgba(102,126,234,0.4); background: rgba(255,255,255,0.07); }
         .form-group textarea { min-height: 90px; resize: vertical; }
         .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-
-        /* UPLOAD */
         .upload-area { border: 2px dashed rgba(255,255,255,0.12); border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: 0.25s; background: rgba(255,255,255,0.03); }
         .upload-area:hover { border-color: rgba(102,126,234,0.4); background: rgba(102,126,234,0.05); }
         .upload-area.lleno { opacity: 0.45; cursor: not-allowed; }
@@ -170,15 +96,11 @@
         .preview-item { position: relative; border-radius: 8px; overflow: hidden; height: 75px; background: #111118; border: 1px solid rgba(255,255,255,0.06); }
         .preview-item img { width: 100%; height: 100%; object-fit: contain; }
         .preview-remove { position: absolute; top: 3px; right: 3px; background: rgba(231,76,60,0.85); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
-        /* FOTOS EXISTENTES */
         .fotos-existentes-titulo { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 7px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
         .fotos-existentes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
         .foto-existente { position: relative; height: 65px; border-radius: 7px; overflow: hidden; background: #111118; border: 1px solid rgba(255,255,255,0.07); cursor: pointer; }
         .foto-existente img { width: 100%; height: 100%; object-fit: contain; }
         .foto-existente-num { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: rgba(255,255,255,0.7); font-size: 9px; text-align: center; padding: 2px; }
-
-        /* DETALLE */
         .detalle-galeria { width: 100%; height: 280px; border-radius: 10px; background: #111118; position: relative; margin-bottom: 18px; overflow: hidden; }
         .detalle-galeria img { width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.4s; }
         .detalle-galeria img.activa { opacity: 1; }
@@ -190,7 +112,6 @@
         .detalle-specs { display: flex; gap: 14px; margin-bottom: 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); padding: 12px; border-radius: 10px; flex-wrap: wrap; }
         .detalle-specs span { font-size: 13px; color: white; font-weight: 600; display: flex; align-items: center; gap: 5px; }
         .detalle-descripcion { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); padding: 14px; border-radius: 10px; font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.7; }
-
         .btn-enviar { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 700; font-family: inherit; margin-top: 8px; transition: 0.2s; }
         .btn-enviar:hover { opacity: 0.88; transform: translateY(-1px); }
         .btn-enviar:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
@@ -199,7 +120,50 @@
         @keyframes progreso { 0% { width: 0%; } 70% { width: 85%; } 100% { width: 95%; } }
         .info-box { background: rgba(52,152,219,0.1); border-left: 3px solid #3498db; padding: 10px 13px; border-radius: 7px; font-size: 12px; color: rgba(100,180,255,0.8); margin-bottom: 12px; }
 
-        /* RESPONSIVE */
+        /* ===== BARRA FLOTANTE COMPARAR ===== */
+        #comparaBar {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
+            background: #1a1a2e;
+            border-top: 2px solid #667eea;
+            box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
+            padding: 14px 24px;
+            display: none;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        #comparaBar.visible { display: flex; }
+        .compara-bar-titulo { font-size: 14px; font-weight: 700; color: white; white-space: nowrap; }
+        .compara-bar-props { display: flex; gap: 10px; flex: 1; flex-wrap: wrap; }
+        .compara-chip { display: flex; align-items: center; gap: 8px; background: rgba(102,126,234,0.2); border: 1px solid rgba(102,126,234,0.4); border-radius: 20px; padding: 6px 12px; font-size: 13px; font-weight: 600; color: #a0b4ff; }
+        .compara-chip-x { background: none; border: none; cursor: pointer; color: #a0b4ff; font-size: 16px; line-height: 1; padding: 0; font-weight: bold; }
+        .compara-chip-x:hover { color: #ff6b6b; }
+        .compara-bar-btns { display: flex; gap: 8px; }
+        .btn-ver-compara { padding: 10px 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: 0.2s; white-space: nowrap; }
+        .btn-ver-compara:hover { opacity: 0.88; transform: translateY(-1px); }
+        .btn-limpiar-compara { padding: 10px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: 0.2s; }
+        .btn-limpiar-compara:hover { color: white; }
+
+        /* ===== MODAL COMPARAR ===== */
+        #modalComparar .modal-contenido { max-width: 960px; }
+        .compara-tabla-wrap { overflow-x: auto; }
+        .compara-tabla { width: 100%; border-collapse: collapse; min-width: 500px; }
+        .compara-tabla th { background: linear-gradient(135deg, rgba(102,126,234,0.3), rgba(118,75,162,0.2)); color: white; padding: 14px 16px; font-size: 14px; font-weight: 700; text-align: center; border: 1px solid rgba(255,255,255,0.06); }
+        .compara-tabla th:first-child { background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.4); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; width: 120px; text-align: left; }
+        .compara-tabla td { padding: 12px 16px; border: 1px solid rgba(255,255,255,0.05); text-align: center; font-size: 14px; color: rgba(255,255,255,0.85); vertical-align: middle; }
+        .compara-tabla td:first-child { font-weight: 700; color: rgba(255,255,255,0.4); font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; text-align: left; background: rgba(255,255,255,0.02); }
+        .compara-tabla tr:hover td { background: rgba(102,126,234,0.05); }
+        .compara-tabla tr:hover td:first-child { background: rgba(255,255,255,0.04); }
+        .compara-img { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; }
+        .compara-img-placeholder { width: 100%; height: 130px; background: linear-gradient(135deg, rgba(102,126,234,0.2), rgba(118,75,162,0.2)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 36px; }
+        .compara-precio { font-size: 18px; font-weight: 800; color: #69d08a; }
+        .compara-mejor { background: rgba(39,174,96,0.2); color: #69d08a; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px; display: inline-block; margin-top: 4px; border: 1px solid rgba(39,174,96,0.3); }
+        .compara-spec { font-size: 16px; font-weight: 700; }
+        td.compara-destacado { background: rgba(102,126,234,0.1) !important; }
+        .compara-btn-wa { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #25D366; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 700; transition: 0.2s; }
+        .compara-btn-wa:hover { background: #20ba5c; }
+        .compara-desc { font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.5; text-align: left; max-width: 200px; }
+
         @media (max-width: 768px) {
             body { padding: 10px; }
             .header { padding: 14px 16px; }
@@ -213,6 +177,7 @@
             .fotos-existentes-grid { grid-template-columns: repeat(3, 1fr); }
             .header-buttons { width: 100%; }
             .btn { padding: 9px 12px; font-size: 12px; }
+            #comparaBar { padding: 12px 16px; }
         }
         @media (max-width: 480px) {
             .top-row { gap: 6px; }
@@ -242,7 +207,6 @@
         </div>
         <a href="{{ url_for('logout', cliente_id=cliente_id) }}" class="btn-logout">{{ textos.btn_cerrar_sesion }}</a>
     </div>
-
     <div class="header">
         <div>
             <h1>📦 {{ textos.inv_titulo_pagina }}</h1>
@@ -253,12 +217,20 @@
             <a href="/historial/{{ cliente_id }}" class="btn btn-volver">← {{ textos.inv_btn_volver }}</a>
         </div>
     </div>
-
     <div class="search-bar">
         <input type="text" id="buscarInput" placeholder="🔍 {{ textos.inv_buscar_placeholder }}" oninput="filtrarPropiedades()">
     </div>
-
     <div id="propiedades-container" class="propiedades-grid"></div>
+</div>
+
+<!-- BARRA FLOTANTE COMPARAR -->
+<div id="comparaBar">
+    <div class="compara-bar-titulo">⚖️ Comparar</div>
+    <div class="compara-bar-props" id="comparaChips"></div>
+    <div class="compara-bar-btns">
+        <button class="btn-limpiar-compara" onclick="limpiarComparacion()">Limpiar</button>
+        <button class="btn-ver-compara" onclick="abrirComparar()">Ver comparación →</button>
+    </div>
 </div>
 
 <!-- MODAL AGREGAR -->
@@ -362,9 +334,22 @@
     </div>
 </div>
 
+<!-- MODAL COMPARAR -->
+<div id="modalComparar" class="modal">
+    <div class="modal-contenido">
+        <div class="modal-header">
+            <h2>⚖️ Comparación de propiedades</h2>
+            <span class="close" onclick="cerrarComparar()">&times;</span>
+        </div>
+        <div class="compara-tabla-wrap">
+            <table class="compara-tabla" id="comparaTabla"></table>
+        </div>
+    </div>
+</div>
+
 <script>
 const clienteId = "{{ cliente_id }}";
-const MAX_FOTOS = 7; // ✅ cambiado de 5 a 7
+const MAX_FOTOS = 7;
 let propiedadesData = [];
 let detalleIdx = 0;
 let editIdx = 0;
@@ -372,6 +357,7 @@ let editImagenes = [];
 const fotoActual = {};
 let fotosNuevaPropiedad = [];
 let fotosEditPropiedad = [];
+let comparaSeleccion = [];
 
 const T = {
     sinDescripcion: "{{ textos.inv_sin_descripcion }}",
@@ -403,12 +389,109 @@ document.addEventListener('click', function(e) {
     const sel = document.getElementById('langSelector');
     if (sel && !sel.contains(e.target)) sel.classList.remove('abierto');
 });
+
 window.onclick = function(e) {
     if (e.target == document.getElementById("modalAgregar")) cerrarModal();
     if (e.target == document.getElementById("modalDetalle")) cerrarDetalle();
     if (e.target == document.getElementById("modalEditar")) cerrarEditar();
+    if (e.target == document.getElementById("modalComparar")) cerrarComparar();
 }
 
+// ===== COMPARAR =====
+function toggleComparar(propId) {
+    const idx = comparaSeleccion.indexOf(propId);
+    if (idx > -1) {
+        comparaSeleccion.splice(idx, 1);
+    } else {
+        if (comparaSeleccion.length >= 3) { alert('Máximo 3 propiedades para comparar'); return; }
+        comparaSeleccion.push(propId);
+    }
+    actualizarUIComparar();
+}
+
+function actualizarUIComparar() {
+    propiedadesData.forEach(p => {
+        const btn = document.getElementById(`btnComp-${p.id}`);
+        const badge = document.getElementById(`badge-${p.id}`);
+        const card = document.getElementById(`card-${p.id}`);
+        if (!btn) return;
+        const sel = comparaSeleccion.includes(p.id);
+        btn.textContent = sel ? '✓ Comparando' : '⚖️ Comparar';
+        btn.classList.toggle('activo', sel);
+        if (badge) { badge.classList.toggle('visible', sel); badge.textContent = comparaSeleccion.indexOf(p.id) + 1; }
+        if (card) card.classList.toggle('seleccionada', sel);
+    });
+
+    const bar = document.getElementById('comparaBar');
+    const chips = document.getElementById('comparaChips');
+    if (comparaSeleccion.length > 0) {
+        bar.classList.add('visible');
+        chips.innerHTML = comparaSeleccion.map(id => {
+            const p = propiedadesData.find(x => x.id == id);
+            return p ? `<div class="compara-chip">${p.titulo.substring(0,22)}${p.titulo.length>22?'…':''}<button class="compara-chip-x" onclick="toggleComparar(${id})">×</button></div>` : '';
+        }).join('');
+    } else {
+        bar.classList.remove('visible');
+    }
+}
+
+function limpiarComparacion() {
+    comparaSeleccion = [];
+    actualizarUIComparar();
+}
+
+function abrirComparar() {
+    if (comparaSeleccion.length < 2) { alert('Selecciona al menos 2 propiedades'); return; }
+    const props = comparaSeleccion.map(id => propiedadesData.find(p => p.id == id)).filter(Boolean);
+
+    const precios = props.map(p => parseFloat(p.precio) || Infinity);
+    const m2s = props.map(p => parseFloat(p.metros2) || 0);
+    const minPrecio = Math.min(...precios);
+    const maxM2 = Math.max(...m2s);
+
+    const tabla = document.getElementById('comparaTabla');
+    let html = `<thead><tr><th></th>${props.map(p => `<th>${p.titulo}</th>`).join('')}</tr></thead><tbody>`;
+
+    // Imagen
+    html += `<tr><td>📸</td>${props.map(p => {
+        const imgs = parseImagenes(p.imagen_url);
+        return `<td>${imgs.length > 0 ? `<img src="${imgs[0]}" class="compara-img">` : `<div class="compara-img-placeholder">🏠</div>`}</td>`;
+    }).join('')}</tr>`;
+
+    // Precio
+    html += `<tr><td>💰 Precio</td>${props.map(p => {
+        const precio = parseFloat(p.precio);
+        const esMejor = precio === minPrecio;
+        return `<td class="${esMejor ? 'compara-destacado' : ''}"><div class="compara-precio">$${precio.toLocaleString()}</div>${esMejor && props.length > 1 ? `<div class="compara-mejor">💰 Mejor precio</div>` : ''}</td>`;
+    }).join('')}</tr>`;
+
+    // Ubicación
+    html += `<tr><td>📍 Ubicación</td>${props.map(p => `<td>${p.ubicacion || '—'}</td>`).join('')}</tr>`;
+
+    // Habitaciones
+    html += `<tr><td>🛏️ Habitaciones</td>${props.map(p => `<td class="compara-spec">${p.habitaciones || '—'}</td>`).join('')}</tr>`;
+
+    // Baños
+    html += `<tr><td>🚿 Baños</td>${props.map(p => `<td class="compara-spec">${p.banos || '—'}</td>`).join('')}</tr>`;
+
+    // M2
+    html += `<tr><td>📐 Metros²</td>${props.map(p => {
+        const m2 = parseFloat(p.metros2) || 0;
+        const esMayor = m2 > 0 && m2 === maxM2;
+        return `<td class="${esMayor && props.length > 1 ? 'compara-destacado' : ''} compara-spec">${m2 > 0 ? `${m2} m²${esMayor && props.length > 1 ? `<br><div class="compara-mejor">📐 Más grande</div>` : ''}` : '—'}</td>`;
+    }).join('')}</tr>`;
+
+    // Descripción
+    html += `<tr><td>📋 Descripción</td>${props.map(p => `<td><div class="compara-desc">${p.descripcion ? p.descripcion.substring(0, 100) + (p.descripcion.length > 100 ? '...' : '') : '—'}</div></td>`).join('')}</tr>`;
+
+    html += '</tbody>';
+    tabla.innerHTML = html;
+    document.getElementById('modalComparar').style.display = 'block';
+}
+
+function cerrarComparar() { document.getElementById("modalComparar").style.display = "none"; }
+
+// ===== FUNCIONES EXISTENTES =====
 function actualizarInputFiles(inputId, archivosArray) {
     const dt = new DataTransfer();
     archivosArray.forEach(file => dt.items.add(file));
@@ -736,7 +819,8 @@ function renderPropiedades(lista) {
                     <button type="button" class="galeria-btn next" onclick="cambiarFoto('${prop.id}',1)">›</button>
                     <div class="galeria-nav">${imagenes.map((_,i)=>`<button type="button" class="galeria-dot ${i===0?'activo':''}" onclick="irFoto('${prop.id}',${i})"></button>`).join('')}</div>
                     <div class="contador-fotos">1/${imagenes.length}</div>` : ''}
-            </div>` : `<div class="galeria"><div class="galeria-placeholder">🏠</div></div>`;
+                <div class="compara-badge" id="badge-${prop.id}"></div>
+            </div>` : `<div class="galeria"><div class="galeria-placeholder">🏠</div><div class="compara-badge" id="badge-${prop.id}"></div></div>`;
         const specsHTML = (prop.habitaciones || prop.banos || prop.metros2) ? `
             <div class="propiedad-specs">
                 ${prop.habitaciones ? `<span>🛏️ ${prop.habitaciones}</span>` : ''}
@@ -744,7 +828,7 @@ function renderPropiedades(lista) {
                 ${prop.metros2 ? `<span>📐 ${prop.metros2} m²</span>` : ''}
             </div>` : '';
         return `
-            <div class="propiedad-card">
+            <div class="propiedad-card" id="card-${prop.id}">
                 ${galeriaHTML}
                 <div class="propiedad-contenido">
                     <div class="propiedad-titulo">${prop.titulo}</div>
@@ -759,9 +843,11 @@ function renderPropiedades(lista) {
                             <button type="submit" class="btn-eliminar" onclick="return confirm('${T.confirmarEliminar}')">🗑️</button>
                         </form>
                     </div>
+                    <button type="button" class="btn-comparar-card" id="btnComp-${prop.id}" onclick="toggleComparar(${prop.id})">⚖️ Comparar</button>
                 </div>
             </div>`;
     }).join('');
+    actualizarUIComparar();
 }
 </script>
 </body>
