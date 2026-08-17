@@ -84,6 +84,122 @@ def get_asesores_de_cliente(cliente_id):
     except:
         return []
 
+# ============================================================
+# ✅ MATCHING AUTOMÁTICO LEADS ↔ PROPIEDADES
+# ============================================================
+
+def buscar_leads_matching(propiedad, leads):
+    """
+    Encuentra leads que podrían estar interesados en una propiedad.
+    Criterios: zona similar + presupuesto compatible.
+    """
+    matches = []
+    precio_prop = float(propiedad.get('precio', 0) or 0)
+    ubicacion_prop = (propiedad.get('ubicacion', '') or '').lower()
+    palabras_ubicacion = [w for w in re.split(r'[\s,.-]+', ubicacion_prop) if len(w) > 2]
+
+    for lead in leads:
+        # Excluir ya clientes cerrados
+        clasificacion = lead.get('clasificacion', '')
+        if 'CLIENTE' in clasificacion:
+            continue
+
+        score_match = 0
+
+        # === MATCH POR ZONA ===
+        zona_lead = (lead.get('zona_interes', '') or '').lower()
+        if zona_lead and ubicacion_prop:
+            # Palabras clave de la zona del lead
+            palabras_zona = [w for w in re.split(r'[\s,.-]+', zona_lead) if len(w) > 2]
+            for palabra in palabras_zona:
+                if palabra in ubicacion_prop:
+                    score_match += 40
+                    break
+            for palabra in palabras_ubicacion:
+                if palabra in zona_lead:
+                    score_match += 30
+                    break
+
+        # === MATCH POR PRESUPUESTO ===
+        try:
+            presupuesto_lead = float(re.sub(r'[^\d.]', '', str(lead.get('presupuesto', 0) or 0)))
+            if presupuesto_lead > 0 and precio_prop > 0:
+                ratio = precio_prop / presupuesto_lead
+                if 0.7 <= ratio <= 1.0:
+                    score_match += 50  # Propiedad cabe perfecto en su presupuesto
+                elif 1.0 < ratio <= 1.2:
+                    score_match += 30  # Ligeramente sobre su presupuesto
+                elif 0.5 <= ratio < 0.7:
+                    score_match += 20  # Propiedad muy por debajo — puede que quiera algo mejor
+        except:
+            pass
+
+        # Solo incluir si hay match mínimo
+        if score_match >= 30:
+            lead['score_match'] = score_match
+            matches.append(lead)
+
+    # Ordenar por score_match desc, luego por score del lead desc
+    matches.sort(key=lambda x: (x.get('score_match', 0), x.get('score', 0)), reverse=True)
+    return matches[:10]  # Máximo 10 leads
+
+
+@app.route("/matching/<cliente_id>/<int:prop_id>")
+def matching_propiedad(cliente_id, prop_id):
+    """Retorna los leads que encajan con una propiedad específica."""
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return jsonify({"ok": False, "error": "No autorizado"}), 403
+    try:
+        prop_r = supabase.table("propiedades").select("*").eq("id", prop_id).eq("vendedor", id_clean).execute()
+        if not prop_r.data:
+            return jsonify({"ok": False, "error": "Propiedad no encontrada"}), 404
+        propiedad = prop_r.data[0]
+
+        leads_r = supabase.table("leads").select("*").eq("vendedor", id_clean).execute()
+        leads = leads_r.data or []
+
+        matches = buscar_leads_matching(propiedad, leads)
+
+        vendedor = get_cliente(id_clean)
+        wa = vendedor.get('whatsapp', '') if vendedor else ''
+
+        return jsonify({
+            "ok": True,
+            "propiedad": {
+                "titulo": propiedad.get('titulo', ''),
+                "precio": float(propiedad.get('precio', 0)),
+                "ubicacion": propiedad.get('ubicacion', '')
+            },
+            "total": len(matches),
+            "leads": [{
+                "id": l.get('id'),
+                "nombre": l.get('nombre', ''),
+                "telefono": l.get('telefono', ''),
+                "zona_interes": l.get('zona_interes', ''),
+                "presupuesto": l.get('presupuesto', ''),
+                "temperatura": l.get('temperatura', ''),
+                "score": l.get('score', 0),
+                "score_match": l.get('score_match', 0),
+                "whatsapp_url": f"https://wa.me/{l.get('telefono','').replace('+','').replace(' ','').replace('-','')}?text={_encode_wa_msg(l, propiedad)}"
+            } for l in matches],
+            "whatsapp_empresa": wa
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+def _encode_wa_msg(lead, propiedad):
+    """Genera mensaje de WhatsApp pre-llenado para contactar al lead."""
+    import urllib.parse
+    nombre = lead.get('nombre', '').split()[0]
+    titulo = propiedad.get('titulo', '')
+    precio = float(propiedad.get('precio', 0))
+    ubicacion = propiedad.get('ubicacion', '')
+    msg = f"Hola {nombre}, tengo una propiedad que podría interesarte: {titulo} en {ubicacion} por ${precio:,.0f}. ¿Te gustaría conocer más detalles?"
+    return urllib.parse.quote(msg)
+
+
 def generar_respuesta_sugerida(lead, lang='es'):
     nombre = lead.get('nombre', 'el cliente').split()[0]
     zona = lead.get('zona_interes', 'la zona de interés')
@@ -362,7 +478,6 @@ def generar_respuesta_sugerida(lead, lang='es'):
             ],
         },
     }
-
     t = T.get(lang, T['es'])
     if 'CLIENTE' in clasificacion: return t['cliente']
     if dias == 0: return t['nuevo']
@@ -1045,14 +1160,17 @@ def inventario(cliente_id):
     try:
         resultado = supabase.table("propiedades").select("*").eq("vendedor", id_clean).order("created_at", desc=True).execute()
         propiedades = resultado.data or []
+        # ✅ Si viene ?match=ID disparar el popup de matching
+        match_id = request.args.get('match', '')
         return render_template("inventario.html", cliente_id=id_clean,
                                cliente_nombre=vendedor['nombre'],
                                propiedades_json=json.dumps(propiedades),
-                               textos=textos, idioma_actual=idioma)
+                               textos=textos, idioma_actual=idioma,
+                               match_id=match_id)
     except Exception as e:
         return render_template("inventario.html", cliente_id=id_clean,
                                cliente_nombre=vendedor['nombre'], propiedades_json='[]',
-                               textos=textos, idioma_actual=idioma)
+                               textos=textos, idioma_actual=idioma, match_id='')
 
 @app.route("/propiedades/<cliente_id>", methods=["GET"])
 def inventario_publico(cliente_id):
@@ -1099,8 +1217,10 @@ def agregar_propiedad(cliente_id):
             "imagen_url": json.dumps(imagenes_urls),
             "vendedor": id_clean, "estado": "disponible"
         }
-        supabase.table("propiedades").insert(propiedad_data).execute()
-        return redirect(url_for('inventario', cliente_id=id_clean))
+        nueva_prop = supabase.table("propiedades").insert(propiedad_data).execute()
+        # ✅ Redirigir con ?match=ID para disparar popup de matching
+        nuevo_id = nueva_prop.data[0]['id'] if nueva_prop.data else ''
+        return redirect(url_for('inventario', cliente_id=id_clean, match=nuevo_id))
     except Exception as e:
         return f"Error: {e}", 500
 
@@ -1373,14 +1493,12 @@ def chat_inmobiliario(cliente_id):
         api_key = os.environ.get("OPENROUTER_API_KEY", "")
         if not api_key:
             return jsonify({"response": "Servicio no disponible."}), 200
-
         lang_nombres = {
             'es': 'español', 'en': 'English', 'fr': 'français',
             'de': 'Deutsch', 'pt': 'português', 'zh': '中文'
         }
         lang_actual = lang_nombres.get(lang, 'español')
         wa = vendedor.get('whatsapp', '')
-
         props_result = supabase.table("propiedades").select("*").eq("vendedor", id_clean).eq("estado", "disponible").execute()
         propiedades = props_result.data or []
         props_text = ""
@@ -1395,7 +1513,6 @@ def chat_inmobiliario(cliente_id):
             props_text += line + "\n"
         if not props_text:
             props_text = "Sin propiedades listadas actualmente."
-
         cta = {
             'es': f"¡Perfecto! 📝 Llena el formulario arriba y te llamamos hoy. O escríbenos por WhatsApp: {wa} 💬",
             'en': f"Perfect! 📝 Fill the form above and we'll call you today. Or WhatsApp: {wa} 💬",
@@ -1404,34 +1521,24 @@ def chat_inmobiliario(cliente_id):
             'pt': f"Perfeito! 📝 Preencha o formulário acima. WhatsApp: {wa} 💬",
             'zh': f"太好了！📝 请填写上方表格。WhatsApp: {wa} 💬"
         }.get(lang, f"¡Perfecto! 📝 Llena el formulario arriba. WhatsApp: {wa} 💬")
-
-        # ✅ SISTEMA: pregunta todo de una sola vez en el primer mensaje
         system_prompt = f"""You are a real estate advisor for {vendedor.get('nombre','')}. Respond ONLY in {lang_actual}.
-
 PROPERTIES:
 {props_text}
-
 INSTRUCTIONS:
 - In your FIRST message: greet warmly, then ask ALL these questions in ONE message: name, country, zone/city, budget, property type (house/apartment/land), timeline to buy.
 - In your SECOND message: based on answers, recommend 1-2 specific properties and send this: {cta}
 - Keep responses under 4 sentences. Be warm and professional like a luxury advisor.
 - ONLY respond in {lang_actual}."""
-
-        # ✅ Solo últimos 4 mensajes para evitar rate limit
         messages_recientes = messages[-4:] if len(messages) > 4 else messages
-
         messages_payload = [{"role": "system", "content": system_prompt}]
         for msg in messages_recientes:
             role = "user" if msg["role"] == "user" else "assistant"
             messages_payload.append({"role": role, "content": msg["content"]})
-
         text = llamar_openrouter(api_key, messages_payload)
-
         if text:
             return jsonify({"response": text})
         else:
             raise Exception("Sin respuesta")
-
     except Exception as e:
         print(f"❌ Error chat: {e}")
         wa = vendedor.get('whatsapp', '') if vendedor else ''
