@@ -35,7 +35,7 @@
         .search-bar input { width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 14px; font-family: inherit; color: white; }
         .search-bar input::placeholder { color: rgba(255,255,255,0.2); }
         .search-bar input:focus { outline: none; border-color: rgba(102,126,234,0.4); }
-        .propiedades-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 30px; }
+        .propiedades-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 120px; }
         .propiedad-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; overflow: hidden; transition: 0.25s; position: relative; }
         .propiedad-card:hover { border-color: rgba(102,126,234,0.3); transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.3); }
         .propiedad-card.seleccionada { border-color: #667eea; box-shadow: 0 0 0 2px #667eea, 0 16px 40px rgba(102,126,234,0.2); transform: translateY(-4px); }
@@ -61,17 +61,17 @@
         .propiedad-specs span { display: flex; align-items: center; gap: 4px; }
         .propiedad-descripcion { color: rgba(255,255,255,0.35); font-size: 12px; line-height: 1.6; margin-bottom: 14px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
         .card-botones { display: flex; gap: 6px; margin-bottom: 8px; }
-        .btn-ver { flex: 1; padding: 9px 8px; background: rgba(52,152,219,0.15); border: 1px solid rgba(52,152,219,0.25); color: #74b9ff; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; transition: 0.2s; }
+        .btn-ver { flex: 1; padding: 9px 4px; background: rgba(52,152,219,0.15); border: 1px solid rgba(52,152,219,0.25); color: #74b9ff; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600; font-family: inherit; transition: 0.2s; text-align: center; }
         .btn-ver:hover { background: rgba(52,152,219,0.25); color: white; }
-        .btn-editar { flex: 1; padding: 9px 8px; background: rgba(243,156,18,0.12); border: 1px solid rgba(243,156,18,0.2); color: #f9ca74; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; transition: 0.2s; }
+        .btn-editar { flex: 1; padding: 9px 4px; background: rgba(243,156,18,0.12); border: 1px solid rgba(243,156,18,0.2); color: #f9ca74; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600; font-family: inherit; transition: 0.2s; text-align: center; }
         .btn-editar:hover { background: rgba(243,156,18,0.22); color: white; }
-        .btn-eliminar { flex: 1; padding: 9px 8px; background: rgba(231,76,60,0.12); border: 1px solid rgba(231,76,60,0.2); color: #ff6b6b; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; transition: 0.2s; width: 100%; }
+        .btn-eliminar { flex: 1; padding: 9px 4px; background: rgba(231,76,60,0.12); border: 1px solid rgba(231,76,60,0.2); color: #ff6b6b; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600; font-family: inherit; transition: 0.2s; width: 100%; }
         .btn-eliminar:hover { background: rgba(231,76,60,0.22); color: white; }
         .card-botones-2 { display: flex; gap: 6px; }
-        .btn-comparar-card { flex: 1; padding: 8px; background: rgba(102,126,234,0.1); border: 1px solid rgba(102,126,234,0.25); color: #a0b4ff; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; transition: 0.2s; }
+        .btn-comparar-card { flex: 1; padding: 8px 4px; background: rgba(102,126,234,0.1); border: 1px solid rgba(102,126,234,0.25); color: #a0b4ff; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600; font-family: inherit; transition: 0.2s; text-align: center; }
         .btn-comparar-card:hover { background: rgba(102,126,234,0.2); color: white; }
         .btn-comparar-card.activo { background: rgba(102,126,234,0.3); border-color: #667eea; color: white; }
-        .btn-matching-card { flex: 1; padding: 8px; background: rgba(39,174,96,0.1); border: 1px solid rgba(39,174,96,0.25); color: #69d08a; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; transition: 0.2s; }
+        .btn-matching-card { flex: 1; padding: 8px 4px; background: rgba(39,174,96,0.1); border: 1px solid rgba(39,174,96,0.25); color: #69d08a; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600; font-family: inherit; transition: 0.2s; text-align: center; }
         .btn-matching-card:hover { background: rgba(39,174,96,0.2); color: white; }
         .vacio { text-align: center; padding: 60px 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; color: rgba(255,255,255,0.3); grid-column: 1/-1; }
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); overflow-y: auto; }
@@ -124,123 +124,123 @@
         .info-box { background: rgba(52,152,219,0.1); border-left: 3px solid #3498db; padding: 10px 13px; border-radius: 7px; font-size: 12px; color: rgba(100,180,255,0.8); margin-bottom: 12px; }
 
         /* ===== BARRA FLOTANTE COMPARAR ===== */
-        #comparaBar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 500; background: #1a1a2e; border-top: 2px solid #667eea; box-shadow: 0 -8px 32px rgba(0,0,0,0.5); padding: 14px 24px; display: none; align-items: center; gap: 16px; flex-wrap: wrap; }
+        #comparaBar {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
+            background: #1a1a2e; border-top: 2px solid #667eea;
+            box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
+            padding: 12px 16px; display: none;
+            align-items: center; gap: 12px; flex-wrap: wrap;
+        }
         #comparaBar.visible { display: flex; }
-        .compara-bar-titulo { font-size: 14px; font-weight: 700; color: white; white-space: nowrap; }
-        .compara-bar-props { display: flex; gap: 10px; flex: 1; flex-wrap: wrap; }
-        .compara-chip { display: flex; align-items: center; gap: 8px; background: rgba(102,126,234,0.2); border: 1px solid rgba(102,126,234,0.4); border-radius: 20px; padding: 6px 12px; font-size: 13px; font-weight: 600; color: #a0b4ff; }
-        .compara-chip-x { background: none; border: none; cursor: pointer; color: #a0b4ff; font-size: 16px; line-height: 1; padding: 0; font-weight: bold; }
+        .compara-bar-titulo { font-size: 13px; font-weight: 700; color: white; white-space: nowrap; }
+        .compara-bar-props { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; min-width: 0; }
+        .compara-chip { display: flex; align-items: center; gap: 6px; background: rgba(102,126,234,0.2); border: 1px solid rgba(102,126,234,0.4); border-radius: 20px; padding: 5px 10px; font-size: 12px; font-weight: 600; color: #a0b4ff; max-width: 140px; }
+        .compara-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .compara-chip-x { background: none; border: none; cursor: pointer; color: #a0b4ff; font-size: 15px; line-height: 1; padding: 0; font-weight: bold; flex-shrink: 0; }
         .compara-chip-x:hover { color: #ff6b6b; }
-        .compara-bar-btns { display: flex; gap: 8px; }
-        .btn-ver-compara { padding: 10px 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: 0.2s; white-space: nowrap; }
-        .btn-ver-compara:hover { opacity: 0.88; transform: translateY(-1px); }
-        .btn-limpiar-compara { padding: 10px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: 0.2s; }
+        .compara-bar-btns { display: flex; gap: 8px; flex-shrink: 0; }
+        .btn-ver-compara { padding: 9px 16px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: 0.2s; white-space: nowrap; }
+        .btn-ver-compara:hover { opacity: 0.88; }
+        .btn-limpiar-compara { padding: 9px 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
         .btn-limpiar-compara:hover { color: white; }
 
         /* ===== MODAL COMPARAR ===== */
         #modalComparar .modal-contenido { max-width: 960px; }
-        .compara-tabla-wrap { overflow-x: auto; }
-        .compara-tabla { width: 100%; border-collapse: collapse; min-width: 500px; }
-        .compara-tabla th { background: linear-gradient(135deg, rgba(102,126,234,0.3), rgba(118,75,162,0.2)); color: white; padding: 14px 16px; font-size: 14px; font-weight: 700; text-align: center; border: 1px solid rgba(255,255,255,0.06); }
-        .compara-tabla th:first-child { background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.4); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; width: 120px; text-align: left; }
-        .compara-tabla td { padding: 12px 16px; border: 1px solid rgba(255,255,255,0.05); text-align: center; font-size: 14px; color: rgba(255,255,255,0.85); vertical-align: middle; }
-        .compara-tabla td:first-child { font-weight: 700; color: rgba(255,255,255,0.4); font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; text-align: left; background: rgba(255,255,255,0.02); }
+        .compara-tabla-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .compara-tabla { width: 100%; border-collapse: collapse; min-width: 460px; }
+        .compara-tabla th { background: linear-gradient(135deg, rgba(102,126,234,0.3), rgba(118,75,162,0.2)); color: white; padding: 12px 14px; font-size: 13px; font-weight: 700; text-align: center; border: 1px solid rgba(255,255,255,0.06); }
+        .compara-tabla th:first-child { background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.4); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; width: 100px; text-align: left; }
+        .compara-tabla td { padding: 10px 14px; border: 1px solid rgba(255,255,255,0.05); text-align: center; font-size: 13px; color: rgba(255,255,255,0.85); vertical-align: middle; }
+        .compara-tabla td:first-child { font-weight: 700; color: rgba(255,255,255,0.4); font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; text-align: left; background: rgba(255,255,255,0.02); }
         .compara-tabla tr:hover td { background: rgba(102,126,234,0.05); }
         .compara-tabla tr:hover td:first-child { background: rgba(255,255,255,0.04); }
-        .compara-img { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; }
-        .compara-img-placeholder { width: 100%; height: 130px; background: linear-gradient(135deg, rgba(102,126,234,0.2), rgba(118,75,162,0.2)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 36px; }
-        .compara-precio { font-size: 18px; font-weight: 800; color: #69d08a; }
-        .compara-mejor { background: rgba(39,174,96,0.2); color: #69d08a; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px; display: inline-block; margin-top: 4px; border: 1px solid rgba(39,174,96,0.3); }
-        .compara-spec { font-size: 16px; font-weight: 700; }
+        .compara-img { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; }
+        .compara-img-placeholder { width: 100%; height: 110px; background: linear-gradient(135deg, rgba(102,126,234,0.2), rgba(118,75,162,0.2)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+        .compara-precio { font-size: 16px; font-weight: 800; color: #69d08a; }
+        .compara-mejor { background: rgba(39,174,96,0.2); color: #69d08a; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; display: inline-block; margin-top: 4px; border: 1px solid rgba(39,174,96,0.3); }
+        .compara-spec { font-size: 15px; font-weight: 700; }
         td.compara-destacado { background: rgba(102,126,234,0.1) !important; }
-        .compara-desc { font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.5; text-align: left; max-width: 200px; }
+        .compara-desc { font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.5; text-align: left; max-width: 180px; }
 
         /* ===== MODAL MATCHING ===== */
         #modalMatching .modal-contenido { max-width: 700px; }
-        .matching-header-info {
-            background: linear-gradient(135deg, rgba(39,174,96,0.15), rgba(39,174,96,0.05));
-            border: 1px solid rgba(39,174,96,0.25);
-            border-radius: 12px; padding: 16px; margin-bottom: 20px;
-            display: flex; align-items: center; gap: 14px;
-        }
-        .matching-header-icon { font-size: 36px; }
-        .matching-header-texto h3 { color: #69d08a; font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-        .matching-header-texto p { color: rgba(255,255,255,0.4); font-size: 13px; }
-        .matching-lista { display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; padding-right: 4px; }
+        .matching-header-info { background: linear-gradient(135deg, rgba(39,174,96,0.15), rgba(39,174,96,0.05)); border: 1px solid rgba(39,174,96,0.25); border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; display: flex; align-items: center; gap: 12px; }
+        .matching-header-icon { font-size: 32px; flex-shrink: 0; }
+        .matching-header-texto h3 { color: #69d08a; font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+        .matching-header-texto p { color: rgba(255,255,255,0.4); font-size: 12px; }
+        .matching-lista { display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding-right: 4px; -webkit-overflow-scrolling: touch; }
         .matching-lista::-webkit-scrollbar { width: 4px; }
         .matching-lista::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-        .matching-lead {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 12px; padding: 14px 16px;
-            display: flex; align-items: center; justify-content: space-between;
-            gap: 12px; flex-wrap: wrap;
-            transition: 0.2s;
-        }
+        .matching-lead { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; transition: 0.2s; }
         .matching-lead:hover { border-color: rgba(39,174,96,0.3); background: rgba(39,174,96,0.05); }
         .matching-lead-info { flex: 1; min-width: 0; }
-        .matching-lead-nombre { font-size: 14px; font-weight: 700; color: white; margin-bottom: 4px; }
-        .matching-lead-detalles { font-size: 12px; color: rgba(255,255,255,0.4); display: flex; gap: 12px; flex-wrap: wrap; }
-        .matching-lead-detalles span { display: flex; align-items: center; gap: 4px; }
-        .matching-score-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .matching-score { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, rgba(39,174,96,0.2), rgba(39,174,96,0.1)); border: 2px solid rgba(39,174,96,0.4); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #69d08a; }
-        .matching-score-label { font-size: 9px; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.5px; }
-        .matching-temp { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 8px; margin-top: 4px; }
+        .matching-lead-nombre { font-size: 14px; font-weight: 700; color: white; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .matching-lead-detalles { font-size: 11px; color: rgba(255,255,255,0.4); display: flex; gap: 10px; flex-wrap: wrap; }
+        .matching-lead-detalles span { display: flex; align-items: center; gap: 3px; }
+        .matching-score-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 0; }
+        .matching-score { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, rgba(39,174,96,0.2), rgba(39,174,96,0.1)); border: 2px solid rgba(39,174,96,0.4); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #69d08a; }
+        .matching-score-label { font-size: 9px; color: rgba(255,255,255,0.3); text-transform: uppercase; }
+        .matching-temp { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 8px; margin-top: 4px; }
         .matching-temp.MUY_CALIENTE { background: rgba(231,76,60,0.15); color: #ff6b6b; border: 1px solid rgba(231,76,60,0.2); }
         .matching-temp.CALIENTE { background: rgba(243,156,18,0.15); color: #f9ca74; border: 1px solid rgba(243,156,18,0.2); }
         .matching-temp.MEDIO { background: rgba(52,152,219,0.15); color: #74b9ff; border: 1px solid rgba(52,152,219,0.2); }
         .matching-temp.FRIO { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.08); }
-        .btn-wa-matching { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; background: #25D366; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 700; transition: 0.2s; white-space: nowrap; flex-shrink: 0; }
-        .btn-wa-matching:hover { background: #20ba5c; transform: translateY(-1px); }
-        .matching-vacio { text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.3); }
-        .matching-loading { text-align: center; padding: 40px; color: rgba(255,255,255,0.4); font-size: 14px; }
-        .matching-spinner { width: 32px; height: 32px; border: 3px solid rgba(39,174,96,0.2); border-top-color: #69d08a; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+        .btn-wa-matching { display: inline-flex; align-items: center; gap: 5px; padding: 8px 12px; background: #25D366; color: white; border-radius: 8px; text-decoration: none; font-size: 12px; font-weight: 700; transition: 0.2s; white-space: nowrap; flex-shrink: 0; }
+        .btn-wa-matching:hover { background: #20ba5c; }
+        .matching-vacio { text-align: center; padding: 36px 20px; color: rgba(255,255,255,0.3); }
+        .matching-loading { text-align: center; padding: 36px; color: rgba(255,255,255,0.4); font-size: 14px; }
+        .matching-spinner { width: 30px; height: 30px; border: 3px solid rgba(39,174,96,0.2); border-top-color: #69d08a; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ===== NOTIFICACIÓN NUEVA PROPIEDAD ===== */
+        /* ===== NOTIFICACIÓN MATCHING — ✅ no se superpone con comparaBar ===== */
         #matchingNotif {
-            position: fixed; top: 20px; right: 20px; z-index: 9000;
+            position: fixed; top: 16px; right: 16px; z-index: 9000;
             background: linear-gradient(135deg, #14141e, #1a1a2e);
             border: 1px solid rgba(39,174,96,0.4);
-            border-radius: 16px; padding: 18px 20px;
-            max-width: 340px; width: 90%;
+            border-radius: 14px; padding: 16px 18px;
+            width: min(320px, calc(100vw - 32px));
             box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(39,174,96,0.1);
             display: none; animation: slideInRight 0.4s ease;
         }
         @keyframes slideInRight { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
         #matchingNotif.visible { display: block; }
-        .notif-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .notif-icon { font-size: 28px; }
-        .notif-titulo { font-size: 14px; font-weight: 700; color: #69d08a; }
-        .notif-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
-        .notif-count { font-size: 32px; font-weight: 800; color: white; text-align: center; margin: 10px 0; }
-        .notif-count span { font-size: 14px; color: rgba(255,255,255,0.4); font-weight: 400; }
+        .notif-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .notif-icon { font-size: 26px; flex-shrink: 0; }
+        .notif-titulo { font-size: 13px; font-weight: 700; color: #69d08a; }
+        .notif-sub { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+        .notif-count { font-size: 28px; font-weight: 800; color: white; text-align: center; margin: 8px 0; }
+        .notif-count span { font-size: 13px; color: rgba(255,255,255,0.4); font-weight: 400; }
         .notif-btns { display: flex; gap: 8px; }
-        .btn-notif-ver { flex: 1; padding: 10px; background: linear-gradient(135deg, rgba(39,174,96,0.3), rgba(39,174,96,0.2)); border: 1px solid rgba(39,174,96,0.4); color: #69d08a; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; font-family: inherit; transition: 0.2s; }
+        .btn-notif-ver { flex: 1; padding: 9px; background: linear-gradient(135deg, rgba(39,174,96,0.3), rgba(39,174,96,0.2)); border: 1px solid rgba(39,174,96,0.4); color: #69d08a; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700; font-family: inherit; transition: 0.2s; }
         .btn-notif-ver:hover { background: rgba(39,174,96,0.4); color: white; }
-        .btn-notif-cerrar { padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.4); border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; transition: 0.2s; }
+        .btn-notif-cerrar { padding: 9px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.4); border-radius: 8px; cursor: pointer; font-size: 12px; font-family: inherit; }
         .btn-notif-cerrar:hover { color: white; }
 
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             body { padding: 10px; }
             .header { padding: 14px 16px; }
             .header h1 { font-size: 17px; }
-            .propiedades-grid { grid-template-columns: 1fr; gap: 12px; }
+            .propiedades-grid { grid-template-columns: 1fr; gap: 12px; margin-bottom: 140px; }
             .galeria { height: 200px; }
             .detalle-info { grid-template-columns: 1fr; }
             .form-row-3 { grid-template-columns: 1fr; }
-            .modal-contenido { margin: 1% auto; padding: 18px; }
+            .modal-contenido { margin: 1% auto; padding: 16px; }
             .preview-grid { grid-template-columns: repeat(3, 1fr); }
             .fotos-existentes-grid { grid-template-columns: repeat(3, 1fr); }
             .header-buttons { width: 100%; }
             .btn { padding: 9px 12px; font-size: 12px; }
-            #comparaBar { padding: 12px 16px; }
+            #comparaBar { padding: 10px 12px; gap: 8px; }
+            .compara-bar-titulo { font-size: 12px; }
+            .compara-chip { max-width: 100px; font-size: 11px; }
+            .btn-ver-compara { padding: 8px 12px; font-size: 12px; }
             #matchingNotif { top: 10px; right: 10px; }
         }
-        @media (max-width: 480px) {
-            .top-row { gap: 6px; }
-            .header-buttons { gap: 6px; }
-            .card-botones { gap: 5px; }
+        @media (max-width: 400px) {
+            .card-botones { flex-wrap: wrap; }
+            .card-botones-2 { flex-wrap: wrap; }
+            .btn-ver, .btn-editar, .btn-comparar-card, .btn-matching-card { font-size: 10px; padding: 8px 3px; }
+            .compara-bar-props { display: none; }
         }
     </style>
 </head>
@@ -265,6 +265,7 @@
         </div>
         <a href="{{ url_for('logout', cliente_id=cliente_id) }}" class="btn-logout">{{ textos.btn_cerrar_sesion }}</a>
     </div>
+
     <div class="header">
         <div>
             <h1>📦 {{ textos.inv_titulo_pagina }}</h1>
@@ -275,6 +276,7 @@
             <a href="/historial/{{ cliente_id }}" class="btn btn-volver">← {{ textos.inv_btn_volver }}</a>
         </div>
     </div>
+
     <div class="search-bar">
         <input type="text" id="buscarInput" placeholder="🔍 {{ textos.inv_buscar_placeholder }}" oninput="filtrarPropiedades()">
     </div>
@@ -286,12 +288,12 @@
     <div class="compara-bar-titulo">⚖️ Comparar</div>
     <div class="compara-bar-props" id="comparaChips"></div>
     <div class="compara-bar-btns">
-        <button class="btn-limpiar-compara" onclick="limpiarComparacion()">Limpiar</button>
+        <button class="btn-limpiar-compara" onclick="limpiarComparacion()">✕</button>
         <button class="btn-ver-compara" onclick="abrirComparar()">Ver comparación →</button>
     </div>
 </div>
 
-<!-- NOTIFICACIÓN MATCHING AUTOMÁTICO -->
+<!-- NOTIFICACIÓN MATCHING -->
 <div id="matchingNotif">
     <div class="notif-header">
         <div class="notif-icon">🎯</div>
@@ -302,7 +304,7 @@
     </div>
     <div class="notif-count" id="notifCount">0 <span>leads encontrados</span></div>
     <div class="notif-btns">
-        <button class="btn-notif-ver" id="btnNotifVer" onclick="verMatchingDesdeNotif()">👥 Ver leads</button>
+        <button class="btn-notif-ver" onclick="verMatchingDesdeNotif()">👥 Ver leads</button>
         <button class="btn-notif-cerrar" onclick="cerrarNotif()">Omitir</button>
     </div>
 </div>
@@ -315,10 +317,12 @@
             <span class="close" onclick="cerrarModal()">&times;</span>
         </div>
         <form id="formPropiedad" method="POST" action="/agregar_propiedad/{{ cliente_id }}" enctype="multipart/form-data">
-            <div class="form-group"><label>{{ textos.inv_label_titulo }}</label><input type="text" name="titulo" required placeholder="{{ textos.inv_placeholder_titulo }}"></div>
-            <div class="form-group"><label>{{ textos.inv_label_descripcion }}</label><textarea name="descripcion" placeholder="{{ textos.inv_placeholder_descripcion }}"></textarea></div>
-            <div class="form-group"><label>{{ textos.inv_label_precio }}</label><input type="number" name="precio" required step="0.01" placeholder="250000"></div>
-            <div class="form-group"><label>{{ textos.inv_label_ubicacion }}</label><input type="text" name="ubicacion" required placeholder="{{ textos.inv_placeholder_ubicacion }}"></div>
+            <!-- ✅ CSRF -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group"><label>{{ textos.inv_label_titulo }}</label><input type="text" name="titulo" required placeholder="{{ textos.inv_placeholder_titulo }}" maxlength="200"></div>
+            <div class="form-group"><label>{{ textos.inv_label_descripcion }}</label><textarea name="descripcion" placeholder="{{ textos.inv_placeholder_descripcion }}" maxlength="2000"></textarea></div>
+            <div class="form-group"><label>{{ textos.inv_label_precio }}</label><input type="number" name="precio" required step="0.01" placeholder="250000" min="0"></div>
+            <div class="form-group"><label>{{ textos.inv_label_ubicacion }}</label><input type="text" name="ubicacion" required placeholder="{{ textos.inv_placeholder_ubicacion }}" maxlength="200"></div>
             <div class="form-row-3">
                 <div><label>{{ textos.inv_label_habitaciones }}</label><input type="number" name="habitaciones" min="0" placeholder="3"></div>
                 <div><label>{{ textos.inv_label_banos }}</label><input type="number" name="banos" min="0" step="0.5" placeholder="2"></div>
@@ -327,7 +331,7 @@
             <div class="form-group">
                 <label>{{ textos.inv_label_fotos }}</label>
                 <div class="upload-area" id="uploadAreaNueva" onclick="document.getElementById('inputFotos').click()">
-                    <input type="file" id="inputFotos" name="imagenes" multiple accept="image/*" onchange="manejarFotosNueva(this)">
+                    <input type="file" id="inputFotos" name="imagenes" multiple accept="image/jpeg,image/png,image/webp,image/gif" onchange="manejarFotosNueva(this)">
                     <div class="upload-icon">📸</div>
                     <div class="upload-texto">{{ textos.inv_upload_click }}</div>
                     <div class="upload-sub">{{ textos.inv_upload_sub }}</div>
@@ -372,10 +376,12 @@
             <span class="close" onclick="cerrarEditar()">&times;</span>
         </div>
         <form id="formEditar" method="POST" enctype="multipart/form-data">
-            <div class="form-group"><label>{{ textos.inv_label_titulo }}</label><input type="text" name="titulo" id="editTitulo" required></div>
-            <div class="form-group"><label>{{ textos.inv_label_descripcion }}</label><textarea name="descripcion" id="editDescripcion"></textarea></div>
-            <div class="form-group"><label>{{ textos.inv_label_precio }}</label><input type="number" name="precio" id="editPrecio" required step="0.01"></div>
-            <div class="form-group"><label>{{ textos.inv_label_ubicacion }}</label><input type="text" name="ubicacion" id="editUbicacion" required></div>
+            <!-- ✅ CSRF -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group"><label>{{ textos.inv_label_titulo }}</label><input type="text" name="titulo" id="editTitulo" required maxlength="200"></div>
+            <div class="form-group"><label>{{ textos.inv_label_descripcion }}</label><textarea name="descripcion" id="editDescripcion" maxlength="2000"></textarea></div>
+            <div class="form-group"><label>{{ textos.inv_label_precio }}</label><input type="number" name="precio" id="editPrecio" required step="0.01" min="0"></div>
+            <div class="form-group"><label>{{ textos.inv_label_ubicacion }}</label><input type="text" name="ubicacion" id="editUbicacion" required maxlength="200"></div>
             <div class="form-row-3">
                 <div><label>{{ textos.inv_label_habitaciones }}</label><input type="number" name="habitaciones" id="editHabitaciones" min="0"></div>
                 <div><label>{{ textos.inv_label_banos }}</label><input type="number" name="banos" id="editBanos" min="0" step="0.5"></div>
@@ -394,7 +400,7 @@
             <div class="form-group">
                 <div class="info-box">➕ {{ textos.inv_info_agrega }}</div>
                 <div class="upload-area" id="uploadAreaEdit" onclick="document.getElementById('inputFotosEdit').click()">
-                    <input type="file" id="inputFotosEdit" name="imagenes" multiple accept="image/*" onchange="manejarFotosEdit(this)">
+                    <input type="file" id="inputFotosEdit" name="imagenes" multiple accept="image/jpeg,image/png,image/webp,image/gif" onchange="manejarFotosEdit(this)">
                     <div class="upload-icon">📸</div>
                     <div class="upload-texto">{{ textos.inv_upload_click_editar }}</div>
                     <div class="upload-sub">{{ textos.inv_upload_sub_editar }}</div>
@@ -446,6 +452,7 @@
 
 <script>
 const clienteId = "{{ cliente_id }}";
+const CSRF_TOKEN = "{{ csrf_token() }}";
 const MAX_FOTOS = 7;
 const MATCH_ID = "{{ match_id }}";
 let propiedadesData = [];
@@ -458,6 +465,7 @@ let fotosEditPropiedad = [];
 let comparaSeleccion = [];
 let matchingPropIdActual = null;
 let matchingLeadsCache = null;
+let notifTimer = null;
 
 const T = {
     sinDescripcion: "{{ textos.inv_sin_descripcion }}",
@@ -484,9 +492,8 @@ const T = {
 
 document.addEventListener('DOMContentLoaded', () => {
     cargarPropiedades();
-    // ✅ Si viene ?match=ID disparar matching automático
     if (MATCH_ID) {
-        setTimeout(() => cargarMatching(MATCH_ID, true), 800);
+        setTimeout(() => cargarMatching(MATCH_ID, true), 900);
     }
 });
 
@@ -514,11 +521,10 @@ async function cargarMatching(propId, esNueva = false) {
         if (!data.ok) return;
         matchingLeadsCache = data;
         if (esNueva) {
-            // Mostrar notificación en vez de abrir el modal directamente
             document.getElementById('notifCount').innerHTML = `${data.total} <span>leads encontrados</span>`;
             document.getElementById('matchingNotif').classList.add('visible');
-            // Auto-cerrar en 12 segundos
-            setTimeout(cerrarNotif, 12000);
+            if (notifTimer) clearTimeout(notifTimer);
+            notifTimer = setTimeout(cerrarNotif, 12000);
         } else {
             abrirMatchingConData(data);
         }
@@ -534,21 +540,16 @@ function verMatchingDesdeNotif() {
 
 function cerrarNotif() {
     document.getElementById('matchingNotif').classList.remove('visible');
+    if (notifTimer) { clearTimeout(notifTimer); notifTimer = null; }
 }
 
 function abrirMatchingConData(data) {
     const prop = data.propiedad;
     document.getElementById('matchingPropTitulo').textContent = prop.titulo;
     document.getElementById('matchingPropInfo').textContent = `$${parseFloat(prop.precio).toLocaleString()} • ${prop.ubicacion}`;
-
     const lista = document.getElementById('matchingLista');
     if (data.leads.length === 0) {
-        lista.innerHTML = `
-            <div class="matching-vacio">
-                <div style="font-size:48px;margin-bottom:12px;">🔍</div>
-                <p style="font-size:14px;margin-bottom:6px;color:rgba(255,255,255,0.5);">Sin coincidencias por ahora</p>
-                <p style="font-size:12px;">Los leads que busquen en esta zona y presupuesto aparecerán aquí.</p>
-            </div>`;
+        lista.innerHTML = `<div class="matching-vacio"><div style="font-size:44px;margin-bottom:10px;">🔍</div><p style="font-size:13px;margin-bottom:5px;color:rgba(255,255,255,0.5);">Sin coincidencias por ahora</p><p style="font-size:11px;">Los leads que busquen en esta zona y presupuesto aparecerán aquí.</p></div>`;
     } else {
         lista.innerHTML = data.leads.map(lead => {
             const tempClass = lead.temperatura || 'FRIO';
@@ -561,7 +562,6 @@ function abrirMatchingConData(data) {
                         <div class="matching-lead-detalles">
                             <span>📍 ${lead.zona_interes || '—'}</span>
                             <span>💰 ${presupuesto}</span>
-                            <span>📱 ${lead.telefono || '—'}</span>
                         </div>
                         <div class="matching-temp ${tempClass}">${tempEmoji} ${tempClass.replace('_',' ')}</div>
                     </div>
@@ -569,7 +569,7 @@ function abrirMatchingConData(data) {
                         <div class="matching-score">${lead.score_match}%</div>
                         <div class="matching-score-label">match</div>
                     </div>
-                    <a href="${lead.whatsapp_url}" target="_blank" class="btn-wa-matching">💬 WhatsApp</a>
+                    <a href="${lead.whatsapp_url}" target="_blank" class="btn-wa-matching">💬 WA</a>
                 </div>`;
         }).join('');
     }
@@ -584,9 +584,7 @@ function abrirMatchingCard(propId) {
     cargarMatching(propId, false);
 }
 
-function cerrarMatching() {
-    document.getElementById('modalMatching').style.display = 'none';
-}
+function cerrarMatching() { document.getElementById('modalMatching').style.display = 'none'; }
 
 // ===== COMPARAR =====
 function toggleComparar(propId) {
@@ -606,7 +604,7 @@ function actualizarUIComparar() {
         const card = document.getElementById(`card-${p.id}`);
         if (!btn) return;
         const sel = comparaSeleccion.includes(p.id);
-        btn.textContent = sel ? '✓ Comparando' : '⚖️ Comparar';
+        btn.textContent = sel ? '✓ Sel.' : '⚖️ Comp.';
         btn.classList.toggle('activo', sel);
         if (badge) { badge.classList.toggle('visible', sel); badge.textContent = comparaSeleccion.indexOf(p.id) + 1; }
         if (card) card.classList.toggle('seleccionada', sel);
@@ -617,7 +615,7 @@ function actualizarUIComparar() {
         bar.classList.add('visible');
         chips.innerHTML = comparaSeleccion.map(id => {
             const p = propiedadesData.find(x => x.id == id);
-            return p ? `<div class="compara-chip">${p.titulo.substring(0,22)}${p.titulo.length>22?'…':''}<button class="compara-chip-x" onclick="toggleComparar(${id})">×</button></div>` : '';
+            return p ? `<div class="compara-chip"><span>${p.titulo.substring(0,18)}${p.titulo.length>18?'…':''}</span><button class="compara-chip-x" onclick="toggleComparar(${id})">×</button></div>` : '';
         }).join('');
     } else { bar.classList.remove('visible'); }
 }
@@ -634,12 +632,12 @@ function abrirComparar() {
     const tabla = document.getElementById('comparaTabla');
     let html = `<thead><tr><th></th>${props.map(p => `<th>${p.titulo}</th>`).join('')}</tr></thead><tbody>`;
     html += `<tr><td>📸</td>${props.map(p => { const imgs = parseImagenes(p.imagen_url); return `<td>${imgs.length > 0 ? `<img src="${imgs[0]}" class="compara-img">` : `<div class="compara-img-placeholder">🏠</div>`}</td>`; }).join('')}</tr>`;
-    html += `<tr><td>💰 Precio</td>${props.map(p => { const precio = parseFloat(p.precio); const esMejor = precio === minPrecio; return `<td class="${esMejor ? 'compara-destacado' : ''}"><div class="compara-precio">$${precio.toLocaleString()}</div>${esMejor && props.length > 1 ? `<div class="compara-mejor">💰 Mejor precio</div>` : ''}</td>`; }).join('')}</tr>`;
-    html += `<tr><td>📍 Ubicación</td>${props.map(p => `<td>${p.ubicacion || '—'}</td>`).join('')}</tr>`;
-    html += `<tr><td>🛏️ Habitaciones</td>${props.map(p => `<td class="compara-spec">${p.habitaciones || '—'}</td>`).join('')}</tr>`;
+    html += `<tr><td>💰 Precio</td>${props.map(p => { const precio = parseFloat(p.precio); const esMejor = precio === minPrecio; return `<td class="${esMejor ? 'compara-destacado' : ''}"><div class="compara-precio">$${precio.toLocaleString()}</div>${esMejor && props.length > 1 ? `<div class="compara-mejor">💰 Mejor</div>` : ''}</td>`; }).join('')}</tr>`;
+    html += `<tr><td>📍 Zona</td>${props.map(p => `<td>${p.ubicacion || '—'}</td>`).join('')}</tr>`;
+    html += `<tr><td>🛏️ Habs.</td>${props.map(p => `<td class="compara-spec">${p.habitaciones || '—'}</td>`).join('')}</tr>`;
     html += `<tr><td>🚿 Baños</td>${props.map(p => `<td class="compara-spec">${p.banos || '—'}</td>`).join('')}</tr>`;
-    html += `<tr><td>📐 Metros²</td>${props.map(p => { const m2 = parseFloat(p.metros2) || 0; const esMayor = m2 > 0 && m2 === maxM2; return `<td class="${esMayor && props.length > 1 ? 'compara-destacado' : ''} compara-spec">${m2 > 0 ? `${m2} m²${esMayor && props.length > 1 ? `<br><div class="compara-mejor">📐 Más grande</div>` : ''}` : '—'}</td>`; }).join('')}</tr>`;
-    html += `<tr><td>📋 Descripción</td>${props.map(p => `<td><div class="compara-desc">${p.descripcion ? p.descripcion.substring(0, 100) + (p.descripcion.length > 100 ? '...' : '') : '—'}</div></td>`).join('')}</tr>`;
+    html += `<tr><td>📐 m²</td>${props.map(p => { const m2 = parseFloat(p.metros2) || 0; const esMayor = m2 > 0 && m2 === maxM2; return `<td class="${esMayor && props.length > 1 ? 'compara-destacado' : ''} compara-spec">${m2 > 0 ? `${m2}m²${esMayor && props.length > 1 ? `<br><div class="compara-mejor">📐 Mayor</div>` : ''}` : '—'}</td>`; }).join('')}</tr>`;
+    html += `<tr><td>📋 Desc.</td>${props.map(p => `<td><div class="compara-desc">${p.descripcion ? p.descripcion.substring(0, 80) + (p.descripcion.length > 80 ? '...' : '') : '—'}</div></td>`).join('')}</tr>`;
     html += '</tbody>';
     tabla.innerHTML = html;
     document.getElementById('modalComparar').style.display = 'block';
@@ -647,7 +645,7 @@ function abrirComparar() {
 
 function cerrarComparar() { document.getElementById("modalComparar").style.display = "none"; }
 
-// ===== FUNCIONES EXISTENTES =====
+// ===== FOTOS =====
 function actualizarInputFiles(inputId, archivosArray) {
     const dt = new DataTransfer();
     archivosArray.forEach(file => dt.items.add(file));
@@ -981,7 +979,7 @@ function renderPropiedades(lista) {
             <div class="propiedad-specs">
                 ${prop.habitaciones ? `<span>🛏️ ${prop.habitaciones}</span>` : ''}
                 ${prop.banos ? `<span>🚿 ${prop.banos}</span>` : ''}
-                ${prop.metros2 ? `<span>📐 ${prop.metros2} m²</span>` : ''}
+                ${prop.metros2 ? `<span>📐 ${prop.metros2}m²</span>` : ''}
             </div>` : '';
         return `
             <div class="propiedad-card" id="card-${prop.id}">
@@ -995,13 +993,14 @@ function renderPropiedades(lista) {
                     <div class="card-botones">
                         <button type="button" class="btn-ver" onclick="verDetalle(${prop.id})">🔍 ${T.btnVer}</button>
                         <button type="button" class="btn-editar" onclick="abrirEditar(${prop.id})">✏️ ${T.btnEditar}</button>
-                        <form method="POST" action="/eliminar_propiedad/${clienteId}/${prop.id}" style="flex:1">
-                            <button type="submit" class="btn-eliminar" onclick="return confirm('${T.confirmarEliminar}')">🗑️</button>
+                        <form method="POST" action="/eliminar_propiedad/${clienteId}/${prop.id}" style="flex:1" onsubmit="return confirm('${T.confirmarEliminar}')">
+                            <input type="hidden" name="csrf_token" value="${CSRF_TOKEN}">
+                            <button type="submit" class="btn-eliminar">🗑️</button>
                         </form>
                     </div>
                     <div class="card-botones-2">
-                        <button type="button" class="btn-comparar-card" id="btnComp-${prop.id}" onclick="toggleComparar(${prop.id})">⚖️ Comparar</button>
-                        <button type="button" class="btn-matching-card" onclick="abrirMatchingCard(${prop.id})">🎯 Ver leads</button>
+                        <button type="button" class="btn-comparar-card" id="btnComp-${prop.id}" onclick="toggleComparar(${prop.id})">⚖️ Comp.</button>
+                        <button type="button" class="btn-matching-card" onclick="abrirMatchingCard(${prop.id})">🎯 Leads</button>
                     </div>
                 </div>
             </div>`;
