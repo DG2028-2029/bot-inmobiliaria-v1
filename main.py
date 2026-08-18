@@ -1,13 +1,14 @@
-from flask import Flask, request, render_template, redirect, session, url_for, send_file, jsonify
+from flask import Flask, request, render_template, redirect, session, url_for, send_file, jsonify, abort
 from supabase import create_client
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 import os
 import re
 import json
 import urllib.request
 import time
+import secrets
 import cloudinary
 import cloudinary.uploader
 from datetime import datetime, timedelta
@@ -25,8 +26,15 @@ from stats import obtener_stats
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
+
+# ============================================================
+# ✅ SEGURIDAD — COOKIES Y SESIONES
+# ============================================================
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') != 'development'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
+app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  # 20 MB máximo por request
 
 limiter = Limiter(get_remote_address, app=app, default_limits=[], storage_uri="memory://")
 
@@ -39,6 +47,70 @@ cloudinary.config(
     api_key=os.environ.get("CLOUDINARY_API_KEY"),
     api_secret=os.environ.get("CLOUDINARY_API_SECRET")
 )
+
+# ============================================================
+# ✅ TIPOS DE ARCHIVO PERMITIDOS (server-side)
+# ============================================================
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp', 'gif'}
+ALLOWED_MIMETYPES = {'image/jpeg', 'image/png', 'image/webp', 'image/gif'}
+MAX_FILE_SIZE_MB = 8
+
+def archivo_permitido(archivo):
+    """Valida extensión Y magic bytes del archivo."""
+    if not archivo or not archivo.filename:
+        return False
+    ext = archivo.filename.rsplit('.', 1)[-1].lower() if '.' in archivo.filename else ''
+    if ext not in ALLOWED_EXTENSIONS:
+        return False
+    # Leer magic bytes para verificar que realmente es imagen
+    header = archivo.read(12)
+    archivo.seek(0)
+    magic = {
+        b'\xff\xd8\xff': 'jpeg',
+        b'\x89PNG': 'png',
+        b'RIFF': 'webp',
+        b'GIF8': 'gif',
+        b'GIF9': 'gif',
+    }
+    for sig, tipo in magic.items():
+        if header.startswith(sig):
+            return True
+    return False
+
+def limpiar_telefono(tel):
+    """Limpia el teléfono para usar en URLs de WhatsApp."""
+    if not tel:
+        return ''
+    return re.sub(r'[^\d+]', '', str(tel)).lstrip('+')
+
+# ============================================================
+# ✅ CSRF PROTECTION
+# ============================================================
+def generar_csrf_token():
+    if 'csrf_token' not in session:
+        session['csrf_token'] = secrets.token_hex(32)
+    return session['csrf_token']
+
+def verificar_csrf():
+    token_form = request.form.get('csrf_token') or request.headers.get('X-CSRF-Token')
+    token_session = session.get('csrf_token')
+    if not token_form or not token_session or not secrets.compare_digest(token_form, token_session):
+        log_accion('CSRF_FAIL', request.endpoint, get_remote_address())
+        abort(403)
+
+app.jinja_env.globals['csrf_token'] = generar_csrf_token
+
+# ============================================================
+# ✅ LOGS DE ACCIONES CRÍTICAS
+# ============================================================
+def log_accion(accion, detalle='', ip='', cliente_id=''):
+    try:
+        ts = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        print(f"[LOG] {ts} | {accion} | cliente={cliente_id} | ip={ip} | {detalle}")
+        # Opcional: guardar en Supabase si tienes tabla de logs
+        # supabase.table("logs").insert({...}).execute()
+    except:
+        pass
 
 IDIOMA_NOMBRE_A_CODIGO = {
     'español': 'es', 'inglés': 'en', 'ingles': 'en',
@@ -61,9 +133,11 @@ def get_idioma_default(vendedor):
     return IDIOMA_NOMBRE_A_CODIGO.get(nombre, 'es')
 
 def verificar_password(password_ingresada, password_guardada):
+    if not password_guardada or not password_ingresada:
+        return False
     if password_guardada.startswith('scrypt:') or password_guardada.startswith('pbkdf2:'):
         return check_password_hash(password_guardada, password_ingresada)
-    return password_ingresada == password_guardada
+    return secrets.compare_digest(password_ingresada, password_guardada)
 
 def es_dueno():
     return session.get('cliente') and not session.get('asesor_id')
@@ -87,29 +161,19 @@ def get_asesores_de_cliente(cliente_id):
 # ============================================================
 # ✅ MATCHING AUTOMÁTICO LEADS ↔ PROPIEDADES
 # ============================================================
-
 def buscar_leads_matching(propiedad, leads):
-    """
-    Encuentra leads que podrían estar interesados en una propiedad.
-    Criterios: zona similar + presupuesto compatible.
-    """
     matches = []
     precio_prop = float(propiedad.get('precio', 0) or 0)
     ubicacion_prop = (propiedad.get('ubicacion', '') or '').lower()
     palabras_ubicacion = [w for w in re.split(r'[\s,.-]+', ubicacion_prop) if len(w) > 2]
 
     for lead in leads:
-        # Excluir ya clientes cerrados
         clasificacion = lead.get('clasificacion', '')
         if 'CLIENTE' in clasificacion:
             continue
-
         score_match = 0
-
-        # === MATCH POR ZONA ===
         zona_lead = (lead.get('zona_interes', '') or '').lower()
         if zona_lead and ubicacion_prop:
-            # Palabras clave de la zona del lead
             palabras_zona = [w for w in re.split(r'[\s,.-]+', zona_lead) if len(w) > 2]
             for palabra in palabras_zona:
                 if palabra in ubicacion_prop:
@@ -119,34 +183,27 @@ def buscar_leads_matching(propiedad, leads):
                 if palabra in zona_lead:
                     score_match += 30
                     break
-
-        # === MATCH POR PRESUPUESTO ===
         try:
             presupuesto_lead = float(re.sub(r'[^\d.]', '', str(lead.get('presupuesto', 0) or 0)))
             if presupuesto_lead > 0 and precio_prop > 0:
                 ratio = precio_prop / presupuesto_lead
                 if 0.7 <= ratio <= 1.0:
-                    score_match += 50  # Propiedad cabe perfecto en su presupuesto
+                    score_match += 50
                 elif 1.0 < ratio <= 1.2:
-                    score_match += 30  # Ligeramente sobre su presupuesto
+                    score_match += 30
                 elif 0.5 <= ratio < 0.7:
-                    score_match += 20  # Propiedad muy por debajo — puede que quiera algo mejor
+                    score_match += 20
         except:
             pass
-
-        # Solo incluir si hay match mínimo
         if score_match >= 30:
             lead['score_match'] = score_match
             matches.append(lead)
 
-    # Ordenar por score_match desc, luego por score del lead desc
     matches.sort(key=lambda x: (x.get('score_match', 0), x.get('score', 0)), reverse=True)
-    return matches[:10]  # Máximo 10 leads
-
+    return matches[:10]
 
 @app.route("/matching/<cliente_id>/<int:prop_id>")
 def matching_propiedad(cliente_id, prop_id):
-    """Retorna los leads que encajan con una propiedad específica."""
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean:
         return jsonify({"ok": False, "error": "No autorizado"}), 403
@@ -155,15 +212,11 @@ def matching_propiedad(cliente_id, prop_id):
         if not prop_r.data:
             return jsonify({"ok": False, "error": "Propiedad no encontrada"}), 404
         propiedad = prop_r.data[0]
-
         leads_r = supabase.table("leads").select("*").eq("vendedor", id_clean).execute()
         leads = leads_r.data or []
-
         matches = buscar_leads_matching(propiedad, leads)
-
         vendedor = get_cliente(id_clean)
         wa = vendedor.get('whatsapp', '') if vendedor else ''
-
         return jsonify({
             "ok": True,
             "propiedad": {
@@ -181,16 +234,14 @@ def matching_propiedad(cliente_id, prop_id):
                 "temperatura": l.get('temperatura', ''),
                 "score": l.get('score', 0),
                 "score_match": l.get('score_match', 0),
-                "whatsapp_url": f"https://wa.me/{l.get('telefono','').replace('+','').replace(' ','').replace('-','')}?text={_encode_wa_msg(l, propiedad)}"
+                "whatsapp_url": f"https://wa.me/{limpiar_telefono(l.get('telefono',''))}?text={_encode_wa_msg(l, propiedad)}"
             } for l in matches],
             "whatsapp_empresa": wa
         })
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
-
 def _encode_wa_msg(lead, propiedad):
-    """Genera mensaje de WhatsApp pre-llenado para contactar al lead."""
     import urllib.parse
     nombre = lead.get('nombre', '').split()[0]
     titulo = propiedad.get('titulo', '')
@@ -198,7 +249,6 @@ def _encode_wa_msg(lead, propiedad):
     ubicacion = propiedad.get('ubicacion', '')
     msg = f"Hola {nombre}, tengo una propiedad que podría interesarte: {titulo} en {ubicacion} por ${precio:,.0f}. ¿Te gustaría conocer más detalles?"
     return urllib.parse.quote(msg)
-
 
 def generar_respuesta_sugerida(lead, lang='es'):
     nombre = lead.get('nombre', 'el cliente').split()[0]
@@ -233,248 +283,248 @@ def generar_respuesta_sugerida(lead, lang='es'):
             ],
             'nuevo': [
                 {'titulo': '⚡ Velocidad (recomendado)', 'msg': f"¡Hola {nombre}! Acabo de ver tu consulta sobre propiedades en {zona}. Tengo opciones perfectas para ti. ¿Tienes 5 minutos ahora?"},
-                {'titulo': '💬 Consultivo', 'msg': f"Hola {nombre}, vi tu interés en propiedades en {zona}. Antes de enviarte opciones, ¿me puedes contar un poco más sobre lo que buscas? Así te mando exactamente lo que necesitas."},
+                {'titulo': '💬 Consultivo', 'msg': f"Hola {nombre}, vi tu interés en propiedades en {zona}. Antes de enviarte opciones, ¿me puedes contar un poco más sobre lo que buscas?"},
                 {'titulo': '📸 Propuesta directa', 'msg': f"Hola {nombre}! Tengo 3 propiedades en {zona} que podrían encajar con lo que buscas. ¿Te las envío ahora mismo con fotos y precios?"},
             ],
             'dia1_caliente': [
                 {'titulo': '🔥 Llamada directa (recomendado)', 'msg': f"Hola {nombre}, le contacto porque ayer vi su interés en {zona} y hoy recibimos una propiedad que encaja perfectamente con {p}. ¿Le puedo enviar los detalles?"},
-                {'titulo': '🏠 Agendar visita', 'msg': f"Hola {nombre}! Tengo propiedades en {zona} listas para visitar esta semana. ¿Cuándo le queda bien? Puedo acompañarle personalmente."},
-                {'titulo': '💎 Exclusividad', 'msg': f"Hola {nombre}, tengo una propiedad en {zona} que acaba de entrar al mercado y aún no está publicada. Con su presupuesto de {p} encaja perfecto. ¿Le interesa verla primero?"},
+                {'titulo': '🏠 Agendar visita', 'msg': f"Hola {nombre}! Tengo propiedades en {zona} listas para visitar esta semana. ¿Cuándo le queda bien?"},
+                {'titulo': '💎 Exclusividad', 'msg': f"Hola {nombre}, tengo una propiedad en {zona} que acaba de entrar al mercado. Con su presupuesto de {p} encaja perfecto. ¿Le interesa verla primero?"},
             ],
             'dias3': [
-                {'titulo': '📬 Micro-compromiso (recomendado)', 'msg': f"Hola {nombre}, ¿le puedo enviar 2-3 opciones en {zona} con fotos ahora mismo? Sin compromiso, solo para que vea si algo le llama la atención."},
-                {'titulo': '💎 Alto valor', 'msg': f"Hola {nombre}, con un presupuesto de {p} en {zona} tiene acceso a propiedades con excelente potencial de valorización. Tengo 2 opciones exclusivas. ¿Las revisamos juntos esta semana?"},
-                {'titulo': '📞 Cita rápida', 'msg': f"Hola {nombre}, ¿me permite 10 minutos esta semana? Tengo opciones nuevas en {zona} que creo le van a interesar mucho. ¿Cuándo le queda bien?"},
+                {'titulo': '📬 Micro-compromiso (recomendado)', 'msg': f"Hola {nombre}, ¿le puedo enviar 2-3 opciones en {zona} con fotos ahora mismo? Sin compromiso."},
+                {'titulo': '💎 Alto valor', 'msg': f"Hola {nombre}, con un presupuesto de {p} en {zona} tiene acceso a propiedades con excelente potencial. Tengo 2 opciones exclusivas. ¿Las revisamos?"},
+                {'titulo': '📞 Cita rápida', 'msg': f"Hola {nombre}, ¿me permite 10 minutos esta semana? Tengo opciones nuevas en {zona}. ¿Cuándo le queda bien?"},
             ],
             'dias7': [
-                {'titulo': '🔄 Nuevo contexto (recomendado)', 'msg': f"Hola {nombre}, ¿cómo está? Le escribo porque el mercado en {zona} cambió esta semana — bajaron 2 propiedades de precio. ¿Sigue buscando o ya encontró algo?"},
-                {'titulo': '❓ Pregunta honesta', 'msg': f"Hola {nombre}, ¿sigue interesado en propiedades en {zona} o sus planes cambiaron? Solo quiero saber para enfocar mi búsqueda correctamente."},
-                {'titulo': '📸 Novedad', 'msg': f"Hola {nombre}! Acaba de entrar una propiedad en {zona} que me recordó a lo que buscaba. ¿Se la muestro? No tiene ningún compromiso."},
+                {'titulo': '🔄 Nuevo contexto (recomendado)', 'msg': f"Hola {nombre}, ¿cómo está? El mercado en {zona} cambió esta semana — bajaron 2 propiedades de precio. ¿Sigue buscando?"},
+                {'titulo': '❓ Pregunta honesta', 'msg': f"Hola {nombre}, ¿sigue interesado en propiedades en {zona} o sus planes cambiaron?"},
+                {'titulo': '📸 Novedad', 'msg': f"Hola {nombre}! Acaba de entrar una propiedad en {zona} que me recordó a lo que buscaba. ¿Se la muestro?"},
             ],
             'dias14': [
-                {'titulo': '⏰ FOMO (recomendado)', 'msg': f"Hola {nombre}, una propiedad que tenía en mente para usted en {zona} recibió una oferta hoy. Antes de que se cierre, ¿le gustaría verla? Si no es el momento, no hay problema."},
-                {'titulo': '📞 Llamada directa', 'msg': f"Hola {nombre}, ¿podemos hablar 5 minutos esta semana? Tengo algo en {zona} dentro de {p} que creo que le va a gustar mucho."},
-                {'titulo': '💰 Precio bajó', 'msg': f"Hola {nombre}, buenas noticias — una propiedad en {zona} bajó de precio esta semana. ¿Le interesa verla ahora?"},
+                {'titulo': '⏰ FOMO (recomendado)', 'msg': f"Hola {nombre}, una propiedad en {zona} recibió una oferta hoy. Antes de que se cierre, ¿le gustaría verla?"},
+                {'titulo': '📞 Llamada directa', 'msg': f"Hola {nombre}, ¿podemos hablar 5 minutos? Tengo algo en {zona} dentro de {p} que creo le va a gustar."},
+                {'titulo': '💰 Precio bajó', 'msg': f"Hola {nombre}, buenas noticias — una propiedad en {zona} bajó de precio. ¿Le interesa verla?"},
             ],
             'dias30': [
-                {'titulo': '🔄 Reactivación honesta (recomendado)', 'msg': f"Hola {nombre}, ¿sigue considerando una propiedad en {zona} o sus planes cambiaron? Solo quiero asegurarme de enfocar mi búsqueda en lo que realmente necesita."},
-                {'titulo': '🆕 Ángulo nuevo', 'msg': f"Hola {nombre}, han entrado propiedades nuevas en {zona} con características diferentes a lo que le había mostrado antes. ¿Vale la pena que le envíe algunas opciones?"},
-                {'titulo': '🤝 Sin presión', 'msg': f"Hola {nombre}, espero que esté muy bien. No le escribo para venderle nada — solo para saber si puedo serle útil en algo relacionado con propiedades en {zona}."},
+                {'titulo': '🔄 Reactivación honesta (recomendado)', 'msg': f"Hola {nombre}, ¿sigue considerando una propiedad en {zona} o sus planes cambiaron?"},
+                {'titulo': '🆕 Ángulo nuevo', 'msg': f"Hola {nombre}, han entrado propiedades nuevas en {zona}. ¿Vale la pena que le envíe algunas opciones?"},
+                {'titulo': '🤝 Sin presión', 'msg': f"Hola {nombre}, no le escribo para venderle nada — solo para saber si puedo serle útil en {zona}."},
             ],
             'ultimo': [
-                {'titulo': '📊 Última oportunidad (recomendado)', 'msg': f"Hola {nombre}, le escribo por última vez. Si ya encontró su propiedad, me alegra mucho. Si todavía busca en {zona}, estoy aquí. ¿En qué momento está?"},
-                {'titulo': '🚪 Puerta abierta', 'msg': f"Hola {nombre}, entiendo que el momento quizás no era el correcto. Cuando retome su búsqueda en {zona}, con gusto le ayudo. ¡Hasta pronto!"},
-                {'titulo': '🎯 Referidos', 'msg': f"Hola {nombre}, aunque quizás usted ya no busque en {zona}, ¿conoce a alguien que sí esté buscando? Con gusto le atiendo."},
+                {'titulo': '📊 Última oportunidad (recomendado)', 'msg': f"Hola {nombre}, le escribo por última vez. Si todavía busca en {zona}, estoy aquí."},
+                {'titulo': '🚪 Puerta abierta', 'msg': f"Hola {nombre}, cuando retome su búsqueda en {zona}, con gusto le ayudo."},
+                {'titulo': '🎯 Referidos', 'msg': f"Hola {nombre}, ¿conoce a alguien que esté buscando en {zona}? Con gusto le atiendo."},
             ],
         },
         'en': {
             'cliente': [
-                {'titulo': '💎 Referrals (recommended)', 'msg': f"Hi {nombre}, hope everything is great with your property. Do you know anyone looking in {zona}? I'd be happy to help them with the same dedication."},
-                {'titulo': '🏠 New opportunity', 'msg': f"Hi {nombre}, a new exclusive property just came in at {zona} that might interest you or someone you know. Want me to share the details?"},
-                {'titulo': '✅ Check-in', 'msg': f"Hi {nombre}, how's everything going with your property? Just wanted to say hi and remind you I'm always available for any future questions."},
+                {'titulo': '💎 Referrals (recommended)', 'msg': f"Hi {nombre}, hope everything is great with your property. Do you know anyone looking in {zona}?"},
+                {'titulo': '🏠 New opportunity', 'msg': f"Hi {nombre}, a new exclusive property just came in at {zona}. Want me to share the details?"},
+                {'titulo': '✅ Check-in', 'msg': f"Hi {nombre}, how's everything going? Just wanted to remind you I'm always available."},
             ],
             'nuevo': [
-                {'titulo': '⚡ Speed (recommended)', 'msg': f"Hi {nombre}! I just saw your inquiry about properties in {zona}. I have great options for you. Do you have 5 minutes right now?"},
-                {'titulo': '💬 Consultative', 'msg': f"Hi {nombre}, I saw your interest in properties in {zona}. Before I send you options, could you tell me a bit more about what you're looking for?"},
-                {'titulo': '📸 Direct proposal', 'msg': f"Hi {nombre}! I have 3 properties in {zona} that might fit what you're looking for. Want me to send them right now with photos and prices?"},
+                {'titulo': '⚡ Speed (recommended)', 'msg': f"Hi {nombre}! I just saw your inquiry about properties in {zona}. Do you have 5 minutes?"},
+                {'titulo': '💬 Consultative', 'msg': f"Hi {nombre}, I saw your interest in {zona}. Could you tell me more about what you're looking for?"},
+                {'titulo': '📸 Direct proposal', 'msg': f"Hi {nombre}! I have 3 properties in {zona} that might fit. Want me to send them with photos?"},
             ],
             'dia1_caliente': [
-                {'titulo': '🔥 Direct contact (recommended)', 'msg': f"Hi {nombre}, I'm reaching out because yesterday I saw your interest in {zona} and today we got a property that fits perfectly within {p}. Can I send you the details?"},
-                {'titulo': '🏠 Schedule a visit', 'msg': f"Hi {nombre}! I have properties in {zona} ready to visit this week. When works for you? I can accompany you personally."},
-                {'titulo': '💎 Exclusivity', 'msg': f"Hi {nombre}, I have a property in {zona} that just hit the market and isn't listed publicly yet. Your budget of {p} fits perfectly. Want to see it first?"},
+                {'titulo': '🔥 Direct (recommended)', 'msg': f"Hi {nombre}, we got a property in {zona} that fits perfectly within {p}. Can I send details?"},
+                {'titulo': '🏠 Schedule visit', 'msg': f"Hi {nombre}! I have properties in {zona} ready to visit. When works for you?"},
+                {'titulo': '💎 Exclusivity', 'msg': f"Hi {nombre}, I have an unlisted property in {zona} within {p}. Want to see it first?"},
             ],
             'dias3': [
-                {'titulo': '📬 Micro-commitment (recommended)', 'msg': f"Hi {nombre}, can I send you 2-3 options in {zona} with photos right now? No commitment, just to see if anything catches your eye."},
-                {'titulo': '💎 High value', 'msg': f"Hi {nombre}, with a budget of {p} in {zona} you have access to properties with excellent appreciation potential. I have 2 exclusive options. Want to review them together this week?"},
-                {'titulo': '📞 Quick call', 'msg': f"Hi {nombre}, can I have 10 minutes this week? I have new options in {zona} that I think you'll really like. When works for you?"},
+                {'titulo': '📬 Micro-commitment (recommended)', 'msg': f"Hi {nombre}, can I send 2-3 options in {zona} with photos? No commitment."},
+                {'titulo': '💎 High value', 'msg': f"Hi {nombre}, with {p} in {zona} you have access to great properties. Want to review them?"},
+                {'titulo': '📞 Quick call', 'msg': f"Hi {nombre}, can I have 10 minutes this week? New options in {zona} that you'll like."},
             ],
             'dias7': [
-                {'titulo': '🔄 New context (recommended)', 'msg': f"Hi {nombre}, how are you? I'm reaching out because the market in {zona} changed this week — 2 properties dropped in price. Are you still looking?"},
-                {'titulo': '❓ Honest question', 'msg': f"Hi {nombre}, are you still interested in properties in {zona} or have your plans changed? Just want to know so I can focus my search correctly."},
-                {'titulo': '📸 New listing', 'msg': f"Hi {nombre}! A property just came in {zona} that reminded me of what you were looking for. Want me to show you? No commitment at all."},
+                {'titulo': '🔄 New context (recommended)', 'msg': f"Hi {nombre}, the market in {zona} changed this week — 2 properties dropped in price. Still looking?"},
+                {'titulo': '❓ Honest question', 'msg': f"Hi {nombre}, are you still interested in {zona} or have your plans changed?"},
+                {'titulo': '📸 New listing', 'msg': f"Hi {nombre}! A property just came in {zona} that reminded me of what you were looking for."},
             ],
             'dias14': [
-                {'titulo': '⏰ FOMO (recommended)', 'msg': f"Hi {nombre}, a property I had in mind for you in {zona} received an offer today. Before it closes, would you like to see it? If it's not the right time, no problem at all."},
-                {'titulo': '📞 Direct call', 'msg': f"Hi {nombre}, could we talk for 5 minutes this week? I have something in {zona} within {p} that I think you'll really like."},
-                {'titulo': '💰 Price dropped', 'msg': f"Hi {nombre}, good news — a property in {zona} dropped in price this week. Are you interested in seeing it now?"},
+                {'titulo': '⏰ FOMO (recommended)', 'msg': f"Hi {nombre}, a property in {zona} I had in mind for you received an offer today. Want to see it?"},
+                {'titulo': '📞 Direct call', 'msg': f"Hi {nombre}, could we talk 5 minutes? I have something in {zona} within {p} you'll like."},
+                {'titulo': '💰 Price dropped', 'msg': f"Hi {nombre}, good news — a property in {zona} dropped in price. Interested?"},
             ],
             'dias30': [
-                {'titulo': '🔄 Honest reactivation (recommended)', 'msg': f"Hi {nombre}, are you still considering a property in {zona} or have your plans changed? I just want to make sure I'm focusing my search on what you really need."},
-                {'titulo': '🆕 New angle', 'msg': f"Hi {nombre}, new properties have come in at {zona} with different features from what I had shown you before. Worth sending you some options?"},
-                {'titulo': '🤝 No pressure', 'msg': f"Hi {nombre}, hope you're doing great. I'm not writing to sell you anything — just to know if I can be helpful with anything related to properties in {zona}."},
+                {'titulo': '🔄 Honest reactivation (recommended)', 'msg': f"Hi {nombre}, are you still considering a property in {zona}?"},
+                {'titulo': '🆕 New angle', 'msg': f"Hi {nombre}, new properties came in {zona}. Worth sending some options?"},
+                {'titulo': '🤝 No pressure', 'msg': f"Hi {nombre}, just checking if I can help with anything in {zona}."},
             ],
             'ultimo': [
-                {'titulo': '📊 Last chance (recommended)', 'msg': f"Hi {nombre}, this is my last message. If you've already found your property, I'm really glad. If you're still looking in {zona}, I'm here. Where are you in the process?"},
-                {'titulo': '🚪 Open door', 'msg': f"Hi {nombre}, I understand the timing might not have been right. Whenever you resume your search in {zona}, I'll be happy to help. Take care!"},
-                {'titulo': '🎯 Referrals', 'msg': f"Hi {nombre}, even if you're no longer looking in {zona}, do you know anyone who might be? I'd be glad to help them."},
+                {'titulo': '📊 Last message (recommended)', 'msg': f"Hi {nombre}, this is my last message. If you're still looking in {zona}, I'm here."},
+                {'titulo': '🚪 Open door', 'msg': f"Hi {nombre}, whenever you resume your search in {zona}, I'll be happy to help."},
+                {'titulo': '🎯 Referrals', 'msg': f"Hi {nombre}, do you know anyone looking in {zona}? I'd be glad to help them."},
             ],
         },
         'fr': {
             'cliente': [
-                {'titulo': '💎 Références (recommandé)', 'msg': f"Bonjour {nombre}, j'espère que tout se passe bien avec votre propriété. Connaissez-vous quelqu'un qui cherche à {zona}? Je serais ravi de les aider."},
-                {'titulo': '🏠 Nouvelle opportunité', 'msg': f"Bonjour {nombre}, une propriété exclusive vient d'arriver à {zona} qui pourrait vous intéresser ou intéresser quelqu'un de votre entourage. Je vous en parle?"},
-                {'titulo': '✅ Prise de nouvelles', 'msg': f"Bonjour {nombre}, comment se passe votre propriété? Je voulais juste vous saluer et vous rappeler que je reste disponible pour toute question."},
+                {'titulo': '💎 Références (recommandé)', 'msg': f"Bonjour {nombre}, connaissez-vous quelqu'un cherchant à {zona}?"},
+                {'titulo': '🏠 Nouvelle opportunité', 'msg': f"Bonjour {nombre}, une propriété vient d'arriver à {zona}. Vous en parle?"},
+                {'titulo': '✅ Prise de nouvelles', 'msg': f"Bonjour {nombre}, comment se passe tout? Je reste disponible pour toute question."},
             ],
             'nuevo': [
-                {'titulo': '⚡ Rapidité (recommandé)', 'msg': f"Bonjour {nombre}! Je viens de voir votre demande concernant des propriétés à {zona}. J'ai des options parfaites pour vous. Avez-vous 5 minutes maintenant?"},
-                {'titulo': '💬 Consultatif', 'msg': f"Bonjour {nombre}, j'ai vu votre intérêt pour des propriétés à {zona}. Avant de vous envoyer des options, pouvez-vous me dire ce que vous recherchez exactement?"},
-                {'titulo': '📸 Proposition directe', 'msg': f"Bonjour {nombre}! J'ai 3 propriétés à {zona} qui pourraient correspondre à ce que vous cherchez. Je vous les envoie maintenant avec photos et prix?"},
+                {'titulo': '⚡ Rapidité (recommandé)', 'msg': f"Bonjour {nombre}! Je viens de voir votre demande pour {zona}. Avez-vous 5 minutes?"},
+                {'titulo': '💬 Consultatif', 'msg': f"Bonjour {nombre}, que recherchez-vous exactement à {zona}?"},
+                {'titulo': '📸 Proposition directe', 'msg': f"Bonjour {nombre}! J'ai 3 propriétés à {zona}. Je vous les envoie avec photos?"},
             ],
             'dia1_caliente': [
-                {'titulo': '🔥 Appel direct (recommandé)', 'msg': f"Bonjour {nombre}, je vous contacte car hier j'ai vu votre intérêt pour {zona} et aujourd'hui nous avons une propriété qui correspond parfaitement à {p}. Je vous envoie les détails?"},
-                {'titulo': '🏠 Planifier une visite', 'msg': f"Bonjour {nombre}! J'ai des propriétés à {zona} disponibles pour visite cette semaine. Quand êtes-vous disponible? Je peux vous accompagner."},
-                {'titulo': '💎 Exclusivité', 'msg': f"Bonjour {nombre}, j'ai une propriété à {zona} qui vient d'arriver et n'est pas encore publiée. Votre budget de {p} correspond parfaitement. Vous voulez la voir en premier?"},
+                {'titulo': '🔥 Direct (recommandé)', 'msg': f"Bonjour {nombre}, une propriété à {zona} correspond parfaitement à {p}. Je vous envoie les détails?"},
+                {'titulo': '🏠 Visite', 'msg': f"Bonjour {nombre}! Propriétés disponibles à {zona} cette semaine. Quand êtes-vous libre?"},
+                {'titulo': '💎 Exclusivité', 'msg': f"Bonjour {nombre}, propriété exclusive à {zona} dans {p}. Vous voulez la voir en premier?"},
             ],
             'dias3': [
-                {'titulo': '📬 Micro-engagement (recommandé)', 'msg': f"Bonjour {nombre}, puis-je vous envoyer 2-3 options à {zona} avec photos maintenant? Sans engagement, juste pour voir si quelque chose vous plaît."},
-                {'titulo': '💎 Haute valeur', 'msg': f"Bonjour {nombre}, avec un budget de {p} à {zona} vous avez accès à des propriétés avec excellent potentiel de valorisation. J'ai 2 options exclusives. On les revoit ensemble?"},
-                {'titulo': '📞 Appel rapide', 'msg': f"Bonjour {nombre}, puis-je avoir 10 minutes cette semaine? J'ai de nouvelles options à {zona} qui je crois vont beaucoup vous plaire."},
+                {'titulo': '📬 Engagement (recommandé)', 'msg': f"Bonjour {nombre}, je vous envoie 2-3 options à {zona} avec photos? Sans engagement."},
+                {'titulo': '💎 Valeur', 'msg': f"Bonjour {nombre}, avec {p} à {zona} vous avez accès à d'excellentes propriétés."},
+                {'titulo': '📞 Appel', 'msg': f"Bonjour {nombre}, 10 minutes cette semaine? Nouvelles options à {zona}."},
             ],
             'dias7': [
-                {'titulo': '🔄 Nouveau contexte (recommandé)', 'msg': f"Bonjour {nombre}, comment allez-vous? Je vous écris car le marché à {zona} a changé cette semaine — 2 propriétés ont baissé de prix. Cherchez-vous toujours?"},
-                {'titulo': '❓ Question honnête', 'msg': f"Bonjour {nombre}, êtes-vous toujours intéressé par des propriétés à {zona} ou vos projets ont-ils changé?"},
-                {'titulo': '📸 Nouveauté', 'msg': f"Bonjour {nombre}! Une propriété vient d'arriver à {zona} qui m'a rappelé ce que vous cherchiez. Je vous la montre? Aucun engagement."},
+                {'titulo': '🔄 Contexte (recommandé)', 'msg': f"Bonjour {nombre}, le marché à {zona} a changé — 2 propriétés ont baissé. Vous cherchez encore?"},
+                {'titulo': '❓ Honnête', 'msg': f"Bonjour {nombre}, êtes-vous toujours intéressé par {zona}?"},
+                {'titulo': '📸 Nouveau', 'msg': f"Bonjour {nombre}! Une propriété à {zona} vient d'arriver. Je vous la montre?"},
             ],
             'dias14': [
-                {'titulo': '⏰ FOMO (recommandé)', 'msg': f"Bonjour {nombre}, une propriété que j'avais en tête pour vous à {zona} a reçu une offre aujourd'hui. Avant qu'elle se ferme, souhaitez-vous la voir?"},
-                {'titulo': '📞 Appel direct', 'msg': f"Bonjour {nombre}, pouvons-nous parler 5 minutes cette semaine? J'ai quelque chose à {zona} dans {p} qui je crois va beaucoup vous plaire."},
-                {'titulo': '💰 Prix baissé', 'msg': f"Bonjour {nombre}, bonne nouvelle — une propriété à {zona} a baissé de prix cette semaine. Vous êtes intéressé à la voir maintenant?"},
+                {'titulo': '⏰ FOMO (recommandé)', 'msg': f"Bonjour {nombre}, une propriété à {zona} a reçu une offre. Souhaitez-vous la voir?"},
+                {'titulo': '📞 Appel direct', 'msg': f"Bonjour {nombre}, 5 minutes cette semaine? J'ai quelque chose à {zona} dans {p}."},
+                {'titulo': '💰 Prix baissé', 'msg': f"Bonjour {nombre}, une propriété à {zona} a baissé de prix. Intéressé?"},
             ],
             'dias30': [
-                {'titulo': '🔄 Réactivation honnête (recommandé)', 'msg': f"Bonjour {nombre}, envisagez-vous toujours une propriété à {zona} ou vos projets ont-ils changé?"},
-                {'titulo': '🆕 Nouvel angle', 'msg': f"Bonjour {nombre}, de nouvelles propriétés sont arrivées à {zona} avec des caractéristiques différentes. Ça vaut la peine que je vous envoie quelques options?"},
-                {'titulo': '🤝 Sans pression', 'msg': f"Bonjour {nombre}, j'espère que vous allez bien. Je ne vous écris pas pour vendre — juste pour savoir si je peux vous être utile pour des propriétés à {zona}."},
+                {'titulo': '🔄 Réactivation (recommandé)', 'msg': f"Bonjour {nombre}, envisagez-vous toujours une propriété à {zona}?"},
+                {'titulo': '🆕 Angle nouveau', 'msg': f"Bonjour {nombre}, nouvelles propriétés à {zona}. Je vous envoie des options?"},
+                {'titulo': '🤝 Sans pression', 'msg': f"Bonjour {nombre}, puis-je vous aider pour quelque chose à {zona}?"},
             ],
             'ultimo': [
-                {'titulo': '📊 Dernière chance (recommandé)', 'msg': f"Bonjour {nombre}, c'est mon dernier message. Si vous avez déjà trouvé votre propriété, je suis vraiment content. Si vous cherchez encore à {zona}, je suis là."},
-                {'titulo': '🚪 Porte ouverte', 'msg': f"Bonjour {nombre}, je comprends que le moment n'était peut-être pas le bon. Quand vous reprendrez votre recherche à {zona}, je serai heureux de vous aider."},
-                {'titulo': '🎯 Références', 'msg': f"Bonjour {nombre}, même si vous ne cherchez plus à {zona}, connaissez-vous quelqu'un qui cherche?"},
+                {'titulo': '📊 Dernier message (recommandé)', 'msg': f"Bonjour {nombre}, dernier message. Si vous cherchez encore à {zona}, je suis là."},
+                {'titulo': '🚪 Porte ouverte', 'msg': f"Bonjour {nombre}, quand vous reprendrez votre recherche à {zona}, je serai là."},
+                {'titulo': '🎯 Références', 'msg': f"Bonjour {nombre}, connaissez-vous quelqu'un cherchant à {zona}?"},
             ],
         },
         'de': {
             'cliente': [
-                {'titulo': '💎 Empfehlungen (empfohlen)', 'msg': f"Hallo {nombre}, ich hoffe alles läuft gut mit Ihrer Immobilie. Kennen Sie jemanden, der in {zona} sucht? Ich helfe gerne mit der gleichen Hingabe."},
-                {'titulo': '🏠 Neue Gelegenheit', 'msg': f"Hallo {nombre}, eine exklusive Immobilie in {zona} ist gerade auf den Markt gekommen. Soll ich Ihnen Details schicken?"},
-                {'titulo': '✅ Check-in', 'msg': f"Hallo {nombre}, wie läuft alles mit Ihrer Immobilie? Ich wollte mich nur melden und daran erinnern, dass ich immer zur Verfügung stehe."},
+                {'titulo': '💎 Empfehlungen (empfohlen)', 'msg': f"Hallo {nombre}, kennen Sie jemanden, der in {zona} sucht?"},
+                {'titulo': '🏠 Neue Gelegenheit', 'msg': f"Hallo {nombre}, eine Immobilie in {zona} ist gerade auf den Markt. Details?"},
+                {'titulo': '✅ Check-in', 'msg': f"Hallo {nombre}, wie läuft alles? Ich stehe jederzeit zur Verfügung."},
             ],
             'nuevo': [
-                {'titulo': '⚡ Schnelligkeit (empfohlen)', 'msg': f"Hallo {nombre}! Ich habe gerade Ihre Anfrage zu Immobilien in {zona} gesehen. Ich habe perfekte Optionen für Sie. Haben Sie jetzt 5 Minuten?"},
-                {'titulo': '💬 Beratend', 'msg': f"Hallo {nombre}, ich habe Ihr Interesse an Immobilien in {zona} gesehen. Könnten Sie mir etwas mehr darüber erzählen, was Sie suchen?"},
-                {'titulo': '📸 Direktes Angebot', 'msg': f"Hallo {nombre}! Ich habe 3 Immobilien in {zona}, die zu Ihnen passen könnten. Soll ich sie Ihnen jetzt mit Fotos und Preisen schicken?"},
+                {'titulo': '⚡ Schnell (empfohlen)', 'msg': f"Hallo {nombre}! Ihre Anfrage für {zona} gesehen. Haben Sie 5 Minuten?"},
+                {'titulo': '💬 Beratend', 'msg': f"Hallo {nombre}, was genau suchen Sie in {zona}?"},
+                {'titulo': '📸 Direktes Angebot', 'msg': f"Hallo {nombre}! 3 Immobilien in {zona}. Soll ich sie mit Fotos schicken?"},
             ],
             'dia1_caliente': [
-                {'titulo': '🔥 Direkter Anruf (empfohlen)', 'msg': f"Hallo {nombre}, ich melde mich, weil ich gestern Ihr Interesse an {zona} gesehen habe und wir heute eine Immobilie bekommen haben, die perfekt zu {p} passt."},
-                {'titulo': '🏠 Besichtigung planen', 'msg': f"Hallo {nombre}! Ich habe Immobilien in {zona}, die diese Woche besichtigt werden können. Wann hätten Sie Zeit?"},
-                {'titulo': '💎 Exklusivität', 'msg': f"Hallo {nombre}, ich habe eine Immobilie in {zona}, die noch nicht öffentlich ist. Ihr Budget von {p} passt perfekt. Möchten Sie sie zuerst sehen?"},
+                {'titulo': '🔥 Direkt (empfohlen)', 'msg': f"Hallo {nombre}, eine Immobilie in {zona} passt perfekt zu {p}. Details schicken?"},
+                {'titulo': '🏠 Besichtigung', 'msg': f"Hallo {nombre}! Immobilien in {zona} diese Woche verfügbar. Wann haben Sie Zeit?"},
+                {'titulo': '💎 Exklusiv', 'msg': f"Hallo {nombre}, exklusive Immobilie in {zona} für {p}. Zuerst sehen?"},
             ],
             'dias3': [
-                {'titulo': '📬 Micro-Commitment (empfohlen)', 'msg': f"Hallo {nombre}, darf ich Ihnen jetzt 2-3 Optionen in {zona} mit Fotos schicken? Ohne Verpflichtung, nur um zu sehen, ob etwas Ihr Interesse weckt."},
-                {'titulo': '💎 Hoher Wert', 'msg': f"Hallo {nombre}, mit einem Budget von {p} in {zona} haben Sie Zugang zu Immobilien mit ausgezeichnetem Wertsteigerungspotenzial. Sollen wir sie diese Woche besprechen?"},
-                {'titulo': '📞 Schneller Anruf', 'msg': f"Hallo {nombre}, darf ich Sie diese Woche 10 Minuten in Anspruch nehmen? Ich habe neue Optionen in {zona}, die Ihnen sehr gefallen werden."},
+                {'titulo': '📬 Commitment (empfohlen)', 'msg': f"Hallo {nombre}, 2-3 Optionen in {zona} mit Fotos? Ohne Verpflichtung."},
+                {'titulo': '💎 Wert', 'msg': f"Hallo {nombre}, mit {p} in {zona} haben Sie Zugang zu tollen Immobilien."},
+                {'titulo': '📞 Anruf', 'msg': f"Hallo {nombre}, 10 Minuten diese Woche? Neue Optionen in {zona}."},
             ],
             'dias7': [
-                {'titulo': '🔄 Neuer Kontext (empfohlen)', 'msg': f"Hallo {nombre}, wie geht es Ihnen? Ich schreibe, weil sich der Markt in {zona} diese Woche verändert hat — 2 Immobilien sind im Preis gefallen. Suchen Sie noch?"},
-                {'titulo': '❓ Ehrliche Frage', 'msg': f"Hallo {nombre}, interessieren Sie sich noch für Immobilien in {zona} oder haben sich Ihre Pläne geändert?"},
-                {'titulo': '📸 Neuheit', 'msg': f"Hallo {nombre}! Eine Immobilie in {zona} ist gerade reingekommen, die mich an das erinnerte, was Sie suchten. Soll ich sie Ihnen zeigen?"},
+                {'titulo': '🔄 Kontext (empfohlen)', 'msg': f"Hallo {nombre}, der Markt in {zona} hat sich verändert — 2 Preise gefallen. Suchen Sie noch?"},
+                {'titulo': '❓ Ehrlich', 'msg': f"Hallo {nombre}, interessieren Sie sich noch für {zona}?"},
+                {'titulo': '📸 Neuheit', 'msg': f"Hallo {nombre}! Eine Immobilie in {zona} ist gerade reingekommen. Zeigen?"},
             ],
             'dias14': [
-                {'titulo': '⏰ FOMO (empfohlen)', 'msg': f"Hallo {nombre}, eine Immobilie in {zona}, die ich für Sie im Sinn hatte, hat heute ein Angebot erhalten. Möchten Sie sie sehen, bevor sie abgeschlossen wird?"},
-                {'titulo': '📞 Direkter Anruf', 'msg': f"Hallo {nombre}, könnten wir diese Woche 5 Minuten sprechen? Ich habe etwas in {zona} für {p}, das Ihnen sehr gefallen wird."},
-                {'titulo': '💰 Preis gesunken', 'msg': f"Hallo {nombre}, gute Nachrichten — eine Immobilie in {zona} ist diese Woche im Preis gesunken. Möchten Sie sie jetzt sehen?"},
+                {'titulo': '⏰ FOMO (empfohlen)', 'msg': f"Hallo {nombre}, eine Immobilie in {zona} hat ein Angebot erhalten. Sehen?"},
+                {'titulo': '📞 Direkter Anruf', 'msg': f"Hallo {nombre}, 5 Minuten diese Woche? Etwas in {zona} für {p}."},
+                {'titulo': '💰 Preis gesunken', 'msg': f"Hallo {nombre}, eine Immobilie in {zona} ist günstiger geworden. Interesse?"},
             ],
             'dias30': [
-                {'titulo': '🔄 Ehrliche Reaktivierung (empfohlen)', 'msg': f"Hallo {nombre}, denken Sie noch an eine Immobilie in {zona} oder haben sich Ihre Pläne geändert?"},
-                {'titulo': '🆕 Neuer Ansatz', 'msg': f"Hallo {nombre}, es sind neue Immobilien in {zona} mit anderen Merkmalen reingekommen. Lohnt es sich, Ihnen einige Optionen zu schicken?"},
-                {'titulo': '🤝 Kein Druck', 'msg': f"Hallo {nombre}, ich hoffe, es geht Ihnen gut. Ich schreibe nicht um zu verkaufen — nur um zu wissen, ob ich Ihnen bei Immobilien in {zona} behilflich sein kann."},
+                {'titulo': '🔄 Reaktivierung (empfohlen)', 'msg': f"Hallo {nombre}, denken Sie noch an eine Immobilie in {zona}?"},
+                {'titulo': '🆕 Neuer Ansatz', 'msg': f"Hallo {nombre}, neue Immobilien in {zona}. Optionen schicken?"},
+                {'titulo': '🤝 Kein Druck', 'msg': f"Hallo {nombre}, kann ich Ihnen bei etwas in {zona} helfen?"},
             ],
             'ultimo': [
-                {'titulo': '📊 Letzte Chance (empfohlen)', 'msg': f"Hallo {nombre}, dies ist meine letzte Nachricht. Wenn Sie bereits Ihre Immobilie gefunden haben, freue ich mich. Wenn Sie noch in {zona} suchen, bin ich hier."},
-                {'titulo': '🚪 Offene Tür', 'msg': f"Hallo {nombre}, ich verstehe, dass der Zeitpunkt vielleicht nicht der richtige war. Wenn Sie Ihre Suche in {zona} wieder aufnehmen, helfe ich gerne."},
-                {'titulo': '🎯 Empfehlungen', 'msg': f"Hallo {nombre}, auch wenn Sie nicht mehr in {zona} suchen, kennen Sie jemanden, der sucht?"},
+                {'titulo': '📊 Letzte Nachricht (empfohlen)', 'msg': f"Hallo {nombre}, letzte Nachricht. Falls Sie noch in {zona} suchen, bin ich hier."},
+                {'titulo': '🚪 Offene Tür', 'msg': f"Hallo {nombre}, wenn Sie Ihre Suche in {zona} wieder aufnehmen, helfe ich gerne."},
+                {'titulo': '🎯 Empfehlungen', 'msg': f"Hallo {nombre}, kennen Sie jemanden, der in {zona} sucht?"},
             ],
         },
         'pt': {
             'cliente': [
-                {'titulo': '💎 Indicações (recomendado)', 'msg': f"Olá {nombre}, espero que tudo esteja ótimo com seu imóvel. Você conhece alguém buscando em {zona}? Ficaria feliz em ajudá-lo com a mesma dedicação."},
-                {'titulo': '🏠 Nova oportunidade', 'msg': f"Olá {nombre}, acabou de chegar um imóvel exclusivo em {zona} que pode te interessar ou a alguém do seu círculo. Quero te contar?"},
-                {'titulo': '✅ Check-in', 'msg': f"Olá {nombre}, como está tudo com seu imóvel? Só queria dar um oi e lembrar que continuo disponível para qualquer dúvida futura."},
+                {'titulo': '💎 Indicações (recomendado)', 'msg': f"Olá {nombre}, conhece alguém buscando em {zona}?"},
+                {'titulo': '🏠 Nova oportunidade', 'msg': f"Olá {nombre}, chegou um imóvel em {zona}. Quero te contar?"},
+                {'titulo': '✅ Check-in', 'msg': f"Olá {nombre}, tudo bem? Continuo disponível para qualquer dúvida."},
             ],
             'nuevo': [
-                {'titulo': '⚡ Velocidade (recomendado)', 'msg': f"Olá {nombre}! Acabei de ver sua consulta sobre imóveis em {zona}. Tenho opções perfeitas para você. Tem 5 minutos agora?"},
-                {'titulo': '💬 Consultivo', 'msg': f"Olá {nombre}, vi seu interesse em imóveis em {zona}. Antes de enviar opções, pode me contar mais sobre o que procura?"},
-                {'titulo': '📸 Proposta direta', 'msg': f"Olá {nombre}! Tenho 3 imóveis em {zona} que podem combinar com o que você procura. Te envio agora com fotos e preços?"},
+                {'titulo': '⚡ Velocidade (recomendado)', 'msg': f"Olá {nombre}! Vi sua consulta sobre {zona}. Tem 5 minutos?"},
+                {'titulo': '💬 Consultivo', 'msg': f"Olá {nombre}, o que você procura exatamente em {zona}?"},
+                {'titulo': '📸 Proposta direta', 'msg': f"Olá {nombre}! Tenho 3 imóveis em {zona}. Te envio com fotos?"},
             ],
             'dia1_caliente': [
-                {'titulo': '🔥 Contato direto (recomendado)', 'msg': f"Olá {nombre}, estou entrando em contato porque ontem vi seu interesse em {zona} e hoje recebemos um imóvel que encaixa perfeitamente em {p}. Posso te enviar os detalhes?"},
-                {'titulo': '🏠 Agendar visita', 'msg': f"Olá {nombre}! Tenho imóveis em {zona} prontos para visitar esta semana. Quando fica bom para você?"},
-                {'titulo': '💎 Exclusividade', 'msg': f"Olá {nombre}, tenho um imóvel em {zona} que acabou de entrar no mercado e ainda não foi publicado. Seu orçamento de {p} encaixa perfeitamente. Quer ver primeiro?"},
+                {'titulo': '🔥 Direto (recomendado)', 'msg': f"Olá {nombre}, temos um imóvel em {zona} que encaixa em {p}. Posso enviar detalhes?"},
+                {'titulo': '🏠 Visita', 'msg': f"Olá {nombre}! Imóveis em {zona} disponíveis esta semana. Quando fica bom?"},
+                {'titulo': '💎 Exclusivo', 'msg': f"Olá {nombre}, imóvel exclusivo em {zona} dentro de {p}. Quer ver primeiro?"},
             ],
             'dias3': [
-                {'titulo': '📬 Micro-compromisso (recomendado)', 'msg': f"Olá {nombre}, posso te enviar 2-3 opções em {zona} com fotos agora? Sem compromisso, só para ver se algo chama atenção."},
-                {'titulo': '💎 Alto valor', 'msg': f"Olá {nombre}, com orçamento de {p} em {zona} você tem acesso a imóveis com excelente potencial de valorização. Revisamos juntos esta semana?"},
-                {'titulo': '📞 Ligação rápida', 'msg': f"Olá {nombre}, posso ter 10 minutos esta semana? Tenho opções novas em {zona} que acho que vai gostar muito."},
+                {'titulo': '📬 Compromisso (recomendado)', 'msg': f"Olá {nombre}, posso te enviar 2-3 opções em {zona} com fotos? Sem compromisso."},
+                {'titulo': '💎 Alto valor', 'msg': f"Olá {nombre}, com {p} em {zona} você tem acesso a ótimos imóveis."},
+                {'titulo': '📞 Ligação', 'msg': f"Olá {nombre}, 10 minutos esta semana? Novas opções em {zona}."},
             ],
             'dias7': [
-                {'titulo': '🔄 Novo contexto (recomendado)', 'msg': f"Olá {nombre}, tudo bem? Estou escrevendo porque o mercado em {zona} mudou esta semana — 2 imóveis baixaram de preço. Ainda está procurando?"},
-                {'titulo': '❓ Pergunta honesta', 'msg': f"Olá {nombre}, ainda tem interesse em imóveis em {zona} ou seus planos mudaram?"},
-                {'titulo': '📸 Novidade', 'msg': f"Olá {nombre}! Acabou de entrar um imóvel em {zona} que me lembrou do que você procurava. Te mostro? Sem nenhum compromisso."},
+                {'titulo': '🔄 Contexto (recomendado)', 'msg': f"Olá {nombre}, o mercado em {zona} mudou — 2 imóveis baixaram. Ainda procurando?"},
+                {'titulo': '❓ Honesto', 'msg': f"Olá {nombre}, ainda tem interesse em {zona}?"},
+                {'titulo': '📸 Novidade', 'msg': f"Olá {nombre}! Um imóvel em {zona} acabou de entrar. Te mostro?"},
             ],
             'dias14': [
-                {'titulo': '⏰ FOMO (recomendado)', 'msg': f"Olá {nombre}, um imóvel que eu tinha em mente para você em {zona} recebeu uma proposta hoje. Antes de fechar, gostaria de ver?"},
-                {'titulo': '📞 Ligação direta', 'msg': f"Olá {nombre}, podemos conversar 5 minutos esta semana? Tenho algo em {zona} dentro de {p} que acho que vai gostar muito."},
-                {'titulo': '💰 Preço caiu', 'msg': f"Olá {nombre}, boa notícia — um imóvel em {zona} baixou de preço esta semana. Tem interesse em ver agora?"},
+                {'titulo': '⏰ FOMO (recomendado)', 'msg': f"Olá {nombre}, um imóvel em {zona} recebeu proposta hoje. Gostaria de ver?"},
+                {'titulo': '📞 Direto', 'msg': f"Olá {nombre}, 5 minutos esta semana? Tenho algo em {zona} dentro de {p}."},
+                {'titulo': '💰 Preço caiu', 'msg': f"Olá {nombre}, um imóvel em {zona} baixou de preço. Interesse?"},
             ],
             'dias30': [
-                {'titulo': '🔄 Reativação honesta (recomendado)', 'msg': f"Olá {nombre}, ainda está pensando em um imóvel em {zona} ou seus planos mudaram?"},
-                {'titulo': '🆕 Novo ângulo', 'msg': f"Olá {nombre}, entraram imóveis novos em {zona} com características diferentes. Vale a pena te enviar algumas opções?"},
-                {'titulo': '🤝 Sem pressão', 'msg': f"Olá {nombre}, espero que esteja bem. Não estou escrevendo para vender — só para saber se posso ser útil com algo em {zona}."},
+                {'titulo': '🔄 Reativação (recomendado)', 'msg': f"Olá {nombre}, ainda pensa em um imóvel em {zona}?"},
+                {'titulo': '🆕 Novo ângulo', 'msg': f"Olá {nombre}, chegaram imóveis novos em {zona}. Vale enviar opções?"},
+                {'titulo': '🤝 Sem pressão', 'msg': f"Olá {nombre}, posso ser útil com algo em {zona}?"},
             ],
             'ultimo': [
-                {'titulo': '📊 Última chance (recomendado)', 'msg': f"Olá {nombre}, esta é minha última mensagem. Se já encontrou seu imóvel, fico muito feliz. Se ainda procura em {zona}, estou aqui."},
-                {'titulo': '🚪 Porta aberta', 'msg': f"Olá {nombre}, entendo que talvez o momento não fosse o certo. Quando retomar sua busca em {zona}, terei prazer em ajudar."},
-                {'titulo': '🎯 Indicações', 'msg': f"Olá {nombre}, mesmo que não esteja mais procurando em {zona}, conhece alguém que esteja?"},
+                {'titulo': '📊 Última mensagem (recomendado)', 'msg': f"Olá {nombre}, última mensagem. Se ainda procura em {zona}, estou aqui."},
+                {'titulo': '🚪 Porta aberta', 'msg': f"Olá {nombre}, quando retomar sua busca em {zona}, terei prazer em ajudar."},
+                {'titulo': '🎯 Indicações', 'msg': f"Olá {nombre}, conhece alguém buscando em {zona}?"},
             ],
         },
         'zh': {
             'cliente': [
-                {'titulo': '💎 推荐（推荐）', 'msg': f"您好 {nombre}，希望您的房产一切顺利。您认识在{zona}找房的人吗？我很乐意以同样的热情为他们服务。"},
-                {'titulo': '🏠 新机会', 'msg': f"您好 {nombre}，{zona}刚到了一套独家房源，可能您或您认识的人会感兴趣。要我告诉您详情吗？"},
-                {'titulo': '✅ 问候', 'msg': f"您好 {nombre}，您的房产一切都好吗？只是想问候一下，提醒您我随时可以回答您的问题。"},
+                {'titulo': '💎 推荐（推荐）', 'msg': f"您好 {nombre}，您认识在{zona}找房的人吗？"},
+                {'titulo': '🏠 新机会', 'msg': f"您好 {nombre}，{zona}刚来了一套房产，要我告诉您详情吗？"},
+                {'titulo': '✅ 问候', 'msg': f"您好 {nombre}，一切都好吗？我随时可以为您服务。"},
             ],
             'nuevo': [
-                {'titulo': '⚡ 速度（推荐）', 'msg': f"您好 {nombre}！我刚看到您在{zona}找房的咨询。我有非常适合您的选择。您现在有5分钟时间吗？"},
-                {'titulo': '💬 顾问式', 'msg': f"您好 {nombre}，我看到您对{zona}的房产感兴趣。在发送选项之前，您能告诉我更多您在寻找什么吗？"},
-                {'titulo': '📸 直接提案', 'msg': f"您好 {nombre}！我在{zona}有3套可能符合您需求的房产。现在就把带照片和价格的信息发给您吗？"},
+                {'titulo': '⚡ 速度（推荐）', 'msg': f"您好 {nombre}！看到您在{zona}找房。您现在有5分钟吗？"},
+                {'titulo': '💬 顾问式', 'msg': f"您好 {nombre}，您在{zona}具体找什么类型的房产？"},
+                {'titulo': '📸 直接提案', 'msg': f"您好 {nombre}！我在{zona}有3套房产。现在发给您带照片的信息吗？"},
             ],
             'dia1_caliente': [
-                {'titulo': '🔥 直接联系（推荐）', 'msg': f"您好 {nombre}，我联系您是因为昨天看到您对{zona}感兴趣，今天我们收到了一套完全符合{p}预算的房产。我可以发详情给您吗？"},
-                {'titulo': '🏠 安排参观', 'msg': f"您好 {nombre}！我在{zona}有本周可以参观的房产。什么时候方便？我可以亲自陪您。"},
-                {'titulo': '💎 独家', 'msg': f"您好 {nombre}，我在{zona}有一套刚上市尚未公开的房产。您{p}的预算非常匹配。想第一个看吗？"},
+                {'titulo': '🔥 直接（推荐）', 'msg': f"您好 {nombre}，{zona}有一套在{p}预算内的房产。我发详情给您？"},
+                {'titulo': '🏠 参观', 'msg': f"您好 {nombre}！{zona}本周有房产可以参观。什么时候方便？"},
+                {'titulo': '💎 独家', 'msg': f"您好 {nombre}，{zona}有一套独家房产在{p}内。想第一个看吗？"},
             ],
             'dias3': [
-                {'titulo': '📬 微承诺（推荐）', 'msg': f"您好 {nombre}，我可以现在发给您{zona}的2-3个带照片的选项吗？没有任何义务，只是看看是否有您感兴趣的。"},
-                {'titulo': '💎 高价值', 'msg': f"您好 {nombre}，凭借{p}的预算在{zona}，您可以获得具有出色升值潜力的房产。这周一起看看？"},
-                {'titulo': '📞 快速通话', 'msg': f"您好 {nombre}，这周能给我10分钟吗？我在{zona}有新选项，我认为您会非常喜欢。"},
+                {'titulo': '📬 微承诺（推荐）', 'msg': f"您好 {nombre}，发给您{zona}的2-3个带照片的选项？没有义务。"},
+                {'titulo': '💎 高价值', 'msg': f"您好 {nombre}，凭借{p}在{zona}您可以获得很好的房产。"},
+                {'titulo': '📞 通话', 'msg': f"您好 {nombre}，这周能给我10分钟吗？{zona}有新选项。"},
             ],
             'dias7': [
-                {'titulo': '🔄 新背景（推荐）', 'msg': f"您好 {nombre}，您好吗？{zona}的市场本周发生了变化——有2套房产降价了。您还在找吗？"},
-                {'titulo': '❓ 诚实的问题', 'msg': f"您好 {nombre}，您还对{zona}的房产感兴趣吗，还是您的计划改变了？"},
-                {'titulo': '📸 新房源', 'msg': f"您好 {nombre}！{zona}刚来了一套房产，让我想起了您在寻找的。我给您看看吗？完全没有任何义务。"},
+                {'titulo': '🔄 新背景（推荐）', 'msg': f"您好 {nombre}，{zona}市场本周变化——2套降价。您还在找吗？"},
+                {'titulo': '❓ 诚实', 'msg': f"您好 {nombre}，您还对{zona}感兴趣吗？"},
+                {'titulo': '📸 新房源', 'msg': f"您好 {nombre}！{zona}刚来了新房产。我给您看吗？"},
             ],
             'dias14': [
-                {'titulo': '⏰ 紧迫感（推荐）', 'msg': f"您好 {nombre}，我在{zona}为您考虑的一套房产今天收到了报价。在成交之前，您想看看吗？"},
-                {'titulo': '📞 直接通话', 'msg': f"您好 {nombre}，这周我们能通话5分钟吗？我在{zona}有一套在{p}范围内的房产，我认为您会非常喜欢。"},
-                {'titulo': '💰 降价了', 'msg': f"您好 {nombre}，好消息——{zona}的一套房产本周降价了。您现在有兴趣看看吗？"},
+                {'titulo': '⏰ 紧迫（推荐）', 'msg': f"您好 {nombre}，{zona}一套房产今天收到报价。想看吗？"},
+                {'titulo': '📞 通话', 'msg': f"您好 {nombre}，这周5分钟？{zona}有适合{p}的房产。"},
+                {'titulo': '💰 降价', 'msg': f"您好 {nombre}，{zona}一套房产降价了。有兴趣吗？"},
             ],
             'dias30': [
-                {'titulo': '🔄 诚实的重新激活（推荐）', 'msg': f"您好 {nombre}，您还在考虑在{zona}买房吗，还是您的计划改变了？"},
-                {'titulo': '🆕 新角度', 'msg': f"您好 {nombre}，{zona}来了一些具有不同特点的新房产。值得给您发一些选项吗？"},
-                {'titulo': '🤝 无压力', 'msg': f"您好 {nombre}，希望您一切都好。我写信不是为了推销——只是想知道我是否能在{zona}方面为您提供帮助。"},
+                {'titulo': '🔄 重新激活（推荐）', 'msg': f"您好 {nombre}，您还在考虑{zona}的房产吗？"},
+                {'titulo': '🆕 新角度', 'msg': f"您好 {nombre}，{zona}来了新房产。发些选项给您吗？"},
+                {'titulo': '🤝 无压力', 'msg': f"您好 {nombre}，我能在{zona}方面为您提供帮助吗？"},
             ],
             'ultimo': [
-                {'titulo': '📊 最后机会（推荐）', 'msg': f"您好 {nombre}，这是我最后一条消息。如果您已经找到了房产，我真的很高兴。如果您还在{zona}找，我在这里。"},
-                {'titulo': '🚪 开放的大门', 'msg': f"您好 {nombre}，我明白时机可能不合适。当您恢复在{zona}的搜索时，我很乐意帮助您。"},
-                {'titulo': '🎯 推荐', 'msg': f"您好 {nombre}，即使您不再在{zona}找房，您认识有人在找吗？"},
+                {'titulo': '📊 最后消息（推荐）', 'msg': f"您好 {nombre}，这是最后一条消息。如果还在{zona}找，我在这里。"},
+                {'titulo': '🚪 开放', 'msg': f"您好 {nombre}，当您恢复在{zona}的搜索时，我很乐意帮助。"},
+                {'titulo': '🎯 推荐', 'msg': f"您好 {nombre}，您认识在{zona}找房的人吗？"},
             ],
         },
     }
@@ -487,7 +537,6 @@ def generar_respuesta_sugerida(lead, lang='es'):
     if dias <= 14: return t['dias14']
     if dias <= 30: return t['dias30']
     return t['ultimo']
-
 
 def job_seguimiento_automatico():
     print(f"🔄 [{datetime.now().strftime('%Y-%m-%d %H:%M')}] Ejecutando seguimiento automático...")
@@ -520,17 +569,22 @@ def job_seguimiento_automatico():
     except Exception as e:
         print(f"❌ Error en seguimiento automático: {e}")
 
-
 @app.before_request
 def verificar_sesion():
     rutas_publicas = ['formulario', 'formulario_asesor', 'index', 'seleccion_idioma_login',
                       'static', 'login', 'cambiar_idioma', 'cron_seguimiento', 'admin_login',
-                      'inicio_formulario', 'chat_inmobiliario', 'test_chat']
+                      'inicio_formulario', 'chat_inmobiliario', 'test_chat', 'inventario_publico']
     if request.endpoint in rutas_publicas:
         return
     if request.endpoint and request.endpoint.startswith('admin'):
         if not session.get('admin'):
             return redirect(url_for('admin_login'))
+        # ✅ Expiración de sesión admin (2 horas)
+        admin_time = session.get('admin_time')
+        if admin_time:
+            if datetime.now() - datetime.fromisoformat(admin_time) > timedelta(hours=2):
+                session.clear()
+                return redirect(url_for('admin_login'))
         return
     if 'cliente' in session:
         login_time = session.get('login_time')
@@ -550,6 +604,8 @@ def agregar_headers_seguridad(response):
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    # ✅ Content Security Policy básico
+    response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
     return response
 
 def calcular_entropia_mensaje(texto):
@@ -686,20 +742,30 @@ def generar_pdf_leads(cliente_id, periodo="todo", cliente_nombre="", textos=None
 # ============================================================
 
 @app.route("/admin/login", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
 def admin_login():
     error = None
     if request.method == "POST":
+        # ✅ CSRF check en login de admin
+        token_form = request.form.get('csrf_token')
+        token_session = session.get('csrf_token')
+        if not token_form or not token_session or not secrets.compare_digest(token_form, token_session):
+            error = "Error de seguridad. Recarga la página."
+            return render_template("admin_login.html", error=error)
         password = request.form.get("password", "")
         admin_pass = os.environ.get("ADMIN_PASSWORD", "admin_diego_2024")
-        if password == admin_pass:
+        if secrets.compare_digest(password, admin_pass):
             session["admin"] = True
             session["admin_time"] = datetime.now().isoformat()
+            log_accion('ADMIN_LOGIN', 'Login exitoso', get_remote_address())
             return redirect(url_for('admin_panel'))
+        log_accion('ADMIN_LOGIN_FAIL', 'Contraseña incorrecta', get_remote_address())
         error = "Contraseña incorrecta"
     return render_template("admin_login.html", error=error)
 
 @app.route("/admin/logout")
 def admin_logout():
+    log_accion('ADMIN_LOGOUT', '', get_remote_address())
     session.pop("admin", None)
     session.pop("admin_time", None)
     return redirect(url_for('admin_login'))
@@ -726,17 +792,21 @@ def admin_panel():
 def admin_nuevo_cliente():
     if not session.get("admin"):
         return redirect(url_for('admin_panel'))
+    verificar_csrf()
     try:
         cliente_id = request.form.get("id", "").strip().lower().replace(" ", "_")
         if not cliente_id:
             return redirect(url_for('admin_panel'))
+        password_raw = request.form.get("password", "").strip()
+        # ✅ Hashear password siempre
+        password_hash = generate_password_hash(password_raw) if password_raw else generate_password_hash(secrets.token_hex(16))
         data = {
             "id": cliente_id,
             "nombre": request.form.get("nombre", "").strip(),
             "email_vendedor": request.form.get("email_vendedor", "").strip(),
             "whatsapp": request.form.get("whatsapp", "").strip(),
             "usuario": request.form.get("usuario", "").strip(),
-            "password": request.form.get("password", "").strip(),
+            "password": password_hash,
             "idioma_default": request.form.get("idioma_default", "español"),
             "color_primario": request.form.get("color_primario", "#667eea"),
             "premium_email": True,
@@ -744,6 +814,7 @@ def admin_nuevo_cliente():
             "activo": True
         }
         supabase.table("clientes").insert(data).execute()
+        log_accion('ADMIN_NUEVO_CLIENTE', f"id={cliente_id}", get_remote_address())
     except Exception as e:
         print(f"❌ Error creando cliente: {e}")
     return redirect(url_for('admin_panel'))
@@ -752,6 +823,7 @@ def admin_nuevo_cliente():
 def admin_editar_cliente(cliente_id):
     if not session.get("admin"):
         return redirect(url_for('admin_panel'))
+    verificar_csrf()
     try:
         data = {
             "nombre": request.form.get("nombre", "").strip(),
@@ -765,8 +837,10 @@ def admin_editar_cliente(cliente_id):
         }
         nueva_password = request.form.get("password", "").strip()
         if nueva_password:
-            data["password"] = nueva_password
+            # ✅ Hashear password al editar
+            data["password"] = generate_password_hash(nueva_password)
         supabase.table("clientes").update(data).eq("id", cliente_id).execute()
+        log_accion('ADMIN_EDITAR_CLIENTE', f"id={cliente_id}", get_remote_address())
     except Exception as e:
         print(f"❌ Error editando cliente: {e}")
     return redirect(url_for('admin_panel'))
@@ -775,6 +849,7 @@ def admin_editar_cliente(cliente_id):
 def admin_toggle_cliente(cliente_id):
     if not session.get("admin"):
         return redirect(url_for('admin_panel'))
+    verificar_csrf()
     try:
         nuevo_estado = request.form.get("nuevo_estado", "false") == "true"
         supabase.table("clientes").update({"activo": nuevo_estado}).eq("id", cliente_id).execute()
@@ -786,11 +861,13 @@ def admin_toggle_cliente(cliente_id):
 def admin_borrar_cliente(cliente_id):
     if not session.get("admin"):
         return redirect(url_for('admin_panel'))
+    verificar_csrf()
     try:
         supabase.table("leads").delete().eq("vendedor", cliente_id).execute()
         supabase.table("propiedades").delete().eq("vendedor", cliente_id).execute()
         supabase.table("asesores").delete().eq("cliente_id", cliente_id).execute()
         supabase.table("clientes").delete().eq("id", cliente_id).execute()
+        log_accion('ADMIN_BORRAR_CLIENTE', f"id={cliente_id}", get_remote_address())
     except Exception as e:
         print(f"❌ Error eliminando cliente: {e}")
     return redirect(url_for('admin_panel'))
@@ -804,16 +881,19 @@ def crear_asesor(cliente_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean or not es_dueno():
         return "No autorizado", 403
+    verificar_csrf()
     try:
+        password_raw = request.form.get("password", "").strip()
         data = {
             "cliente_id": id_clean,
             "nombre": request.form.get("nombre", "").strip(),
             "usuario": request.form.get("usuario", "").strip(),
-            "password": request.form.get("password", "").strip(),
+            "password": generate_password_hash(password_raw) if password_raw else generate_password_hash(secrets.token_hex(16)),
             "email": request.form.get("email", "").strip(),
             "activo": True
         }
         supabase.table("asesores").insert(data).execute()
+        log_accion('CREAR_ASESOR', f"cliente={id_clean}", get_remote_address(), id_clean)
     except Exception as e:
         print(f"❌ Error creando asesor: {e}")
     return redirect(url_for('historial', cliente_id=id_clean))
@@ -823,6 +903,7 @@ def toggle_asesor(cliente_id, asesor_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean or not es_dueno():
         return "No autorizado", 403
+    verificar_csrf()
     try:
         nuevo_estado = request.form.get("nuevo_estado", "false") == "true"
         supabase.table("asesores").update({"activo": nuevo_estado}) \
@@ -836,6 +917,7 @@ def borrar_asesor(cliente_id, asesor_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean or not es_dueno():
         return "No autorizado", 403
+    verificar_csrf()
     try:
         supabase.table("leads").update({"asesor_id": None}).eq("asesor_id", asesor_id).execute()
         supabase.table("asesores").delete().eq("id", asesor_id).eq("cliente_id", id_clean).execute()
@@ -883,6 +965,7 @@ def asignar_asesor_lead(cliente_id, lead_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean or not es_dueno():
         return "No autorizado", 403
+    verificar_csrf()
     try:
         asesor_id = request.form.get("asesor_id")
         if asesor_id:
@@ -898,6 +981,10 @@ def guardar_nota(cliente_id, lead_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean:
         return "No autorizado", 403
+    # CSRF via header para requests AJAX
+    token_header = request.headers.get('X-CSRF-Token') or request.form.get('csrf_token')
+    if not token_header or not secrets.compare_digest(token_header, session.get('csrf_token', '')):
+        return jsonify({"ok": False, "error": "CSRF"}), 403
     try:
         nota = request.form.get("nota", "").strip()
         supabase.table("leads").update({
@@ -928,6 +1015,9 @@ def actualizar_etapa(cliente_id, lead_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean:
         return "No autorizado", 403
+    token_header = request.headers.get('X-CSRF-Token') or request.form.get('csrf_token')
+    if not token_header or not secrets.compare_digest(token_header, session.get('csrf_token', '')):
+        return jsonify({"ok": False, "error": "CSRF"}), 403
     try:
         nueva_etapa = request.form.get("etapa", "nuevo")
         etapas_validas = ['nuevo', 'contactado', 'visita', 'propuesta', 'cerrado']
@@ -945,7 +1035,7 @@ def actualizar_etapa(cliente_id, lead_id):
 @app.route("/cron/seguimiento/<secret_key>", methods=["GET"])
 def cron_seguimiento(secret_key):
     clave_esperada = os.environ.get("CRON_SECRET", "seguimiento_secreto_roberto_2024")
-    if secret_key != clave_esperada:
+    if not secrets.compare_digest(secret_key, clave_esperada):
         return "No autorizado", 403
     try:
         job_seguimiento_automatico()
@@ -970,6 +1060,7 @@ def seleccion_idioma(cliente_id):
     return render_template("bienvenida.html", cliente=vendedor, textos=textos, idioma_actual=lang)
 
 @app.route("/form/<cliente_id>", methods=["GET","POST"])
+@limiter.limit("20 per minute")
 def formulario(cliente_id):
     id_clean = cliente_id.lower()
     vendedor = get_cliente(id_clean)
@@ -978,17 +1069,28 @@ def formulario(cliente_id):
     lang = session.get('idioma', idioma_default)
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     if request.method == "POST":
+        verificar_csrf()
+        nombre = request.form.get("nombre", "").strip()
+        telefono = request.form.get("telefono", "").strip()
+        zona = request.form.get("zona", "").strip()
+        presupuesto = request.form.get("presupuesto", "").strip()
+        mensaje = request.form.get("mensaje", "").strip()
+        # ✅ Validación básica server-side
+        if not nombre or not telefono or not zona or not presupuesto or not mensaje:
+            return render_template("formulario.html", enviado=False, cliente_id=id_clean,
+                                   textos=textos, cliente_nombre=vendedor['nombre'],
+                                   idioma_actual=lang, error="Todos los campos son requeridos.")
         d = {
-            "nombre": request.form.get("nombre").strip(),
-            "telefono": request.form.get("telefono").strip(),
-            "zona_interes": request.form.get("zona").strip(),
-            "presupuesto": request.form.get("presupuesto").strip(),
-            "mensaje": request.form.get("mensaje").strip(),
+            "nombre": nombre[:100],
+            "telefono": telefono[:30],
+            "zona_interes": zona[:100],
+            "presupuesto": presupuesto[:30],
+            "mensaje": mensaje[:1000],
             "vendedor": id_clean
         }
         score_final = motor_scoring_global(d)
         clasificacion, temperatura = calificar_lead_profesional(score_final)
-        email_prospecto = request.form.get("email", "").strip()
+        email_prospecto = request.form.get("email", "").strip()[:150]
         lead_data = {
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
             **d,
@@ -1002,6 +1104,7 @@ def formulario(cliente_id):
         }
         try:
             supabase.table("leads").insert(lead_data).execute()
+            log_accion('NUEVO_LEAD', f"cliente={id_clean} nombre={nombre}", get_remote_address(), id_clean)
             if email_prospecto:
                 enviar_email_cliente(id_clean, d.get("nombre"), email_prospecto)
             notificar_vendedor_lead_nuevo(
@@ -1018,6 +1121,7 @@ def formulario(cliente_id):
                            textos=textos, cliente_nombre=vendedor['nombre'], idioma_actual=lang)
 
 @app.route("/form/<cliente_id>/<asesor_usuario>", methods=["GET","POST"])
+@limiter.limit("20 per minute")
 def formulario_asesor(cliente_id, asesor_usuario):
     id_clean = cliente_id.lower()
     vendedor = get_cliente(id_clean)
@@ -1034,17 +1138,27 @@ def formulario_asesor(cliente_id, asesor_usuario):
     lang = session.get('idioma', idioma_default)
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     if request.method == "POST":
+        verificar_csrf()
+        nombre = request.form.get("nombre", "").strip()
+        telefono = request.form.get("telefono", "").strip()
+        zona = request.form.get("zona", "").strip()
+        presupuesto = request.form.get("presupuesto", "").strip()
+        mensaje = request.form.get("mensaje", "").strip()
+        if not nombre or not telefono or not zona or not presupuesto or not mensaje:
+            return render_template("formulario.html", enviado=False, cliente_id=id_clean,
+                                   textos=textos, cliente_nombre=vendedor['nombre'],
+                                   idioma_actual=lang, error="Todos los campos son requeridos.")
         d = {
-            "nombre": request.form.get("nombre").strip(),
-            "telefono": request.form.get("telefono").strip(),
-            "zona_interes": request.form.get("zona").strip(),
-            "presupuesto": request.form.get("presupuesto").strip(),
-            "mensaje": request.form.get("mensaje").strip(),
+            "nombre": nombre[:100],
+            "telefono": telefono[:30],
+            "zona_interes": zona[:100],
+            "presupuesto": presupuesto[:30],
+            "mensaje": mensaje[:1000],
             "vendedor": id_clean
         }
         score_final = motor_scoring_global(d)
         clasificacion, temperatura = calificar_lead_profesional(score_final)
-        email_prospecto = request.form.get("email", "").strip()
+        email_prospecto = request.form.get("email", "").strip()[:150]
         lead_data = {
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
             **d,
@@ -1160,7 +1274,6 @@ def inventario(cliente_id):
     try:
         resultado = supabase.table("propiedades").select("*").eq("vendedor", id_clean).order("created_at", desc=True).execute()
         propiedades = resultado.data or []
-        # ✅ Si viene ?match=ID disparar el popup de matching
         match_id = request.args.get('match', '')
         return render_template("inventario.html", cliente_id=id_clean,
                                cliente_nombre=vendedor['nombre'],
@@ -1189,28 +1302,43 @@ def inventario_publico(cliente_id):
         return f"Error: {e}", 500
 
 @app.route("/agregar_propiedad/<cliente_id>", methods=["POST"])
+@limiter.limit("30 per hour")
 def agregar_propiedad(cliente_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean: return "Error 403: No autorizado.", 403
+    verificar_csrf()
     vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
         imagenes_urls = []
         archivos = request.files.getlist("imagenes")[:7]
         for archivo in archivos:
-            if archivo and archivo.filename:
-                resultado = cloudinary.uploader.upload(archivo,
-                    folder=f"bot_inmobiliaria/{id_clean}",
-                    transformation=[{"width": 1200, "height": 900, "crop": "limit", "quality": "auto"}])
-                imagenes_urls.append(resultado["secure_url"])
+            if not archivo_permitido(archivo):
+                continue  # Saltar archivos no permitidos silenciosamente
+            # ✅ Verificar tamaño (máx 8MB por imagen)
+            archivo.seek(0, 2)
+            size_mb = archivo.tell() / (1024 * 1024)
+            archivo.seek(0)
+            if size_mb > MAX_FILE_SIZE_MB:
+                continue
+            resultado = cloudinary.uploader.upload(archivo,
+                folder=f"bot_inmobiliaria/{id_clean}",
+                transformation=[{"width": 1200, "height": 900, "crop": "limit", "quality": "auto"}])
+            imagenes_urls.append(resultado["secure_url"])
+
         habitaciones = request.form.get("habitaciones", "").strip()
         banos = request.form.get("banos", "").strip()
         metros2 = request.form.get("metros2", "").strip()
+        titulo = request.form.get("titulo", "").strip()[:200]
+        ubicacion = request.form.get("ubicacion", "").strip()[:200]
+        if not titulo or not ubicacion:
+            return "Título y ubicación requeridos", 400
+
         propiedad_data = {
-            "titulo": request.form.get("titulo").strip(),
-            "descripcion": request.form.get("descripcion", "").strip(),
+            "titulo": titulo,
+            "descripcion": request.form.get("descripcion", "").strip()[:2000],
             "precio": float(request.form.get("precio", 0)),
-            "ubicacion": request.form.get("ubicacion").strip(),
+            "ubicacion": ubicacion,
             "habitaciones": int(habitaciones) if habitaciones else None,
             "banos": float(banos) if banos else None,
             "metros2": float(metros2) if metros2 else None,
@@ -1218,7 +1346,7 @@ def agregar_propiedad(cliente_id):
             "vendedor": id_clean, "estado": "disponible"
         }
         nueva_prop = supabase.table("propiedades").insert(propiedad_data).execute()
-        # ✅ Redirigir con ?match=ID para disparar popup de matching
+        log_accion('AGREGAR_PROPIEDAD', f"titulo={titulo}", get_remote_address(), id_clean)
         nuevo_id = nueva_prop.data[0]['id'] if nueva_prop.data else ''
         return redirect(url_for('inventario', cliente_id=id_clean, match=nuevo_id))
     except Exception as e:
@@ -1228,6 +1356,7 @@ def agregar_propiedad(cliente_id):
 def editar_propiedad(cliente_id, prop_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean: return "Error 403: No autorizado.", 403
+    verificar_csrf()
     vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
@@ -1241,19 +1370,25 @@ def editar_propiedad(cliente_id, prop_id):
         espacio_disponible = max(0, 7 - len(imagenes_existentes))
         archivos = request.files.getlist("imagenes")[:espacio_disponible]
         for archivo in archivos:
-            if archivo and archivo.filename:
-                resultado = cloudinary.uploader.upload(archivo,
-                    folder=f"bot_inmobiliaria/{id_clean}",
-                    transformation=[{"width": 1200, "height": 900, "crop": "limit", "quality": "auto"}])
-                imagenes_existentes.append(resultado["secure_url"])
+            if not archivo_permitido(archivo):
+                continue
+            archivo.seek(0, 2)
+            size_mb = archivo.tell() / (1024 * 1024)
+            archivo.seek(0)
+            if size_mb > MAX_FILE_SIZE_MB:
+                continue
+            resultado = cloudinary.uploader.upload(archivo,
+                folder=f"bot_inmobiliaria/{id_clean}",
+                transformation=[{"width": 1200, "height": 900, "crop": "limit", "quality": "auto"}])
+            imagenes_existentes.append(resultado["secure_url"])
         habitaciones = request.form.get("habitaciones", "").strip()
         banos = request.form.get("banos", "").strip()
         metros2 = request.form.get("metros2", "").strip()
         update_data = {
-            "titulo": request.form.get("titulo").strip(),
-            "descripcion": request.form.get("descripcion", "").strip(),
+            "titulo": request.form.get("titulo", "").strip()[:200],
+            "descripcion": request.form.get("descripcion", "").strip()[:2000],
             "precio": float(request.form.get("precio", 0)),
-            "ubicacion": request.form.get("ubicacion").strip(),
+            "ubicacion": request.form.get("ubicacion", "").strip()[:200],
             "habitaciones": int(habitaciones) if habitaciones else None,
             "banos": float(banos) if banos else None,
             "metros2": float(metros2) if metros2 else None,
@@ -1268,10 +1403,12 @@ def editar_propiedad(cliente_id, prop_id):
 def eliminar_propiedad(cliente_id, prop_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean: return "Error 403: No autorizado.", 403
+    verificar_csrf()
     vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
         supabase.table("propiedades").delete().eq("id", prop_id).eq("vendedor", id_clean).execute()
+        log_accion('ELIMINAR_PROPIEDAD', f"prop_id={prop_id}", get_remote_address(), id_clean)
         return redirect(url_for('inventario', cliente_id=id_clean))
     except Exception as e:
         return f"Error: {e}", 500
@@ -1323,6 +1460,7 @@ def descargar_pdf(cliente_id):
 def marcar_cliente(cliente_id, lead_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean: return "Error 403: No autorizado.", 403
+    verificar_csrf()
     vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
@@ -1333,6 +1471,7 @@ def marcar_cliente(cliente_id, lead_id):
                 "temperatura": "MUY_CALIENTE", "clasificacion": "💎 CLIENTE",
                 "seguimiento_enviado": True, "etapa": "cerrado"
             }).eq("id", lead_id).execute()
+            log_accion('MARCAR_CLIENTE', f"lead_id={lead_id} nombre={lead.get('nombre')}", get_remote_address(), id_clean)
             notificar_vendedor_cliente_marcado(
                 cliente_id=id_clean, nombre=lead.get("nombre"), telefono=lead.get("telefono"),
                 zona=lead.get("zona_interes"), presupuesto=lead.get("presupuesto")
@@ -1345,6 +1484,7 @@ def marcar_cliente(cliente_id, lead_id):
 def desmarcar_cliente(cliente_id, lead_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean: return "Error 403: No autorizado.", 403
+    verificar_csrf()
     vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
@@ -1383,6 +1523,7 @@ def login(cliente_id):
     lang = session.get('idioma', get_idioma_default(vendedor))
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     if request.method == "POST":
+        verificar_csrf()
         usuario_form = request.form.get("usuario", "").strip()
         password_form = request.form.get("password", "").strip()
         if usuario_form == vendedor["usuario"] and \
@@ -1391,6 +1532,7 @@ def login(cliente_id):
             session["login_time"] = datetime.now().isoformat()
             session.pop("asesor_id", None)
             session.pop("asesor_nombre", None)
+            log_accion('LOGIN_OK', f"usuario={usuario_form}", get_remote_address(), id_clean)
             return redirect(url_for('seleccion_idioma', cliente_id=id_clean))
         try:
             asesores_r = supabase.table("asesores").select("*") \
@@ -1404,20 +1546,25 @@ def login(cliente_id):
                     session["login_time"] = datetime.now().isoformat()
                     session["asesor_id"] = asesor["id"]
                     session["asesor_nombre"] = asesor["nombre"]
+                    log_accion('LOGIN_ASESOR_OK', f"asesor={usuario_form}", get_remote_address(), id_clean)
                     return redirect(url_for('historial', cliente_id=id_clean))
         except Exception as e:
             print(f"⚠️ Error consultando asesores: {e}")
-        print(f"⚠️ Login fallido para {id_clean} desde {get_remote_address()}")
+        log_accion('LOGIN_FAIL', f"usuario={usuario_form}", get_remote_address(), id_clean)
         return render_template("login.html", error="Credenciales Invalidas", cliente=vendedor, textos=textos)
     return render_template("login.html", cliente=vendedor, textos=textos)
 
 @app.route("/logout/<cliente_id>")
 def logout(cliente_id):
+    log_accion('LOGOUT', '', get_remote_address(), session.get('cliente', ''))
     session.clear()
     return redirect(url_for('login', cliente_id=cliente_id.lower()))
 
 @app.route("/idioma/<lang>/<proximo>/<cliente_id>")
 def cambiar_idioma(lang, proximo, cliente_id):
+    idiomas_validos = ['es', 'en', 'fr', 'de', 'pt', 'zh']
+    if lang not in idiomas_validos:
+        lang = 'es'
     session['idioma'] = lang
     return redirect(url_for(proximo, cliente_id=cliente_id.lower()))
 
@@ -1481,6 +1628,7 @@ def test_chat(cliente_id):
         return jsonify({"ok": False, "error": str(e), "key_prefix": api_key[:12]})
 
 @app.route("/api/chat/<cliente_id>", methods=["POST"])
+@limiter.limit("30 per minute")
 def chat_inmobiliario(cliente_id):
     id_clean = cliente_id.lower()
     vendedor = get_cliente(id_clean)
@@ -1488,8 +1636,12 @@ def chat_inmobiliario(cliente_id):
         return jsonify({"response": "Lo siento, no pude conectarme."}), 200
     try:
         data = request.get_json()
-        messages = data.get("messages", [])
+        if not data:
+            return jsonify({"response": "Datos inválidos."}), 400
+        messages = data.get("messages", [])[:20]  # Limitar historial
         lang = data.get("lang", "es")
+        if lang not in ['es', 'en', 'fr', 'de', 'pt', 'zh']:
+            lang = 'es'
         api_key = os.environ.get("OPENROUTER_API_KEY", "")
         if not api_key:
             return jsonify({"response": "Servicio no disponible."}), 200
@@ -1532,8 +1684,9 @@ INSTRUCTIONS:
         messages_recientes = messages[-4:] if len(messages) > 4 else messages
         messages_payload = [{"role": "system", "content": system_prompt}]
         for msg in messages_recientes:
-            role = "user" if msg["role"] == "user" else "assistant"
-            messages_payload.append({"role": role, "content": msg["content"]})
+            role = "user" if msg.get("role") == "user" else "assistant"
+            content = str(msg.get("content", ""))[:500]  # Limitar longitud
+            messages_payload.append({"role": role, "content": content})
         text = llamar_openrouter(api_key, messages_payload)
         if text:
             return jsonify({"response": text})
@@ -1543,15 +1696,15 @@ INSTRUCTIONS:
         print(f"❌ Error chat: {e}")
         wa = vendedor.get('whatsapp', '') if vendedor else ''
         error_msgs = {
-            'es': f"Nuestro asistente está ocupado en este momento 🔧 Escríbenos directamente por WhatsApp y te atendemos al instante: {wa} 💬",
-            'en': f"Our assistant is busy right now 🔧 Write us directly on WhatsApp for instant help: {wa} 💬",
-            'fr': f"Notre assistant est occupé 🔧 Écrivez-nous sur WhatsApp: {wa} 💬",
+            'es': f"Nuestro asistente está ocupado 🔧 Escríbenos por WhatsApp: {wa} 💬",
+            'en': f"Our assistant is busy 🔧 WhatsApp: {wa} 💬",
+            'fr': f"Notre assistant est occupé 🔧 WhatsApp: {wa} 💬",
             'de': f"Unser Assistent ist beschäftigt 🔧 WhatsApp: {wa} 💬",
             'pt': f"Nosso assistente está ocupado 🔧 WhatsApp: {wa} 💬",
-            'zh': f"我们的助手很忙 🔧 WhatsApp: {wa} 💬"
+            'zh': f"助手很忙 🔧 WhatsApp: {wa} 💬"
         }
         try:
-            l = request.get_json(silent=True).get('lang', 'es')
+            l = request.get_json(silent=True).get('lang', 'es') if request.get_json(silent=True) else 'es'
         except:
             l = 'es'
         return jsonify({"response": error_msgs.get(l, error_msgs['es'])}), 200
@@ -1559,6 +1712,14 @@ INSTRUCTIONS:
 @app.route("/")
 def index():
     return "PropTech Global Engine V4.0 [Active Mode] 🌐🚀"
+
+@app.errorhandler(403)
+def forbidden(e):
+    return "<h2>403 — Acceso denegado</h2>", 403
+
+@app.errorhandler(413)
+def archivo_muy_grande(e):
+    return jsonify({"error": "Archivo demasiado grande. Máximo 20MB total."}), 413
 
 @app.errorhandler(429)
 def demasiados_intentos(e):
