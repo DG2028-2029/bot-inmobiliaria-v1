@@ -134,6 +134,17 @@
             background: rgba(255,255,255,0.07);
             box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
         }
+        /* ✅ Error box */
+        .error-box {
+            background: rgba(231,76,60,0.1);
+            border: 1px solid rgba(231,76,60,0.3);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 13px;
+            color: #ff6b6b;
+            margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
         .checkbox-group {
             display: flex; align-items: flex-start; gap: 11px;
             margin: 18px 0;
@@ -149,6 +160,16 @@
             accent-color: #667eea;
         }
         .checkbox-group label { font-size: 12px; color: rgba(255,255,255,0.33); line-height: 1.6; cursor: pointer; }
+        /* ✅ Aviso de privacidad */
+        .privacy-notice {
+            font-size: 11px;
+            color: rgba(255,255,255,0.2);
+            text-align: center;
+            margin-top: 12px;
+            line-height: 1.5;
+        }
+        .privacy-notice a { color: rgba(102,126,234,0.6); text-decoration: none; }
+        .privacy-notice a:hover { color: #667eea; }
         .btn-submit {
             width: 100%; padding: 14px;
             background: linear-gradient(135deg, #667eea, #764ba2);
@@ -158,6 +179,7 @@
             box-shadow: 0 8px 24px rgba(102,126,234,0.3);
         }
         .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(102,126,234,0.4); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         .success-card {
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.08);
@@ -190,8 +212,10 @@
         }
         .btn-inv:hover { background: rgba(142,68,173,0.3); color: white; }
         @media (max-width: 480px) {
+            body { padding: 16px; }
             .form-card { padding: 22px 18px; }
             .brand { padding: 14px 16px; }
+            .lang-wrapper { top: 12px; right: 12px; }
         }
     </style>
 </head>
@@ -220,6 +244,14 @@
     'fr': 'Email (Optionnel)', 'de': 'E-Mail (Optional)',
     'pt': 'Email (Opcional)', 'zh': '电子邮件（可选）'
 } %}
+{% set privacy_texts = {
+    'es': 'Al enviar este formulario, aceptas el tratamiento de tus datos personales conforme a nuestra política de privacidad.',
+    'en': 'By submitting this form, you agree to the processing of your personal data per our privacy policy.',
+    'fr': 'En soumettant ce formulaire, vous acceptez le traitement de vos données personnelles.',
+    'de': 'Mit dem Absenden stimmen Sie der Verarbeitung Ihrer personenbezogenen Daten zu.',
+    'pt': 'Ao enviar este formulário, você concorda com o tratamento de seus dados pessoais.',
+    'zh': '提交此表单即表示您同意我们处理您的个人数据。'
+} %}
 {% set lang = idioma_actual if idioma_actual in sistema_label else 'es' %}
 
 <div class="lang-wrapper">
@@ -241,7 +273,7 @@
             <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'fr' %}class="activo"{% endif %}>
                 <span class="lang-menu-flag">🇫🇷</span> {{ textos.btn_fr }}
             </a>
-            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='herramientas', cliente_id=cliente_id) }}" {% if idioma_actual == 'de' %}class="activo"{% endif %}>
+            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'de' %}class="activo"{% endif %}>
                 <span class="lang-menu-flag">🇩🇪</span> {{ textos.btn_de }}
             </a>
             <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'pt' %}class="activo"{% endif %}>
@@ -267,39 +299,47 @@
     <div class="form-card">
         <div class="form-title">{{ textos.titulo_form }}</div>
         <div class="form-sub">{{ subtitulo_texts[lang] }}</div>
-        <form method="POST">
+
+        {% if error %}
+        <div class="error-box">⚠️ {{ error }}</div>
+        {% endif %}
+
+        <form method="POST" id="mainForm" onsubmit="return validarForm()">
+            <!-- ✅ CSRF TOKEN -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
             <div class="form-group">
                 <label class="form-label">{{ textos.placeholder_nombre }}</label>
                 <div class="input-wrap">
                     <span class="input-icon">👤</span>
-                    <input type="text" name="nombre" placeholder="{{ textos.placeholder_nombre }}" required>
+                    <input type="text" name="nombre" placeholder="{{ textos.placeholder_nombre }}" required maxlength="100">
                 </div>
             </div>
             <div class="form-group">
                 <label class="form-label">{{ textos.placeholder_tel }}</label>
                 <div class="input-wrap">
                     <span class="input-icon">📱</span>
-                    <input type="tel" name="telefono" placeholder="+502 0000 0000" required>
+                    <input type="tel" name="telefono" placeholder="+502 0000 0000" required maxlength="30">
                 </div>
             </div>
             <div class="form-group">
                 <label class="form-label">{{ textos.placeholder_zona }}</label>
                 <div class="input-wrap">
                     <span class="input-icon">📍</span>
-                    <input type="text" name="zona" placeholder="{{ textos.placeholder_zona }}" required>
+                    <input type="text" name="zona" placeholder="{{ textos.placeholder_zona }}" required maxlength="100">
                 </div>
             </div>
             <div class="form-group">
                 <label class="form-label">{{ textos.placeholder_presupuesto }}</label>
                 <div class="input-wrap">
                     <span class="input-icon">💰</span>
-                    <input type="number" name="presupuesto" placeholder="$ 0.00" required>
+                    <input type="number" name="presupuesto" placeholder="$ 0.00" required min="0" max="999999999">
                 </div>
             </div>
             <div class="form-group">
                 <label class="form-label">{{ textos.placeholder_propiedad }}</label>
                 <div class="input-wrap">
-                    <textarea name="mensaje" placeholder="{{ textos.placeholder_propiedad }}" required style="padding-left:38px;"></textarea>
+                    <textarea name="mensaje" placeholder="{{ textos.placeholder_propiedad }}" required maxlength="1000" style="padding-left:38px;"></textarea>
                     <span class="input-icon" style="top:16px;transform:none;">💬</span>
                 </div>
             </div>
@@ -307,14 +347,15 @@
                 <label class="form-label">{{ email_label_texts[lang] }}</label>
                 <div class="input-wrap">
                     <span class="input-icon">📧</span>
-                    <input type="email" name="email" placeholder="correo@ejemplo.com">
+                    <input type="email" name="email" placeholder="correo@ejemplo.com" maxlength="150">
                 </div>
             </div>
             <div class="checkbox-group">
                 <input type="checkbox" id="terminos" name="terminos" required>
                 <label for="terminos">{{ textos.acepto_terminos }}</label>
             </div>
-            <button type="submit" class="btn-submit">{{ textos.boton_enviar }} →</button>
+            <button type="submit" class="btn-submit" id="btnEnviar">{{ textos.boton_enviar }} →</button>
+            <p class="privacy-notice">🔒 {{ privacy_texts[lang] }}</p>
         </form>
     </div>
     {% else %}
@@ -340,6 +381,15 @@ document.addEventListener('click', function(e) {
     const sel = document.getElementById('langSelector');
     if (sel && !sel.contains(e.target)) sel.classList.remove('abierto');
 });
+
+function validarForm() {
+    const btn = document.getElementById('btnEnviar');
+    btn.disabled = true;
+    btn.textContent = '⏳ Enviando...';
+    // Re-habilitar si hay error del servidor (navegación de vuelta)
+    setTimeout(() => { btn.disabled = false; btn.textContent = '{{ textos.boton_enviar }} →'; }, 8000);
+    return true;
+}
 </script>
 </body>
 </html>
