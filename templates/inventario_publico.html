@@ -8,156 +8,151 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .header h1 { color: #2c3e50; font-size: 24px; }
-        .header p { color: #666; margin-top: 5px; }
-        .btn-whatsapp { background: #25D366; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; }
-        .btn-whatsapp:hover { background: #20ba5c; transform: translateY(-2px); }
-        .filtros-bar { background: white; padding: 16px 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-        .filtros-bar input { padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; }
-        .filtros-bar input[type="text"] { flex: 2; min-width: 160px; }
-        .filtros-bar input[type="number"] { flex: 1; min-width: 100px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); flex-wrap: wrap; gap: 12px; }
+        .header h1 { color: #2c3e50; font-size: 22px; }
+        .header p { color: #666; margin-top: 5px; font-size: 13px; }
+        .btn-whatsapp { background: #25D366; color: white; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; white-space: nowrap; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        .btn-whatsapp:hover { background: #20ba5c; }
+        .filtros-bar { background: white; padding: 14px 16px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .filtros-bar input { padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; -webkit-appearance: none; }
+        .filtros-bar input[type="text"] { flex: 2; min-width: 140px; }
+        .filtros-bar input[type="number"] { flex: 1; min-width: 90px; }
         .filtros-bar input:focus { outline: none; border-color: #667eea; }
-        .btn-limpiar-filtros { padding: 10px 16px; background: #95a5a6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; font-family: inherit; }
+        .btn-limpiar-filtros { padding: 10px 14px; background: #95a5a6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; font-family: inherit; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
         .btn-limpiar-filtros:hover { background: #7f8c8d; }
-        .propiedades-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-bottom: 40px; }
-        .propiedad-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.3s; position: relative; }
-        .propiedad-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
-        .propiedad-card.seleccionada { box-shadow: 0 0 0 3px #667eea, 0 8px 25px rgba(102,126,234,0.3); transform: translateY(-5px); }
+        .propiedades-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 18px; margin-bottom: 80px; }
+        .propiedad-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.3s, box-shadow 0.3s; position: relative; }
+        .propiedad-card:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .propiedad-card.seleccionada { box-shadow: 0 0 0 3px #667eea, 0 8px 25px rgba(102,126,234,0.3); transform: translateY(-4px); }
+
+        /* ✅ GALERÍA — fixes mobile */
         .galeria { position: relative; width: 100%; height: 200px; background: #1a1a2e; overflow: hidden; }
-        .galeria img { width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.4s; }
+        .galeria img {
+            width: 100%; height: 100%; object-fit: cover;
+            position: absolute; top: 0; left: 0;
+            opacity: 0; transition: opacity 0.4s;
+            /* ✅ Fix iOS rendering */
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
         .galeria img.activa { opacity: 1; }
         .galeria-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 48px; color: white; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
         .galeria-nav { position: absolute; bottom: 8px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; z-index: 2; }
-        .galeria-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; border: none; transition: 0.3s; }
+        .galeria-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; border: none; transition: 0.3s; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
         .galeria-dot.activo { background: white; }
-        .galeria-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; z-index: 2; transition: 0.2s; }
-        .galeria-btn:hover { background: rgba(0,0,0,0.8); }
+        .galeria-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; z-index: 2; transition: 0.2s; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        .galeria-btn:hover, .galeria-btn:active { background: rgba(0,0,0,0.8); }
         .galeria-btn.prev { left: 8px; }
         .galeria-btn.next { right: 8px; }
         .contador-fotos { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; font-size: 11px; padding: 3px 8px; border-radius: 10px; z-index: 2; }
-        .propiedad-contenido { padding: 18px; }
-        .propiedad-titulo { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 8px; }
-        .propiedad-precio { font-size: 22px; color: #27ae60; font-weight: bold; margin-bottom: 10px; }
-        .propiedad-ubicacion { color: #666; font-size: 13px; margin-bottom: 8px; }
-        .propiedad-specs { display: flex; gap: 14px; margin-bottom: 10px; font-size: 12px; color: #666; }
-        .propiedad-specs span { display: flex; align-items: center; gap: 4px; }
-        .badge-disponible { display: inline-block; background: #eafaf1; color: #27ae60; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 20px; margin-bottom: 12px; }
-        .propiedad-descripcion { color: #555; font-size: 13px; line-height: 1.5; margin-bottom: 14px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
-        .card-botones { display: flex; gap: 8px; flex-wrap: wrap; }
-        .btn-ver-detalle { flex: 1; padding: 10px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.3s; font-family: inherit; }
-        .btn-ver-detalle:hover { background: #5568d3; }
-        .btn-consultar { flex: 1; padding: 10px; background: #25D366; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; text-decoration: none; text-align: center; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
-        .btn-consultar:hover { background: #20ba5c; }
-        .btn-comparar-card { width: 100%; padding: 9px; background: #f0f3ff; color: #667eea; border: 1.5px solid #667eea; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.3s; font-family: inherit; margin-top: 6px; }
-        .btn-comparar-card:hover { background: #667eea; color: white; }
-        .btn-comparar-card.activo { background: #667eea; color: white; }
-        .compara-badge {
-            position: absolute; top: 10px; left: 10px; z-index: 5;
-            background: #667eea; color: white; border-radius: 50%;
-            width: 28px; height: 28px; display: none;
-            align-items: center; justify-content: center;
-            font-size: 14px; font-weight: bold;
-            box-shadow: 0 2px 8px rgba(102,126,234,0.5);
-        }
+        .compara-badge { position: absolute; top: 10px; left: 10px; z-index: 5; background: #667eea; color: white; border-radius: 50%; width: 28px; height: 28px; display: none; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; box-shadow: 0 2px 8px rgba(102,126,234,0.5); }
         .compara-badge.visible { display: flex; }
-        .vacio { text-align: center; padding: 60px 20px; background: white; border-radius: 12px; color: #95a5a6; grid-column: 1/-1; }
+
+        .propiedad-contenido { padding: 16px; }
+        .propiedad-titulo { font-size: 17px; font-weight: bold; color: #2c3e50; margin-bottom: 6px; line-height: 1.3; }
+        .propiedad-precio { font-size: 20px; color: #27ae60; font-weight: bold; margin-bottom: 8px; }
+        .propiedad-ubicacion { color: #666; font-size: 13px; margin-bottom: 8px; }
+        .propiedad-specs { display: flex; gap: 12px; margin-bottom: 10px; font-size: 12px; color: #666; flex-wrap: wrap; }
+        .propiedad-specs span { display: flex; align-items: center; gap: 4px; }
+        .badge-disponible { display: inline-block; background: #eafaf1; color: #27ae60; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 20px; margin-bottom: 10px; }
+        .propiedad-descripcion { color: #555; font-size: 13px; line-height: 1.5; margin-bottom: 12px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+        .card-botones { display: flex; gap: 8px; margin-bottom: 8px; }
+        .btn-ver-detalle { flex: 1; padding: 10px 8px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; font-family: inherit; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        .btn-ver-detalle:hover, .btn-ver-detalle:active { background: #5568d3; }
+        .btn-consultar { flex: 1; padding: 10px 8px; background: #25D366; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; text-decoration: none; text-align: center; transition: 0.2s; display: flex; align-items: center; justify-content: center; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        .btn-consultar:hover, .btn-consultar:active { background: #20ba5c; }
+        .btn-comparar-card { width: 100%; padding: 9px; background: #f0f3ff; color: #667eea; border: 1.5px solid #667eea; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; font-family: inherit; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        .btn-comparar-card:hover, .btn-comparar-card:active { background: #667eea; color: white; }
+        .btn-comparar-card.activo { background: #667eea; color: white; }
+        .vacio { text-align: center; padding: 50px 20px; background: white; border-radius: 12px; color: #95a5a6; grid-column: 1/-1; }
         .footer-texto { text-align: center; color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 20px; padding-bottom: 20px; }
 
-        /* ===== MODALES ===== */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); overflow-y: auto; }
-        .modal-contenido { background-color: white; margin: 4% auto; padding: 30px; border-radius: 12px; width: 90%; max-width: 620px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; }
-        .modal-header h2 { color: #2c3e50; font-size: 20px; }
-        .close { font-size: 28px; font-weight: bold; color: #95a5a6; cursor: pointer; }
-        .detalle-galeria { width: 100%; height: 300px; border-radius: 10px; background: #1a1a2e; position: relative; margin-bottom: 20px; overflow: hidden; }
-        .detalle-galeria img { width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.4s; }
+        /* ===== MODALES — ✅ fix scroll iOS ===== */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .modal-contenido {
+            background-color: white; margin: 4% auto; padding: 24px;
+            border-radius: 12px; width: 92%; max-width: 620px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            /* ✅ Fix iOS modal scroll */
+            position: relative;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 2px solid #ecf0f1; padding-bottom: 13px; position: sticky; top: 0; background: white; z-index: 1; }
+        .modal-header h2 { color: #2c3e50; font-size: 18px; }
+        .close { font-size: 28px; font-weight: bold; color: #95a5a6; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; line-height: 1; padding: 4px; }
+        .detalle-galeria { width: 100%; height: 260px; border-radius: 10px; background: #1a1a2e; position: relative; margin-bottom: 18px; overflow: hidden; }
+        .detalle-galeria img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.4s; -webkit-backface-visibility: hidden; }
         .detalle-galeria img.activa { opacity: 1; }
         .detalle-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 64px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .detalle-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        .detalle-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
         .detalle-campo { background: #f8f9fa; padding: 12px; border-radius: 8px; }
         .detalle-campo-label { font-size: 11px; color: #999; text-transform: uppercase; margin-bottom: 4px; }
-        .detalle-campo-valor { font-size: 16px; color: #2c3e50; font-weight: bold; }
-        .detalle-specs { display: flex; gap: 16px; margin-bottom: 16px; background: #f8f9fa; padding: 12px; border-radius: 8px; flex-wrap: wrap; }
+        .detalle-campo-valor { font-size: 15px; color: #2c3e50; font-weight: bold; }
+        .detalle-specs { display: flex; gap: 14px; margin-bottom: 14px; background: #f8f9fa; padding: 12px; border-radius: 8px; flex-wrap: wrap; }
         .detalle-specs span { font-size: 13px; color: #2c3e50; font-weight: bold; display: flex; align-items: center; gap: 5px; }
-        .detalle-descripcion { background: #f8f9fa; padding: 14px; border-radius: 8px; font-size: 13px; color: #555; line-height: 1.7; margin-bottom: 20px; }
-        .btn-wa-detalle { width: 100%; padding: 14px; background: #25D366; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; text-decoration: none; display: block; text-align: center; transition: 0.3s; }
-        .btn-wa-detalle:hover { background: #20ba5c; }
+        .detalle-descripcion { background: #f8f9fa; padding: 14px; border-radius: 8px; font-size: 13px; color: #555; line-height: 1.7; margin-bottom: 18px; }
+        .btn-wa-detalle { width: 100%; padding: 14px; background: #25D366; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; text-decoration: none; display: block; text-align: center; transition: 0.2s; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        .btn-wa-detalle:hover, .btn-wa-detalle:active { background: #20ba5c; }
 
         /* ===== BARRA FLOTANTE COMPARAR ===== */
         #comparaBar {
             position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
-            background: white;
-            border-top: 3px solid #667eea;
-            box-shadow: 0 -8px 32px rgba(0,0,0,0.18);
-            padding: 14px 24px;
-            display: none;
-            align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
+            background: white; border-top: 3px solid #667eea;
+            box-shadow: 0 -6px 24px rgba(0,0,0,0.15);
+            padding: 12px 16px; display: none;
+            align-items: center; gap: 12px; flex-wrap: wrap;
         }
         #comparaBar.visible { display: flex; }
-        .compara-bar-titulo { font-size: 14px; font-weight: 700; color: #2c3e50; white-space: nowrap; }
-        .compara-bar-props { display: flex; gap: 10px; flex: 1; flex-wrap: wrap; }
-        .compara-chip {
-            display: flex; align-items: center; gap: 8px;
-            background: #f0f3ff; border: 1.5px solid #667eea;
-            border-radius: 20px; padding: 6px 12px;
-            font-size: 13px; font-weight: 600; color: #667eea;
-        }
-        .compara-chip-x {
-            background: none; border: none; cursor: pointer;
-            color: #667eea; font-size: 16px; line-height: 1;
-            padding: 0; font-weight: bold;
-        }
+        .compara-bar-titulo { font-size: 13px; font-weight: 700; color: #2c3e50; white-space: nowrap; }
+        .compara-bar-props { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; min-width: 0; }
+        .compara-chip { display: flex; align-items: center; gap: 6px; background: #f0f3ff; border: 1.5px solid #667eea; border-radius: 20px; padding: 5px 10px; font-size: 12px; font-weight: 600; color: #667eea; max-width: 130px; }
+        .compara-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .compara-chip-x { background: none; border: none; cursor: pointer; color: #667eea; font-size: 16px; line-height: 1; padding: 0; font-weight: bold; flex-shrink: 0; touch-action: manipulation; }
         .compara-chip-x:hover { color: #e74c3c; }
-        .compara-bar-btns { display: flex; gap: 8px; }
-        .btn-ver-compara {
-            padding: 10px 20px; background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white; border: none; border-radius: 8px;
-            font-size: 14px; font-weight: 700; cursor: pointer;
-            font-family: inherit; transition: 0.2s; white-space: nowrap;
-        }
-        .btn-ver-compara:hover { opacity: 0.88; transform: translateY(-1px); }
-        .btn-limpiar-compara {
-            padding: 10px 16px; background: #f8f9fa; border: 1px solid #ddd;
-            color: #666; border-radius: 8px; font-size: 13px;
-            font-weight: 600; cursor: pointer; font-family: inherit; transition: 0.2s;
-        }
-        .btn-limpiar-compara:hover { background: #eee; }
+        .compara-bar-btns { display: flex; gap: 8px; flex-shrink: 0; }
+        .btn-ver-compara { padding: 10px 16px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; touch-action: manipulation; }
+        .btn-limpiar-compara { padding: 10px 12px; background: #f8f9fa; border: 1px solid #ddd; color: #666; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; touch-action: manipulation; }
 
         /* ===== MODAL COMPARAR ===== */
-        #modalComparar .modal-contenido {
-            max-width: 960px; padding: 28px;
-        }
-        .compara-tabla-wrap { overflow-x: auto; }
-        .compara-tabla {
-            width: 100%; border-collapse: collapse; min-width: 500px;
-        }
-        .compara-tabla th {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white; padding: 14px 16px; font-size: 14px; font-weight: 700;
-            text-align: center; border: none;
-        }
-        .compara-tabla th:first-child { background: #f8f9fa; color: #666; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; width: 130px; text-align: left; }
-        .compara-tabla td { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 14px; color: #2c3e50; vertical-align: middle; }
-        .compara-tabla td:first-child { font-weight: 700; color: #666; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; text-align: left; background: #fafafa; }
+        #modalComparar .modal-contenido { max-width: 960px; }
+        .compara-tabla-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .compara-tabla { width: 100%; border-collapse: collapse; min-width: 460px; }
+        .compara-tabla th { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 12px 14px; font-size: 13px; font-weight: 700; text-align: center; border: none; }
+        .compara-tabla th:first-child { background: #f8f9fa; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; width: 100px; text-align: left; }
+        .compara-tabla td { padding: 11px 14px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 13px; color: #2c3e50; vertical-align: middle; }
+        .compara-tabla td:first-child { font-weight: 700; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; text-align: left; background: #fafafa; }
         .compara-tabla tr:hover td { background: #f8f9ff; }
         .compara-tabla tr:hover td:first-child { background: #f0f0f0; }
-        .compara-img { width: 100%; height: 140px; object-fit: cover; border-radius: 8px; }
-        .compara-img-placeholder { width: 100%; height: 140px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 40px; }
-        .compara-precio { font-size: 18px; font-weight: 800; color: #27ae60; }
-        .compara-mejor { background: #eafaf1; color: #27ae60; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px; display: inline-block; margin-top: 4px; }
-        .compara-spec { font-size: 16px; font-weight: 700; }
+        .compara-img { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; }
+        .compara-img-placeholder { width: 100%; height: 110px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 36px; }
+        .compara-precio { font-size: 16px; font-weight: 800; color: #27ae60; }
+        .compara-mejor { background: #eafaf1; color: #27ae60; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; display: inline-block; margin-top: 4px; }
+        .compara-spec { font-size: 15px; font-weight: 700; }
         td.compara-destacado { background: #f0f3ff !important; }
-        .compara-btn-wa { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #25D366; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 700; transition: 0.2s; }
-        .compara-btn-wa:hover { background: #20ba5c; }
-        .compara-desc { font-size: 12px; color: #666; line-height: 1.5; text-align: left; max-width: 220px; }
+        .compara-btn-wa { display: inline-flex; align-items: center; gap: 5px; padding: 8px 12px; background: #25D366; color: white; border-radius: 8px; text-decoration: none; font-size: 12px; font-weight: 700; touch-action: manipulation; }
+        .compara-desc { font-size: 11px; color: #666; line-height: 1.5; text-align: left; max-width: 180px; }
 
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 600px) {
-            #comparaBar { padding: 12px 16px; }
-            .compara-bar-titulo { font-size: 13px; }
-            #modalComparar .modal-contenido { padding: 16px; }
+            body { padding: 12px; }
+            .header { padding: 14px 16px; }
+            .header h1 { font-size: 18px; }
+            .propiedades-grid { grid-template-columns: 1fr; gap: 14px; margin-bottom: 100px; }
+            .galeria { height: 180px; }
+            .filtros-bar { gap: 6px; }
+            .filtros-bar input { font-size: 16px; } /* ✅ Evita zoom en iOS al enfocar */
+            .detalle-galeria { height: 220px; }
+            .detalle-info { grid-template-columns: 1fr; }
+            .modal-contenido { margin: 0 auto; border-radius: 12px 12px 0 0; position: fixed; bottom: 0; left: 0; right: 0; width: 100%; max-height: 90vh; }
+            #comparaBar { padding: 10px 12px; }
+            .compara-bar-props { display: none; }
+            .btn-ver-compara { font-size: 12px; padding: 9px 12px; }
+        }
+        @media (max-width: 380px) {
+            .card-botones { flex-direction: column; }
+            .btn-ver-detalle, .btn-consultar { width: 100%; }
         }
     </style>
 </head>
@@ -166,7 +161,7 @@
 {% set ip = {
     'es': {
         'titulo': '🏠 Propiedades Disponibles',
-        'contactar_wa': '💬 Contactar por WhatsApp',
+        'contactar_wa': '💬 Contactar',
         'buscar_zona': '📍 Buscar por zona...',
         'precio_min': 'Precio mín',
         'precio_max': 'Precio máx',
@@ -180,15 +175,15 @@
         'sin_result_texto': 'Prueba ajustando los filtros',
         'label_precio': 'Precio',
         'label_ubicacion': 'Ubicación',
-        'consultar_wa': '💬 Consultar esta propiedad por WhatsApp',
+        'consultar_wa': '💬 Consultar por WhatsApp',
         'consultar_wa_msg': 'Hola, me interesa la propiedad:',
         'consultar_wa_short': 'Hola, me interesa:',
         'comparar': '⚖️ Comparar',
         'comparando': '✓ Comparando',
         'compara_titulo': '⚖️ Comparando propiedades',
-        'compara_bar_titulo': '⚖️ Comparar seleccionadas',
+        'compara_bar_titulo': '⚖️ Comparar',
         'compara_ver': 'Ver comparación',
-        'compara_limpiar': 'Limpiar',
+        'compara_limpiar': '✕',
         'compara_precio': 'Precio',
         'compara_ubicacion': 'Ubicación',
         'compara_habs': 'Habitaciones',
@@ -198,13 +193,13 @@
         'compara_accion': 'Contactar',
         'compara_mejor_precio': '💰 Mejor precio',
         'compara_mas_grande': '📐 Más grande',
-        'compara_max': 'Máximo 3 propiedades para comparar',
-        'compara_min': 'Selecciona al menos 2 propiedades',
+        'compara_max': 'Máximo 3 propiedades',
+        'compara_min': 'Selecciona al menos 2',
         'sin_dato': '—',
     },
     'en': {
         'titulo': '🏠 Available Properties',
-        'contactar_wa': '💬 Contact via WhatsApp',
+        'contactar_wa': '💬 Contact',
         'buscar_zona': '📍 Search by area...',
         'precio_min': 'Min price',
         'precio_max': 'Max price',
@@ -218,15 +213,15 @@
         'sin_result_texto': 'Try adjusting the filters',
         'label_precio': 'Price',
         'label_ubicacion': 'Location',
-        'consultar_wa': '💬 Inquire about this property on WhatsApp',
-        'consultar_wa_msg': 'Hi, I am interested in the property:',
+        'consultar_wa': '💬 Inquire on WhatsApp',
+        'consultar_wa_msg': 'Hi, I am interested in:',
         'consultar_wa_short': 'Hi, I am interested in:',
         'comparar': '⚖️ Compare',
-        'comparando': '✓ Comparing',
+        'comparando': '✓ Selected',
         'compara_titulo': '⚖️ Comparing properties',
-        'compara_bar_titulo': '⚖️ Compare selected',
+        'compara_bar_titulo': '⚖️ Compare',
         'compara_ver': 'View comparison',
-        'compara_limpiar': 'Clear',
+        'compara_limpiar': '✕',
         'compara_precio': 'Price',
         'compara_ubicacion': 'Location',
         'compara_habs': 'Bedrooms',
@@ -236,14 +231,14 @@
         'compara_accion': 'Contact',
         'compara_mejor_precio': '💰 Best price',
         'compara_mas_grande': '📐 Largest',
-        'compara_max': 'Maximum 3 properties to compare',
-        'compara_min': 'Select at least 2 properties',
+        'compara_max': 'Maximum 3 properties',
+        'compara_min': 'Select at least 2',
         'sin_dato': '—',
     },
     'fr': {
         'titulo': '🏠 Propriétés Disponibles',
-        'contactar_wa': '💬 Contacter par WhatsApp',
-        'buscar_zona': '📍 Rechercher par zone...',
+        'contactar_wa': '💬 Contacter',
+        'buscar_zona': '📍 Rechercher...',
         'precio_min': 'Prix min',
         'precio_max': 'Prix max',
         'limpiar': 'Effacer',
@@ -251,20 +246,20 @@
         'ver_detalle': '🔍 Voir détail',
         'sin_descripcion': 'Aucune description',
         'vacio_titulo': 'Aucune propriété disponible',
-        'vacio_texto': 'Contactez-nous pour plus d\'informations',
+        'vacio_texto': 'Contactez-nous',
         'sin_result_titulo': 'Aucun résultat',
         'sin_result_texto': 'Ajustez les filtres',
         'label_precio': 'Prix',
         'label_ubicacion': 'Emplacement',
-        'consultar_wa': '💬 Renseignez-vous via WhatsApp',
+        'consultar_wa': '💬 WhatsApp',
         'consultar_wa_msg': 'Bonjour, je suis intéressé par:',
-        'consultar_wa_short': 'Bonjour, je suis intéressé par:',
+        'consultar_wa_short': 'Bonjour, intéressé par:',
         'comparar': '⚖️ Comparer',
-        'comparando': '✓ Comparé',
+        'comparando': '✓ Sélectionné',
         'compara_titulo': '⚖️ Comparaison',
-        'compara_bar_titulo': '⚖️ Comparer sélectionnés',
+        'compara_bar_titulo': '⚖️ Comparer',
         'compara_ver': 'Voir comparaison',
-        'compara_limpiar': 'Effacer',
+        'compara_limpiar': '✕',
         'compara_precio': 'Prix',
         'compara_ubicacion': 'Emplacement',
         'compara_habs': 'Chambres',
@@ -274,35 +269,35 @@
         'compara_accion': 'Contacter',
         'compara_mejor_precio': '💰 Meilleur prix',
         'compara_mas_grande': '📐 Plus grand',
-        'compara_max': 'Maximum 3 propriétés',
+        'compara_max': 'Maximum 3',
         'compara_min': 'Sélectionnez au moins 2',
         'sin_dato': '—',
     },
     'de': {
         'titulo': '🏠 Verfügbare Immobilien',
-        'contactar_wa': '💬 Per WhatsApp kontaktieren',
-        'buscar_zona': '📍 Nach Bereich suchen...',
+        'contactar_wa': '💬 Kontakt',
+        'buscar_zona': '📍 Suchen...',
         'precio_min': 'Mindestpreis',
         'precio_max': 'Höchstpreis',
         'limpiar': 'Löschen',
         'disponible': '✅ Verfügbar',
-        'ver_detalle': '🔍 Details ansehen',
+        'ver_detalle': '🔍 Details',
         'sin_descripcion': 'Keine Beschreibung',
-        'vacio_titulo': 'Noch keine Immobilien verfügbar',
+        'vacio_titulo': 'Noch keine Immobilien',
         'vacio_texto': 'Kontaktieren Sie uns',
         'sin_result_titulo': 'Keine Ergebnisse',
-        'sin_result_texto': 'Passen Sie die Filter an',
+        'sin_result_texto': 'Filter anpassen',
         'label_precio': 'Preis',
         'label_ubicacion': 'Standort',
-        'consultar_wa': '💬 Per WhatsApp anfragen',
+        'consultar_wa': '💬 WhatsApp',
         'consultar_wa_msg': 'Hallo, ich interessiere mich für:',
-        'consultar_wa_short': 'Hallo, ich interessiere mich für:',
+        'consultar_wa_short': 'Hallo, Interesse an:',
         'comparar': '⚖️ Vergleichen',
-        'comparando': '✓ Verglichen',
+        'comparando': '✓ Ausgewählt',
         'compara_titulo': '⚖️ Vergleich',
-        'compara_bar_titulo': '⚖️ Ausgewählte vergleichen',
+        'compara_bar_titulo': '⚖️ Vergleichen',
         'compara_ver': 'Vergleich anzeigen',
-        'compara_limpiar': 'Löschen',
+        'compara_limpiar': '✕',
         'compara_precio': 'Preis',
         'compara_ubicacion': 'Standort',
         'compara_habs': 'Schlafzimmer',
@@ -312,14 +307,14 @@
         'compara_accion': 'Kontakt',
         'compara_mejor_precio': '💰 Bester Preis',
         'compara_mas_grande': '📐 Größter',
-        'compara_max': 'Maximal 3 Immobilien',
+        'compara_max': 'Maximal 3',
         'compara_min': 'Mindestens 2 auswählen',
         'sin_dato': '—',
     },
     'pt': {
         'titulo': '🏠 Imóveis Disponíveis',
-        'contactar_wa': '💬 Contatar pelo WhatsApp',
-        'buscar_zona': '📍 Buscar por zona...',
+        'contactar_wa': '💬 Contatar',
+        'buscar_zona': '📍 Buscar...',
         'precio_min': 'Preço mín',
         'precio_max': 'Preço máx',
         'limpiar': 'Limpar',
@@ -332,15 +327,15 @@
         'sin_result_texto': 'Ajuste os filtros',
         'label_precio': 'Preço',
         'label_ubicacion': 'Localização',
-        'consultar_wa': '💬 Consultar pelo WhatsApp',
+        'consultar_wa': '💬 WhatsApp',
         'consultar_wa_msg': 'Olá, tenho interesse em:',
-        'consultar_wa_short': 'Olá, tenho interesse em:',
+        'consultar_wa_short': 'Olá, interesse em:',
         'comparar': '⚖️ Comparar',
-        'comparando': '✓ Comparando',
+        'comparando': '✓ Selecionado',
         'compara_titulo': '⚖️ Comparação',
-        'compara_bar_titulo': '⚖️ Comparar selecionados',
+        'compara_bar_titulo': '⚖️ Comparar',
         'compara_ver': 'Ver comparação',
-        'compara_limpiar': 'Limpar',
+        'compara_limpiar': '✕',
         'compara_precio': 'Preço',
         'compara_ubicacion': 'Localização',
         'compara_habs': 'Quartos',
@@ -350,35 +345,35 @@
         'compara_accion': 'Contatar',
         'compara_mejor_precio': '💰 Melhor preço',
         'compara_mas_grande': '📐 Maior',
-        'compara_max': 'Máximo 3 imóveis',
+        'compara_max': 'Máximo 3',
         'compara_min': 'Selecione pelo menos 2',
         'sin_dato': '—',
     },
     'zh': {
         'titulo': '🏠 可用房产',
-        'contactar_wa': '💬 通过WhatsApp联系',
-        'buscar_zona': '📍 按区域搜索...',
+        'contactar_wa': '💬 联系',
+        'buscar_zona': '📍 搜索...',
         'precio_min': '最低价格',
         'precio_max': '最高价格',
         'limpiar': '清除',
         'disponible': '✅ 可用',
-        'ver_detalle': '🔍 查看详情',
+        'ver_detalle': '🔍 查看',
         'sin_descripcion': '无描述',
-        'vacio_titulo': '暂无可用房产',
+        'vacio_titulo': '暂无房产',
         'vacio_texto': '请联系我们',
         'sin_result_titulo': '无结果',
-        'sin_result_texto': '请调整筛选条件',
+        'sin_result_texto': '调整筛选条件',
         'label_precio': '价格',
         'label_ubicacion': '位置',
-        'consultar_wa': '💬 通过WhatsApp咨询',
+        'consultar_wa': '💬 WhatsApp',
         'consultar_wa_msg': '您好，我对该房产感兴趣：',
-        'consultar_wa_short': '您好，我对以下感兴趣：',
+        'consultar_wa_short': '您好，感兴趣：',
         'comparar': '⚖️ 比较',
         'comparando': '✓ 已选',
-        'compara_titulo': '⚖️ 房产比较',
-        'compara_bar_titulo': '⚖️ 比较已选',
+        'compara_titulo': '⚖️ 比较',
+        'compara_bar_titulo': '⚖️ 比较',
         'compara_ver': '查看比较',
-        'compara_limpiar': '清除',
+        'compara_limpiar': '✕',
         'compara_precio': '价格',
         'compara_ubicacion': '位置',
         'compara_habs': '卧室',
@@ -388,8 +383,8 @@
         'compara_accion': '联系',
         'compara_mejor_precio': '💰 最佳价格',
         'compara_mas_grande': '📐 最大',
-        'compara_max': '最多比较3个房产',
-        'compara_min': '请至少选择2个',
+        'compara_max': '最多3个',
+        'compara_min': '至少选择2个',
         'sin_dato': '—',
     },
 } %}
@@ -401,14 +396,16 @@
             <h1>{{ t.titulo }}</h1>
             <p>{{ cliente_nombre }}</p>
         </div>
-        <a href="https://wa.me/{{ whatsapp }}" target="_blank" class="btn-whatsapp">{{ t.contactar_wa }}</a>
+        <a href="https://wa.me/{{ whatsapp }}" target="_blank" rel="noopener noreferrer" class="btn-whatsapp">{{ t.contactar_wa }}</a>
     </div>
+
     <div class="filtros-bar">
-        <input type="text" id="filtroZona" placeholder="{{ t.buscar_zona }}" oninput="aplicarFiltros()">
-        <input type="number" id="filtroPrecioMin" placeholder="{{ t.precio_min }}" oninput="aplicarFiltros()">
-        <input type="number" id="filtroPrecioMax" placeholder="{{ t.precio_max }}" oninput="aplicarFiltros()">
+        <input type="text" id="filtroZona" placeholder="{{ t.buscar_zona }}" oninput="aplicarFiltros()" autocomplete="off">
+        <input type="number" id="filtroPrecioMin" placeholder="{{ t.precio_min }}" oninput="aplicarFiltros()" inputmode="numeric">
+        <input type="number" id="filtroPrecioMax" placeholder="{{ t.precio_max }}" oninput="aplicarFiltros()" inputmode="numeric">
         <button type="button" onclick="limpiarFiltros()" class="btn-limpiar-filtros">{{ t.limpiar }}</button>
     </div>
+
     <div id="propiedades-container" class="propiedades-grid"></div>
     <div class="footer-texto">Real Estate System v2.0</div>
 </div>
@@ -443,7 +440,7 @@
         </div>
         <div id="detalleSpecs"></div>
         <div class="detalle-descripcion" id="detalleDescripcion"></div>
-        <a id="btnWaDetalle" href="#" target="_blank" class="btn-wa-detalle">{{ t.consultar_wa }}</a>
+        <a id="btnWaDetalle" href="#" target="_blank" rel="noopener noreferrer" class="btn-wa-detalle">{{ t.consultar_wa }}</a>
     </div>
 </div>
 
@@ -469,38 +466,46 @@
     let comparaSeleccion = [];
 
     const T = {
-        disponible:        "{{ t.disponible }}",
-        ver_detalle:       "{{ t.ver_detalle }}",
-        sin_descripcion:   "{{ t.sin_descripcion }}",
-        vacio_titulo:      "{{ t.vacio_titulo }}",
-        vacio_texto:       "{{ t.vacio_texto }}",
-        sin_result_titulo: "{{ t.sin_result_titulo }}",
-        sin_result_texto:  "{{ t.sin_result_texto }}",
-        consultar_wa_msg:  "{{ t.consultar_wa_msg }}",
-        consultar_wa_short:"{{ t.consultar_wa_short }}",
-        comparar:          "{{ t.comparar }}",
-        comparando:        "{{ t.comparando }}",
-        compara_precio:    "{{ t.compara_precio }}",
-        compara_ubicacion: "{{ t.compara_ubicacion }}",
-        compara_habs:      "{{ t.compara_habs }}",
-        compara_banos:     "{{ t.compara_banos }}",
-        compara_m2:        "{{ t.compara_m2 }}",
-        compara_desc:      "{{ t.compara_desc }}",
-        compara_accion:    "{{ t.compara_accion }}",
+        disponible:           "{{ t.disponible }}",
+        ver_detalle:          "{{ t.ver_detalle }}",
+        sin_descripcion:      "{{ t.sin_descripcion }}",
+        vacio_titulo:         "{{ t.vacio_titulo }}",
+        vacio_texto:          "{{ t.vacio_texto }}",
+        sin_result_titulo:    "{{ t.sin_result_titulo }}",
+        sin_result_texto:     "{{ t.sin_result_texto }}",
+        consultar_wa_msg:     "{{ t.consultar_wa_msg }}",
+        consultar_wa_short:   "{{ t.consultar_wa_short }}",
+        comparar:             "{{ t.comparar }}",
+        comparando:           "{{ t.comparando }}",
+        compara_precio:       "{{ t.compara_precio }}",
+        compara_ubicacion:    "{{ t.compara_ubicacion }}",
+        compara_habs:         "{{ t.compara_habs }}",
+        compara_banos:        "{{ t.compara_banos }}",
+        compara_m2:           "{{ t.compara_m2 }}",
+        compara_desc:         "{{ t.compara_desc }}",
+        compara_accion:       "{{ t.compara_accion }}",
         compara_mejor_precio: "{{ t.compara_mejor_precio }}",
         compara_mas_grande:   "{{ t.compara_mas_grande }}",
-        compara_max:       "{{ t.compara_max }}",
-        compara_min:       "{{ t.compara_min }}",
-        sin_dato:          "{{ t.sin_dato }}",
+        compara_max:          "{{ t.compara_max }}",
+        compara_min:          "{{ t.compara_min }}",
+        sin_dato:             "{{ t.sin_dato }}",
     };
+
+    // ✅ Cerrar modales al hacer tap fuera — funciona bien en iOS
+    document.addEventListener('touchstart', function(e) {
+        const modalDetalle = document.getElementById("modalDetalle");
+        const modalComparar = document.getElementById("modalComparar");
+        if (e.target == modalDetalle) cerrarDetalle();
+        if (e.target == modalComparar) cerrarComparar();
+    }, { passive: true });
 
     window.onclick = function(e) {
         if (e.target == document.getElementById("modalDetalle")) cerrarDetalle();
         if (e.target == document.getElementById("modalComparar")) cerrarComparar();
     }
 
-    function cerrarDetalle() { document.getElementById("modalDetalle").style.display = "none"; }
-    function cerrarComparar() { document.getElementById("modalComparar").style.display = "none"; }
+    function cerrarDetalle() { document.getElementById("modalDetalle").style.display = "none"; document.body.style.overflow = ''; }
+    function cerrarComparar() { document.getElementById("modalComparar").style.display = "none"; document.body.style.overflow = ''; }
 
     function parseImagenes(imagen_url) {
         try {
@@ -525,7 +530,6 @@
     }
 
     function actualizarUIComparar() {
-        // Actualizar botones en cards
         propiedades.forEach(p => {
             const btn = document.getElementById(`btnComp-${p.id}`);
             const badge = document.getElementById(`badge-${p.id}`);
@@ -537,79 +541,61 @@
             if (badge) { badge.classList.toggle('visible', sel); badge.textContent = comparaSeleccion.indexOf(p.id) + 1; }
             if (card) card.classList.toggle('seleccionada', sel);
         });
-
-        // Barra flotante
         const bar = document.getElementById('comparaBar');
         const chips = document.getElementById('comparaChips');
         if (comparaSeleccion.length > 0) {
             bar.classList.add('visible');
             chips.innerHTML = comparaSeleccion.map(id => {
                 const p = propiedades.find(x => x.id == id);
-                return p ? `<div class="compara-chip">${p.titulo.substring(0,22)}${p.titulo.length>22?'…':''}<button class="compara-chip-x" onclick="toggleComparar(${id})">×</button></div>` : '';
+                return p ? `<div class="compara-chip"><span>${p.titulo.substring(0,18)}${p.titulo.length>18?'…':''}</span><button class="compara-chip-x" onclick="toggleComparar(${id})">×</button></div>` : '';
             }).join('');
         } else {
             bar.classList.remove('visible');
         }
     }
 
-    function limpiarComparacion() {
-        comparaSeleccion = [];
-        actualizarUIComparar();
-    }
+    function limpiarComparacion() { comparaSeleccion = []; actualizarUIComparar(); }
 
     function abrirComparar() {
         if (comparaSeleccion.length < 2) { alert(T.compara_min); return; }
         const props = comparaSeleccion.map(id => propiedades.find(p => p.id == id)).filter(Boolean);
-
-        // Determinar mejores valores
         const precios = props.map(p => parseFloat(p.precio) || Infinity);
         const m2s = props.map(p => parseFloat(p.metros2) || 0);
         const minPrecio = Math.min(...precios);
         const maxM2 = Math.max(...m2s);
-
         const tabla = document.getElementById('comparaTabla');
-
-        // Fila imágenes
         let html = `<thead><tr><th></th>${props.map(p => `<th>${p.titulo}</th>`).join('')}</tr></thead><tbody>`;
-
         // Imagen
         html += `<tr><td>📸</td>${props.map(p => {
             const imgs = parseImagenes(p.imagen_url);
-            return `<td>${imgs.length > 0 ? `<img src="${imgs[0]}" class="compara-img">` : `<div class="compara-img-placeholder">🏠</div>`}</td>`;
+            return `<td>${imgs.length > 0 ? `<img src="${imgs[0]}" class="compara-img" loading="lazy">` : `<div class="compara-img-placeholder">🏠</div>`}</td>`;
         }).join('')}</tr>`;
-
         // Precio
-        html += `<tr><td>${T.compara_precio}</td>${props.map((p, i) => {
+        html += `<tr><td>${T.compara_precio}</td>${props.map(p => {
             const precio = parseFloat(p.precio);
             const esMejor = precio === minPrecio;
             return `<td class="${esMejor ? 'compara-destacado' : ''}"><div class="compara-precio">$${precio.toLocaleString()}</div>${esMejor && props.length > 1 ? `<div class="compara-mejor">${T.compara_mejor_precio}</div>` : ''}</td>`;
         }).join('')}</tr>`;
-
         // Ubicación
-        html += `<tr><td>${T.compara_ubicacion}</td>${props.map(p => `<td>📍 ${p.ubicacion || T.sin_dato}</td>`).join('')}</tr>`;
-
+        html += `<tr><td>${T.compara_ubicacion}</td>${props.map(p => `<td>${p.ubicacion || T.sin_dato}</td>`).join('')}</tr>`;
         // Habitaciones
-        html += `<tr><td>${T.compara_habs}</td>${props.map(p => `<td class="compara-spec">${p.habitaciones ? '🛏️ ' + p.habitaciones : T.sin_dato}</td>`).join('')}</tr>`;
-
+        html += `<tr><td>${T.compara_habs}</td>${props.map(p => `<td>${p.habitaciones ? '🛏️ ' + p.habitaciones : T.sin_dato}</td>`).join('')}</tr>`;
         // Baños
-        html += `<tr><td>${T.compara_banos}</td>${props.map(p => `<td class="compara-spec">${p.banos ? '🚿 ' + p.banos : T.sin_dato}</td>`).join('')}</tr>`;
-
+        html += `<tr><td>${T.compara_banos}</td>${props.map(p => `<td>${p.banos ? '🚿 ' + p.banos : T.sin_dato}</td>`).join('')}</tr>`;
         // M2
-        html += `<tr><td>${T.compara_m2}</td>${props.map((p, i) => {
+        html += `<tr><td>${T.compara_m2}</td>${props.map(p => {
             const m2 = parseFloat(p.metros2) || 0;
             const esMayor = m2 > 0 && m2 === maxM2;
-            return `<td class="${esMayor && props.length > 1 ? 'compara-destacado' : ''} compara-spec">${m2 > 0 ? `📐 ${m2} m²${esMayor && props.length > 1 ? `<br><div class="compara-mejor">${T.compara_mas_grande}</div>` : ''}` : T.sin_dato}</td>`;
+            return `<td class="${esMayor && props.length > 1 ? 'compara-destacado' : ''}">${m2 > 0 ? `📐 ${m2}m²${esMayor && props.length > 1 ? `<br><div class="compara-mejor">${T.compara_mas_grande}</div>` : ''}` : T.sin_dato}</td>`;
         }).join('')}</tr>`;
-
         // Descripción
-        html += `<tr><td>${T.compara_desc}</td>${props.map(p => `<td><div class="compara-desc">${p.descripcion ? p.descripcion.substring(0, 120) + (p.descripcion.length > 120 ? '...' : '') : T.sin_dato}</div></td>`).join('')}</tr>`;
-
+        html += `<tr><td>${T.compara_desc}</td>${props.map(p => `<td><div class="compara-desc">${p.descripcion ? p.descripcion.substring(0, 100) + (p.descripcion.length > 100 ? '...' : '') : T.sin_dato}</div></td>`).join('')}</tr>`;
         // Acción
-        html += `<tr><td>${T.compara_accion}</td>${props.map(p => `<td><a href="https://wa.me/${whatsapp}?text=${encodeURIComponent(T.consultar_wa_short + ' ' + p.titulo)}" target="_blank" class="compara-btn-wa">💬 WhatsApp</a></td>`).join('')}</tr>`;
-
+        html += `<tr><td>${T.compara_accion}</td>${props.map(p => `<td><a href="https://wa.me/${whatsapp}?text=${encodeURIComponent(T.consultar_wa_short + ' ' + p.titulo)}" target="_blank" rel="noopener noreferrer" class="compara-btn-wa">💬 WhatsApp</a></td>`).join('')}</tr>`;
         html += '</tbody>';
         tabla.innerHTML = html;
         document.getElementById('modalComparar').style.display = 'block';
+        document.body.style.overflow = 'hidden'; // ✅ Evita scroll del fondo en iOS
     }
 
     // ===== DETALLE =====
@@ -632,8 +618,9 @@
         document.getElementById("detalleSpecs").innerHTML = specsHTML;
         const galeriaEl = document.getElementById("detalleGaleria");
         if (imagenes.length > 0) {
-            galeriaEl.innerHTML = imagenes.map((url, i) => `<img src="${url}" class="${i===0?'activa':''}" alt="foto ${i+1}">`).join('') +
-                (imagenes.length > 1 ? `
+            galeriaEl.innerHTML = imagenes.map((url, i) =>
+                `<img src="${url}" class="${i===0?'activa':''}" alt="foto ${i+1}" loading="${i===0?'eager':'lazy'}">`
+            ).join('') + (imagenes.length > 1 ? `
                 <button class="galeria-btn prev" onclick="cambiarDetalleImg(-1, ${imagenes.length})">‹</button>
                 <button class="galeria-btn next" onclick="cambiarDetalleImg(1, ${imagenes.length})">›</button>
                 <div class="contador-fotos">1/${imagenes.length}</div>` : '');
@@ -641,6 +628,7 @@
             galeriaEl.innerHTML = `<div class="detalle-placeholder">🏠</div>`;
         }
         document.getElementById("modalDetalle").style.display = "block";
+        document.body.style.overflow = 'hidden'; // ✅ Evita scroll del fondo en iOS
     }
 
     function cambiarDetalleImg(dir, total) {
@@ -658,7 +646,7 @@
         const min = parseFloat(document.getElementById('filtroPrecioMin').value) || 0;
         const max = parseFloat(document.getElementById('filtroPrecioMax').value) || Infinity;
         const filtradas = propiedades.filter(p => {
-            const coincideZona = !zona || (p.ubicacion || '').toLowerCase().includes(zona);
+            const coincideZona = !zona || (p.ubicacion || '').toLowerCase().includes(zona) || (p.titulo || '').toLowerCase().includes(zona);
             const precio = parseFloat(p.precio) || 0;
             return coincideZona && precio >= min && precio <= max;
         });
@@ -674,32 +662,36 @@
 
     function renderPropiedades(lista) {
         if (!propiedades || propiedades.length === 0) {
-            container.innerHTML = `<div class="vacio"><div style="font-size:64px;margin-bottom:20px;">🏡</div><h2 style="color:#7f8c8d;margin-bottom:10px;">${T.vacio_titulo}</h2><p>${T.vacio_texto}</p></div>`;
+            container.innerHTML = `<div class="vacio"><div style="font-size:56px;margin-bottom:16px;">🏡</div><h2 style="color:#7f8c8d;margin-bottom:10px;">${T.vacio_titulo}</h2><p>${T.vacio_texto}</p></div>`;
             return;
         }
         if (lista.length === 0) {
-            container.innerHTML = `<div class="vacio"><div style="font-size:64px;margin-bottom:20px;">🔍</div><h2 style="color:#7f8c8d;margin-bottom:10px;">${T.sin_result_titulo}</h2><p>${T.sin_result_texto}</p></div>`;
+            container.innerHTML = `<div class="vacio"><div style="font-size:56px;margin-bottom:16px;">🔍</div><h2 style="color:#7f8c8d;margin-bottom:10px;">${T.sin_result_titulo}</h2><p>${T.sin_result_texto}</p></div>`;
             return;
         }
         container.innerHTML = lista.map(prop => {
             const imagenes = parseImagenes(prop.imagen_url);
             const galeriaHTML = imagenes.length > 0 ? `
                 <div class="galeria" id="galeria-${prop.id}">
-                    ${imagenes.map((url, i) => `<img src="${url}" class="${i===0?'activa':''}" alt="foto ${i+1}">`).join('')}
+                    ${imagenes.map((url, i) => `<img src="${i===0?url:''}" data-src="${url}" class="${i===0?'activa':''}" alt="foto ${i+1}" loading="${i===0?'eager':'lazy'}">`).join('')}
                     ${imagenes.length > 1 ? `
                         <button class="galeria-btn prev" onclick="event.stopPropagation();cambiarFoto('${prop.id}',-1)">‹</button>
                         <button class="galeria-btn next" onclick="event.stopPropagation();cambiarFoto('${prop.id}',1)">›</button>
-                        <div class="galeria-nav">${imagenes.map((_,i)=>`<button class="galeria-dot ${i===0?'activo':''}" onclick="event.stopPropagation();irFoto('${prop.id}',${i})"></button>`).join('')}</div>
+                        <div class="galeria-nav">
+                            ${imagenes.map((_,i)=>`<button class="galeria-dot ${i===0?'activo':''}" onclick="event.stopPropagation();irFoto('${prop.id}',${i})"></button>`).join('')}
+                        </div>
                         <div class="contador-fotos">1/${imagenes.length}</div>` : ''}
                     <div class="compara-badge" id="badge-${prop.id}"></div>
                 </div>` :
                 `<div class="galeria"><div class="galeria-placeholder">🏠</div><div class="compara-badge" id="badge-${prop.id}"></div></div>`;
+
             const specsHTML = (prop.habitaciones || prop.banos || prop.metros2) ? `
                 <div class="propiedad-specs">
                     ${prop.habitaciones ? `<span>🛏️ ${prop.habitaciones}</span>` : ''}
                     ${prop.banos ? `<span>🚿 ${prop.banos}</span>` : ''}
-                    ${prop.metros2 ? `<span>📐 ${prop.metros2} m²</span>` : ''}
+                    ${prop.metros2 ? `<span>📐 ${prop.metros2}m²</span>` : ''}
                 </div>` : '';
+
             return `
                 <div class="propiedad-card" id="card-${prop.id}">
                     ${galeriaHTML}
@@ -712,13 +704,37 @@
                         <div class="propiedad-descripcion">${prop.descripcion || ''}</div>
                         <div class="card-botones">
                             <button class="btn-ver-detalle" onclick="verDetalle(${prop.id})">${T.ver_detalle}</button>
-                            <a href="https://wa.me/${whatsapp}?text=${encodeURIComponent(T.consultar_wa_short + ' ' + prop.titulo)}" target="_blank" class="btn-consultar">💬 WhatsApp</a>
+                            <a href="https://wa.me/${whatsapp}?text=${encodeURIComponent(T.consultar_wa_short + ' ' + prop.titulo)}" target="_blank" rel="noopener noreferrer" class="btn-consultar">💬 WhatsApp</a>
                         </div>
                         <button class="btn-comparar-card" id="btnComp-${prop.id}" onclick="toggleComparar(${prop.id})">${T.comparar}</button>
                     </div>
                 </div>`;
         }).join('');
+
         actualizarUIComparar();
+        // ✅ Lazy load de imágenes al hacer scroll
+        iniciarLazyLoad();
+    }
+
+    // ✅ LAZY LOADING — previene freeze por cargar todas las imágenes a la vez
+    function iniciarLazyLoad() {
+        if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const galeria = entry.target;
+                        galeria.querySelectorAll('img[data-src]').forEach(img => {
+                            if (!img.src || img.src === window.location.href) {
+                                img.src = img.dataset.src;
+                            }
+                            img.removeAttribute('data-src');
+                        });
+                        observer.unobserve(galeria);
+                    }
+                });
+            }, { rootMargin: '200px' });
+            document.querySelectorAll('.galeria').forEach(g => observer.observe(g));
+        }
     }
 
     function cambiarFoto(propId, dir) {
@@ -731,7 +747,10 @@
         imgs[fotoActual[propId]].classList.remove('activa');
         dots[fotoActual[propId]]?.classList.remove('activo');
         fotoActual[propId] = (fotoActual[propId] + dir + imgs.length) % imgs.length;
-        imgs[fotoActual[propId]].classList.add('activa');
+        // ✅ Cargar imagen si no estaba cargada
+        const siguiente = imgs[fotoActual[propId]];
+        if (siguiente.dataset.src) { siguiente.src = siguiente.dataset.src; siguiente.removeAttribute('data-src'); }
+        siguiente.classList.add('activa');
         dots[fotoActual[propId]]?.classList.add('activo');
         if (contador) contador.textContent = `${fotoActual[propId]+1}/${imgs.length}`;
     }
@@ -745,7 +764,9 @@
         imgs[fotoActual[propId]].classList.remove('activa');
         dots[fotoActual[propId]]?.classList.remove('activo');
         fotoActual[propId] = index;
-        imgs[index].classList.add('activa');
+        const target = imgs[index];
+        if (target.dataset.src) { target.src = target.dataset.src; target.removeAttribute('data-src'); }
+        target.classList.add('activa');
         dots[index]?.classList.add('activo');
         if (contador) contador.textContent = `${index+1}/${imgs.length}`;
     }
