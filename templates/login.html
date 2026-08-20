@@ -246,6 +246,20 @@
             background: rgba(255,255,255,0.06);
             box-shadow: 0 0 0 3px color-mix(in srgb, var(--color) 20%, transparent);
         }
+        .olvido-wrap {
+            text-align: right;
+            margin-top: -8px;
+            margin-bottom: 18px;
+        }
+        .olvido-wrap a {
+            font-size: 12.5px;
+            color: rgba(255,255,255,0.4);
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        .olvido-wrap a:hover {
+            color: var(--color);
+        }
         .btn-login {
             width: 100%;
             padding: 15px;
@@ -326,7 +340,8 @@
         'stat3_lbl': 'Sistema activo sin intervención',
         'titulo1': 'Convierte más leads.',
         'titulo2': 'Cierra más ventas.',
-        'desc': 'Tu CRM inmobiliario inteligente. Captura, clasifica y da seguimiento a cada prospecto automáticamente — para que tú te concentres en cerrar.'
+        'desc': 'Tu CRM inmobiliario inteligente. Captura, clasifica y da seguimiento a cada prospecto automáticamente — para que tú te concentres en cerrar.',
+        'olvido': '¿Olvidaste tu contraseña?'
     },
     'en': {
         'sub': 'Real estate management system',
@@ -346,7 +361,8 @@
         'stat3_lbl': 'System active without intervention',
         'titulo1': 'Convert more leads.',
         'titulo2': 'Close more sales.',
-        'desc': 'Your intelligent real estate CRM. Capture, classify and follow up every prospect automatically — so you can focus on closing.'
+        'desc': 'Your intelligent real estate CRM. Capture, classify and follow up every prospect automatically — so you can focus on closing.',
+        'olvido': 'Forgot your password?'
     },
     'fr': {
         'sub': 'Système de gestion immobilière',
@@ -366,7 +382,8 @@
         'stat3_lbl': 'Système actif sans intervention',
         'titulo1': 'Convertissez plus de leads.',
         'titulo2': 'Concluez plus de ventes.',
-        'desc': 'Votre CRM immobilier intelligent. Capturez, classifiez et suivez chaque prospect automatiquement — pour vous concentrer sur la conclusion.'
+        'desc': 'Votre CRM immobilier intelligent. Capturez, classifiez et suivez chaque prospect automatiquement — pour vous concentrer sur la conclusion.',
+        'olvido': 'Mot de passe oublié ?'
     },
     'de': {
         'sub': 'Immobilienverwaltungssystem',
@@ -386,7 +403,8 @@
         'stat3_lbl': 'System aktiv ohne Eingriff',
         'titulo1': 'Mehr Leads konvertieren.',
         'titulo2': 'Mehr Verkäufe abschließen.',
-        'desc': 'Ihr intelligentes Immobilien-CRM. Erfassen, klassifizieren und verfolgen Sie jeden Interessenten automatisch — damit Sie sich auf den Abschluss konzentrieren können.'
+        'desc': 'Ihr intelligentes Immobilien-CRM. Erfassen, klassifizieren und verfolgen Sie jeden Interessenten automatisch — damit Sie sich auf den Abschluss konzentrieren können.',
+        'olvido': 'Passwort vergessen?'
     },
     'pt': {
         'sub': 'Sistema de gestão imobiliária',
@@ -406,7 +424,8 @@
         'stat3_lbl': 'Sistema ativo sem intervenção',
         'titulo1': 'Converta mais leads.',
         'titulo2': 'Feche mais vendas.',
-        'desc': 'Seu CRM imobiliário inteligente. Capture, classifique e acompanhe cada prospecto automaticamente — para você se concentrar em fechar.'
+        'desc': 'Seu CRM imobiliário inteligente. Capture, classifique e acompanhe cada prospecto automaticamente — para você se concentrar em fechar.',
+        'olvido': 'Esqueceu sua senha?'
     },
     'zh': {
         'sub': '房地产管理系统',
@@ -426,7 +445,8 @@
         'stat3_lbl': '无需干预系统持续运行',
         'titulo1': '转化更多线索。',
         'titulo2': '完成更多销售。',
-        'desc': '您的智能房地产CRM。自动捕获、分类和跟进每位潜在客户 — 让您专注于成交。'
+        'desc': '您的智能房地产CRM。自动捕获、分类和跟进每位潜在客户 — 让您专注于成交。',
+        'olvido': '忘记密码？'
     }
 } %}
 {% set lxt = lt[lang] if lang in lt else lt['es'] %}
@@ -547,6 +567,9 @@
                     autocomplete="current-password"
                 >
             </div>
+        </div>
+        <div class="olvido-wrap">
+            <a href="{{ url_for('recuperar_password', cliente_id=cliente.usuario) }}">{{ lxt.olvido }}</a>
         </div>
         <button type="submit" class="btn-login">{{ lxt.btn }}</button>
         {% if error %}
