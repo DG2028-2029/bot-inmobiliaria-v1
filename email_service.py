@@ -295,3 +295,57 @@ def enviar_seguimiento_automatico(cliente_id, nombre, telefono, email_prospecto,
         f"⏰ Seguimiento: {nombre} en {zona} — contactar hoy | {vendedor['nombre']}",
         html
     )
+
+def enviar_email_reset_password(cliente_id, nombre_destinatario, es_asesor, link_reset):
+    """
+    Envía el email con el link para restablecer contraseña.
+    Con onboarding@resend.dev, solo llega bien al email verificado
+    de la cuenta de Resend (normalmente el del dueño/vendedor).
+    """
+    vendedor = _get_cliente(cliente_id)
+    if not vendedor:
+        return False
+
+    color = vendedor.get("color_primario", "#667eea")
+    tipo_cuenta = "Asesor" if es_asesor else "Dueño"
+
+    html = f"""
+    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#f8f9fa;padding:0;border-radius:12px;overflow:hidden;">
+        <div style="background:{color};padding:22px 30px;text-align:center;">
+            <div style="font-size:32px;margin-bottom:6px;">🔐</div>
+            <h1 style="color:white;margin:0;font-size:20px;">Restablecer contraseña</h1>
+            <p style="color:rgba(255,255,255,0.8);margin:6px 0 0;font-size:13px;">{vendedor['nombre']}</p>
+        </div>
+        <div style="background:white;padding:28px 30px;">
+            <p style="color:#555;font-size:15px;">
+                Hola <strong>{nombre_destinatario}</strong>,
+            </p>
+            <p style="color:#555;font-size:14px;">
+                Recibimos una solicitud para restablecer la contraseña de tu cuenta
+                ({tipo_cuenta}) en el panel de {vendedor['nombre']}.
+                Si fuiste tú, hacé clic en el siguiente botón para crear una nueva contraseña:
+            </p>
+            <div style="text-align:center;margin:26px 0;">
+                <a href="{link_reset}"
+                   style="background:{color};color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;">
+                    🔑 Crear nueva contraseña
+                </a>
+            </div>
+            <p style="color:#999;font-size:12px;">
+                Este enlace expira en 1 hora por seguridad. Si no solicitaste este cambio,
+                podés ignorar este correo y tu contraseña actual seguirá funcionando.
+            </p>
+        </div>
+        <div style="background:#f8f9fa;padding:14px 30px;text-align:center;border-top:1px solid #eee;">
+            <p style="color:#999;font-size:12px;margin:0;">
+                Solicitado el {datetime.now().strftime('%d/%m/%Y a las %H:%M')} — {vendedor['nombre']}
+            </p>
+        </div>
+    </div>
+    """
+    return _enviar(
+        vendedor["email_api_key"],
+        vendedor["email_vendedor"],
+        f"🔐 Restablecer contraseña — {vendedor['nombre']}",
+        html
+    )
