@@ -21,7 +21,8 @@ from reportlab.lib.units import inch
 import config
 from traducciones import DICCIONARIO
 from email_service import (enviar_email_cliente, notificar_vendedor_lead_nuevo,
-                           notificar_vendedor_cliente_marcado, enviar_seguimiento_automatico)
+                           notificar_vendedor_cliente_marcado, enviar_seguimiento_automatico,
+                           enviar_email_reset_password)
 from stats import obtener_stats
 
 app = Flask(__name__)
@@ -62,7 +63,6 @@ def archivo_permitido(archivo):
     ext = archivo.filename.rsplit('.', 1)[-1].lower() if '.' in archivo.filename else ''
     if ext not in ALLOWED_EXTENSIONS:
         return False
-    # Leer magic bytes para verificar que realmente es imagen
     header = archivo.read(12)
     archivo.seek(0)
     magic = {
@@ -107,8 +107,6 @@ def log_accion(accion, detalle='', ip='', cliente_id=''):
     try:
         ts = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         print(f"[LOG] {ts} | {accion} | cliente={cliente_id} | ip={ip} | {detalle}")
-        # Opcional: guardar en Supabase si tienes tabla de logs
-        # supabase.table("logs").insert({...}).execute()
     except:
         pass
 
@@ -573,13 +571,13 @@ def job_seguimiento_automatico():
 def verificar_sesion():
     rutas_publicas = ['formulario', 'formulario_asesor', 'index', 'seleccion_idioma_login',
                       'static', 'login', 'cambiar_idioma', 'cron_seguimiento', 'admin_login',
-                      'inicio_formulario', 'chat_inmobiliario', 'test_chat', 'inventario_publico']
+                      'inicio_formulario', 'chat_inmobiliario', 'test_chat', 'inventario_publico',
+                      'recuperar_password', 'reset_password']
     if request.endpoint in rutas_publicas:
         return
     if request.endpoint and request.endpoint.startswith('admin'):
         if not session.get('admin'):
             return redirect(url_for('admin_login'))
-        # ✅ Expiración de sesión admin (2 horas)
         admin_time = session.get('admin_time')
         if admin_time:
             if datetime.now() - datetime.fromisoformat(admin_time) > timedelta(hours=2):
@@ -604,7 +602,6 @@ def agregar_headers_seguridad(response):
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-    # ✅ Content Security Policy básico
     response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
     return response
 
@@ -746,7 +743,6 @@ def generar_pdf_leads(cliente_id, periodo="todo", cliente_nombre="", textos=None
 def admin_login():
     error = None
     if request.method == "POST":
-        # ✅ CSRF check en login de admin
         token_form = request.form.get('csrf_token')
         token_session = session.get('csrf_token')
         if not token_form or not token_session or not secrets.compare_digest(token_form, token_session):
@@ -798,7 +794,6 @@ def admin_nuevo_cliente():
         if not cliente_id:
             return redirect(url_for('admin_panel'))
         password_raw = request.form.get("password", "").strip()
-        # ✅ Hashear password siempre
         password_hash = generate_password_hash(password_raw) if password_raw else generate_password_hash(secrets.token_hex(16))
         data = {
             "id": cliente_id,
@@ -837,7 +832,6 @@ def admin_editar_cliente(cliente_id):
         }
         nueva_password = request.form.get("password", "").strip()
         if nueva_password:
-            # ✅ Hashear password al editar
             data["password"] = generate_password_hash(nueva_password)
         supabase.table("clientes").update(data).eq("id", cliente_id).execute()
         log_accion('ADMIN_EDITAR_CLIENTE', f"id={cliente_id}", get_remote_address())
@@ -981,7 +975,6 @@ def guardar_nota(cliente_id, lead_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean:
         return "No autorizado", 403
-    # CSRF via header para requests AJAX
     token_header = request.headers.get('X-CSRF-Token') or request.form.get('csrf_token')
     if not token_header or not secrets.compare_digest(token_header, session.get('csrf_token', '')):
         return jsonify({"ok": False, "error": "CSRF"}), 403
@@ -1075,7 +1068,6 @@ def formulario(cliente_id):
         zona = request.form.get("zona", "").strip()
         presupuesto = request.form.get("presupuesto", "").strip()
         mensaje = request.form.get("mensaje", "").strip()
-        # ✅ Validación básica server-side
         if not nombre or not telefono or not zona or not presupuesto or not mensaje:
             return render_template("formulario.html", enviado=False, cliente_id=id_clean,
                                    textos=textos, cliente_nombre=vendedor['nombre'],
@@ -1314,8 +1306,7 @@ def agregar_propiedad(cliente_id):
         archivos = request.files.getlist("imagenes")[:7]
         for archivo in archivos:
             if not archivo_permitido(archivo):
-                continue  # Saltar archivos no permitidos silenciosamente
-            # ✅ Verificar tamaño (máx 8MB por imagen)
+                continue
             archivo.seek(0, 2)
             size_mb = archivo.tell() / (1024 * 1024)
             archivo.seek(0)
@@ -1554,6 +1545,118 @@ def login(cliente_id):
         return render_template("login.html", error="Credenciales Invalidas", cliente=vendedor, textos=textos)
     return render_template("login.html", cliente=vendedor, textos=textos)
 
+# ============================================================
+# ✅ RECUPERACIÓN DE CONTRASEÑA
+# ============================================================
+
+@app.route("/recuperar/<cliente_id>", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
+def recuperar_password(cliente_id):
+    id_clean = cliente_id.lower()
+    vendedor = get_cliente(id_clean)
+    if not vendedor:
+        return "Error 404", 404
+    lang = session.get('idioma', get_idioma_default(vendedor))
+    textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
+    mensaje = None
+    if request.method == "POST":
+        verificar_csrf()
+        email_form = request.form.get("email", "").strip().lower()
+
+        encontrado = False
+        if email_form == (vendedor.get("email_vendedor", "") or "").strip().lower():
+            token = secrets.token_urlsafe(32)
+            expira = (datetime.now() + timedelta(hours=1)).isoformat()
+            supabase.table("clientes").update({
+                "reset_token": token, "reset_token_expira": expira
+            }).eq("id", id_clean).execute()
+            link = url_for('reset_password', token=token, _external=True)
+            enviar_email_reset_password(id_clean, vendedor.get("nombre", ""), False, link)
+            encontrado = True
+            log_accion('RESET_PASSWORD_SOLICITADO', f"dueño cliente={id_clean}", get_remote_address(), id_clean)
+
+        if not encontrado:
+            try:
+                asesores_r = supabase.table("asesores").select("*").eq("cliente_id", id_clean).execute()
+                for asesor in (asesores_r.data or []):
+                    if email_form == (asesor.get("email", "") or "").strip().lower():
+                        token = secrets.token_urlsafe(32)
+                        expira = (datetime.now() + timedelta(hours=1)).isoformat()
+                        supabase.table("asesores").update({
+                            "reset_token": token, "reset_token_expira": expira
+                        }).eq("id", asesor["id"]).execute()
+                        link = url_for('reset_password', token=token, _external=True)
+                        enviar_email_reset_password(id_clean, asesor.get("nombre", ""), True, link)
+                        encontrado = True
+                        log_accion('RESET_PASSWORD_SOLICITADO', f"asesor={asesor.get('usuario')}", get_remote_address(), id_clean)
+                        break
+            except Exception as e:
+                print(f"❌ Error buscando asesor para reset: {e}")
+
+        mensaje = "Si el correo existe en nuestro sistema, te enviamos un enlace para restablecer tu contraseña."
+    return render_template("recuperar_password.html", cliente=vendedor, textos=textos,
+                           idioma_actual=lang, mensaje=mensaje, cliente_id=id_clean)
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+@limiter.limit("10 per minute")
+def reset_password(token):
+    ahora = datetime.now()
+    cuenta = None
+    tipo = None
+
+    try:
+        r = supabase.table("clientes").select("*").eq("reset_token", token).execute()
+        if r.data:
+            cuenta = r.data[0]
+            tipo = "cliente"
+    except:
+        pass
+
+    if not cuenta:
+        try:
+            r = supabase.table("asesores").select("*").eq("reset_token", token).execute()
+            if r.data:
+                cuenta = r.data[0]
+                tipo = "asesor"
+        except:
+            pass
+
+    token_valido = False
+    if cuenta:
+        expira_str = cuenta.get("reset_token_expira")
+        if expira_str:
+            try:
+                expira_dt = datetime.fromisoformat(expira_str.replace("Z", "+00:00")).replace(tzinfo=None)
+                if ahora < expira_dt:
+                    token_valido = True
+            except:
+                pass
+
+    if not token_valido:
+        return render_template("reset_password.html", token_invalido=True)
+
+    error = None
+    if request.method == "POST":
+        verificar_csrf()
+        nueva = request.form.get("password", "").strip()
+        confirmar = request.form.get("password_confirmar", "").strip()
+        if len(nueva) < 6:
+            error = "La contraseña debe tener al menos 6 caracteres."
+        elif nueva != confirmar:
+            error = "Las contraseñas no coinciden."
+        else:
+            nuevo_hash = generate_password_hash(nueva)
+            tabla = "clientes" if tipo == "cliente" else "asesores"
+            supabase.table(tabla).update({
+                "password": nuevo_hash,
+                "reset_token": None,
+                "reset_token_expira": None
+            }).eq("id", cuenta["id"]).execute()
+            log_accion('RESET_PASSWORD_COMPLETADO', f"tipo={tipo}", get_remote_address())
+            return render_template("reset_password.html", exito=True)
+
+    return render_template("reset_password.html", token=token, error=error)
+
 @app.route("/logout/<cliente_id>")
 def logout(cliente_id):
     log_accion('LOGOUT', '', get_remote_address(), session.get('cliente', ''))
@@ -1638,7 +1741,7 @@ def chat_inmobiliario(cliente_id):
         data = request.get_json()
         if not data:
             return jsonify({"response": "Datos inválidos."}), 400
-        messages = data.get("messages", [])[:20]  # Limitar historial
+        messages = data.get("messages", [])[:20]
         lang = data.get("lang", "es")
         if lang not in ['es', 'en', 'fr', 'de', 'pt', 'zh']:
             lang = 'es'
@@ -1685,7 +1788,7 @@ INSTRUCTIONS:
         messages_payload = [{"role": "system", "content": system_prompt}]
         for msg in messages_recientes:
             role = "user" if msg.get("role") == "user" else "assistant"
-            content = str(msg.get("content", ""))[:500]  # Limitar longitud
+            content = str(msg.get("content", ""))[:500]
             messages_payload.append({"role": role, "content": content})
         text = llamar_openrouter(api_key, messages_payload)
         if text:
