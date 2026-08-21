@@ -580,9 +580,11 @@ def verificar_sesion():
             return redirect(url_for('admin_login'))
         admin_time = session.get('admin_time')
         if admin_time:
-            if datetime.now() - datetime.fromisoformat(admin_time) > timedelta(hours=2):
+            if datetime.now() - datetime.fromisoformat(admin_time) > timedelta(minutes=30):
                 session.clear()
                 return redirect(url_for('admin_login'))
+            # ✅ Renovar el tiempo de actividad del admin en cada acción
+            session['admin_time'] = datetime.now().isoformat()
         return
     if 'cliente' in session:
         login_time = session.get('login_time')
