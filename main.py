@@ -587,10 +587,12 @@ def verificar_sesion():
     if 'cliente' in session:
         login_time = session.get('login_time')
         if login_time:
-            if datetime.now() - datetime.fromisoformat(login_time) > timedelta(hours=8):
+            if datetime.now() - datetime.fromisoformat(login_time) > timedelta(minutes=30):
                 cliente_id = session.get('cliente')
                 session.clear()
                 return redirect(url_for('login', cliente_id=cliente_id or 'roberto'))
+            # ✅ Renovar el tiempo de actividad en cada acción (sesión por inactividad)
+            session['login_time'] = datetime.now().isoformat()
         else:
             cliente_id = session.get('cliente')
             session.clear()
