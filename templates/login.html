@@ -541,6 +541,7 @@
     <div class="form-sub">{{ lxt.sub2 }}</div>
 
     <form method="POST" autocomplete="on">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
             <label>{{ lxt.user_lbl }}</label>
             <div class="input-wrap">
