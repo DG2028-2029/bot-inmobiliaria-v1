@@ -52,6 +52,7 @@
         <p>Acceso exclusivo para administradores</p>
         {% if error %}<div class="error">⚠️ {{ error }}</div>{% endif %}
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label>Contraseña de administrador</label>
             <input type="password" name="password" placeholder="••••••••••••" required autofocus>
             <button type="submit">Entrar al Panel</button>
