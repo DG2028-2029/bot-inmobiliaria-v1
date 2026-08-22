@@ -1,0 +1,55 @@
+# ============================================================
+# MAPA DE PAÍSES → ZONA HORARIA (IANA)
+# ============================================================
+
+PAISES_TIMEZONE = {
+    # Latinoamérica
+    "Argentina": "America/Argentina/Buenos_Aires",
+    "Bolivia": "America/La_Paz",
+    "Brasil": "America/Sao_Paulo",
+    "Chile": "America/Santiago",
+    "Colombia": "America/Bogota",
+    "Costa Rica": "America/Costa_Rica",
+    "Cuba": "America/Havana",
+    "Ecuador": "America/Guayaquil",
+    "El Salvador": "America/El_Salvador",
+    "Guatemala": "America/Guatemala",
+    "Honduras": "America/Tegucigalpa",
+    "México": "America/Mexico_City",
+    "Nicaragua": "America/Managua",
+    "Panamá": "America/Panama",
+    "Paraguay": "America/Asuncion",
+    "Perú": "America/Lima",
+    "República Dominicana": "America/Santo_Domingo",
+    "Uruguay": "America/Montevideo",
+    "Venezuela": "America/Caracas",
+    # Estados Unidos (por zona horaria)
+    "Estados Unidos (Este)": "America/New_York",
+    "Estados Unidos (Central)": "America/Chicago",
+    "Estados Unidos (Montaña)": "America/Denver",
+    "Estados Unidos (Pacífico)": "America/Los_Angeles",
+    # Europa
+    "España": "Europe/Madrid",
+    "Portugal": "Europe/Lisbon",
+    "Francia": "Europe/Paris",
+    "Alemania": "Europe/Berlin",
+    "Italia": "Europe/Rome",
+    "Reino Unido": "Europe/London",
+    "Países Bajos": "Europe/Amsterdam",
+    "Bélgica": "Europe/Brussels",
+    "Suiza": "Europe/Zurich",
+    "Austria": "Europe/Vienna",
+    "Irlanda": "Europe/Dublin",
+    "Polonia": "Europe/Warsaw",
+    "Suecia": "Europe/Stockholm",
+    "Noruega": "Europe/Oslo",
+    "Dinamarca": "Europe/Copenhagen",
+    "Finlandia": "Europe/Helsinki",
+    "Grecia": "Europe/Athens",
+    "República Checa": "Europe/Prague",
+    "Hungría": "Europe/Budapest",
+    "Rumania": "Europe/Bucharest",
+    "Rusia": "Europe/Moscow",
+    # Asia
+    "China": "Asia/Shanghai",
+}
