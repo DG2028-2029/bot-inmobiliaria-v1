@@ -807,6 +807,7 @@ def admin_nuevo_cliente():
             "usuario": request.form.get("usuario", "").strip(),
             "password": password_hash,
             "idioma_default": request.form.get("idioma_default", "español"),
+            "pais": request.form.get("pais", "").strip(),
             "color_primario": request.form.get("color_primario", "#667eea"),
             "premium_email": True,
             "email_api_key": request.form.get("email_api_key", "").strip(),
@@ -830,6 +831,7 @@ def admin_editar_cliente(cliente_id):
             "whatsapp": request.form.get("whatsapp", "").strip(),
             "usuario": request.form.get("usuario", "").strip(),
             "idioma_default": request.form.get("idioma_default", "español"),
+            "pais": request.form.get("pais", "").strip(),
             "color_primario": request.form.get("color_primario", "#667eea"),
             "email_api_key": request.form.get("email_api_key", "").strip(),
             "activo": request.form.get("activo") == "on"
