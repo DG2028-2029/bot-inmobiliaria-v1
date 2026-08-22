@@ -181,6 +181,7 @@
             data-email="{{ c.email_vendedor or '' }}"
             data-whatsapp="{{ c.whatsapp or '' }}"
             data-idioma="{{ c.idioma_default or 'español' }}"
+            data-pais="{{ c.pais or '' }}"
             data-color="{{ c.color_primario or '#667eea' }}"
             data-apikey="{{ c.email_api_key or '' }}"
             data-activo="{{ 'true' if c.activo else 'false' }}">
@@ -201,6 +202,7 @@
                 <div class="cliente-row"><span>📱 WhatsApp:</span><strong>{{ c.whatsapp or '—' }}</strong></div>
                 <div class="cliente-row"><span>👤 Usuario:</span><strong>{{ c.usuario }}</strong></div>
                 <div class="cliente-row"><span>🌐 Idioma:</span><strong>{{ c.idioma_default or 'español' }}</strong></div>
+                <div class="cliente-row"><span>🌍 País:</span><strong>{{ c.pais or '—' }}</strong></div>
                 <div class="cliente-row"><span>📊 Leads:</span><strong>{{ c.total_leads }}</strong></div>
                 <div class="cliente-row">
                     <span>🎨 Color:</span>
@@ -283,6 +285,65 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>País * (para hora del reporte semanal)</label>
+                    <select name="pais" required>
+                        <option value="">Selecciona un país</option>
+                        <optgroup label="Latinoamérica">
+                            <option value="Argentina">Argentina</option>
+                            <option value="Bolivia">Bolivia</option>
+                            <option value="Brasil">Brasil</option>
+                            <option value="Chile">Chile</option>
+                            <option value="Colombia">Colombia</option>
+                            <option value="Costa Rica">Costa Rica</option>
+                            <option value="Cuba">Cuba</option>
+                            <option value="Ecuador">Ecuador</option>
+                            <option value="El Salvador">El Salvador</option>
+                            <option value="Guatemala">Guatemala</option>
+                            <option value="Honduras">Honduras</option>
+                            <option value="México">México</option>
+                            <option value="Nicaragua">Nicaragua</option>
+                            <option value="Panamá">Panamá</option>
+                            <option value="Paraguay">Paraguay</option>
+                            <option value="Perú">Perú</option>
+                            <option value="República Dominicana">República Dominicana</option>
+                            <option value="Uruguay">Uruguay</option>
+                            <option value="Venezuela">Venezuela</option>
+                        </optgroup>
+                        <optgroup label="Estados Unidos">
+                            <option value="Estados Unidos (Este)">Estados Unidos (Este)</option>
+                            <option value="Estados Unidos (Central)">Estados Unidos (Central)</option>
+                            <option value="Estados Unidos (Montaña)">Estados Unidos (Montaña)</option>
+                            <option value="Estados Unidos (Pacífico)">Estados Unidos (Pacífico)</option>
+                        </optgroup>
+                        <optgroup label="Europa">
+                            <option value="España">España</option>
+                            <option value="Portugal">Portugal</option>
+                            <option value="Francia">Francia</option>
+                            <option value="Alemania">Alemania</option>
+                            <option value="Italia">Italia</option>
+                            <option value="Reino Unido">Reino Unido</option>
+                            <option value="Países Bajos">Países Bajos</option>
+                            <option value="Bélgica">Bélgica</option>
+                            <option value="Suiza">Suiza</option>
+                            <option value="Austria">Austria</option>
+                            <option value="Irlanda">Irlanda</option>
+                            <option value="Polonia">Polonia</option>
+                            <option value="Suecia">Suecia</option>
+                            <option value="Noruega">Noruega</option>
+                            <option value="Dinamarca">Dinamarca</option>
+                            <option value="Finlandia">Finlandia</option>
+                            <option value="Grecia">Grecia</option>
+                            <option value="República Checa">República Checa</option>
+                            <option value="Hungría">Hungría</option>
+                            <option value="Rumania">Rumania</option>
+                            <option value="Rusia">Rusia</option>
+                        </optgroup>
+                        <optgroup label="Asia">
+                            <option value="China">China</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label>Color principal</label>
                     <div class="color-preview">
                         <input type="color" id="colorPickerNuevo" value="#667eea" oninput="document.getElementById('colorTextNuevo').value=this.value">
@@ -340,6 +401,65 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>País * (para hora del reporte semanal)</label>
+                    <select name="pais" id="editPais" required>
+                        <option value="">Selecciona un país</option>
+                        <optgroup label="Latinoamérica">
+                            <option value="Argentina">Argentina</option>
+                            <option value="Bolivia">Bolivia</option>
+                            <option value="Brasil">Brasil</option>
+                            <option value="Chile">Chile</option>
+                            <option value="Colombia">Colombia</option>
+                            <option value="Costa Rica">Costa Rica</option>
+                            <option value="Cuba">Cuba</option>
+                            <option value="Ecuador">Ecuador</option>
+                            <option value="El Salvador">El Salvador</option>
+                            <option value="Guatemala">Guatemala</option>
+                            <option value="Honduras">Honduras</option>
+                            <option value="México">México</option>
+                            <option value="Nicaragua">Nicaragua</option>
+                            <option value="Panamá">Panamá</option>
+                            <option value="Paraguay">Paraguay</option>
+                            <option value="Perú">Perú</option>
+                            <option value="República Dominicana">República Dominicana</option>
+                            <option value="Uruguay">Uruguay</option>
+                            <option value="Venezuela">Venezuela</option>
+                        </optgroup>
+                        <optgroup label="Estados Unidos">
+                            <option value="Estados Unidos (Este)">Estados Unidos (Este)</option>
+                            <option value="Estados Unidos (Central)">Estados Unidos (Central)</option>
+                            <option value="Estados Unidos (Montaña)">Estados Unidos (Montaña)</option>
+                            <option value="Estados Unidos (Pacífico)">Estados Unidos (Pacífico)</option>
+                        </optgroup>
+                        <optgroup label="Europa">
+                            <option value="España">España</option>
+                            <option value="Portugal">Portugal</option>
+                            <option value="Francia">Francia</option>
+                            <option value="Alemania">Alemania</option>
+                            <option value="Italia">Italia</option>
+                            <option value="Reino Unido">Reino Unido</option>
+                            <option value="Países Bajos">Países Bajos</option>
+                            <option value="Bélgica">Bélgica</option>
+                            <option value="Suiza">Suiza</option>
+                            <option value="Austria">Austria</option>
+                            <option value="Irlanda">Irlanda</option>
+                            <option value="Polonia">Polonia</option>
+                            <option value="Suecia">Suecia</option>
+                            <option value="Noruega">Noruega</option>
+                            <option value="Dinamarca">Dinamarca</option>
+                            <option value="Finlandia">Finlandia</option>
+                            <option value="Grecia">Grecia</option>
+                            <option value="República Checa">República Checa</option>
+                            <option value="Hungría">Hungría</option>
+                            <option value="Rumania">Rumania</option>
+                            <option value="Rusia">Rusia</option>
+                        </optgroup>
+                        <optgroup label="Asia">
+                            <option value="China">China</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label>Color principal</label>
                     <div class="color-preview">
                         <input type="color" id="colorPickerEdit" oninput="document.getElementById('colorTextEdit').value=this.value">
@@ -374,6 +494,7 @@ function abrirModalEditar(card) {
     const email   = card.dataset.email;
     const wa      = card.dataset.whatsapp;
     const idioma  = card.dataset.idioma;
+    const pais    = card.dataset.pais;
     const color   = card.dataset.color;
     const apikey  = card.dataset.apikey;
     const activo  = card.dataset.activo === 'true';
@@ -395,6 +516,12 @@ function abrirModalEditar(card) {
     for (let i = 0; i < sel.options.length; i++) {
         if (sel.options[i].value === idioma) { sel.selectedIndex = i; break; }
     }
+
+    const selPais = document.getElementById('editPais');
+    for (let i = 0; i < selPais.options.length; i++) {
+        if (selPais.options[i].value === pais) { selPais.selectedIndex = i; break; }
+    }
+
     document.getElementById('modalEditar').style.display = 'block';
 }
 
