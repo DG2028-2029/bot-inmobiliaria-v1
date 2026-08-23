@@ -349,3 +349,70 @@ def enviar_email_reset_password(cliente_id, nombre_destinatario, es_asesor, link
         f"🔐 Restablecer contraseña — {vendedor['nombre']}",
         html
     )
+
+def enviar_reporte_semanal(cliente_id, resumen):
+    """
+    Envía el reporte semanal automático al dueño del negocio.
+    """
+    vendedor = _get_cliente(cliente_id)
+    if not vendedor or not vendedor.get("premium_email"):
+        return False
+
+    color = vendedor.get("color_primario", "#667eea")
+    mejor = resumen.get("mejor_lead")
+
+    mejor_html = ""
+    if mejor:
+        mejor_html = f"""
+        <div style="background:#f0fff4;border-left:4px solid #27ae60;padding:14px 18px;border-radius:6px;margin-top:16px;">
+            <p style="margin:0;color:#2c3e50;font-size:13px;">
+                🏆 <strong>Mejor lead de la semana:</strong> {mejor['nombre']} — Score {mejor['score']}/100
+                {f" en {mejor['zona']}" if mejor.get('zona') else ""}
+            </p>
+        </div>
+        """
+
+    riesgo_html = ""
+    if resumen.get("en_riesgo", 0) > 0:
+        riesgo_html = f"""
+        <div style="background:#fff5f5;border-left:4px solid #c0392b;padding:14px 18px;border-radius:6px;margin-top:12px;">
+            <p style="margin:0;color:#7f0000;font-size:13px;font-weight:bold;">
+                🚨 Tenés {resumen['en_riesgo']} lead(s) en riesgo de perderse (14+ días sin convertirse).
+            </p>
+        </div>
+        """
+
+    html = f"""
+    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#f8f9fa;padding:0;border-radius:12px;overflow:hidden;">
+        <div style="background:linear-gradient(135deg,{color},#1a1a2e);padding:24px 30px;text-align:center;">
+            <div style="font-size:32px;margin-bottom:6px;">📊</div>
+            <h1 style="color:white;margin:0;font-size:20px;">Reporte Semanal</h1>
+            <p style="color:rgba(255,255,255,0.8);margin:6px 0 0;font-size:13px;">{vendedor['nombre']}</p>
+        </div>
+        <div style="background:white;padding:26px 30px;">
+            <table style="width:100%;border-collapse:collapse;">
+                <tr style="border-bottom:1px solid #f0f0f0;">
+                    <td style="padding:12px 0;color:#999;font-size:13px;">🆕 Leads nuevos esta semana</td>
+                    <td style="padding:12px 0;color:#2c3e50;font-weight:bold;font-size:18px;text-align:right;">{resumen['nuevos']}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f0f0f0;">
+                    <td style="padding:12px 0;color:#999;font-size:13px;">💎 Convertidos a cliente</td>
+                    <td style="padding:12px 0;color:#27ae60;font-weight:bold;font-size:18px;text-align:right;">{resumen['convertidos_semana']}</td>
+                </tr>
+            </table>
+            {mejor_html}
+            {riesgo_html}
+        </div>
+        <div style="background:#f8f9fa;padding:14px 30px;text-align:center;border-top:1px solid #eee;">
+            <p style="color:#999;font-size:11px;margin:0;">
+                Reporte automático — {datetime.now().strftime('%d/%m/%Y')} — {vendedor['nombre']}
+            </p>
+        </div>
+    </div>
+    """
+    return _enviar(
+        vendedor["email_api_key"],
+        vendedor["email_vendedor"],
+        f"📊 Reporte Semanal — {vendedor['nombre']}",
+        html
+    )
