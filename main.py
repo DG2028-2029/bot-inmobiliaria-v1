@@ -12,6 +12,7 @@ import secrets
 import cloudinary
 import cloudinary.uploader
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
@@ -20,9 +21,11 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.units import inch
 import config
 from traducciones import DICCIONARIO
+from paises import PAISES_TIMEZONE
+from reporte_semanal import generar_resumen_semanal
 from email_service import (enviar_email_cliente, notificar_vendedor_lead_nuevo,
                            notificar_vendedor_cliente_marcado, enviar_seguimiento_automatico,
-                           enviar_email_reset_password)
+                           enviar_email_reset_password, enviar_reporte_semanal)
 from stats import obtener_stats
 
 app = Flask(__name__)
@@ -567,12 +570,52 @@ def job_seguimiento_automatico():
     except Exception as e:
         print(f"❌ Error en seguimiento automático: {e}")
 
+def job_reporte_semanal():
+    """
+    Corre cada hora (vía cron externo). Revisa todos los clientes activos
+    con país configurado, y le manda el reporte semanal solo a los que
+    en este momento son las 8am del lunes en SU hora local — y que
+    todavía no recibieron el reporte de esta semana.
+    """
+    print(f"🔄 [{datetime.now().strftime('%Y-%m-%d %H:%M')}] Revisando reportes semanales...")
+    try:
+        resultado = supabase.table("clientes").select("*").eq("activo", True).execute()
+        clientes = resultado.data or []
+        for cliente in clientes:
+            pais = cliente.get("pais", "")
+            tz_name = PAISES_TIMEZONE.get(pais)
+            if not tz_name:
+                continue
+
+            ahora_local = datetime.now(ZoneInfo(tz_name))
+
+            # Solo lunes (weekday 0) a las 8am en su hora local
+            if ahora_local.weekday() != 0 or ahora_local.hour != 8:
+                continue
+
+            semana_actual = f"{ahora_local.isocalendar()[0]}-W{ahora_local.isocalendar()[1]:02d}"
+            if cliente.get("ultimo_reporte_semana") == semana_actual:
+                continue  # Ya se le mandó esta semana
+
+            resumen = generar_resumen_semanal(cliente["id"])
+            if resumen is None:
+                continue
+
+            enviado = enviar_reporte_semanal(cliente["id"], resumen)
+            if enviado:
+                supabase.table("clientes").update({
+                    "ultimo_reporte_semana": semana_actual
+                }).eq("id", cliente["id"]).execute()
+                print(f"✅ Reporte semanal enviado a {cliente.get('nombre')} ({pais})")
+    except Exception as e:
+        print(f"❌ Error en job_reporte_semanal: {e}")
+
 @app.before_request
 def verificar_sesion():
     rutas_publicas = ['formulario', 'formulario_asesor', 'index', 'seleccion_idioma_login',
                       'static', 'login', 'cambiar_idioma', 'cron_seguimiento', 'admin_login',
                       'inicio_formulario', 'chat_inmobiliario', 'test_chat', 'inventario_publico',
-                      'recuperar_password', 'reset_password']
+                      'recuperar_password', 'reset_password', 'cron_reporte_semanal']
     if request.endpoint in rutas_publicas:
         return
     if request.endpoint and request.endpoint.startswith('admin'):
@@ -1039,6 +1082,17 @@ def cron_seguimiento(secret_key):
     try:
         job_seguimiento_automatico()
         return f"✅ Seguimiento ejecutado: {datetime.now().strftime('%Y-%m-%d %H:%M')}", 200
+    except Exception as e:
+        return f"❌ Error: {e}", 500
+
+@app.route("/cron/reporte-semanal/<secret_key>", methods=["GET"])
+def cron_reporte_semanal(secret_key):
+    clave_esperada = os.environ.get("CRON_SECRET", "seguimiento_secreto_roberto_2024")
+    if not secrets.compare_digest(secret_key, clave_esperada):
+        return "No autorizado", 403
+    try:
+        job_reporte_semanal()
+        return f"✅ Revisión de reportes semanales ejecutada: {datetime.now().strftime('%Y-%m-%d %H:%M')}", 200
     except Exception as e:
         return f"❌ Error: {e}", 500
 
