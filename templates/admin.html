@@ -218,11 +218,13 @@
 
                 {% if c.activo %}
                 <form method="POST" action="{{ url_for('admin_toggle_cliente', cliente_id=c.id) }}" style="flex:1" onsubmit="return confirm('¿Desactivar a {{ c.nombre }}?')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="nuevo_estado" value="false">
                     <button type="submit" class="btn-desactivar" style="width:100%;">🚫 Desactivar</button>
                 </form>
                 {% else %}
                 <form method="POST" action="{{ url_for('admin_toggle_cliente', cliente_id=c.id) }}" style="flex:1" onsubmit="return confirm('¿Reactivar a {{ c.nombre }}?')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="nuevo_estado" value="true">
                     <button type="submit" class="btn-reactivar" style="width:100%;">✅ Reactivar</button>
                 </form>
@@ -230,6 +232,7 @@
 
                 <form method="POST" action="{{ url_for('admin_borrar_cliente', cliente_id=c.id) }}" style="flex:1"
                     onsubmit="return confirm('⚠️ ELIMINAR PERMANENTEMENTE a {{ c.nombre }}.\n\nEsto borrará también todos sus leads y propiedades.\n\n¿Estás absolutamente seguro?')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn-borrar" style="width:100%;">🗑️ Borrar</button>
                 </form>
             </div>
@@ -248,6 +251,7 @@
             <span class="close" onclick="cerrarModalNuevo()">&times;</span>
         </div>
         <form method="POST" action="{{ url_for('admin_nuevo_cliente') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-grid">
                 <div class="form-group full">
                     <label>ID del cliente * (sin espacios, ej: roberto)</label>
@@ -368,6 +372,7 @@
             <span class="close" onclick="cerrarModalEditar()">&times;</span>
         </div>
         <form method="POST" id="formEditar">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-grid">
                 <div class="form-group full">
                     <label>Nombre de la Inmobiliaria *</label>
