@@ -296,9 +296,98 @@ def enviar_seguimiento_automatico(cliente_id, nombre, telefono, email_prospecto,
         html
     )
 
-def enviar_email_reset_password(cliente_id, nombre_destinatario, es_asesor, link_reset):
+# ============================================================
+# ✅ TRADUCCIONES — emails que respetan el idioma del cliente
+# ============================================================
+
+T_RESET = {
+    'es': {
+        'titulo': 'Restablecer contraseña', 'tipo_asesor': 'Asesor', 'tipo_dueno': 'Dueño',
+        'saludo': 'Hola', 'parrafo': 'Recibimos una solicitud para restablecer la contraseña de tu cuenta ({tipo}) en el panel de {nombre_empresa}. Si fuiste tú, hacé clic en el siguiente botón para crear una nueva contraseña:',
+        'boton': '🔑 Crear nueva contraseña',
+        'nota': 'Este enlace expira en 1 hora por seguridad. Si no solicitaste este cambio, podés ignorar este correo y tu contraseña actual seguirá funcionando.',
+        'footer': 'Solicitado el', 'asunto': '🔐 Restablecer contraseña — {nombre_empresa}'
+    },
+    'en': {
+        'titulo': 'Reset your password', 'tipo_asesor': 'Agent', 'tipo_dueno': 'Owner',
+        'saludo': 'Hi', 'parrafo': 'We received a request to reset the password for your ({tipo}) account on {nombre_empresa}\'s panel. If this was you, click the button below to create a new password:',
+        'boton': '🔑 Create new password',
+        'nota': 'This link expires in 1 hour for security. If you did not request this change, you can ignore this email and your current password will keep working.',
+        'footer': 'Requested on', 'asunto': '🔐 Reset your password — {nombre_empresa}'
+    },
+    'fr': {
+        'titulo': 'Réinitialiser le mot de passe', 'tipo_asesor': 'Agent', 'tipo_dueno': 'Propriétaire',
+        'saludo': 'Bonjour', 'parrafo': 'Nous avons reçu une demande de réinitialisation du mot de passe de votre compte ({tipo}) sur le panneau de {nombre_empresa}. Si c\'était vous, cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe :',
+        'boton': '🔑 Créer un nouveau mot de passe',
+        'nota': 'Ce lien expire dans 1 heure par sécurité. Si vous n\'avez pas demandé ce changement, vous pouvez ignorer cet e-mail et votre mot de passe actuel continuera de fonctionner.',
+        'footer': 'Demandé le', 'asunto': '🔐 Réinitialiser le mot de passe — {nombre_empresa}'
+    },
+    'de': {
+        'titulo': 'Passwort zurücksetzen', 'tipo_asesor': 'Makler', 'tipo_dueno': 'Inhaber',
+        'saludo': 'Hallo', 'parrafo': 'Wir haben eine Anfrage zum Zurücksetzen des Passworts für Ihr Konto ({tipo}) im Panel von {nombre_empresa} erhalten. Wenn Sie das waren, klicken Sie auf die Schaltfläche unten, um ein neues Passwort zu erstellen:',
+        'boton': '🔑 Neues Passwort erstellen',
+        'nota': 'Dieser Link läuft aus Sicherheitsgründen in 1 Stunde ab. Wenn Sie diese Änderung nicht angefordert haben, können Sie diese E-Mail ignorieren und Ihr aktuelles Passwort funktioniert weiterhin.',
+        'footer': 'Angefordert am', 'asunto': '🔐 Passwort zurücksetzen — {nombre_empresa}'
+    },
+    'pt': {
+        'titulo': 'Redefinir senha', 'tipo_asesor': 'Corretor', 'tipo_dueno': 'Proprietário',
+        'saludo': 'Olá', 'parrafo': 'Recebemos uma solicitação para redefinir a senha da sua conta ({tipo}) no painel de {nombre_empresa}. Se foi você, clique no botão abaixo para criar uma nova senha:',
+        'boton': '🔑 Criar nova senha',
+        'nota': 'Este link expira em 1 hora por segurança. Se você não solicitou esta alteração, pode ignorar este e-mail e sua senha atual continuará funcionando.',
+        'footer': 'Solicitado em', 'asunto': '🔐 Redefinir senha — {nombre_empresa}'
+    },
+    'zh': {
+        'titulo': '重置密码', 'tipo_asesor': '经纪人', 'tipo_dueno': '业主',
+        'saludo': '您好', 'parrafo': '我们收到了重置您在{nombre_empresa}面板上的（{tipo}）账户密码的请求。如果是您本人操作，请点击下方按钮创建新密码：',
+        'boton': '🔑 创建新密码',
+        'nota': '出于安全考虑，此链接将在1小时后失效。如果您没有请求此更改，可以忽略此邮件，您当前的密码将继续有效。',
+        'footer': '请求时间', 'asunto': '🔐 重置密码 — {nombre_empresa}'
+    },
+}
+
+T_REPORTE = {
+    'es': {
+        'titulo': 'Reporte Semanal', 'nuevos': '🆕 Leads nuevos esta semana',
+        'mejor': '🏆 Mejor lead de la semana:', 'score_txt': 'Score', 'en_zona': 'en',
+        'riesgo': 'Tenés {n} lead(s) en riesgo de perderse (14+ días sin convertirse).',
+        'footer': 'Reporte automático', 'asunto': '📊 Reporte Semanal — {nombre_empresa}'
+    },
+    'en': {
+        'titulo': 'Weekly Report', 'nuevos': '🆕 New leads this week',
+        'mejor': '🏆 Best lead of the week:', 'score_txt': 'Score', 'en_zona': 'in',
+        'riesgo': 'You have {n} lead(s) at risk of being lost (14+ days without converting).',
+        'footer': 'Automatic report', 'asunto': '📊 Weekly Report — {nombre_empresa}'
+    },
+    'fr': {
+        'titulo': 'Rapport Hebdomadaire', 'nuevos': '🆕 Nouveaux leads cette semaine',
+        'mejor': '🏆 Meilleur lead de la semaine :', 'score_txt': 'Score', 'en_zona': 'à',
+        'riesgo': 'Vous avez {n} lead(s) en risque de perte (14+ jours sans conversion).',
+        'footer': 'Rapport automatique', 'asunto': '📊 Rapport Hebdomadaire — {nombre_empresa}'
+    },
+    'de': {
+        'titulo': 'Wochenbericht', 'nuevos': '🆕 Neue Leads diese Woche',
+        'mejor': '🏆 Bester Lead der Woche:', 'score_txt': 'Score', 'en_zona': 'in',
+        'riesgo': 'Sie haben {n} Lead(s) in Verlustgefahr (14+ Tage ohne Konvertierung).',
+        'footer': 'Automatischer Bericht', 'asunto': '📊 Wochenbericht — {nombre_empresa}'
+    },
+    'pt': {
+        'titulo': 'Relatório Semanal', 'nuevos': '🆕 Novos leads esta semana',
+        'mejor': '🏆 Melhor lead da semana:', 'score_txt': 'Score', 'en_zona': 'em',
+        'riesgo': 'Você tem {n} lead(s) em risco de se perder (14+ dias sem converter).',
+        'footer': 'Relatório automático', 'asunto': '📊 Relatório Semanal — {nombre_empresa}'
+    },
+    'zh': {
+        'titulo': '每周报告', 'nuevos': '🆕 本周新线索',
+        'mejor': '🏆 本周最佳线索：', 'score_txt': '评分', 'en_zona': '于',
+        'riesgo': '您有{n}条线索面临流失风险（超过14天未转化）。',
+        'footer': '自动报告', 'asunto': '📊 每周报告 — {nombre_empresa}'
+    },
+}
+
+def enviar_email_reset_password(cliente_id, nombre_destinatario, es_asesor, link_reset, lang='es'):
     """
-    Envía el email con el link para restablecer contraseña.
+    Envía el email con el link para restablecer contraseña, en el idioma
+    del cliente (lang: 'es', 'en', 'fr', 'de', 'pt', 'zh').
     Con onboarding@resend.dev, solo llega bien al email verificado
     de la cuenta de Resend (normalmente el del dueño/vendedor).
     """
@@ -306,39 +395,38 @@ def enviar_email_reset_password(cliente_id, nombre_destinatario, es_asesor, link
     if not vendedor:
         return False
 
+    t = T_RESET.get(lang, T_RESET['es'])
     color = vendedor.get("color_primario", "#667eea")
-    tipo_cuenta = "Asesor" if es_asesor else "Dueño"
+    tipo_cuenta = t['tipo_asesor'] if es_asesor else t['tipo_dueno']
+    parrafo = t['parrafo'].format(tipo=tipo_cuenta, nombre_empresa=vendedor['nombre'])
 
     html = f"""
     <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#f8f9fa;padding:0;border-radius:12px;overflow:hidden;">
         <div style="background:{color};padding:22px 30px;text-align:center;">
             <div style="font-size:32px;margin-bottom:6px;">🔐</div>
-            <h1 style="color:white;margin:0;font-size:20px;">Restablecer contraseña</h1>
+            <h1 style="color:white;margin:0;font-size:20px;">{t['titulo']}</h1>
             <p style="color:rgba(255,255,255,0.8);margin:6px 0 0;font-size:13px;">{vendedor['nombre']}</p>
         </div>
         <div style="background:white;padding:28px 30px;">
             <p style="color:#555;font-size:15px;">
-                Hola <strong>{nombre_destinatario}</strong>,
+                {t['saludo']} <strong>{nombre_destinatario}</strong>,
             </p>
             <p style="color:#555;font-size:14px;">
-                Recibimos una solicitud para restablecer la contraseña de tu cuenta
-                ({tipo_cuenta}) en el panel de {vendedor['nombre']}.
-                Si fuiste tú, hacé clic en el siguiente botón para crear una nueva contraseña:
+                {parrafo}
             </p>
             <div style="text-align:center;margin:26px 0;">
                 <a href="{link_reset}"
                    style="background:{color};color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;">
-                    🔑 Crear nueva contraseña
+                    {t['boton']}
                 </a>
             </div>
             <p style="color:#999;font-size:12px;">
-                Este enlace expira en 1 hora por seguridad. Si no solicitaste este cambio,
-                podés ignorar este correo y tu contraseña actual seguirá funcionando.
+                {t['nota']}
             </p>
         </div>
         <div style="background:#f8f9fa;padding:14px 30px;text-align:center;border-top:1px solid #eee;">
             <p style="color:#999;font-size:12px;margin:0;">
-                Solicitado el {datetime.now().strftime('%d/%m/%Y a las %H:%M')} — {vendedor['nombre']}
+                {t['footer']} {datetime.now().strftime('%d/%m/%Y a las %H:%M')} — {vendedor['nombre']}
             </p>
         </div>
     </div>
@@ -346,38 +434,41 @@ def enviar_email_reset_password(cliente_id, nombre_destinatario, es_asesor, link
     return _enviar(
         vendedor["email_api_key"],
         vendedor["email_vendedor"],
-        f"🔐 Restablecer contraseña — {vendedor['nombre']}",
+        t['asunto'].format(nombre_empresa=vendedor['nombre']),
         html
     )
 
-def enviar_reporte_semanal(cliente_id, resumen):
+def enviar_reporte_semanal(cliente_id, resumen, lang='es'):
     """
-    Envía el reporte semanal automático al dueño del negocio.
+    Envía el reporte semanal automático al dueño del negocio, en el
+    idioma del cliente (lang: 'es', 'en', 'fr', 'de', 'pt', 'zh').
     """
     vendedor = _get_cliente(cliente_id)
     if not vendedor or not vendedor.get("premium_email"):
         return False
 
+    t = T_REPORTE.get(lang, T_REPORTE['es'])
     color = vendedor.get("color_primario", "#667eea")
     mejor = resumen.get("mejor_lead")
 
     mejor_html = ""
     if mejor:
+        zona_txt = f" {t['en_zona']} {mejor['zona']}" if mejor.get('zona') else ""
         mejor_html = f"""
         <div style="background:#f0fff4;border-left:4px solid #27ae60;padding:14px 18px;border-radius:6px;margin-top:16px;">
             <p style="margin:0;color:#2c3e50;font-size:13px;">
-                🏆 <strong>Mejor lead de la semana:</strong> {mejor['nombre']} — Score {mejor['score']}/100
-                {f" en {mejor['zona']}" if mejor.get('zona') else ""}
+                {t['mejor']} {mejor['nombre']} — {t['score_txt']} {mejor['score']}/100{zona_txt}
             </p>
         </div>
         """
 
     riesgo_html = ""
     if resumen.get("en_riesgo", 0) > 0:
+        riesgo_texto = t['riesgo'].format(n=resumen['en_riesgo'])
         riesgo_html = f"""
         <div style="background:#fff5f5;border-left:4px solid #c0392b;padding:14px 18px;border-radius:6px;margin-top:12px;">
             <p style="margin:0;color:#7f0000;font-size:13px;font-weight:bold;">
-                🚨 Tenés {resumen['en_riesgo']} lead(s) en riesgo de perderse (14+ días sin convertirse).
+                🚨 {riesgo_texto}
             </p>
         </div>
         """
@@ -386,13 +477,13 @@ def enviar_reporte_semanal(cliente_id, resumen):
     <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#f8f9fa;padding:0;border-radius:12px;overflow:hidden;">
         <div style="background:linear-gradient(135deg,{color},#1a1a2e);padding:24px 30px;text-align:center;">
             <div style="font-size:32px;margin-bottom:6px;">📊</div>
-            <h1 style="color:white;margin:0;font-size:20px;">Reporte Semanal</h1>
+            <h1 style="color:white;margin:0;font-size:20px;">{t['titulo']}</h1>
             <p style="color:rgba(255,255,255,0.8);margin:6px 0 0;font-size:13px;">{vendedor['nombre']}</p>
         </div>
         <div style="background:white;padding:26px 30px;">
             <table style="width:100%;border-collapse:collapse;">
                 <tr>
-                    <td style="padding:12px 0;color:#999;font-size:13px;">🆕 Leads nuevos esta semana</td>
+                    <td style="padding:12px 0;color:#999;font-size:13px;">{t['nuevos']}</td>
                     <td style="padding:12px 0;color:#2c3e50;font-weight:bold;font-size:18px;text-align:right;">{resumen['nuevos']}</td>
                 </tr>
             </table>
@@ -401,7 +492,7 @@ def enviar_reporte_semanal(cliente_id, resumen):
         </div>
         <div style="background:#f8f9fa;padding:14px 30px;text-align:center;border-top:1px solid #eee;">
             <p style="color:#999;font-size:11px;margin:0;">
-                Reporte automático — {datetime.now().strftime('%d/%m/%Y')} — {vendedor['nombre']}
+                {t['footer']} — {datetime.now().strftime('%d/%m/%Y')} — {vendedor['nombre']}
             </p>
         </div>
     </div>
@@ -409,6 +500,6 @@ def enviar_reporte_semanal(cliente_id, resumen):
     return _enviar(
         vendedor["email_api_key"],
         vendedor["email_vendedor"],
-        f"📊 Reporte Semanal — {vendedor['nombre']}",
+        t['asunto'].format(nombre_empresa=vendedor['nombre']),
         html
     )
