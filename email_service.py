@@ -391,13 +391,9 @@ def enviar_reporte_semanal(cliente_id, resumen):
         </div>
         <div style="background:white;padding:26px 30px;">
             <table style="width:100%;border-collapse:collapse;">
-                <tr style="border-bottom:1px solid #f0f0f0;">
+                <tr>
                     <td style="padding:12px 0;color:#999;font-size:13px;">🆕 Leads nuevos esta semana</td>
                     <td style="padding:12px 0;color:#2c3e50;font-weight:bold;font-size:18px;text-align:right;">{resumen['nuevos']}</td>
-                </tr>
-                <tr style="border-bottom:1px solid #f0f0f0;">
-                    <td style="padding:12px 0;color:#999;font-size:13px;">💎 Convertidos a cliente</td>
-                    <td style="padding:12px 0;color:#27ae60;font-weight:bold;font-size:18px;text-align:right;">{resumen['convertidos_semana']}</td>
                 </tr>
             </table>
             {mejor_html}
