@@ -615,7 +615,8 @@ def verificar_sesion():
     rutas_publicas = ['formulario', 'formulario_asesor', 'index', 'seleccion_idioma_login',
                       'static', 'login', 'cambiar_idioma', 'cron_seguimiento', 'admin_login',
                       'inicio_formulario', 'chat_inmobiliario', 'test_chat', 'inventario_publico',
-                      'recuperar_password', 'reset_password', 'cron_reporte_semanal']
+                      'recuperar_password', 'reset_password', 'cron_reporte_semanal',
+                      'test_reporte_semanal']
     if request.endpoint in rutas_publicas:
         return
     if request.endpoint and request.endpoint.startswith('admin'):
@@ -1093,6 +1094,24 @@ def cron_reporte_semanal(secret_key):
     try:
         job_reporte_semanal()
         return f"✅ Revisión de reportes semanales ejecutada: {datetime.now().strftime('%Y-%m-%d %H:%M')}", 200
+    except Exception as e:
+        return f"❌ Error: {e}", 500
+
+@app.route("/cron/test-reporte-semanal/<secret_key>/<cliente_id>", methods=["GET"])
+def test_reporte_semanal(secret_key, cliente_id):
+    """
+    RUTA DE PRUEBA — fuerza el envío del reporte semanal a un cliente
+    específico, sin importar el día/hora. Úsala solo para probar.
+    """
+    clave_esperada = os.environ.get("CRON_SECRET", "seguimiento_secreto_roberto_2024")
+    if not secrets.compare_digest(secret_key, clave_esperada):
+        return "No autorizado", 403
+    try:
+        resumen = generar_resumen_semanal(cliente_id)
+        if resumen is None:
+            return "Error generando resumen", 500
+        enviado = enviar_reporte_semanal(cliente_id, resumen)
+        return f"✅ Reporte de prueba enviado: {enviado}", 200
     except Exception as e:
         return f"❌ Error: {e}", 500
 
