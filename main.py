@@ -575,7 +575,8 @@ def job_reporte_semanal():
     Corre cada hora (vía cron externo). Revisa todos los clientes activos
     con país configurado, y le manda el reporte semanal solo a los que
     en este momento son las 8am del lunes en SU hora local — y que
-    todavía no recibieron el reporte de esta semana.
+    todavía no recibieron el reporte de esta semana. El email se envía
+    en el idioma configurado para ese cliente.
     """
     print(f"🔄 [{datetime.now().strftime('%Y-%m-%d %H:%M')}] Revisando reportes semanales...")
     try:
@@ -601,12 +602,13 @@ def job_reporte_semanal():
             if resumen is None:
                 continue
 
-            enviado = enviar_reporte_semanal(cliente["id"], resumen)
+            lang_cliente = get_idioma_default(cliente)
+            enviado = enviar_reporte_semanal(cliente["id"], resumen, lang=lang_cliente)
             if enviado:
                 supabase.table("clientes").update({
                     "ultimo_reporte_semana": semana_actual
                 }).eq("id", cliente["id"]).execute()
-                print(f"✅ Reporte semanal enviado a {cliente.get('nombre')} ({pais})")
+                print(f"✅ Reporte semanal enviado a {cliente.get('nombre')} ({pais}, idioma={lang_cliente})")
     except Exception as e:
         print(f"❌ Error en job_reporte_semanal: {e}")
 
@@ -1107,11 +1109,15 @@ def test_reporte_semanal(secret_key, cliente_id):
     if not secrets.compare_digest(secret_key, clave_esperada):
         return "No autorizado", 403
     try:
+        cliente = get_cliente(cliente_id)
+        if not cliente:
+            return "Cliente no encontrado", 404
         resumen = generar_resumen_semanal(cliente_id)
         if resumen is None:
             return "Error generando resumen", 500
-        enviado = enviar_reporte_semanal(cliente_id, resumen)
-        return f"✅ Reporte de prueba enviado: {enviado}", 200
+        lang_cliente = get_idioma_default(cliente)
+        enviado = enviar_reporte_semanal(cliente_id, resumen, lang=lang_cliente)
+        return f"✅ Reporte de prueba enviado (idioma={lang_cliente}): {enviado}", 200
     except Exception as e:
         return f"❌ Error: {e}", 500
 
@@ -1650,7 +1656,7 @@ def recuperar_password(cliente_id):
                 "reset_token": token, "reset_token_expira": expira
             }).eq("id", id_clean).execute()
             link = url_for('reset_password', token=token, _external=True)
-            enviar_email_reset_password(id_clean, vendedor.get("nombre", ""), False, link)
+            enviar_email_reset_password(id_clean, vendedor.get("nombre", ""), False, link, lang=lang)
             encontrado = True
             log_accion('RESET_PASSWORD_SOLICITADO', f"dueño cliente={id_clean}", get_remote_address(), id_clean)
 
@@ -1665,7 +1671,7 @@ def recuperar_password(cliente_id):
                             "reset_token": token, "reset_token_expira": expira
                         }).eq("id", asesor["id"]).execute()
                         link = url_for('reset_password', token=token, _external=True)
-                        enviar_email_reset_password(id_clean, asesor.get("nombre", ""), True, link)
+                        enviar_email_reset_password(id_clean, asesor.get("nombre", ""), True, link, lang=lang)
                         encontrado = True
                         log_accion('RESET_PASSWORD_SOLICITADO', f"asesor={asesor.get('usuario')}", get_remote_address(), id_clean)
                         break
