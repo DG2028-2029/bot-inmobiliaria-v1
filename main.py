@@ -1634,6 +1634,15 @@ def login(cliente_id):
 # ✅ RECUPERACIÓN DE CONTRASEÑA
 # ============================================================
 
+ERROR_MSGS_RESET = {
+    'es': {'corta': 'La contraseña debe tener al menos 6 caracteres.', 'no_coincide': 'Las contraseñas no coinciden.'},
+    'en': {'corta': 'Password must be at least 6 characters.', 'no_coincide': 'Passwords do not match.'},
+    'fr': {'corta': 'Le mot de passe doit contenir au moins 6 caractères.', 'no_coincide': 'Les mots de passe ne correspondent pas.'},
+    'de': {'corta': 'Das Passwort muss mindestens 6 Zeichen lang sein.', 'no_coincide': 'Die Passwörter stimmen nicht überein.'},
+    'pt': {'corta': 'A senha deve ter pelo menos 6 caracteres.', 'no_coincide': 'As senhas não coincidem.'},
+    'zh': {'corta': '密码至少需要6个字符。', 'no_coincide': '两次输入的密码不一致。'},
+}
+
 @app.route("/recuperar/<cliente_id>", methods=["GET", "POST"])
 @limiter.limit("5 per minute")
 def recuperar_password(cliente_id):
@@ -1678,7 +1687,8 @@ def recuperar_password(cliente_id):
             except Exception as e:
                 print(f"❌ Error buscando asesor para reset: {e}")
 
-        mensaje = "Si el correo existe en nuestro sistema, te enviamos un enlace para restablecer tu contraseña."
+        # ✅ El texto de confirmación ahora lo muestra el template traducido (rt.mensaje_ok)
+        mensaje = True
     return render_template("recuperar_password.html", cliente=vendedor, textos=textos,
                            idioma_actual=lang, mensaje=mensaje, cliente_id=id_clean)
 
@@ -1706,6 +1716,17 @@ def reset_password(token):
         except:
             pass
 
+    # ✅ Determinar el idioma correcto (del dueño, o del dueño del asesor)
+    lang_reset = 'es'
+    if cuenta and tipo:
+        if tipo == "cliente":
+            lang_reset = get_idioma_default(cuenta)
+        else:
+            cliente_padre_id = cuenta.get("cliente_id")
+            cliente_padre = get_cliente(cliente_padre_id) if cliente_padre_id else None
+            if cliente_padre:
+                lang_reset = get_idioma_default(cliente_padre)
+
     token_valido = False
     if cuenta:
         expira_str = cuenta.get("reset_token_expira")
@@ -1718,17 +1739,18 @@ def reset_password(token):
                 pass
 
     if not token_valido:
-        return render_template("reset_password.html", token_invalido=True)
+        return render_template("reset_password.html", token_invalido=True, idioma_actual=lang_reset)
 
     error = None
+    err_t = ERROR_MSGS_RESET.get(lang_reset, ERROR_MSGS_RESET['es'])
     if request.method == "POST":
         verificar_csrf()
         nueva = request.form.get("password", "").strip()
         confirmar = request.form.get("password_confirmar", "").strip()
         if len(nueva) < 6:
-            error = "La contraseña debe tener al menos 6 caracteres."
+            error = err_t['corta']
         elif nueva != confirmar:
-            error = "Las contraseñas no coinciden."
+            error = err_t['no_coincide']
         else:
             nuevo_hash = generate_password_hash(nueva)
             tabla = "clientes" if tipo == "cliente" else "asesores"
@@ -1738,9 +1760,9 @@ def reset_password(token):
                 "reset_token_expira": None
             }).eq("id", cuenta["id"]).execute()
             log_accion('RESET_PASSWORD_COMPLETADO', f"tipo={tipo}", get_remote_address())
-            return render_template("reset_password.html", exito=True)
+            return render_template("reset_password.html", exito=True, idioma_actual=lang_reset)
 
-    return render_template("reset_password.html", token=token, error=error)
+    return render_template("reset_password.html", token=token, error=error, idioma_actual=lang_reset)
 
 @app.route("/logout/<cliente_id>")
 def logout(cliente_id):
