@@ -1074,6 +1074,93 @@ def actualizar_etapa(cliente_id, lead_id):
         return jsonify({"ok": False, "error": str(e)}), 500
 
 # ============================================================
+# ✅ AGENDA DE VISITAS
+# ============================================================
+
+@app.route("/visitas/<cliente_id>/nueva/<int:lead_id>", methods=["POST"])
+def crear_visita(cliente_id, lead_id):
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return jsonify({"ok": False, "error": "No autorizado"}), 403
+    verificar_csrf()
+    try:
+        fecha_str = request.form.get("fecha_visita", "").strip()
+        propiedad_id = request.form.get("propiedad_id", "").strip()
+        notas = request.form.get("notas", "").strip()[:500]
+
+        if not fecha_str:
+            return jsonify({"ok": False, "error": "Fecha requerida"}), 400
+
+        try:
+            fecha_visita = datetime.strptime(fecha_str, "%Y-%m-%dT%H:%M")
+        except ValueError:
+            return jsonify({"ok": False, "error": "Formato de fecha inválido"}), 400
+
+        visita_data = {
+            "lead_id": lead_id,
+            "vendedor": id_clean,
+            "propiedad_id": int(propiedad_id) if propiedad_id else None,
+            "fecha_visita": fecha_visita.isoformat(),
+            "notas": notas,
+            "estado": "agendada"
+        }
+        resultado = supabase.table("visitas").insert(visita_data).execute()
+        log_accion('VISITA_CREADA', f"lead_id={lead_id}", get_remote_address(), id_clean)
+        return jsonify({"ok": True, "visita": resultado.data[0] if resultado.data else None})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/visitas/<cliente_id>/lead/<int:lead_id>")
+def obtener_visitas_lead(cliente_id, lead_id):
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return jsonify({"ok": False, "error": "No autorizado"}), 403
+    try:
+        resultado = supabase.table("visitas").select("*").eq("lead_id", lead_id).eq("vendedor", id_clean).order("fecha_visita", desc=False).execute()
+        return jsonify({"ok": True, "visitas": resultado.data or []})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/visitas/<cliente_id>/proximas")
+def visitas_proximas(cliente_id):
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return jsonify({"ok": False, "error": "No autorizado"}), 403
+    try:
+        resultado = supabase.table("visitas").select("*").eq("vendedor", id_clean).eq("estado", "agendada").order("fecha_visita", desc=False).execute()
+        return jsonify({"ok": True, "visitas": resultado.data or []})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/visitas/<cliente_id>/cancelar/<int:visita_id>", methods=["POST"])
+def cancelar_visita(cliente_id, visita_id):
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return jsonify({"ok": False, "error": "No autorizado"}), 403
+    verificar_csrf()
+    try:
+        supabase.table("visitas").update({"estado": "cancelada"}).eq("id", visita_id).eq("vendedor", id_clean).execute()
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/propiedades/<cliente_id>/lista")
+def propiedades_lista_json(cliente_id):
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return jsonify({"ok": False, "error": "No autorizado"}), 403
+    try:
+        resultado = supabase.table("propiedades").select("id,titulo").eq("vendedor", id_clean).eq("estado", "disponible").order("titulo").execute()
+        return jsonify({"ok": True, "propiedades": resultado.data or []})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+# ============================================================
 # RUTAS PRINCIPALES
 # ============================================================
 
