@@ -54,6 +54,7 @@
         .badge-medio { background: #fef9e7; color: #d68910; border: 1px solid #fad7a0; }
         .badge-bajo { background: #f4f6f7; color: #7f8c8d; border: 1px solid #d5dbdb; }
         .badge-cliente { background: #eaf4fb; color: #1a5276; border: 1px solid #aed6f1; }
+        .badge-visita { display: none; background: #eafaf1; color: #196f3d; border: 1px solid #a9dfbf; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; }
         .card-score { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
         .score-bar-wrap { flex: 1; background: #ecf0f1; border-radius: 4px; height: 5px; overflow: hidden; }
         .score-bar { height: 100%; border-radius: 4px; }
@@ -79,6 +80,8 @@
         .btn-wa:hover { background: #128C7E; }
         .btn-msg { background: #f0f4ff; color: var(--color); border: 1px solid var(--color); }
         .btn-msg:hover { background: var(--color); color: white; }
+        .btn-visita { background: #eafaf1; color: #196f3d; border: 1px solid #a9dfbf; }
+        .btn-visita:hover { background: #196f3d; color: white; }
         .etapa-select { width: 100%; font-size: 11px; padding: 5px 6px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer; margin-top: 6px; }
         .etapa-select:focus { outline: none; border-color: var(--color); }
 
@@ -99,6 +102,19 @@
         .btn-wa-op { flex: 1; padding: 9px; background: #25D366; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; font-family: inherit; }
         .btn-wa-op:hover { background: #128C7E; }
         .btn-cerrar-modal-k { width: 100%; margin-top: 8px; padding: 11px; background: #ecf0f1; color: #555; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; }
+
+        /* ✅ MODAL agendar visita */
+        .form-visita-group { margin-bottom: 14px; }
+        .form-visita-group label { display: block; font-size: 12px; font-weight: 700; color: #555; margin-bottom: 5px; }
+        .form-visita-group input, .form-visita-group select, .form-visita-group textarea {
+            width: 100%; padding: 9px 10px; border: 1px solid #ddd; border-radius: 8px;
+            font-size: 13px; font-family: inherit; background: white;
+        }
+        .form-visita-group input:focus, .form-visita-group select:focus, .form-visita-group textarea:focus {
+            outline: none; border-color: var(--color);
+        }
+        .form-visita-group textarea { resize: vertical; }
+        .visita-error { color: #e74c3c; font-size: 12px; margin-bottom: 10px; display: none; background: #fdf2f2; padding: 8px 10px; border-radius: 6px; }
 
         @media (max-width: 900px) {
             .kanban-board { grid-template-columns: repeat(3, 1fr); }
@@ -145,6 +161,16 @@
         'cerrar_modal': 'Cerrar',
         'recomendado': '★ Recomendado',
         'error_resp': 'Error al generar mensajes.',
+        'visita_boton_titulo': 'Agendar visita',
+        'visita_modal_titulo': '📅 Agendar visita — ',
+        'visita_fecha_lbl': 'Fecha y hora',
+        'visita_propiedad_lbl': 'Propiedad (opcional)',
+        'visita_sin_propiedad': '— Sin propiedad específica —',
+        'visita_notas_lbl': 'Notas (opcional)',
+        'visita_guardar': '💾 Guardar visita',
+        'visita_fecha_requerida': 'La fecha es requerida.',
+        'visita_error_guardar': 'Error al guardar la visita.',
+        'visita_error_conexion': 'Error de conexión.',
     },
     'en': {
         'titulo_top': 'Sales Process',
@@ -174,6 +200,16 @@
         'cerrar_modal': 'Close',
         'recomendado': '★ Recommended',
         'error_resp': 'Error generating messages.',
+        'visita_boton_titulo': 'Schedule visit',
+        'visita_modal_titulo': '📅 Schedule visit — ',
+        'visita_fecha_lbl': 'Date and time',
+        'visita_propiedad_lbl': 'Property (optional)',
+        'visita_sin_propiedad': '— No specific property —',
+        'visita_notas_lbl': 'Notes (optional)',
+        'visita_guardar': '💾 Save visit',
+        'visita_fecha_requerida': 'Date is required.',
+        'visita_error_guardar': 'Error saving the visit.',
+        'visita_error_conexion': 'Connection error.',
     },
     'fr': {
         'titulo_top': 'Processus de Vente',
@@ -203,6 +239,16 @@
         'cerrar_modal': 'Fermer',
         'recomendado': '★ Recommandé',
         'error_resp': 'Erreur lors de la génération.',
+        'visita_boton_titulo': 'Planifier une visite',
+        'visita_modal_titulo': '📅 Planifier une visite — ',
+        'visita_fecha_lbl': 'Date et heure',
+        'visita_propiedad_lbl': 'Propriété (facultatif)',
+        'visita_sin_propiedad': '— Aucune propriété spécifique —',
+        'visita_notas_lbl': 'Notes (facultatif)',
+        'visita_guardar': '💾 Enregistrer la visite',
+        'visita_fecha_requerida': 'La date est requise.',
+        'visita_error_guardar': "Erreur lors de l'enregistrement.",
+        'visita_error_conexion': 'Erreur de connexion.',
     },
     'de': {
         'titulo_top': 'Verkaufsprozess',
@@ -232,6 +278,16 @@
         'cerrar_modal': 'Schließen',
         'recomendado': '★ Empfohlen',
         'error_resp': 'Fehler beim Generieren.',
+        'visita_boton_titulo': 'Besichtigung planen',
+        'visita_modal_titulo': '📅 Besichtigung planen — ',
+        'visita_fecha_lbl': 'Datum und Uhrzeit',
+        'visita_propiedad_lbl': 'Immobilie (optional)',
+        'visita_sin_propiedad': '— Keine bestimmte Immobilie —',
+        'visita_notas_lbl': 'Notizen (optional)',
+        'visita_guardar': '💾 Besichtigung speichern',
+        'visita_fecha_requerida': 'Datum ist erforderlich.',
+        'visita_error_guardar': 'Fehler beim Speichern.',
+        'visita_error_conexion': 'Verbindungsfehler.',
     },
     'pt': {
         'titulo_top': 'Processo de Vendas',
@@ -261,6 +317,16 @@
         'cerrar_modal': 'Fechar',
         'recomendado': '★ Recomendado',
         'error_resp': 'Erro ao gerar mensagens.',
+        'visita_boton_titulo': 'Agendar visita',
+        'visita_modal_titulo': '📅 Agendar visita — ',
+        'visita_fecha_lbl': 'Data e hora',
+        'visita_propiedad_lbl': 'Imóvel (opcional)',
+        'visita_sin_propiedad': '— Sem imóvel específico —',
+        'visita_notas_lbl': 'Notas (opcional)',
+        'visita_guardar': '💾 Salvar visita',
+        'visita_fecha_requerida': 'A data é obrigatória.',
+        'visita_error_guardar': 'Erro ao salvar a visita.',
+        'visita_error_conexion': 'Erro de conexão.',
     },
     'zh': {
         'titulo_top': '销售流程',
@@ -290,6 +356,16 @@
         'cerrar_modal': '关闭',
         'recomendado': '★ 推荐',
         'error_resp': '生成消息时出错。',
+        'visita_boton_titulo': '安排参观',
+        'visita_modal_titulo': '📅 安排参观 — ',
+        'visita_fecha_lbl': '日期和时间',
+        'visita_propiedad_lbl': '房产（可选）',
+        'visita_sin_propiedad': '— 无特定房产 —',
+        'visita_notas_lbl': '备注（可选）',
+        'visita_guardar': '💾 保存参观',
+        'visita_fecha_requerida': '日期为必填项。',
+        'visita_error_guardar': '保存参观时出错。',
+        'visita_error_conexion': '连接错误。',
     }
 } %}
 {% set t = kn[lang] if lang in kn else kn['es'] %}
@@ -387,6 +463,7 @@
             <div class="card-badges">
                 <span class="badge {{ badge_clase }}">{{ lead.clasificacion | truncate(15, True, '...') }}</span>
                 <span class="dias-badge {{ dias_clase }}">{{ dias_txt }}</span>
+                <span class="badge-visita" id="visitaBadge_{{ lead.id }}"></span>
             </div>
             <div class="card-score">
                 <div class="score-bar-wrap">
@@ -409,6 +486,7 @@
             <div class="card-footer">
                 <a href="https://wa.me/{{ lead.telefono }}" target="_blank" class="card-tel">📱 {{ lead.telefono }}</a>
                 <div class="card-actions">
+                    <button class="btn-card btn-visita" title="{{ t.visita_boton_titulo }}" onclick="abrirModalVisita({{ lead.id }}, '{{ lead.nombre }}')">📅</button>
                     <button class="btn-card btn-msg" onclick="verRespuesta({{ lead.id }}, '{{ lead.nombre }}', '{{ lead.telefono }}')">💬</button>
                     <button class="btn-card btn-wa" onclick="abrirWhatsApp('{{ lead.telefono }}', {{ lead.id }})">📱</button>
                 </div>
@@ -435,15 +513,51 @@
     </div>
 </div>
 
+<!-- ✅ MODAL agendar visita -->
+<div id="modalVisita" class="modal-respuesta">
+    <div class="modal-respuesta-content" style="max-width:420px;">
+        <div class="modal-resp-header">
+            <div class="modal-resp-titulo">{{ t.visita_modal_titulo }}<span id="nombreVisita"></span></div>
+            <button class="modal-resp-cerrar" onclick="cerrarModalVisita()">✕</button>
+        </div>
+        <form id="formVisita" onsubmit="return guardarVisita(event)">
+            <input type="hidden" id="visitaLeadId" value="">
+            <div class="form-visita-group">
+                <label>{{ t.visita_fecha_lbl }}</label>
+                <input type="datetime-local" id="visitaFecha" required>
+            </div>
+            <div class="form-visita-group">
+                <label>{{ t.visita_propiedad_lbl }}</label>
+                <select id="visitaPropiedad">
+                    <option value="">{{ t.visita_sin_propiedad }}</option>
+                </select>
+            </div>
+            <div class="form-visita-group">
+                <label>{{ t.visita_notas_lbl }}</label>
+                <textarea id="visitaNotas" rows="2"></textarea>
+            </div>
+            <div id="visitaError" class="visita-error"></div>
+            <button type="submit" class="btn-copiar-op" style="width:100%;">{{ t.visita_guardar }}</button>
+        </form>
+        <button class="btn-cerrar-modal-k" onclick="cerrarModalVisita()">{{ t.cerrar_modal }}</button>
+    </div>
+</div>
+
 <script>
 const clienteId = "{{ cliente.usuario }}";
+const CSRF_TOKEN = "{{ csrf_token() }}";
 const T_COPIAR = "{{ t.copiar }}";
 const T_COPIADO = "{{ t.copiado }}";
 const T_ANALIZANDO = "{{ t.analizando }}";
 const T_RECOMENDADO = "{{ t.recomendado }}";
 const T_ERROR = "{{ t.error_resp }}";
 const T_WA = "{{ t.whatsapp }}";
+const T_VISITA_SIN_PROPIEDAD = "{{ t.visita_sin_propiedad }}";
+const T_VISITA_FECHA_REQUERIDA = "{{ t.visita_fecha_requerida }}";
+const T_VISITA_ERROR_GUARDAR = "{{ t.visita_error_guardar }}";
+const T_VISITA_ERROR_CONEXION = "{{ t.visita_error_conexion }}";
 let draggedLeadId = null;
+let propiedadesCache = null;
 
 function toggleLang() { document.getElementById('langSelector').classList.toggle('abierto'); }
 document.addEventListener('click', function(e) {
@@ -563,8 +677,108 @@ function waOpcion(msgId, telefono) {
 
 function cerrarModal() { document.getElementById('modalRespuesta').style.display = 'none'; }
 
+// ✅ NUEVO — agenda de visitas
+function abrirModalVisita(leadId, nombre) {
+    document.getElementById('visitaLeadId').value = leadId;
+    document.getElementById('nombreVisita').textContent = nombre;
+    document.getElementById('visitaFecha').value = '';
+    document.getElementById('visitaNotas').value = '';
+    document.getElementById('visitaError').style.display = 'none';
+    cargarPropiedadesSelect();
+    document.getElementById('modalVisita').style.display = 'block';
+}
+function cerrarModalVisita() {
+    document.getElementById('modalVisita').style.display = 'none';
+}
+function cargarPropiedadesSelect() {
+    if (propiedadesCache) {
+        renderPropiedadesSelect(propiedadesCache);
+        return;
+    }
+    fetch(`/propiedades/${clienteId}/lista`)
+        .then(r => r.json())
+        .then(data => {
+            propiedadesCache = data.propiedades || [];
+            renderPropiedadesSelect(propiedadesCache);
+        })
+        .catch(() => {});
+}
+function renderPropiedadesSelect(props) {
+    const sel = document.getElementById('visitaPropiedad');
+    sel.innerHTML = `<option value="">${T_VISITA_SIN_PROPIEDAD}</option>` +
+        props.map(p => `<option value="${p.id}">${p.titulo}</option>`).join('');
+}
+function guardarVisita(event) {
+    event.preventDefault();
+    const leadId = document.getElementById('visitaLeadId').value;
+    const fecha = document.getElementById('visitaFecha').value;
+    const propiedadId = document.getElementById('visitaPropiedad').value;
+    const notas = document.getElementById('visitaNotas').value;
+    const errBox = document.getElementById('visitaError');
+    errBox.style.display = 'none';
+
+    if (!fecha) {
+        errBox.textContent = T_VISITA_FECHA_REQUERIDA;
+        errBox.style.display = 'block';
+        return false;
+    }
+
+    const body = new URLSearchParams();
+    body.append('csrf_token', CSRF_TOKEN);
+    body.append('fecha_visita', fecha);
+    if (propiedadId) body.append('propiedad_id', propiedadId);
+    if (notas) body.append('notas', notas);
+
+    fetch(`/visitas/${clienteId}/nueva/${leadId}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: body.toString()
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            cerrarModalVisita();
+            location.reload();
+        } else {
+            errBox.textContent = data.error || T_VISITA_ERROR_GUARDAR;
+            errBox.style.display = 'block';
+        }
+    })
+    .catch(() => {
+        errBox.textContent = T_VISITA_ERROR_CONEXION;
+        errBox.style.display = 'block';
+    });
+    return false;
+}
+
+function cargarBadgesVisitas() {
+    fetch(`/visitas/${clienteId}/proximas`)
+        .then(r => r.json())
+        .then(data => {
+            const visitas = data.visitas || [];
+            const porLead = {};
+            visitas.forEach(v => {
+                if (!porLead[v.lead_id] || new Date(v.fecha_visita) < new Date(porLead[v.lead_id].fecha_visita)) {
+                    porLead[v.lead_id] = v;
+                }
+            });
+            Object.keys(porLead).forEach(leadId => {
+                const badge = document.getElementById(`visitaBadge_${leadId}`);
+                if (badge) {
+                    const f = new Date(porLead[leadId].fecha_visita);
+                    const fechaStr = f.toLocaleDateString(undefined, {day:'2-digit', month:'2-digit'}) + ' ' + f.toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit'});
+                    badge.textContent = `📅 ${fechaStr}`;
+                    badge.style.display = 'inline-block';
+                }
+            });
+        })
+        .catch(() => {});
+}
+document.addEventListener('DOMContentLoaded', cargarBadgesVisitas);
+
 window.onclick = function(e) {
     if (e.target == document.getElementById('modalRespuesta')) cerrarModal();
+    if (e.target == document.getElementById('modalVisita')) cerrarModalVisita();
 }
 </script>
 </body>
