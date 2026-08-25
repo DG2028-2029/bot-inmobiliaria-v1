@@ -320,7 +320,7 @@
 </head>
 <body>
 
-{% set lang = session.get('idioma', 'es') %}
+{% set lang = idioma_actual or session.get('idioma', 'es') %}
 {% set lt = {
     'es': {
         'sub': 'Panel de gestión inmobiliaria',
