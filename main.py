@@ -1627,8 +1627,8 @@ def login(cliente_id):
         except Exception as e:
             print(f"⚠️ Error consultando asesores: {e}")
         log_accion('LOGIN_FAIL', f"usuario={usuario_form}", get_remote_address(), id_clean)
-        return render_template("login.html", error="Credenciales Invalidas", cliente=vendedor, textos=textos)
-    return render_template("login.html", cliente=vendedor, textos=textos)
+        return render_template("login.html", error="Credenciales Invalidas", cliente=vendedor, textos=textos, idioma_actual=lang)
+    return render_template("login.html", cliente=vendedor, textos=textos, idioma_actual=lang)
 
 # ============================================================
 # ✅ RECUPERACIÓN DE CONTRASEÑA
