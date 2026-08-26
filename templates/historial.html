@@ -53,7 +53,7 @@
         .btn-search { background: #2c3e50; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: bold; white-space: nowrap; }
         .btn-clear { background: #ecf0f1; color: #555; text-decoration: none; padding: 10px 14px; border-radius: 8px; font-size: 13px; display: flex; align-items: center; white-space: nowrap; }
         .tabla-wrapper { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.07); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1180px; }
         th { background: var(--color); color: white; padding: 12px 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; white-space: nowrap; }
         td { padding: 10px 8px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 11px; vertical-align: middle; }
         tr:last-child td { border-bottom: none; }
@@ -76,6 +76,7 @@
         .badge-medio { background: #fef9e7; color: #d68910; border: 1px solid #fad7a0; }
         .badge-bajo { background: #f4f6f7; color: #7f8c8d; border: 1px solid #d5dbdb; }
         .badge-cliente { background: #eaf4fb; color: #1a5276; border: 1px solid #aed6f1; }
+        .badge-visita { display: none; background: #eafaf1; color: #196f3d; border: 1px solid #a9dfbf; padding: 3px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; }
         .score-cell { min-width: 75px; }
         .score-bar-wrap { background: #ecf0f1; border-radius: 6px; height: 5px; margin-bottom: 3px; overflow: hidden; }
         .score-bar { height: 100%; border-radius: 6px; }
@@ -113,6 +114,8 @@
         .btn-respuesta:hover { background: #e8f4fd; border-color: var(--color); color: var(--color); }
         .btn-whatsapp-quick { background: #25D366; color: white; border: none; padding: 5px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; width: 100%; margin-top: 4px; font-weight: bold; transition: 0.2s; }
         .btn-whatsapp-quick:hover { background: #128C7E; }
+        .btn-agendar-visita { background: #eafaf1; color: #196f3d; border: 1px solid #a9dfbf; padding: 5px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; width: 100%; margin-top: 4px; font-weight: bold; transition: 0.2s; }
+        .btn-agendar-visita:hover { background: #196f3d; color: white; }
         .select-asesor { font-size: 11px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 6px; width: 100%; background: white; cursor: pointer; }
         .select-asesor:focus { outline: none; border-color: var(--color); }
         .acciones-container { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 105px; }
@@ -135,6 +138,19 @@
         .btn-wa-op { flex: 1; padding: 9px; background: #25D366; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; font-family: inherit; }
         .btn-wa-op:hover { background: #128C7E; }
         .btn-cerrar-modal { width: 100%; margin-top: 8px; padding: 11px; background: #ecf0f1; color: #555; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; }
+
+        /* ✅ MODAL agendar visita */
+        .form-visita-group { margin-bottom: 14px; }
+        .form-visita-group label { display: block; font-size: 12px; font-weight: 700; color: #555; margin-bottom: 5px; }
+        .form-visita-group input, .form-visita-group select, .form-visita-group textarea {
+            width: 100%; padding: 9px 10px; border: 1px solid #ddd; border-radius: 8px;
+            font-size: 13px; font-family: inherit; background: white;
+        }
+        .form-visita-group input:focus, .form-visita-group select:focus, .form-visita-group textarea:focus {
+            outline: none; border-color: var(--color);
+        }
+        .form-visita-group textarea { resize: vertical; }
+        .visita-error { color: #e74c3c; font-size: 12px; margin-bottom: 10px; display: none; background: #fdf2f2; padding: 8px 10px; border-radius: 6px; }
 
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); overflow-y: auto; }
         .modal-content { background: white; margin: 4% auto; padding: 24px; border-radius: 12px; max-width: 620px; width: 92%; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
@@ -195,6 +211,7 @@
         'col_asesor': 'Asesor',
         'col_email': '📧 Email',
         'col_seg': '✉️ Seg.',
+        'col_visita': '📅 Visita',
         'sin_asignar': 'Sin asignar',
         'hoy': 'Hoy',
         'email_si': '✅ Sí',
@@ -243,6 +260,16 @@
         'que_decirle': '💬 ¿Qué decirle a ',
         'recomendado': '★ Recomendado',
         'error_resp': 'Error al generar mensajes.',
+        'visita_boton': '📅 Agendar visita',
+        'visita_modal_titulo': '📅 Agendar visita — ',
+        'visita_fecha_lbl': 'Fecha y hora',
+        'visita_propiedad_lbl': 'Propiedad (opcional)',
+        'visita_sin_propiedad': '— Sin propiedad específica —',
+        'visita_notas_lbl': 'Notas (opcional)',
+        'visita_guardar': '💾 Guardar visita',
+        'visita_fecha_requerida': 'La fecha es requerida.',
+        'visita_error_guardar': 'Error al guardar la visita.',
+        'visita_error_conexion': 'Error de conexión.',
     },
     'en': {
         'pipeline': '📊 Sales Process',
@@ -255,6 +282,7 @@
         'col_asesor': 'Agent',
         'col_email': '📧 Email',
         'col_seg': '✉️ Follow-up',
+        'col_visita': '📅 Visit',
         'sin_asignar': 'Unassigned',
         'hoy': 'Today',
         'email_si': '✅ Yes',
@@ -303,6 +331,16 @@
         'que_decirle': '💬 What to say to ',
         'recomendado': '★ Recommended',
         'error_resp': 'Error generating messages.',
+        'visita_boton': '📅 Schedule visit',
+        'visita_modal_titulo': '📅 Schedule visit — ',
+        'visita_fecha_lbl': 'Date and time',
+        'visita_propiedad_lbl': 'Property (optional)',
+        'visita_sin_propiedad': '— No specific property —',
+        'visita_notas_lbl': 'Notes (optional)',
+        'visita_guardar': '💾 Save visit',
+        'visita_fecha_requerida': 'Date is required.',
+        'visita_error_guardar': 'Error saving the visit.',
+        'visita_error_conexion': 'Connection error.',
     },
     'fr': {
         'pipeline': '📊 Processus de Vente',
@@ -315,6 +353,7 @@
         'col_asesor': 'Agent',
         'col_email': '📧 Email',
         'col_seg': '✉️ Suivi',
+        'col_visita': '📅 Visite',
         'sin_asignar': 'Non assigné',
         'hoy': "Aujourd'hui",
         'email_si': '✅ Oui',
@@ -363,6 +402,16 @@
         'que_decirle': '💬 Quoi dire à ',
         'recomendado': '★ Recommandé',
         'error_resp': 'Erreur lors de la génération.',
+        'visita_boton': '📅 Planifier une visite',
+        'visita_modal_titulo': '📅 Planifier une visite — ',
+        'visita_fecha_lbl': 'Date et heure',
+        'visita_propiedad_lbl': 'Propriété (facultatif)',
+        'visita_sin_propiedad': '— Aucune propriété spécifique —',
+        'visita_notas_lbl': 'Notes (facultatif)',
+        'visita_guardar': '💾 Enregistrer la visite',
+        'visita_fecha_requerida': 'La date est requise.',
+        'visita_error_guardar': "Erreur lors de l'enregistrement.",
+        'visita_error_conexion': 'Erreur de connexion.',
     },
     'de': {
         'pipeline': '📊 Verkaufsprozess',
@@ -375,6 +424,7 @@
         'col_asesor': 'Agent',
         'col_email': '📧 Email',
         'col_seg': '✉️ Nachverfolgung',
+        'col_visita': '📅 Besichtigung',
         'sin_asignar': 'Nicht zugewiesen',
         'hoy': 'Heute',
         'email_si': '✅ Ja',
@@ -423,6 +473,16 @@
         'que_decirle': '💬 Was sagen zu ',
         'recomendado': '★ Empfohlen',
         'error_resp': 'Fehler beim Generieren.',
+        'visita_boton': '📅 Besichtigung planen',
+        'visita_modal_titulo': '📅 Besichtigung planen — ',
+        'visita_fecha_lbl': 'Datum und Uhrzeit',
+        'visita_propiedad_lbl': 'Immobilie (optional)',
+        'visita_sin_propiedad': '— Keine bestimmte Immobilie —',
+        'visita_notas_lbl': 'Notizen (optional)',
+        'visita_guardar': '💾 Besichtigung speichern',
+        'visita_fecha_requerida': 'Datum ist erforderlich.',
+        'visita_error_guardar': 'Fehler beim Speichern.',
+        'visita_error_conexion': 'Verbindungsfehler.',
     },
     'pt': {
         'pipeline': '📊 Processo de Vendas',
@@ -435,6 +495,7 @@
         'col_asesor': 'Agente',
         'col_email': '📧 Email',
         'col_seg': '✉️ Acomp.',
+        'col_visita': '📅 Visita',
         'sin_asignar': 'Sem atribuição',
         'hoy': 'Hoje',
         'email_si': '✅ Sim',
@@ -483,6 +544,16 @@
         'que_decirle': '💬 O que dizer a ',
         'recomendado': '★ Recomendado',
         'error_resp': 'Erro ao gerar mensagens.',
+        'visita_boton': '📅 Agendar visita',
+        'visita_modal_titulo': '📅 Agendar visita — ',
+        'visita_fecha_lbl': 'Data e hora',
+        'visita_propiedad_lbl': 'Imóvel (opcional)',
+        'visita_sin_propiedad': '— Sem imóvel específico —',
+        'visita_notas_lbl': 'Notas (opcional)',
+        'visita_guardar': '💾 Salvar visita',
+        'visita_fecha_requerida': 'A data é obrigatória.',
+        'visita_error_guardar': 'Erro ao salvar a visita.',
+        'visita_error_conexion': 'Erro de conexão.',
     },
     'zh': {
         'pipeline': '📊 销售流程',
@@ -495,6 +566,7 @@
         'col_asesor': '顾问',
         'col_email': '📧 邮件',
         'col_seg': '✉️ 跟进',
+        'col_visita': '📅 参观',
         'sin_asignar': '未分配',
         'hoy': '今天',
         'email_si': '✅ 有',
@@ -543,6 +615,16 @@
         'que_decirle': '💬 对 ',
         'recomendado': '★ 推荐',
         'error_resp': '生成消息时出错。',
+        'visita_boton': '📅 安排参观',
+        'visita_modal_titulo': '📅 安排参观 — ',
+        'visita_fecha_lbl': '日期和时间',
+        'visita_propiedad_lbl': '房产（可选）',
+        'visita_sin_propiedad': '— 无特定房产 —',
+        'visita_notas_lbl': '备注（可选）',
+        'visita_guardar': '💾 保存参观',
+        'visita_fecha_requerida': '日期为必填项。',
+        'visita_error_guardar': '保存参观时出错。',
+        'visita_error_conexion': '连接错误。',
     }
 } %}
 {% set lang = idioma_actual if idioma_actual in tl else 'es' %}
@@ -634,6 +716,7 @@
                 <th>{{ textos.col_temperatura }}</th>
                 <th>{{ tx.col_email }}</th>
                 <th>{{ tx.col_seg }}</th>
+                <th>{{ tx.col_visita }}</th>
                 <th>{{ tx.col_notas }}</th>
                 {% if es_dueno and asesores %}<th>{{ tx.col_asesor }}</th>{% endif %}
                 <th>{{ textos.col_acciones }}</th>
@@ -672,6 +755,7 @@
                     {% if lead.seguimiento_enviado %}<span class="seguimiento-si">{{ tx.seg_env }}</span>
                     {% else %}<span class="seguimiento-no">{{ tx.seg_pend }}</span>{% endif %}
                 </td>
+                <td><span class="badge-visita" id="visitaBadge_{{ lead.id }}"></span></td>
                 <td class="nota-cell">
                     <span class="nota-texto" onclick="editarNota(this, {{ lead.id }})" title="Click">{{ lead.notas or tx.nota_ph }}</span>
                     <textarea class="nota-input" rows="2" onblur="guardarNota(this, {{ lead.id }})">{{ lead.notas or '' }}</textarea>
@@ -699,11 +783,12 @@
                         {% endif %}
                         <button class="btn-respuesta" onclick="verRespuesta({{ lead.id }}, '{{ lead.nombre }}', '{{ lead.telefono }}')">{{ tx.btn_que_decir_m }}</button>
                         <button class="btn-whatsapp-quick" onclick="abrirWhatsAppDirecto('{{ lead.telefono }}', {{ lead.id }})">📱 WhatsApp</button>
+                        <button class="btn-agendar-visita" onclick="abrirModalVisita({{ lead.id }}, '{{ lead.nombre }}')">{{ tx.visita_boton }}</button>
                     </div>
                 </td>
             </tr>
             {% else %}
-            <tr><td colspan="14" class="empty-state">{{ textos.no_leads }}</td></tr>
+            <tr><td colspan="15" class="empty-state">{{ textos.no_leads }}</td></tr>
             {% endfor %}
         </tbody>
     </table>
@@ -730,6 +815,7 @@
                 {% elif dias <= 7 %}<span class="dias-badge dias-ok">{{ dias }}d</span>
                 {% else %}<span class="dias-badge dias-alerta">{{ dias }}d</span>{% endif %}
                 <span class="badge {{ badge_clase }}">{{ lead.clasificacion }}</span>
+                <span class="badge-visita" id="visitaBadgeM_{{ lead.id }}"></span>
             </div>
         </div>
         <div class="lead-card-row"><span class="lead-card-label">{{ tx.card_tel }}</span><span class="lead-card-valor"><a href="https://wa.me/{{ lead.telefono }}" style="color:#27ae60;font-weight:bold;">{{ lead.telefono }}</a></span></div>
@@ -748,6 +834,7 @@
             {% endif %}
             <button onclick="verRespuesta({{ lead.id }}, '{{ lead.nombre }}', '{{ lead.telefono }}')" style="background:#f8f9fa;color:#2c3e50;border:1px solid #ddd;flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:bold;">{{ tx.btn_que_decir_m }}</button>
             <button onclick="abrirWhatsAppDirecto('{{ lead.telefono }}', {{ lead.id }})" style="background:#25D366;color:white;flex:1;padding:10px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:bold;">{{ tx.btn_wa_m }}</button>
+            <button onclick="abrirModalVisita({{ lead.id }}, '{{ lead.nombre }}')" style="background:#eafaf1;color:#196f3d;border:1px solid #a9dfbf;flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:bold;">{{ tx.visita_boton }}</button>
         </div>
     </div>
     {% else %}
@@ -766,6 +853,36 @@
             <div style="text-align:center;padding:30px;color:#999;">⏳ {{ tx.analizando }}</div>
         </div>
         <button class="btn-cerrar-modal" onclick="cerrarModalRespuesta()">{{ tx.cerrar }}</button>
+    </div>
+</div>
+
+<!-- ✅ MODAL agendar visita -->
+<div id="modalVisita" class="modal-respuesta">
+    <div class="modal-respuesta-content" style="max-width:420px;">
+        <div class="modal-resp-header">
+            <div class="modal-resp-titulo">{{ tx.visita_modal_titulo }}<span id="nombreVisita"></span></div>
+            <button class="modal-resp-cerrar" onclick="cerrarModalVisita()">✕</button>
+        </div>
+        <form id="formVisita" onsubmit="return guardarVisita(event)">
+            <input type="hidden" id="visitaLeadId" value="">
+            <div class="form-visita-group">
+                <label>{{ tx.visita_fecha_lbl }}</label>
+                <input type="datetime-local" id="visitaFecha" required>
+            </div>
+            <div class="form-visita-group">
+                <label>{{ tx.visita_propiedad_lbl }}</label>
+                <select id="visitaPropiedad">
+                    <option value="">{{ tx.visita_sin_propiedad }}</option>
+                </select>
+            </div>
+            <div class="form-visita-group">
+                <label>{{ tx.visita_notas_lbl }}</label>
+                <textarea id="visitaNotas" rows="2"></textarea>
+            </div>
+            <div id="visitaError" class="visita-error"></div>
+            <button type="submit" class="btn-copiar-op" style="width:100%;">{{ tx.visita_guardar }}</button>
+        </form>
+        <button class="btn-cerrar-modal" onclick="cerrarModalVisita()">{{ tx.cerrar }}</button>
     </div>
 </div>
 
@@ -830,12 +947,18 @@
 
 <script>
 const clienteId = "{{ cliente.usuario }}";
+const CSRF_TOKEN = "{{ csrf_token() }}";
 const TX_COPIAR = "{{ tx.btn_copiar }}";
 const TX_COPIADO = "{{ tx.copiado }}";
 const TX_ANALIZANDO = "{{ tx.analizando }}";
 const TX_RECOMENDADO = "{{ tx.recomendado }}";
 const TX_ERROR = "{{ tx.error_resp }}";
 const TX_WA = "{{ tx.btn_wa_modal }}";
+const TX_VISITA_SIN_PROPIEDAD = "{{ tx.visita_sin_propiedad }}";
+const TX_VISITA_FECHA_REQUERIDA = "{{ tx.visita_fecha_requerida }}";
+const TX_VISITA_ERROR_GUARDAR = "{{ tx.visita_error_guardar }}";
+const TX_VISITA_ERROR_CONEXION = "{{ tx.visita_error_conexion }}";
+let propiedadesCache = null;
 
 function toggleLangMenu() { document.getElementById('langSelector').classList.toggle('abierto'); }
 document.addEventListener('click', function(e) {
@@ -949,9 +1072,108 @@ function cerrarModalRespuesta() { document.getElementById('modalRespuesta').styl
 function abrirModalAsesores() { document.getElementById('modalAsesores').style.display = 'block'; }
 function cerrarModalAsesores() { document.getElementById('modalAsesores').style.display = 'none'; }
 
+// ✅ NUEVO — agenda de visitas
+function abrirModalVisita(leadId, nombre) {
+    document.getElementById('visitaLeadId').value = leadId;
+    document.getElementById('nombreVisita').textContent = nombre;
+    document.getElementById('visitaFecha').value = '';
+    document.getElementById('visitaNotas').value = '';
+    document.getElementById('visitaError').style.display = 'none';
+    cargarPropiedadesSelect();
+    document.getElementById('modalVisita').style.display = 'block';
+}
+function cerrarModalVisita() {
+    document.getElementById('modalVisita').style.display = 'none';
+}
+function cargarPropiedadesSelect() {
+    if (propiedadesCache) {
+        renderPropiedadesSelect(propiedadesCache);
+        return;
+    }
+    fetch(`/propiedades/${clienteId}/lista`)
+        .then(r => r.json())
+        .then(data => {
+            propiedadesCache = data.propiedades || [];
+            renderPropiedadesSelect(propiedadesCache);
+        })
+        .catch(() => {});
+}
+function renderPropiedadesSelect(props) {
+    const sel = document.getElementById('visitaPropiedad');
+    sel.innerHTML = `<option value="">${TX_VISITA_SIN_PROPIEDAD}</option>` +
+        props.map(p => `<option value="${p.id}">${p.titulo}</option>`).join('');
+}
+function guardarVisita(event) {
+    event.preventDefault();
+    const leadId = document.getElementById('visitaLeadId').value;
+    const fecha = document.getElementById('visitaFecha').value;
+    const propiedadId = document.getElementById('visitaPropiedad').value;
+    const notas = document.getElementById('visitaNotas').value;
+    const errBox = document.getElementById('visitaError');
+    errBox.style.display = 'none';
+
+    if (!fecha) {
+        errBox.textContent = TX_VISITA_FECHA_REQUERIDA;
+        errBox.style.display = 'block';
+        return false;
+    }
+
+    const body = new URLSearchParams();
+    body.append('csrf_token', CSRF_TOKEN);
+    body.append('fecha_visita', fecha);
+    if (propiedadId) body.append('propiedad_id', propiedadId);
+    if (notas) body.append('notas', notas);
+
+    fetch(`/visitas/${clienteId}/nueva/${leadId}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: body.toString()
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            cerrarModalVisita();
+            location.reload();
+        } else {
+            errBox.textContent = data.error || TX_VISITA_ERROR_GUARDAR;
+            errBox.style.display = 'block';
+        }
+    })
+    .catch(() => {
+        errBox.textContent = TX_VISITA_ERROR_CONEXION;
+        errBox.style.display = 'block';
+    });
+    return false;
+}
+
+function cargarBadgesVisitas() {
+    fetch(`/visitas/${clienteId}/proximas`)
+        .then(r => r.json())
+        .then(data => {
+            const visitas = data.visitas || [];
+            const porLead = {};
+            visitas.forEach(v => {
+                if (!porLead[v.lead_id] || new Date(v.fecha_visita) < new Date(porLead[v.lead_id].fecha_visita)) {
+                    porLead[v.lead_id] = v;
+                }
+            });
+            Object.keys(porLead).forEach(leadId => {
+                const f = new Date(porLead[leadId].fecha_visita);
+                const fechaStr = f.toLocaleDateString(undefined, {day:'2-digit', month:'2-digit'}) + ' ' + f.toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit'});
+                const badge1 = document.getElementById(`visitaBadge_${leadId}`);
+                if (badge1) { badge1.textContent = `📅 ${fechaStr}`; badge1.style.display = 'inline-block'; }
+                const badge2 = document.getElementById(`visitaBadgeM_${leadId}`);
+                if (badge2) { badge2.textContent = `📅 ${fechaStr}`; badge2.style.display = 'inline-block'; }
+            });
+        })
+        .catch(() => {});
+}
+document.addEventListener('DOMContentLoaded', cargarBadgesVisitas);
+
 window.onclick = function(e) {
     if (e.target == document.getElementById('modalRespuesta')) cerrarModalRespuesta();
     if (e.target == document.getElementById('modalAsesores')) cerrarModalAsesores();
+    if (e.target == document.getElementById('modalVisita')) cerrarModalVisita();
 }
 </script>
 </body>
