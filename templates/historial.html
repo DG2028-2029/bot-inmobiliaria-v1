@@ -116,6 +116,8 @@
         .btn-whatsapp-quick:hover { background: #128C7E; }
         .btn-agendar-visita { background: #eafaf1; color: #196f3d; border: 1px solid #a9dfbf; padding: 5px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; width: 100%; margin-top: 4px; font-weight: bold; transition: 0.2s; }
         .btn-agendar-visita:hover { background: #196f3d; color: white; }
+        .btn-portal-link { background: #f3eefc; color: #6c3fbf; border: 1px solid #d8c4f5; padding: 5px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; width: 100%; margin-top: 4px; font-weight: bold; transition: 0.2s; }
+        .btn-portal-link:hover { background: #6c3fbf; color: white; }
         .select-asesor { font-size: 11px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 6px; width: 100%; background: white; cursor: pointer; }
         .select-asesor:focus { outline: none; border-color: var(--color); }
         .acciones-container { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 105px; }
@@ -270,6 +272,8 @@
         'visita_fecha_requerida': 'La fecha es requerida.',
         'visita_error_guardar': 'Error al guardar la visita.',
         'visita_error_conexion': 'Error de conexión.',
+        'portal_boton': '🔗 Link del portal',
+        'portal_error': 'Error al generar el link.',
     },
     'en': {
         'pipeline': '📊 Sales Process',
@@ -341,6 +345,8 @@
         'visita_fecha_requerida': 'Date is required.',
         'visita_error_guardar': 'Error saving the visit.',
         'visita_error_conexion': 'Connection error.',
+        'portal_boton': '🔗 Portal link',
+        'portal_error': 'Error generating the link.',
     },
     'fr': {
         'pipeline': '📊 Processus de Vente',
@@ -412,6 +418,8 @@
         'visita_fecha_requerida': 'La date est requise.',
         'visita_error_guardar': "Erreur lors de l'enregistrement.",
         'visita_error_conexion': 'Erreur de connexion.',
+        'portal_boton': '🔗 Lien du portail',
+        'portal_error': 'Erreur lors de la génération du lien.',
     },
     'de': {
         'pipeline': '📊 Verkaufsprozess',
@@ -483,6 +491,8 @@
         'visita_fecha_requerida': 'Datum ist erforderlich.',
         'visita_error_guardar': 'Fehler beim Speichern.',
         'visita_error_conexion': 'Verbindungsfehler.',
+        'portal_boton': '🔗 Portal-Link',
+        'portal_error': 'Fehler beim Erstellen des Links.',
     },
     'pt': {
         'pipeline': '📊 Processo de Vendas',
@@ -554,6 +564,8 @@
         'visita_fecha_requerida': 'A data é obrigatória.',
         'visita_error_guardar': 'Erro ao salvar a visita.',
         'visita_error_conexion': 'Erro de conexão.',
+        'portal_boton': '🔗 Link do portal',
+        'portal_error': 'Erro ao gerar o link.',
     },
     'zh': {
         'pipeline': '📊 销售流程',
@@ -625,6 +637,8 @@
         'visita_fecha_requerida': '日期为必填项。',
         'visita_error_guardar': '保存参观时出错。',
         'visita_error_conexion': '连接错误。',
+        'portal_boton': '🔗 门户链接',
+        'portal_error': '生成链接时出错。',
     }
 } %}
 {% set lang = idioma_actual if idioma_actual in tl else 'es' %}
@@ -784,6 +798,7 @@
                         <button class="btn-respuesta" onclick="verRespuesta({{ lead.id }}, '{{ lead.nombre }}', '{{ lead.telefono }}')">{{ tx.btn_que_decir_m }}</button>
                         <button class="btn-whatsapp-quick" onclick="abrirWhatsAppDirecto('{{ lead.telefono }}', {{ lead.id }})">📱 WhatsApp</button>
                         <button class="btn-agendar-visita" onclick="abrirModalVisita({{ lead.id }}, '{{ lead.nombre }}')">{{ tx.visita_boton }}</button>
+                        <button class="btn-portal-link" id="btnPortal_{{ lead.id }}" onclick="copiarLinkPortal({{ lead.id }})">{{ tx.portal_boton }}</button>
                     </div>
                 </td>
             </tr>
@@ -835,6 +850,7 @@
             <button onclick="verRespuesta({{ lead.id }}, '{{ lead.nombre }}', '{{ lead.telefono }}')" style="background:#f8f9fa;color:#2c3e50;border:1px solid #ddd;flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:bold;">{{ tx.btn_que_decir_m }}</button>
             <button onclick="abrirWhatsAppDirecto('{{ lead.telefono }}', {{ lead.id }})" style="background:#25D366;color:white;flex:1;padding:10px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:bold;">{{ tx.btn_wa_m }}</button>
             <button onclick="abrirModalVisita({{ lead.id }}, '{{ lead.nombre }}')" style="background:#eafaf1;color:#196f3d;border:1px solid #a9dfbf;flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:bold;">{{ tx.visita_boton }}</button>
+            <button id="btnPortalM_{{ lead.id }}" onclick="copiarLinkPortal({{ lead.id }}, true)" style="background:#f3eefc;color:#6c3fbf;border:1px solid #d8c4f5;flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:bold;">{{ tx.portal_boton }}</button>
         </div>
     </div>
     {% else %}
@@ -958,6 +974,7 @@ const TX_VISITA_SIN_PROPIEDAD = "{{ tx.visita_sin_propiedad }}";
 const TX_VISITA_FECHA_REQUERIDA = "{{ tx.visita_fecha_requerida }}";
 const TX_VISITA_ERROR_GUARDAR = "{{ tx.visita_error_guardar }}";
 const TX_VISITA_ERROR_CONEXION = "{{ tx.visita_error_conexion }}";
+const TX_PORTAL_ERROR = "{{ tx.portal_error }}";
 let propiedadesCache = null;
 
 function toggleLangMenu() { document.getElementById('langSelector').classList.toggle('abierto'); }
@@ -1169,6 +1186,28 @@ function cargarBadgesVisitas() {
         .catch(() => {});
 }
 document.addEventListener('DOMContentLoaded', cargarBadgesVisitas);
+
+// ✅ NUEVO — copiar link del portal del prospecto
+function copiarLinkPortal(leadId, esMovil) {
+    const btnId = esMovil ? `btnPortalM_${leadId}` : `btnPortal_${leadId}`;
+    const btn = document.getElementById(btnId);
+    fetch(`/portal-link/${clienteId}/${leadId}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.ok && data.link) {
+                navigator.clipboard.writeText(data.link).then(() => {
+                    if (btn) {
+                        const orig = btn.textContent;
+                        btn.textContent = TX_COPIADO;
+                        setTimeout(() => btn.textContent = orig, 2000);
+                    }
+                });
+            } else {
+                alert(TX_PORTAL_ERROR);
+            }
+        })
+        .catch(() => alert(TX_PORTAL_ERROR));
+}
 
 window.onclick = function(e) {
     if (e.target == document.getElementById('modalRespuesta')) cerrarModalRespuesta();
