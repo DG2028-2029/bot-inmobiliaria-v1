@@ -503,3 +503,138 @@ def enviar_reporte_semanal(cliente_id, resumen, lang='es'):
         t['asunto'].format(nombre_empresa=vendedor['nombre']),
         html
     )
+T_VISITA = {
+    'es': {
+        'titulo_24h': 'Recordatorio: Visita mañana', 'titulo_2h': 'Recordatorio: Visita en 2 horas',
+        'saludo': 'Hola', 'con': 'con', 'sin_propiedad': 'propiedad a agendar',
+        'msg_24h': 'Tienes una visita programada mañana con este prospecto. Aquí el detalle:',
+        'msg_2h': 'Tu visita con este prospecto es en aproximadamente 2 horas. ¡No lo olvides!',
+        'fecha_lbl': '📅 Fecha y hora', 'prop_lbl': '🏠 Propiedad', 'tel_lbl': '📱 Teléfono',
+        'wa_btn': '📱 Confirmar por WhatsApp', 'footer': 'Recordatorio automático',
+        'asunto_24h': '📅 Mañana: visita con {nombre} — {empresa}',
+        'asunto_2h': '⏰ En 2 horas: visita con {nombre} — {empresa}',
+        'wa_msg': 'Hola {nombre}, le escribo para confirmar nuestra visita programada. ¿Seguimos en pie?'
+    },
+    'en': {
+        'titulo_24h': 'Reminder: Visit tomorrow', 'titulo_2h': 'Reminder: Visit in 2 hours',
+        'saludo': 'Hi', 'con': 'with', 'sin_propiedad': 'property to be scheduled',
+        'msg_24h': 'You have a visit scheduled tomorrow with this prospect. Details below:',
+        'msg_2h': 'Your visit with this prospect is in about 2 hours. Don\'t forget!',
+        'fecha_lbl': '📅 Date and time', 'prop_lbl': '🏠 Property', 'tel_lbl': '📱 Phone',
+        'wa_btn': '📱 Confirm via WhatsApp', 'footer': 'Automatic reminder',
+        'asunto_24h': '📅 Tomorrow: visit with {nombre} — {empresa}',
+        'asunto_2h': '⏰ In 2 hours: visit with {nombre} — {empresa}',
+        'wa_msg': 'Hi {nombre}, writing to confirm our scheduled visit. Are we still on?'
+    },
+    'fr': {
+        'titulo_24h': 'Rappel : Visite demain', 'titulo_2h': 'Rappel : Visite dans 2 heures',
+        'saludo': 'Bonjour', 'con': 'avec', 'sin_propiedad': 'propriété à définir',
+        'msg_24h': 'Vous avez une visite prévue demain avec ce prospect. Détails ci-dessous :',
+        'msg_2h': 'Votre visite avec ce prospect est dans environ 2 heures. N\'oubliez pas !',
+        'fecha_lbl': '📅 Date et heure', 'prop_lbl': '🏠 Propriété', 'tel_lbl': '📱 Téléphone',
+        'wa_btn': '📱 Confirmer par WhatsApp', 'footer': 'Rappel automatique',
+        'asunto_24h': '📅 Demain : visite avec {nombre} — {empresa}',
+        'asunto_2h': '⏰ Dans 2 heures : visite avec {nombre} — {empresa}',
+        'wa_msg': 'Bonjour {nombre}, je vous écris pour confirmer notre visite prévue. C\'est toujours bon ?'
+    },
+    'de': {
+        'titulo_24h': 'Erinnerung: Besichtigung morgen', 'titulo_2h': 'Erinnerung: Besichtigung in 2 Stunden',
+        'saludo': 'Hallo', 'con': 'mit', 'sin_propiedad': 'noch zu planende Immobilie',
+        'msg_24h': 'Sie haben morgen eine Besichtigung mit diesem Interessenten. Details unten:',
+        'msg_2h': 'Ihre Besichtigung mit diesem Interessenten ist in etwa 2 Stunden. Nicht vergessen!',
+        'fecha_lbl': '📅 Datum und Uhrzeit', 'prop_lbl': '🏠 Immobilie', 'tel_lbl': '📱 Telefon',
+        'wa_btn': '📱 Per WhatsApp bestätigen', 'footer': 'Automatische Erinnerung',
+        'asunto_24h': '📅 Morgen: Besichtigung mit {nombre} — {empresa}',
+        'asunto_2h': '⏰ In 2 Stunden: Besichtigung mit {nombre} — {empresa}',
+        'wa_msg': 'Hallo {nombre}, ich schreibe, um unsere geplante Besichtigung zu bestätigen. Bleibt es dabei?'
+    },
+    'pt': {
+        'titulo_24h': 'Lembrete: Visita amanhã', 'titulo_2h': 'Lembrete: Visita em 2 horas',
+        'saludo': 'Olá', 'con': 'com', 'sin_propiedad': 'imóvel a definir',
+        'msg_24h': 'Você tem uma visita agendada amanhã com este prospecto. Detalhes abaixo:',
+        'msg_2h': 'Sua visita com este prospecto é em aproximadamente 2 horas. Não esqueça!',
+        'fecha_lbl': '📅 Data e hora', 'prop_lbl': '🏠 Imóvel', 'tel_lbl': '📱 Telefone',
+        'wa_btn': '📱 Confirmar via WhatsApp', 'footer': 'Lembrete automático',
+        'asunto_24h': '📅 Amanhã: visita com {nombre} — {empresa}',
+        'asunto_2h': '⏰ Em 2 horas: visita com {nombre} — {empresa}',
+        'wa_msg': 'Olá {nombre}, escrevo para confirmar nossa visita agendada. Continua de pé?'
+    },
+    'zh': {
+        'titulo_24h': '提醒：明天有参观', 'titulo_2h': '提醒：2小时后有参观',
+        'saludo': '您好', 'con': '与', 'sin_propiedad': '待定房产',
+        'msg_24h': '您明天与该潜在客户有一个预约参观。详情如下：',
+        'msg_2h': '您与该潜在客户的参观大约2小时后开始。请不要忘记！',
+        'fecha_lbl': '📅 日期和时间', 'prop_lbl': '🏠 房产', 'tel_lbl': '📱 电话',
+        'wa_btn': '📱 通过WhatsApp确认', 'footer': '自动提醒',
+        'asunto_24h': '📅 明天：与{nombre}的参观 — {empresa}',
+        'asunto_2h': '⏰ 2小时后：与{nombre}的参观 — {empresa}',
+        'wa_msg': '您好{nombre}，写信确认我们预约的参观。还继续吗？'
+    },
+}
+
+def enviar_recordatorio_visita(cliente_id, lead_nombre, lead_telefono, fecha_visita_str, propiedad_titulo, tipo, lang='es'):
+    """
+    Envía recordatorio de visita al VENDEDOR (limitación de onboarding@resend.dev,
+    mismo patrón que enviar_seguimiento_automatico). tipo: '24h' o '2h'.
+    """
+    vendedor = _get_cliente(cliente_id)
+    if not vendedor or not vendedor.get("premium_email"):
+        return False
+
+    t = T_VISITA.get(lang, T_VISITA['es'])
+    color = vendedor.get("color_primario", "#667eea")
+    nombre_corto = lead_nombre.split()[0] if lead_nombre else lead_nombre
+    titulo = t['titulo_24h'] if tipo == '24h' else t['titulo_2h']
+    mensaje_intro = t['msg_24h'] if tipo == '24h' else t['msg_2h']
+    asunto_tpl = t['asunto_24h'] if tipo == '24h' else t['asunto_2h']
+    prop_txt = propiedad_titulo if propiedad_titulo else t['sin_propiedad']
+
+    wa_msg = requests.utils.quote(t['wa_msg'].format(nombre=nombre_corto))
+
+    html = f"""
+    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#f8f9fa;padding:0;border-radius:12px;overflow:hidden;">
+        <div style="background:linear-gradient(135deg,{color},#1a1a2e);padding:22px 30px;text-align:center;">
+            <div style="font-size:32px;margin-bottom:6px;">📅</div>
+            <h1 style="color:white;margin:0;font-size:20px;">{titulo}</h1>
+            <p style="color:rgba(255,255,255,0.8);margin:6px 0 0;font-size:13px;">{vendedor['nombre']}</p>
+        </div>
+        <div style="background:white;padding:24px 30px;">
+            <p style="color:#555;font-size:14px;">{mensaje_intro}</p>
+            <table style="width:100%;border-collapse:collapse;margin-top:10px;">
+                <tr style="border-bottom:1px solid #f0f0f0;">
+                    <td style="padding:10px 0;color:#999;font-size:13px;width:35%;">👤 {t['saludo']} — {t['con']}</td>
+                    <td style="padding:10px 0;color:#2c3e50;font-weight:bold;font-size:15px;">{lead_nombre}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f0f0f0;">
+                    <td style="padding:10px 0;color:#999;font-size:13px;">{t['fecha_lbl']}</td>
+                    <td style="padding:10px 0;color:#2c3e50;font-weight:bold;font-size:14px;">{fecha_visita_str}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f0f0f0;">
+                    <td style="padding:10px 0;color:#999;font-size:13px;">{t['prop_lbl']}</td>
+                    <td style="padding:10px 0;color:#2c3e50;font-size:14px;">{prop_txt}</td>
+                </tr>
+                <tr>
+                    <td style="padding:10px 0;color:#999;font-size:13px;">{t['tel_lbl']}</td>
+                    <td style="padding:10px 0;color:#2c3e50;font-weight:bold;font-size:14px;">{lead_telefono}</td>
+                </tr>
+            </table>
+            <div style="text-align:center;margin-top:22px;">
+                <a href="https://wa.me/{lead_telefono}?text={wa_msg}"
+                   style="background:#25D366;color:white;padding:13px 28px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;">
+                    {t['wa_btn']}
+                </a>
+            </div>
+        </div>
+        <div style="background:#f8f9fa;padding:14px 30px;text-align:center;border-top:1px solid #eee;">
+            <p style="color:#999;font-size:11px;margin:0;">
+                {t['footer']} — {datetime.now().strftime('%d/%m/%Y a las %H:%M')} — {vendedor['nombre']}
+            </p>
+        </div>
+    </div>
+    """
+    return _enviar(
+        vendedor["email_api_key"],
+        vendedor["email_vendedor"],
+        asunto_tpl.format(nombre=lead_nombre, empresa=vendedor['nombre']),
+        html
+    )
