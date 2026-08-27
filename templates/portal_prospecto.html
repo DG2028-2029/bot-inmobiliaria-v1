@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="{{ idioma_actual or 'es' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ textos_portal.titulo_pagina if textos_portal else 'Mi búsqueda' }} | {{ vendedor.nombre }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        :root { --color: {{ vendedor.color_primario or '#667eea' }}; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; background: #f1f2f6; min-height: 100vh; padding-bottom: 40px; }
+
+        .header { background: linear-gradient(135deg, var(--color), #1a1a2e); padding: 32px 20px 60px; text-align: center; position: relative; }
+        .header-logo { width: 60px; height: 60px; border-radius: 16px; object-fit: contain; border: 2px solid rgba(255,255,255,0.3); background: white; margin-bottom: 10px; }
+        .header-logo-placeholder { width: 60px; height: 60px; border-radius: 16px; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 10px; }
+        .header h1 { color: white; font-size: 20px; font-weight: 800; }
+        .header p { color: rgba(255,255,255,0.75); font-size: 13px; margin-top: 4px; }
+
+        .contenedor { max-width: 640px; margin: -40px auto 0; padding: 0 16px; }
+
+        .saludo-card { background: white; border-radius: 16px; padding: 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); margin-bottom: 16px; }
+        .saludo-card h2 { color: #2c3e50; font-size: 18px; margin-bottom: 4px; }
+        .saludo-card p { color: #999; font-size: 13px; }
+
+        .progreso-wrap { display: flex; justify-content: space-between; margin-top: 20px; position: relative; }
+        .progreso-wrap::before { content:''; position: absolute; top: 12px; left: 20px; right: 20px; height: 3px; background: #eee; z-index: 0; }
+        .progreso-linea-activa { position: absolute; top: 12px; left: 20px; height: 3px; background: var(--color); z-index: 1; transition: width 0.3s; }
+        .progreso-paso { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
+        .progreso-dot { width: 26px; height: 26px; border-radius: 50%; background: #eee; color: #999; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; border: 3px solid #f1f2f6; }
+        .progreso-dot.activo { background: var(--color); color: white; }
+        .progreso-dot.completado { background: #27ae60; color: white; }
+        .progreso-lbl { font-size: 9px; color: #999; text-align: center; font-weight: 600; max-width: 60px; }
+        .progreso-lbl.activo { color: var(--color); font-weight: 800; }
+
+        .visita-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); margin-bottom: 16px; border-left: 5px solid var(--color); }
+        .visita-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+        .visita-icon { font-size: 24px; }
+        .visita-titulo { font-size: 15px; font-weight: 700; color: #2c3e50; }
+        .visita-detalle { background: #f8f9fa; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+        .visita-fila { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+        .visita-fila span:first-child { color: #999; }
+        .visita-fila span:last-child { color: #2c3e50; font-weight: 600; text-align: right; }
+        .visita-btns { display: flex; gap: 8px; }
+        .btn-visita-accion { flex: 1; padding: 11px; border-radius: 8px; border: none; cursor: pointer; font-size: 12.5px; font-weight: 700; font-family: inherit; transition: 0.2s; }
+        .btn-confirmar { background: var(--color); color: white; }
+        .btn-confirmar:hover { opacity: 0.88; }
+        .btn-reagendar { background: #f8f9fa; color: #555; border: 1px solid #ddd; }
+        .btn-reagendar:hover { border-color: var(--color); color: var(--color); }
+        .visita-msg-ok { text-align: center; font-size: 13px; font-weight: 700; padding: 10px; border-radius: 8px; display: none; }
+        .visita-msg-ok.si { background: #eafaf1; color: #196f3d; }
+
+        .propiedades-titulo { font-size: 16px; font-weight: 800; color: #2c3e50; margin: 20px 4px 12px; }
+        .prop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .prop-card { background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.07); transition: 0.2s; }
+        .prop-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,0.12); }
+        .prop-img { width: 100%; height: 160px; object-fit: cover; background: #eee; }
+        .prop-img-placeholder { width: 100%; height: 160px; background: linear-gradient(135deg,#eee,#f5f5f5); display: flex; align-items: center; justify-content: center; font-size: 32px; color: #ccc; }
+        .prop-body { padding: 14px; }
+        .prop-titulo { font-size: 14px; font-weight: 700; color: #2c3e50; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .prop-ubicacion { font-size: 12px; color: #999; margin-bottom: 8px; }
+        .prop-precio { font-size: 16px; font-weight: 800; color: #27ae60; margin-bottom: 8px; }
+        .prop-specs { display: flex; gap: 10px; font-size: 11px; color: #777; margin-bottom: 10px; }
+        .prop-match { display: inline-block; background: #eaf4fb; color: #1a5276; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; margin-bottom: 8px; }
+        .btn-prop-wa { display: block; width: 100%; text-align: center; padding: 9px; background: #25D366; color: white; border-radius: 8px; text-decoration: none; font-size: 12.5px; font-weight: 700; }
+        .btn-prop-wa:hover { background: #128C7E; }
+
+        .sin-propiedades { text-align: center; padding: 40px 20px; color: #999; font-size: 13px; background: white; border-radius: 16px; }
+
+        .wa-flotante { position: fixed; bottom: 20px; right: 20px; background: #25D366; color: white; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 6px 20px rgba(37,211,102,0.4); text-decoration: none; z-index: 500; }
+        .wa-flotante:hover { background: #128C7E; }
+
+        .footer-portal { text-align: center; margin-top: 24px; padding: 0 16px; }
+        .footer-portal p { font-size: 11px; color: #aaa; }
+
+        @media (max-width: 480px) {
+            .prop-grid { grid-template-columns: 1fr; }
+            .progreso-lbl { max-width: 50px; font-size: 8px; }
+        }
+    </style>
+</head>
+<body>
+
+{% set lang = idioma_actual if idioma_actual else 'es' %}
+{% set pt = {
+    'es': {
+        'titulo_pagina': 'Mi búsqueda', 'subtitulo': 'Tu proceso con', 'hola': 'Hola',
+        'saludo_desc': 'Aquí puedes ver el estado de tu búsqueda y las propiedades que seleccionamos para ti.',
+        'et_nuevo': 'Nuevo', 'et_contactado': 'Contactado', 'et_visita': 'Visita', 'et_propuesta': 'Propuesta', 'et_cerrado': 'Cerrado',
+        'visita_titulo': 'Tu próxima visita', 'visita_fecha': '📅 Fecha y hora', 'visita_prop': '🏠 Propiedad',
+        'visita_sin_prop': 'Por definir', 'btn_confirmar': '✅ Confirmar asistencia', 'btn_reagendar': '🔄 Pedir reagendar',
+        'msg_confirmado': '¡Visita confirmada! Nos vemos pronto.', 'msg_reagendar': 'Tu asesor recibió tu solicitud de reagendar.',
+        'propiedades_titulo': '🏠 Propiedades para ti', 'sin_propiedades': 'Estamos buscando las mejores opciones para ti. Pronto verás propiedades aquí.',
+        'match_alto': 'Buena opción para ti', 'hab': 'hab', 'banos': 'baños', 'm2': 'm²',
+        'btn_wa_prop': '💬 Preguntar por esta', 'wa_flotante_msg': 'Hola, tengo una pregunta sobre mi búsqueda.',
+        'footer': 'Portal de seguimiento personalizado —'
+    },
+    'en': {
+        'titulo_pagina': 'My search', 'subtitulo': 'Your process with', 'hola': 'Hi',
+        'saludo_desc': 'Here you can see the status of your search and the properties we selected for you.',
+        'et_nuevo': 'New', 'et_contactado': 'Contacted', 'et_visita': 'Visit', 'et_propuesta': 'Proposal', 'et_cerrado': 'Closed',
+        'visita_titulo': 'Your next visit', 'visita_fecha': '📅 Date and time', 'visita_prop': '🏠 Property',
+        'visita_sin_prop': 'To be defined', 'btn_confirmar': '✅ Confirm attendance', 'btn_reagendar': '🔄 Request reschedule',
+        'msg_confirmado': 'Visit confirmed! See you soon.', 'msg_reagendar': 'Your agent received your reschedule request.',
+        'propiedades_titulo': '🏠 Properties for you', 'sin_propiedades': 'We are looking for the best options for you. You will see properties here soon.',
+        'match_alto': 'Good fit for you', 'hab': 'bed', 'banos': 'bath', 'm2': 'm²',
+        'btn_wa_prop': '💬 Ask about this one', 'wa_flotante_msg': 'Hi, I have a question about my search.',
+        'footer': 'Personalized tracking portal —'
+    },
+    'fr': {
+        'titulo_pagina': 'Ma recherche', 'subtitulo': 'Votre parcours avec', 'hola': 'Bonjour',
+        'saludo_desc': "Ici vous pouvez voir l'état de votre recherche et les propriétés sélectionnées pour vous.",
+        'et_nuevo': 'Nouveau', 'et_contactado': 'Contacté', 'et_visita': 'Visite', 'et_propuesta': 'Proposition', 'et_cerrado': 'Fermé',
+        'visita_titulo': 'Votre prochaine visite', 'visita_fecha': '📅 Date et heure', 'visita_prop': '🏠 Propriété',
+        'visita_sin_prop': 'À définir', 'btn_confirmar': '✅ Confirmer ma présence', 'btn_reagendar': '🔄 Demander à replanifier',
+        'msg_confirmado': 'Visite confirmée ! À bientôt.', 'msg_reagendar': 'Votre agent a reçu votre demande de replanification.',
+        'propiedades_titulo': '🏠 Propriétés pour vous', 'sin_propiedades': 'Nous recherchons les meilleures options pour vous. Vous verrez bientôt des propriétés ici.',
+        'match_alto': 'Bon choix pour vous', 'hab': 'ch.', 'banos': 'sdb', 'm2': 'm²',
+        'btn_wa_prop': '💬 Demander à propos', 'wa_flotante_msg': "Bonjour, j'ai une question sur ma recherche.",
+        'footer': 'Portail de suivi personnalisé —'
+    },
+    'de': {
+        'titulo_pagina': 'Meine Suche', 'subtitulo': 'Ihr Prozess mit', 'hola': 'Hallo',
+        'saludo_desc': 'Hier sehen Sie den Status Ihrer Suche und die für Sie ausgewählten Immobilien.',
+        'et_nuevo': 'Neu', 'et_contactado': 'Kontaktiert', 'et_visita': 'Besichtigung', 'et_propuesta': 'Angebot', 'et_cerrado': 'Abgeschlossen',
+        'visita_titulo': 'Ihre nächste Besichtigung', 'visita_fecha': '📅 Datum und Uhrzeit', 'visita_prop': '🏠 Immobilie',
+        'visita_sin_prop': 'Noch offen', 'btn_confirmar': '✅ Teilnahme bestätigen', 'btn_reagendar': '🔄 Verschiebung anfragen',
+        'msg_confirmado': 'Besichtigung bestätigt! Bis bald.', 'msg_reagendar': 'Ihr Makler hat Ihre Verschiebungsanfrage erhalten.',
+        'propiedades_titulo': '🏠 Immobilien für Sie', 'sin_propiedades': 'Wir suchen die besten Optionen für Sie. Bald sehen Sie hier Immobilien.',
+        'match_alto': 'Gute Wahl für Sie', 'hab': 'Zi.', 'banos': 'Bad', 'm2': 'm²',
+        'btn_wa_prop': '💬 Danach fragen', 'wa_flotante_msg': 'Hallo, ich habe eine Frage zu meiner Suche.',
+        'footer': 'Persönliches Nachverfolgungsportal —'
+    },
+    'pt': {
+        'titulo_pagina': 'Minha busca', 'subtitulo': 'Seu processo com', 'hola': 'Olá',
+        'saludo_desc': 'Aqui você pode ver o status da sua busca e os imóveis que selecionamos para você.',
+        'et_nuevo': 'Novo', 'et_contactado': 'Contactado', 'et_visita': 'Visita', 'et_propuesta': 'Proposta', 'et_cerrado': 'Fechado',
+        'visita_titulo': 'Sua próxima visita', 'visita_fecha': '📅 Data e hora', 'visita_prop': '🏠 Imóvel',
+        'visita_sin_prop': 'A definir', 'btn_confirmar': '✅ Confirmar presença', 'btn_reagendar': '🔄 Pedir reagendamento',
+        'msg_confirmado': 'Visita confirmada! Até breve.', 'msg_reagendar': 'Seu corretor recebeu seu pedido de reagendamento.',
+        'propiedades_titulo': '🏠 Imóveis para você', 'sin_propiedades': 'Estamos buscando as melhores opções para você. Em breve verá imóveis aqui.',
+        'match_alto': 'Boa opção para você', 'hab': 'qts', 'banos': 'banh', 'm2': 'm²',
+        'btn_wa_prop': '💬 Perguntar sobre este', 'wa_flotante_msg': 'Olá, tenho uma pergunta sobre minha busca.',
+        'footer': 'Portal de acompanhamento personalizado —'
+    },
+    'zh': {
+        'titulo_pagina': '我的搜索', 'subtitulo': '您与以下机构的进展', 'hola': '您好',
+        'saludo_desc': '在这里您可以查看搜索进度以及我们为您挑选的房产。',
+        'et_nuevo': '新建', 'et_contactado': '已联系', 'et_visita': '参观', 'et_propuesta': '提案', 'et_cerrado': '已成交',
+        'visita_titulo': '您的下一次参观', 'visita_fecha': '📅 日期和时间', 'visita_prop': '🏠 房产',
+        'visita_sin_prop': '待定', 'btn_confirmar': '✅ 确认参加', 'btn_reagendar': '🔄 申请改期',
+        'msg_confirmado': '参观已确认！很快见。', 'msg_reagendar': '您的顾问已收到您的改期请求。',
+        'propiedades_titulo': '🏠 为您推荐的房产', 'sin_propiedades': '我们正在为您寻找最佳选择，很快您将在这里看到房产。',
+        'match_alto': '适合您的好选择', 'hab': '室', 'banos': '卫', 'm2': '平米',
+        'btn_wa_prop': '💬 咨询此房产', 'wa_flotante_msg': '您好，我对我的搜索有一个问题。',
+        'footer': '个性化跟进门户 —'
+    }
+} %}
+{% set t = pt[lang] if lang in pt else pt['es'] %}
+
+<div class="header">
+    {% if vendedor.logo_url %}
+    <img src="{{ vendedor.logo_url }}" alt="{{ vendedor.nombre }}" class="header-logo">
+    {% else %}
+    <div class="header-logo-placeholder">🏠</div>
+    {% endif %}
+    <h1>{{ t.subtitulo }} {{ vendedor.nombre }}</h1>
+    <p>{{ t.titulo_pagina }}</p>
+</div>
+
+<div class="contenedor">
+    <div class="saludo-card">
+        <h2>{{ t.hola }} {{ lead.nombre.split(' ')[0] if lead.nombre else '' }} 👋</h2>
+        <p>{{ t.saludo_desc }}</p>
+
+        {% set etapa_actual = lead.etapa or 'nuevo' %}
+        {% set etapas_orden = ['nuevo', 'contactado', 'visita', 'propuesta', 'cerrado'] %}
+        {% set etapa_idx = etapas_orden.index(etapa_actual) if etapa_actual in etapas_orden else 0 %}
+        {% set porcentaje = (etapa_idx / (etapas_orden|length - 1) * 100) if etapas_orden|length > 1 else 0 %}
+        <div class="progreso-wrap">
+            <div class="progreso-linea-activa" style="width: calc({{ porcentaje }}% * 0.86);"></div>
+            {% set etiquetas = [t.et_nuevo, t.et_contactado, t.et_visita, t.et_propuesta, t.et_cerrado] %}
+            {% for i in range(5) %}
+            <div class="progreso-paso">
+                <div class="progreso-dot {{ 'completado' if i < etapa_idx else ('activo' if i == etapa_idx else '') }}">
+                    {% if i < etapa_idx %}✓{% else %}{{ i + 1 }}{% endif %}
+                </div>
+                <div class="progreso-lbl {{ 'activo' if i == etapa_idx else '' }}">{{ etiquetas[i] }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if visita %}
+    <div class="visita-card">
+        <div class="visita-card-header">
+            <span class="visita-icon">📅</span>
+            <span class="visita-titulo">{{ t.visita_titulo }}</span>
+        </div>
+        <div class="visita-detalle">
+            <div class="visita-fila">
+                <span>{{ t.visita_fecha }}</span>
+                <span id="visitaFechaTxt" data-fecha="{{ visita.fecha_visita }}">{{ visita.fecha_visita }}</span>
+            </div>
+            <div class="visita-fila">
+                <span>{{ t.visita_prop }}</span>
+                <span>{{ visita_propiedad.titulo if visita_propiedad else t.visita_sin_prop }}</span>
+            </div>
+        </div>
+        <div class="visita-btns" id="visitaBtns">
+            <button class="btn-visita-accion btn-confirmar" onclick="accionVisita('confirmar')">{{ t.btn_confirmar }}</button>
+            <button class="btn-visita-accion btn-reagendar" onclick="accionVisita('reagendar')">{{ t.btn_reagendar }}</button>
+        </div>
+        <div class="visita-msg-ok" id="visitaMsgOk"></div>
+    </div>
+    {% endif %}
+
+    <div class="propiedades-titulo">{{ t.propiedades_titulo }}</div>
+
+    {% if propiedades and propiedades|length > 0 %}
+    <div class="prop-grid">
+        {% for p in propiedades %}
+        {% set imagenes = [] %}
+        {% if p.imagen_url %}
+            {% set imagenes = p.imagen_url | fromjson if p.imagen_url is string else p.imagen_url %}
+        {% endif %}
+        <div class="prop-card">
+            {% if imagenes and imagenes|length > 0 %}
+            <img src="{{ imagenes[0] }}" alt="{{ p.titulo }}" class="prop-img">
+            {% else %}
+            <div class="prop-img-placeholder">🏠</div>
+            {% endif %}
+            <div class="prop-body">
+                {% if p.score_match and p.score_match >= 40 %}
+                <span class="prop-match">✨ {{ t.match_alto }}</span>
+                {% endif %}
+                <div class="prop-titulo" title="{{ p.titulo }}">{{ p.titulo }}</div>
+                <div class="prop-ubicacion">📍 {{ p.ubicacion }}</div>
+                <div class="prop-precio">${{ "{:,.0f}".format(p.precio|float) if p.precio else "0" }}</div>
+                <div class="prop-specs">
+                    {% if p.habitaciones %}<span>🛏️ {{ p.habitaciones }} {{ t.hab }}</span>{% endif %}
+                    {% if p.banos %}<span>🚿 {{ p.banos }} {{ t.banos }}</span>{% endif %}
+                    {% if p.metros2 %}<span>📐 {{ p.metros2 }}{{ t.m2 }}</span>{% endif %}
+                </div>
+                <a href="https://wa.me/{{ vendedor.whatsapp }}?text={{ ('Hola, me interesa: ' + p.titulo) | urlencode }}" target="_blank" class="btn-prop-wa">{{ t.btn_wa_prop }}</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="sin-propiedades">{{ t.sin_propiedades }}</div>
+    {% endif %}
+
+    <div class="footer-portal">
+        <p>{{ t.footer }} {{ vendedor.nombre }}</p>
+    </div>
+</div>
+
+<a href="https://wa.me/{{ vendedor.whatsapp }}?text={{ t.wa_flotante_msg | urlencode }}" target="_blank" class="wa-flotante">💬</a>
+
+<script>
+const TOKEN = "{{ lead.token_portal }}";
+const MSG_CONFIRMADO = "{{ t.msg_confirmado }}";
+const MSG_REAGENDAR = "{{ t.msg_reagendar }}";
+
+function accionVisita(accion) {
+    const body = new URLSearchParams();
+    body.append('accion', accion);
+    fetch(`/portal/${TOKEN}/confirmar-visita`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: body.toString()
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            document.getElementById('visitaBtns').style.display = 'none';
+            const msgBox = document.getElementById('visitaMsgOk');
+            msgBox.textContent = accion === 'confirmar' ? MSG_CONFIRMADO : MSG_REAGENDAR;
+            msgBox.classList.add('si');
+            msgBox.style.display = 'block';
+        }
+    });
+}
+
+// Formatear fecha de visita a algo legible en el navegador del usuario
+document.addEventListener('DOMContentLoaded', function() {
+    const el = document.getElementById('visitaFechaTxt');
+    if (el) {
+        const fecha = new Date(el.getAttribute('data-fecha'));
+        if (!isNaN(fecha)) {
+            el.textContent = fecha.toLocaleDateString(undefined, {day:'2-digit', month:'2-digit', year:'numeric'}) +
+                              ' — ' + fecha.toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit'});
+        }
+    }
+});
+</script>
+</body>
+</html>
