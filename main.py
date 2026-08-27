@@ -243,6 +243,60 @@ def matching_propiedad(cliente_id, prop_id):
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
+def buscar_propiedades_para_lead(lead, propiedades):
+    """
+    Igual que buscar_leads_matching pero al revés: dado UN lead, devuelve
+    las propiedades de su inmobiliaria ordenadas por qué tan bien encajan
+    con su zona de interés y presupuesto. Usado en el portal del prospecto.
+    """
+    matches = []
+    zona_lead = (lead.get('zona_interes', '') or '').lower()
+    palabras_zona = [w for w in re.split(r'[\s,.-]+', zona_lead) if len(w) > 2]
+    try:
+        presupuesto_lead = float(re.sub(r'[^\d.]', '', str(lead.get('presupuesto', 0) or 0)))
+    except:
+        presupuesto_lead = 0
+
+    for propiedad in propiedades:
+        score_match = 0
+        ubicacion_prop = (propiedad.get('ubicacion', '') or '').lower()
+        precio_prop = float(propiedad.get('precio', 0) or 0)
+
+        if zona_lead and ubicacion_prop:
+            palabras_ubicacion = [w for w in re.split(r'[\s,.-]+', ubicacion_prop) if len(w) > 2]
+            for palabra in palabras_zona:
+                if palabra in ubicacion_prop:
+                    score_match += 40
+                    break
+            for palabra in palabras_ubicacion:
+                if palabra in zona_lead:
+                    score_match += 30
+                    break
+
+        if presupuesto_lead > 0 and precio_prop > 0:
+            ratio = precio_prop / presupuesto_lead
+            if 0.7 <= ratio <= 1.0:
+                score_match += 50
+            elif 1.0 < ratio <= 1.2:
+                score_match += 30
+            elif 0.5 <= ratio < 0.7:
+                score_match += 20
+
+        propiedad_copia = dict(propiedad)
+        propiedad_copia['score_match'] = score_match
+        matches.append(propiedad_copia)
+
+    matches.sort(key=lambda x: x.get('score_match', 0), reverse=True)
+    return matches[:9]
+
+def get_o_crear_token_portal(lead):
+    """Devuelve el token_portal del lead; si no tiene, lo genera y lo guarda."""
+    if lead.get("token_portal"):
+        return lead["token_portal"]
+    nuevo_token = secrets.token_urlsafe(24)
+    supabase.table("leads").update({"token_portal": nuevo_token}).eq("id", lead["id"]).execute()
+    return nuevo_token
+
 def _encode_wa_msg(lead, propiedad):
     import urllib.parse
     nombre = lead.get('nombre', '').split()[0]
@@ -676,7 +730,8 @@ def verificar_sesion():
                       'static', 'login', 'cambiar_idioma', 'cron_seguimiento', 'admin_login',
                       'inicio_formulario', 'chat_inmobiliario', 'test_chat', 'inventario_publico',
                       'recuperar_password', 'reset_password', 'cron_reporte_semanal',
-                      'test_reporte_semanal', 'cron_recordatorios_visitas']
+                      'test_reporte_semanal', 'cron_recordatorios_visitas',
+                      'portal_prospecto', 'portal_confirmar_visita']
     if request.endpoint in rutas_publicas:
         return
     if request.endpoint and request.endpoint.startswith('admin'):
@@ -1217,6 +1272,82 @@ def propiedades_lista_json(cliente_id):
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
+
+# ============================================================
+# ✅ PORTAL DEL PROSPECTO
+# ============================================================
+
+@app.route("/portal-link/<cliente_id>/<int:lead_id>")
+def obtener_link_portal(cliente_id, lead_id):
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return jsonify({"ok": False, "error": "No autorizado"}), 403
+    try:
+        lead_r = supabase.table("leads").select("*").eq("id", lead_id).eq("vendedor", id_clean).execute()
+        if not lead_r.data:
+            return jsonify({"ok": False, "error": "Lead no encontrado"}), 404
+        lead = lead_r.data[0]
+        token = get_o_crear_token_portal(lead)
+        link = url_for('portal_prospecto', token=token, _external=True)
+        return jsonify({"ok": True, "link": link})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+@app.route("/mi-busqueda/<token>")
+def portal_prospecto(token):
+    try:
+        lead_r = supabase.table("leads").select("*").eq("token_portal", token).execute()
+        if not lead_r.data:
+            return "Enlace no válido o expirado.", 404
+        lead = lead_r.data[0]
+
+        vendedor = get_cliente(lead["vendedor"])
+        if not vendedor:
+            return "Error 404", 404
+
+        lang = get_idioma_default(vendedor)
+
+        props_r = supabase.table("propiedades").select("*").eq("vendedor", lead["vendedor"]).eq("estado", "disponible").execute()
+        propiedades_todas = props_r.data or []
+        propiedades_match = buscar_propiedades_para_lead(lead, propiedades_todas)
+
+        visita_r = supabase.table("visitas").select("*").eq("lead_id", lead["id"]).eq("estado", "agendada").order("fecha_visita", desc=False).limit(1).execute()
+        visita = visita_r.data[0] if visita_r.data else None
+        visita_propiedad = None
+        if visita and visita.get("propiedad_id"):
+            vp_r = supabase.table("propiedades").select("*").eq("id", visita["propiedad_id"]).execute()
+            if vp_r.data:
+                visita_propiedad = vp_r.data[0]
+
+        return render_template("portal_prospecto.html",
+                               lead=lead, vendedor=vendedor,
+                               idioma_actual=lang,
+                               propiedades=propiedades_match,
+                               visita=visita, visita_propiedad=visita_propiedad)
+    except Exception as e:
+        return f"Error: {e}", 500
+
+@app.route("/portal/<token>/confirmar-visita", methods=["POST"])
+def portal_confirmar_visita(token):
+    try:
+        lead_r = supabase.table("leads").select("*").eq("token_portal", token).execute()
+        if not lead_r.data:
+            return jsonify({"ok": False, "error": "Enlace no válido"}), 404
+        lead = lead_r.data[0]
+        visita_r = supabase.table("visitas").select("*").eq("lead_id", lead["id"]).eq("estado", "agendada").order("fecha_visita", desc=False).limit(1).execute()
+        if not visita_r.data:
+            return jsonify({"ok": False, "error": "No hay visita agendada"}), 404
+        visita = visita_r.data[0]
+        accion = request.form.get("accion", "")
+        if accion == "confirmar":
+            supabase.table("visitas").update({"notas": (visita.get("notas") or "") + " [Confirmada por el prospecto]"}).eq("id", visita["id"]).execute()
+            return jsonify({"ok": True})
+        elif accion == "reagendar":
+            supabase.table("visitas").update({"notas": (visita.get("notas") or "") + " [El prospecto pidió reagendar]"}).eq("id", visita["id"]).execute()
+            return jsonify({"ok": True})
+        return jsonify({"ok": False, "error": "Acción inválida"}), 400
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
 
 # ============================================================
 # RUTAS PRINCIPALES
