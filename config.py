@@ -1,1 +1,2 @@
-SECRET_KEY = "clave_secreta_super_segura"
+import os
+SECRET_KEY = os.environ.get("SECRET_KEY")
