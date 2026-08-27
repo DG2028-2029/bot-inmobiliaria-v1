@@ -32,6 +32,10 @@ from stats import obtener_stats
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
 
+# ✅ Filtro para parsear JSON dentro de templates (usado en portal_prospecto.html
+# para leer imagen_url, que se guarda como texto JSON en la tabla propiedades)
+app.jinja_env.filters['fromjson'] = json.loads
+
 # ============================================================
 # ✅ SEGURIDAD — COOKIES Y SESIONES
 # ============================================================
