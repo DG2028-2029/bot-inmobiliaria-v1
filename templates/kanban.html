@@ -74,7 +74,7 @@
         .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f5f5f5; }
         .card-tel { font-size: 11px; color: #27ae60; text-decoration: none; font-weight: bold; }
         .card-tel:hover { text-decoration: underline; }
-        .card-actions { display: flex; gap: 4px; }
+        .card-actions { display: flex; gap: 4px; flex-wrap: wrap; }
         .btn-card { padding: 5px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 10px; font-weight: bold; transition: 0.2s; }
         .btn-wa { background: #25D366; color: white; }
         .btn-wa:hover { background: #128C7E; }
@@ -82,6 +82,8 @@
         .btn-msg:hover { background: var(--color); color: white; }
         .btn-visita { background: #eafaf1; color: #196f3d; border: 1px solid #a9dfbf; }
         .btn-visita:hover { background: #196f3d; color: white; }
+        .btn-portal { background: #f3eefc; color: #6c3fbf; border: 1px solid #d8c4f5; }
+        .btn-portal:hover { background: #6c3fbf; color: white; }
         .etapa-select { width: 100%; font-size: 11px; padding: 5px 6px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer; margin-top: 6px; }
         .etapa-select:focus { outline: none; border-color: var(--color); }
 
@@ -171,6 +173,8 @@
         'visita_fecha_requerida': 'La fecha es requerida.',
         'visita_error_guardar': 'Error al guardar la visita.',
         'visita_error_conexion': 'Error de conexión.',
+        'portal_boton_titulo': 'Copiar link del portal',
+        'portal_error': 'Error al generar el link.',
     },
     'en': {
         'titulo_top': 'Sales Process',
@@ -210,6 +214,8 @@
         'visita_fecha_requerida': 'Date is required.',
         'visita_error_guardar': 'Error saving the visit.',
         'visita_error_conexion': 'Connection error.',
+        'portal_boton_titulo': 'Copy portal link',
+        'portal_error': 'Error generating the link.',
     },
     'fr': {
         'titulo_top': 'Processus de Vente',
@@ -249,6 +255,8 @@
         'visita_fecha_requerida': 'La date est requise.',
         'visita_error_guardar': "Erreur lors de l'enregistrement.",
         'visita_error_conexion': 'Erreur de connexion.',
+        'portal_boton_titulo': 'Copier le lien du portail',
+        'portal_error': 'Erreur lors de la génération du lien.',
     },
     'de': {
         'titulo_top': 'Verkaufsprozess',
@@ -288,6 +296,8 @@
         'visita_fecha_requerida': 'Datum ist erforderlich.',
         'visita_error_guardar': 'Fehler beim Speichern.',
         'visita_error_conexion': 'Verbindungsfehler.',
+        'portal_boton_titulo': 'Portal-Link kopieren',
+        'portal_error': 'Fehler beim Erstellen des Links.',
     },
     'pt': {
         'titulo_top': 'Processo de Vendas',
@@ -327,6 +337,8 @@
         'visita_fecha_requerida': 'A data é obrigatória.',
         'visita_error_guardar': 'Erro ao salvar a visita.',
         'visita_error_conexion': 'Erro de conexão.',
+        'portal_boton_titulo': 'Copiar link do portal',
+        'portal_error': 'Erro ao gerar o link.',
     },
     'zh': {
         'titulo_top': '销售流程',
@@ -366,6 +378,8 @@
         'visita_fecha_requerida': '日期为必填项。',
         'visita_error_guardar': '保存参观时出错。',
         'visita_error_conexion': '连接错误。',
+        'portal_boton_titulo': '复制门户链接',
+        'portal_error': '生成链接时出错。',
     }
 } %}
 {% set t = kn[lang] if lang in kn else kn['es'] %}
@@ -487,6 +501,7 @@
                 <a href="https://wa.me/{{ lead.telefono }}" target="_blank" class="card-tel">📱 {{ lead.telefono }}</a>
                 <div class="card-actions">
                     <button class="btn-card btn-visita" title="{{ t.visita_boton_titulo }}" onclick="abrirModalVisita({{ lead.id }}, '{{ lead.nombre }}')">📅</button>
+                    <button class="btn-card btn-portal" id="btnPortal_{{ lead.id }}" title="{{ t.portal_boton_titulo }}" onclick="copiarLinkPortal({{ lead.id }})">🔗</button>
                     <button class="btn-card btn-msg" onclick="verRespuesta({{ lead.id }}, '{{ lead.nombre }}', '{{ lead.telefono }}')">💬</button>
                     <button class="btn-card btn-wa" onclick="abrirWhatsApp('{{ lead.telefono }}', {{ lead.id }})">📱</button>
                 </div>
@@ -556,6 +571,7 @@ const T_VISITA_SIN_PROPIEDAD = "{{ t.visita_sin_propiedad }}";
 const T_VISITA_FECHA_REQUERIDA = "{{ t.visita_fecha_requerida }}";
 const T_VISITA_ERROR_GUARDAR = "{{ t.visita_error_guardar }}";
 const T_VISITA_ERROR_CONEXION = "{{ t.visita_error_conexion }}";
+const T_PORTAL_ERROR = "{{ t.portal_error }}";
 let draggedLeadId = null;
 let propiedadesCache = null;
 
@@ -775,6 +791,27 @@ function cargarBadgesVisitas() {
         .catch(() => {});
 }
 document.addEventListener('DOMContentLoaded', cargarBadgesVisitas);
+
+// ✅ NUEVO — copiar link del portal del prospecto
+function copiarLinkPortal(leadId) {
+    const btn = document.getElementById(`btnPortal_${leadId}`);
+    fetch(`/portal-link/${clienteId}/${leadId}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.ok && data.link) {
+                navigator.clipboard.writeText(data.link).then(() => {
+                    if (btn) {
+                        const orig = btn.textContent;
+                        btn.textContent = '✅';
+                        setTimeout(() => btn.textContent = orig, 2000);
+                    }
+                });
+            } else {
+                alert(T_PORTAL_ERROR);
+            }
+        })
+        .catch(() => alert(T_PORTAL_ERROR));
+}
 
 window.onclick = function(e) {
     if (e.target == document.getElementById('modalRespuesta')) cerrarModal();
