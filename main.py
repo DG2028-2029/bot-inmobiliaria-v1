@@ -25,7 +25,8 @@ from paises import PAISES_TIMEZONE
 from reporte_semanal import generar_resumen_semanal
 from email_service import (enviar_email_cliente, notificar_vendedor_lead_nuevo,
                            notificar_vendedor_cliente_marcado, enviar_seguimiento_automatico,
-                           enviar_email_reset_password, enviar_reporte_semanal)
+                           enviar_email_reset_password, enviar_reporte_semanal,
+                           enviar_recordatorio_visita)
 from stats import obtener_stats
 
 app = Flask(__name__)
@@ -612,13 +613,70 @@ def job_reporte_semanal():
     except Exception as e:
         print(f"❌ Error en job_reporte_semanal: {e}")
 
+def job_recordatorios_visitas():
+    """
+    Corre cada 15-30 min (vía cron externo). Revisa visitas 'agendadas' y manda
+    recordatorio al vendedor cuando faltan ~24h o ~2h para la visita (una sola
+    vez cada uno, controlado por los flags recordatorio_24h_enviado/2h_enviado).
+    """
+    print(f"🔄 [{datetime.now().strftime('%Y-%m-%d %H:%M')}] Revisando recordatorios de visitas...")
+    try:
+        ahora = datetime.now()
+        resultado = supabase.table("visitas").select("*").eq("estado", "agendada").execute()
+        visitas = resultado.data or []
+        for visita in visitas:
+            try:
+                fecha_visita = datetime.fromisoformat(visita["fecha_visita"].replace("Z", "+00:00")).replace(tzinfo=None)
+            except:
+                continue
+            delta = fecha_visita - ahora
+            if delta.total_seconds() <= 0:
+                continue
+
+            lead_r = supabase.table("leads").select("*").eq("id", visita["lead_id"]).execute()
+            if not lead_r.data:
+                continue
+            lead = lead_r.data[0]
+
+            propiedad_titulo = None
+            if visita.get("propiedad_id"):
+                prop_r = supabase.table("propiedades").select("titulo").eq("id", visita["propiedad_id"]).execute()
+                if prop_r.data:
+                    propiedad_titulo = prop_r.data[0].get("titulo")
+
+            cliente = get_cliente(visita["vendedor"])
+            if not cliente:
+                continue
+            lang_cliente = get_idioma_default(cliente)
+            fecha_str = fecha_visita.strftime("%d/%m/%Y %H:%M")
+
+            if not visita.get("recordatorio_24h_enviado") and delta <= timedelta(hours=24):
+                enviado = enviar_recordatorio_visita(
+                    visita["vendedor"], lead.get("nombre", ""), lead.get("telefono", ""),
+                    fecha_str, propiedad_titulo, "24h", lang=lang_cliente
+                )
+                if enviado:
+                    supabase.table("visitas").update({"recordatorio_24h_enviado": True}).eq("id", visita["id"]).execute()
+                    print(f"✅ Recordatorio 24h enviado — visita {visita['id']}")
+
+            if not visita.get("recordatorio_2h_enviado") and delta <= timedelta(hours=2):
+                enviado = enviar_recordatorio_visita(
+                    visita["vendedor"], lead.get("nombre", ""), lead.get("telefono", ""),
+                    fecha_str, propiedad_titulo, "2h", lang=lang_cliente
+                )
+                if enviado:
+                    supabase.table("visitas").update({"recordatorio_2h_enviado": True}).eq("id", visita["id"]).execute()
+                    print(f"✅ Recordatorio 2h enviado — visita {visita['id']}")
+    except Exception as e:
+        print(f"❌ Error en job_recordatorios_visitas: {e}")
+
 @app.before_request
 def verificar_sesion():
     rutas_publicas = ['formulario', 'formulario_asesor', 'index', 'seleccion_idioma_login',
                       'static', 'login', 'cambiar_idioma', 'cron_seguimiento', 'admin_login',
                       'inicio_formulario', 'chat_inmobiliario', 'test_chat', 'inventario_publico',
                       'recuperar_password', 'reset_password', 'cron_reporte_semanal',
-                      'test_reporte_semanal']
+                      'test_reporte_semanal', 'cron_recordatorios_visitas']
     if request.endpoint in rutas_publicas:
         return
     if request.endpoint and request.endpoint.startswith('admin'):
@@ -1205,6 +1263,17 @@ def test_reporte_semanal(secret_key, cliente_id):
         lang_cliente = get_idioma_default(cliente)
         enviado = enviar_reporte_semanal(cliente_id, resumen, lang=lang_cliente)
         return f"✅ Reporte de prueba enviado (idioma={lang_cliente}): {enviado}", 200
+    except Exception as e:
+        return f"❌ Error: {e}", 500
+
+@app.route("/cron/recordatorios-visitas/<secret_key>", methods=["GET"])
+def cron_recordatorios_visitas(secret_key):
+    clave_esperada = os.environ.get("CRON_SECRET", "seguimiento_secreto_roberto_2024")
+    if not secrets.compare_digest(secret_key, clave_esperada):
+        return "No autorizado", 403
+    try:
+        job_recordatorios_visitas()
+        return f"✅ Recordatorios de visitas revisados: {datetime.now().strftime('%Y-%m-%d %H:%M')}", 200
     except Exception as e:
         return f"❌ Error: {e}", 500
 
