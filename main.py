@@ -1309,7 +1309,10 @@ def portal_prospecto(token):
         if not vendedor:
             return "Error 404", 404
 
-        lang = get_idioma_default(vendedor)
+        lang_default = get_idioma_default(vendedor)
+        lang_solicitado = request.args.get('lang', '').strip()
+        idiomas_validos = ['es', 'en', 'fr', 'de', 'pt', 'zh']
+        lang = lang_solicitado if lang_solicitado in idiomas_validos else lang_default
 
         props_r = supabase.table("propiedades").select("*").eq("vendedor", lead["vendedor"]).eq("estado", "disponible").execute()
         propiedades_todas = props_r.data or []
