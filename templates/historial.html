@@ -123,7 +123,6 @@
         .acciones-container { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 105px; }
         .empty-state { text-align: center; padding: 50px; color: #95a5a6; font-size: 15px; }
 
-        /* ✅ MODAL RESPUESTA — nuevo diseño con 3 opciones */
         .modal-respuesta { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); overflow-y: auto; }
         .modal-respuesta-content { background: white; margin: 4% auto; padding: 24px; border-radius: 12px; max-width: 560px; width: 92%; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
         .modal-resp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
@@ -141,7 +140,6 @@
         .btn-wa-op:hover { background: #128C7E; }
         .btn-cerrar-modal { width: 100%; margin-top: 8px; padding: 11px; background: #ecf0f1; color: #555; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; }
 
-        /* ✅ MODAL agendar visita */
         .form-visita-group { margin-bottom: 14px; }
         .form-visita-group label { display: block; font-size: 12px; font-weight: 700; color: #555; margin-bottom: 5px; }
         .form-visita-group input, .form-visita-group select, .form-visita-group textarea {
@@ -1017,7 +1015,6 @@ function guardarNota(textarea, leadId) {
     });
 }
 
-// ✅ NUEVA función — muestra 3 opciones con copiar y WhatsApp individual
 function verRespuesta(leadId, nombre, telefono) {
     document.getElementById('nombreRespuesta').textContent = nombre;
     document.getElementById('opcionesContainer').innerHTML =
@@ -1089,7 +1086,6 @@ function cerrarModalRespuesta() { document.getElementById('modalRespuesta').styl
 function abrirModalAsesores() { document.getElementById('modalAsesores').style.display = 'block'; }
 function cerrarModalAsesores() { document.getElementById('modalAsesores').style.display = 'none'; }
 
-// ✅ NUEVO — agenda de visitas
 function abrirModalVisita(leadId, nombre) {
     document.getElementById('visitaLeadId').value = leadId;
     document.getElementById('nombreVisita').textContent = nombre;
@@ -1187,7 +1183,6 @@ function cargarBadgesVisitas() {
 }
 document.addEventListener('DOMContentLoaded', cargarBadgesVisitas);
 
-// ✅ NUEVO — copiar link del portal del prospecto
 function copiarLinkPortal(leadId, esMovil) {
     const btnId = esMovil ? `btnPortalM_${leadId}` : `btnPortal_${leadId}`;
     const btn = document.getElementById(btnId);
