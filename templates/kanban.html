@@ -87,7 +87,6 @@
         .etapa-select { width: 100%; font-size: 11px; padding: 5px 6px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer; margin-top: 6px; }
         .etapa-select:focus { outline: none; border-color: var(--color); }
 
-        /* ✅ MODAL 3 opciones */
         .modal-respuesta { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); overflow-y: auto; }
         .modal-respuesta-content { background: white; margin: 6% auto; padding: 24px; border-radius: 12px; max-width: 540px; width: 92%; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
         .modal-resp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
@@ -105,7 +104,6 @@
         .btn-wa-op:hover { background: #128C7E; }
         .btn-cerrar-modal-k { width: 100%; margin-top: 8px; padding: 11px; background: #ecf0f1; color: #555; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; }
 
-        /* ✅ MODAL agendar visita */
         .form-visita-group { margin-bottom: 14px; }
         .form-visita-group label { display: block; font-size: 12px; font-weight: 700; color: #555; margin-bottom: 5px; }
         .form-visita-group input, .form-visita-group select, .form-visita-group textarea {
@@ -514,7 +512,6 @@
     {% endfor %}
 </div>
 
-<!-- ✅ MODAL 3 opciones -->
 <div id="modalRespuesta" class="modal-respuesta">
     <div class="modal-respuesta-content">
         <div class="modal-resp-header">
@@ -528,7 +525,6 @@
     </div>
 </div>
 
-<!-- ✅ MODAL agendar visita -->
 <div id="modalVisita" class="modal-respuesta">
     <div class="modal-respuesta-content" style="max-width:420px;">
         <div class="modal-resp-header">
@@ -623,7 +619,6 @@ function cambiarEtapaDirecto(leadId, nuevaEtapa) {
     }).then(r => r.json()).then(data => { if (data.ok) location.reload(); });
 }
 
-// ✅ NUEVA — muestra 3 opciones traducidas
 function verRespuesta(leadId, nombre, telefono) {
     document.getElementById('nombreRespuesta').textContent = nombre;
     document.getElementById('opcionesContainer').innerHTML =
@@ -693,7 +688,6 @@ function waOpcion(msgId, telefono) {
 
 function cerrarModal() { document.getElementById('modalRespuesta').style.display = 'none'; }
 
-// ✅ NUEVO — agenda de visitas
 function abrirModalVisita(leadId, nombre) {
     document.getElementById('visitaLeadId').value = leadId;
     document.getElementById('nombreVisita').textContent = nombre;
@@ -792,7 +786,6 @@ function cargarBadgesVisitas() {
 }
 document.addEventListener('DOMContentLoaded', cargarBadgesVisitas);
 
-// ✅ NUEVO — copiar link del portal del prospecto
 function copiarLinkPortal(leadId) {
     const btn = document.getElementById(`btnPortal_${leadId}`);
     fetch(`/portal-link/${clienteId}/${leadId}`)
