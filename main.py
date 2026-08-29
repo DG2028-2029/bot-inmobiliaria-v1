@@ -11,6 +11,7 @@ import time
 import secrets
 import cloudinary
 import cloudinary.uploader
+from cryptography.fernet import Fernet
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from io import BytesIO
@@ -35,6 +36,25 @@ app.secret_key = config.SECRET_KEY
 # ✅ Filtro para parsear JSON dentro de templates (usado en portal_prospecto.html
 # para leer imagen_url, que se guarda como texto JSON en la tabla propiedades)
 app.jinja_env.filters['fromjson'] = json.loads
+
+# ============================================================
+# ✅ CIFRADO — protege la contraseña de aplicación de Gmail
+# ============================================================
+_encryption_key = os.environ.get("ENCRYPTION_KEY", "")
+_fernet = Fernet(_encryption_key.encode()) if _encryption_key else None
+
+def cifrar_texto(texto_plano):
+    if not texto_plano or not _fernet:
+        return None
+    return _fernet.encrypt(texto_plano.encode()).decode()
+
+def descifrar_texto(texto_cifrado):
+    if not texto_cifrado or not _fernet:
+        return None
+    try:
+        return _fernet.decrypt(texto_cifrado.encode()).decode()
+    except Exception:
+        return None
 
 # ============================================================
 # ✅ SEGURIDAD — COOKIES Y SESIONES
@@ -1006,6 +1026,28 @@ def admin_editar_cliente(cliente_id):
         log_accion('ADMIN_EDITAR_CLIENTE', f"id={cliente_id}", get_remote_address())
     except Exception as e:
         print(f"❌ Error editando cliente: {e}")
+    return redirect(url_for('admin_panel'))
+
+@app.route("/admin/cliente/email-config/<cliente_id>", methods=["POST"])
+def admin_config_email(cliente_id):
+    if not session.get("admin"):
+        return redirect(url_for('admin_panel'))
+    verificar_csrf()
+    try:
+        proveedor = request.form.get("proveedor_email", "ninguno").strip()
+        data = {"proveedor_email": proveedor}
+
+        if proveedor == "google":
+            gmail_email = request.form.get("gmail_email", "").strip()
+            gmail_password = request.form.get("gmail_app_password", "").strip()
+            data["gmail_email"] = gmail_email
+            if gmail_password:
+                data["gmail_app_password_cifrada"] = cifrar_texto(gmail_password)
+
+        supabase.table("clientes").update(data).eq("id", cliente_id).execute()
+        log_accion('ADMIN_CONFIG_EMAIL', f"id={cliente_id} proveedor={proveedor}", get_remote_address())
+    except Exception as e:
+        print(f"❌ Error configurando email: {e}")
     return redirect(url_for('admin_panel'))
 
 @app.route("/admin/cliente/toggle/<cliente_id>", methods=["POST"])
