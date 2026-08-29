@@ -76,6 +76,9 @@
         .cliente-row strong { color: #2c3e50; }
         .badge-activo { background: #e8f8f0; color: #27ae60; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
         .badge-inactivo { background: #fdf2f2; color: #e74c3c; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
+        .badge-email-google { background: #e8f4fd; color: #1a73e8; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
+        .badge-email-resend { background: #f3eefc; color: #6c3fbf; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
+        .badge-email-ninguno { background: #f4f6f7; color: #7f8c8d; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
         .cliente-actions { padding: 12px 20px; background: #f8f9fa; display: flex; gap: 6px; flex-wrap: wrap; }
         .btn-editar {
             flex: 1; background: #3498db; color: white; border: none;
@@ -83,6 +86,12 @@
             font-size: 12px; font-weight: bold; transition: 0.2s; min-width: 60px;
         }
         .btn-editar:hover { background: #2980b9; }
+        .btn-email-config {
+            flex: 1; background: #16a085; color: white; border: none;
+            padding: 8px; border-radius: 6px; cursor: pointer;
+            font-size: 12px; font-weight: bold; transition: 0.2s; min-width: 70px;
+        }
+        .btn-email-config:hover { background: #138a72; }
         .btn-desactivar {
             flex: 1; background: #e74c3c; color: white; border: none;
             padding: 8px; border-radius: 6px; cursor: pointer;
@@ -140,6 +149,26 @@
         .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
         .checkbox-row input { width: auto; }
         .checkbox-row label { margin: 0; font-weight: normal; font-size: 13px; }
+
+        /* ✅ Configuración de correos automáticos */
+        .proveedor-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .proveedor-tab {
+            flex: 1; padding: 14px 12px; border-radius: 10px; cursor: pointer;
+            text-align: center; font-weight: 700; font-size: 13px;
+            border: 2px solid #e0e0e0; background: #f8f9fa; color: #999;
+            transition: 0.2s;
+        }
+        .proveedor-tab.activo-google { border-color: #1a73e8; background: #e8f4fd; color: #1a73e8; }
+        .proveedor-tab.activo-resend { border-color: #6c3fbf; background: #f3eefc; color: #6c3fbf; }
+        .proveedor-tab .sub { font-weight: 400; font-size: 10.5px; display: block; margin-top: 3px; opacity: 0.8; }
+        .proveedor-tab.deshabilitado { opacity: 0.5; cursor: not-allowed; }
+        .proveedor-panel { display: none; }
+        .proveedor-panel.visible { display: block; }
+        .resend-aviso {
+            background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px;
+            padding: 14px; font-size: 12.5px; color: #8a6d00; line-height: 1.6;
+        }
+        .form-group small { display: block; margin-top: 4px; color: #999; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -174,6 +203,7 @@
 
     <div class="clientes-grid">
         {% for c in clientes %}
+        {% set prov = c.proveedor_email or 'ninguno' %}
         <div class="cliente-card"
             data-id="{{ c.id }}"
             data-nombre="{{ c.nombre }}"
@@ -184,7 +214,9 @@
             data-pais="{{ c.pais or '' }}"
             data-color="{{ c.color_primario or '#667eea' }}"
             data-apikey="{{ c.email_api_key or '' }}"
-            data-activo="{{ 'true' if c.activo else 'false' }}">
+            data-activo="{{ 'true' if c.activo else 'false' }}"
+            data-gmail-email="{{ c.gmail_email or '' }}"
+            data-proveedor-email="{{ prov }}">
             <div class="cliente-header">
                 <div class="cliente-color" style="background: {{ c.color_primario or '#667eea' }}20; border: 2px solid {{ c.color_primario or '#667eea' }};">
                     🏠
@@ -211,10 +243,17 @@
                         {{ c.color_primario or '#667eea' }}
                     </strong>
                 </div>
+                <div class="cliente-row">
+                    <span>✉️ Correos automáticos:</span>
+                    <span class="badge-email-{{ prov }}">
+                        {% if prov == 'google' %}🟢 Google{% elif prov == 'resend' %}🟣 Resend{% else %}⚪ No configurado{% endif %}
+                    </span>
+                </div>
             </div>
             <div class="cliente-actions">
                 <a href="{{ url_for('historial', cliente_id=c.id) }}" class="btn-ver" target="_blank">👁️ Ver</a>
                 <button class="btn-editar" onclick="abrirModalEditar(this.closest('.cliente-card'))">✏️ Editar</button>
+                <button class="btn-email-config" onclick="abrirModalEmail(this.closest('.cliente-card'))">✉️ Correos</button>
 
                 {% if c.activo %}
                 <form method="POST" action="{{ url_for('admin_toggle_cliente', cliente_id=c.id) }}" style="flex:1" onsubmit="return confirm('¿Desactivar a {{ c.nombre }}?')">
@@ -487,10 +526,60 @@
     </div>
 </div>
 
+<!-- ✅ MODAL CONFIGURAR CORREOS AUTOMÁTICOS -->
+<div id="modalEmail" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>✉️ Correos automáticos — <span id="emailClienteNombre"></span></h2>
+            <span class="close" onclick="cerrarModalEmail()">&times;</span>
+        </div>
+
+        <div class="proveedor-tabs">
+            <div class="proveedor-tab" id="tabGoogle" onclick="seleccionarProveedor('google')">
+                🟢 Google
+                <span class="sub">Empezar — gratis</span>
+            </div>
+            <div class="proveedor-tab" id="tabResend" onclick="seleccionarProveedor('resend')">
+                🟣 Resend
+                <span class="sub">Avanzado — próximamente</span>
+            </div>
+        </div>
+
+        <form method="POST" id="formEmailConfig">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="proveedor_email" id="proveedorEmailInput" value="ninguno">
+
+            <div class="proveedor-panel" id="panelGoogle">
+                <div class="form-grid">
+                    <div class="form-group full">
+                        <label>Gmail de la inmobiliaria *</label>
+                        <input type="email" name="gmail_email" id="emailGmailEmail" placeholder="contacto@inmobiliaria.com">
+                    </div>
+                    <div class="form-group full">
+                        <label>Contraseña de aplicación de Google *</label>
+                        <input type="text" name="gmail_app_password" id="emailGmailPassword" placeholder="xxxx xxxx xxxx xxxx">
+                        <small>Se genera en la cuenta de Google del cliente (Seguridad → Verificación en 2 pasos → Contraseñas de aplicaciones). Déjalo vacío si ya está configurada y no quieres cambiarla.</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="proveedor-panel" id="panelResend">
+                <div class="resend-aviso">
+                    ⏳ Esta opción estará disponible cuando se configure un dominio propio verificado en Resend.
+                    Por ahora, usa la opción "Google" para activar los correos automáticos de este cliente.
+                </div>
+            </div>
+
+            <button type="submit" class="btn-guardar">💾 Guardar configuración</button>
+        </form>
+    </div>
+</div>
+
 <script>
 function abrirModalNuevo() { document.getElementById('modalNuevo').style.display = 'block'; }
 function cerrarModalNuevo() { document.getElementById('modalNuevo').style.display = 'none'; }
 function cerrarModalEditar() { document.getElementById('modalEditar').style.display = 'none'; }
+function cerrarModalEmail() { document.getElementById('modalEmail').style.display = 'none'; }
 
 function abrirModalEditar(card) {
     const id      = card.dataset.id;
@@ -530,9 +619,43 @@ function abrirModalEditar(card) {
     document.getElementById('modalEditar').style.display = 'block';
 }
 
+// ✅ NUEVO — modal de configuración de correos
+function abrirModalEmail(card) {
+    const id          = card.dataset.id;
+    const nombre      = card.dataset.nombre;
+    const gmailEmail  = card.dataset.gmailEmail;
+    const proveedor   = card.dataset.proveedorEmail || 'ninguno';
+
+    document.getElementById('formEmailConfig').action = '/admin/cliente/email-config/' + id;
+    document.getElementById('emailClienteNombre').textContent = nombre;
+    document.getElementById('emailGmailEmail').value = gmailEmail;
+    document.getElementById('emailGmailPassword').value = '';
+
+    seleccionarProveedor(proveedor === 'resend' ? 'resend' : 'google');
+    document.getElementById('modalEmail').style.display = 'block';
+}
+
+function seleccionarProveedor(prov) {
+    document.getElementById('proveedorEmailInput').value = prov;
+
+    document.getElementById('tabGoogle').classList.remove('activo-google');
+    document.getElementById('tabResend').classList.remove('activo-resend');
+    document.getElementById('panelGoogle').classList.remove('visible');
+    document.getElementById('panelResend').classList.remove('visible');
+
+    if (prov === 'resend') {
+        document.getElementById('tabResend').classList.add('activo-resend');
+        document.getElementById('panelResend').classList.add('visible');
+    } else {
+        document.getElementById('tabGoogle').classList.add('activo-google');
+        document.getElementById('panelGoogle').classList.add('visible');
+    }
+}
+
 window.onclick = function(e) {
     if (e.target == document.getElementById('modalNuevo')) cerrarModalNuevo();
     if (e.target == document.getElementById('modalEditar')) cerrarModalEditar();
+    if (e.target == document.getElementById('modalEmail')) cerrarModalEmail();
 }
 </script>
 </body>
