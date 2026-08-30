@@ -115,6 +115,15 @@
         }
         .form-visita-group textarea { resize: vertical; }
         .visita-error { color: #e74c3c; font-size: 12px; margin-bottom: 10px; display: none; background: #fdf2f2; padding: 8px 10px; border-radius: 6px; }
+        .hora-picker-wrap { border: 1px solid #ddd; border-radius: 8px; background: white; }
+        .hora-picker-lista { max-height: 168px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #ccc #f8f9fa; }
+        .hora-picker-lista::-webkit-scrollbar { width: 7px; }
+        .hora-picker-lista::-webkit-scrollbar-track { background: #f8f9fa; border-radius: 8px; }
+        .hora-picker-lista::-webkit-scrollbar-thumb { background: #ccc; border-radius: 8px; }
+        .hora-picker-lista::-webkit-scrollbar-thumb:hover { background: #aaa; }
+        .hora-picker-item { padding: 9px 14px; font-size: 13px; cursor: pointer; color: #444; transition: 0.15s; }
+        .hora-picker-item:hover { background: #f5f5f5; }
+        .hora-picker-item.seleccionada { background: var(--color); color: white; font-weight: 700; }
 
         @media (max-width: 900px) {
             .kanban-board { grid-template-columns: repeat(3, 1fr); }
@@ -535,7 +544,11 @@
             <input type="hidden" id="visitaLeadId" value="">
             <div class="form-visita-group">
                 <label>{{ t.visita_fecha_lbl }}</label>
-                <input type="datetime-local" id="visitaFecha" required>
+                <input type="date" id="visitaFechaSolo" required style="margin-bottom:8px;">
+                <div class="hora-picker-wrap">
+                    <div class="hora-picker-lista" id="horaPickerLista"></div>
+                </div>
+                <input type="hidden" id="visitaHoraSolo" required>
             </div>
             <div class="form-visita-group">
                 <label>{{ t.visita_propiedad_lbl }}</label>
@@ -691,7 +704,9 @@ function cerrarModal() { document.getElementById('modalRespuesta').style.display
 function abrirModalVisita(leadId, nombre) {
     document.getElementById('visitaLeadId').value = leadId;
     document.getElementById('nombreVisita').textContent = nombre;
-    document.getElementById('visitaFecha').value = '';
+    document.getElementById('visitaFechaSolo').value = '';
+    document.getElementById('visitaHoraSolo').value = '';
+    document.querySelectorAll('.hora-picker-item').forEach(i => i.classList.remove('seleccionada'));
     document.getElementById('visitaNotas').value = '';
     document.getElementById('visitaError').style.display = 'none';
     cargarPropiedadesSelect();
@@ -721,7 +736,9 @@ function renderPropiedadesSelect(props) {
 function guardarVisita(event) {
     event.preventDefault();
     const leadId = document.getElementById('visitaLeadId').value;
-    const fecha = document.getElementById('visitaFecha').value;
+    const fechaSolo = document.getElementById('visitaFechaSolo').value;
+    const horaSolo = document.getElementById('visitaHoraSolo').value;
+    const fecha = (fechaSolo && horaSolo) ? `${fechaSolo}T${horaSolo}` : '';
     const propiedadId = document.getElementById('visitaPropiedad').value;
     const notas = document.getElementById('visitaNotas').value;
     const errBox = document.getElementById('visitaError');
@@ -784,6 +801,28 @@ function cargarBadgesVisitas() {
         })
         .catch(() => {});
 }
+function generarOpcionesHora() {
+    const lista = document.getElementById('horaPickerLista');
+    if (!lista) return;
+    let html = '';
+    for (let h = 0; h < 24; h++) {
+        for (let m of [0, 15, 30, 45]) {
+            const hh = String(h).padStart(2, '0');
+            const mm = String(m).padStart(2, '0');
+            const valor = `${hh}:${mm}`;
+            const fecha = new Date(2000, 0, 1, h, m);
+            const etiqueta = fecha.toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'});
+            html += `<div class="hora-picker-item" data-valor="${valor}" onclick="seleccionarHora('${valor}', this)">${etiqueta}</div>`;
+        }
+    }
+    lista.innerHTML = html;
+}
+function seleccionarHora(valor, el) {
+    document.getElementById('visitaHoraSolo').value = valor;
+    document.querySelectorAll('.hora-picker-item').forEach(i => i.classList.remove('seleccionada'));
+    el.classList.add('seleccionada');
+}
+document.addEventListener('DOMContentLoaded', generarOpcionesHora);
 document.addEventListener('DOMContentLoaded', cargarBadgesVisitas);
 
 function copiarLinkPortal(leadId) {
