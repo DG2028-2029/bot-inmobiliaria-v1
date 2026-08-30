@@ -1052,7 +1052,8 @@ def admin_config_email(cliente_id):
         if proveedor == "google":
             gmail_email = request.form.get("gmail_email", "").strip()
             gmail_password = request.form.get("gmail_app_password", "").strip()
-            data["gmail_email"] = gmail_email
+            if gmail_email:
+                data["gmail_email"] = gmail_email
             if gmail_password:
                 data["gmail_app_password_cifrada"] = cifrar_texto(gmail_password)
 
