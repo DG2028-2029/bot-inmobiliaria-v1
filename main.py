@@ -27,7 +27,8 @@ from reporte_semanal import generar_resumen_semanal
 from email_service import (enviar_email_cliente, notificar_vendedor_lead_nuevo,
                            notificar_vendedor_cliente_marcado, enviar_seguimiento_automatico,
                            enviar_email_reset_password, enviar_reporte_semanal,
-                           enviar_recordatorio_visita)
+                           enviar_recordatorio_visita, enviar_confirmacion_visita_prospecto,
+                           enviar_recordatorio_visita_prospecto)
 from stats import obtener_stats
 
 app = Flask(__name__)
@@ -694,8 +695,10 @@ def job_reporte_semanal():
 def job_recordatorios_visitas():
     """
     Corre cada 15-30 min (vía cron externo). Revisa visitas 'agendadas' y manda
-    recordatorio al vendedor cuando faltan ~24h o ~2h para la visita (una sola
-    vez cada uno, controlado por los flags recordatorio_24h_enviado/2h_enviado).
+    recordatorio al vendedor (siempre, como respaldo) y AL PROSPECTO directo
+    (si el cliente tiene proveedor_email='google' y el lead tiene email) cuando
+    faltan ~24h o ~3h para la visita (una sola vez cada uno, controlado por los
+    flags recordatorio_24h_enviado/2h_enviado — este último ahora dispara a 3h).
     """
     print(f"🔄 [{datetime.now().strftime('%Y-%m-%d %H:%M')}] Revisando recordatorios de visitas...")
     try:
@@ -715,6 +718,7 @@ def job_recordatorios_visitas():
             if not lead_r.data:
                 continue
             lead = lead_r.data[0]
+            lead_email = (lead.get("email") or "").strip()
 
             propiedad_titulo = None
             if visita.get("propiedad_id"):
@@ -729,22 +733,30 @@ def job_recordatorios_visitas():
             fecha_str = fecha_visita.strftime("%d/%m/%Y %H:%M")
 
             if not visita.get("recordatorio_24h_enviado") and delta <= timedelta(hours=24):
-                enviado = enviar_recordatorio_visita(
+                enviar_recordatorio_visita(
                     visita["vendedor"], lead.get("nombre", ""), lead.get("telefono", ""),
                     fecha_str, propiedad_titulo, "24h", lang=lang_cliente
                 )
-                if enviado:
-                    supabase.table("visitas").update({"recordatorio_24h_enviado": True}).eq("id", visita["id"]).execute()
-                    print(f"✅ Recordatorio 24h enviado — visita {visita['id']}")
+                if lead_email:
+                    enviar_recordatorio_visita_prospecto(
+                        visita["vendedor"], lead.get("nombre", ""), lead_email,
+                        fecha_str, propiedad_titulo, "24h", lang=lang_cliente
+                    )
+                supabase.table("visitas").update({"recordatorio_24h_enviado": True}).eq("id", visita["id"]).execute()
+                print(f"✅ Recordatorio 24h enviado — visita {visita['id']}")
 
-            if not visita.get("recordatorio_2h_enviado") and delta <= timedelta(hours=2):
-                enviado = enviar_recordatorio_visita(
+            if not visita.get("recordatorio_2h_enviado") and delta <= timedelta(hours=3):
+                enviar_recordatorio_visita(
                     visita["vendedor"], lead.get("nombre", ""), lead.get("telefono", ""),
-                    fecha_str, propiedad_titulo, "2h", lang=lang_cliente
+                    fecha_str, propiedad_titulo, "3h", lang=lang_cliente
                 )
-                if enviado:
-                    supabase.table("visitas").update({"recordatorio_2h_enviado": True}).eq("id", visita["id"]).execute()
-                    print(f"✅ Recordatorio 2h enviado — visita {visita['id']}")
+                if lead_email:
+                    enviar_recordatorio_visita_prospecto(
+                        visita["vendedor"], lead.get("nombre", ""), lead_email,
+                        fecha_str, propiedad_titulo, "3h", lang=lang_cliente
+                    )
+                supabase.table("visitas").update({"recordatorio_2h_enviado": True}).eq("id", visita["id"]).execute()
+                print(f"✅ Recordatorio 3h enviado — visita {visita['id']}")
     except Exception as e:
         print(f"❌ Error en job_recordatorios_visitas: {e}")
 
@@ -1265,6 +1277,29 @@ def crear_visita(cliente_id, lead_id):
         }
         resultado = supabase.table("visitas").insert(visita_data).execute()
         log_accion('VISITA_CREADA', f"lead_id={lead_id}", get_remote_address(), id_clean)
+
+        # ✅ Correo 1 de 3 (obligatorio): confirmación inmediata directo al prospecto
+        try:
+            lead_r = supabase.table("leads").select("*").eq("id", lead_id).execute()
+            if lead_r.data:
+                lead = lead_r.data[0]
+                lead_email = lead.get("email", "").strip()
+                if lead_email:
+                    propiedad_titulo = None
+                    if propiedad_id:
+                        prop_r = supabase.table("propiedades").select("titulo").eq("id", int(propiedad_id)).execute()
+                        if prop_r.data:
+                            propiedad_titulo = prop_r.data[0].get("titulo")
+                    cliente_dato = get_cliente(id_clean)
+                    lang_cliente = get_idioma_default(cliente_dato) if cliente_dato else 'es'
+                    fecha_str_legible = fecha_visita.strftime("%d/%m/%Y %H:%M")
+                    enviar_confirmacion_visita_prospecto(
+                        id_clean, lead.get("nombre", ""), lead_email,
+                        fecha_str_legible, propiedad_titulo, lang=lang_cliente
+                    )
+        except Exception as e:
+            print(f"⚠️ Error enviando confirmación de visita al prospecto: {e}")
+
         return jsonify({"ok": True, "visita": resultado.data[0] if resultado.data else None})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
