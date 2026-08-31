@@ -907,7 +907,7 @@
                 <textarea id="visitaNotas" rows="2"></textarea>
             </div>
             <div id="visitaError" class="visita-error"></div>
-            <button type="submit" class="btn-copiar-op" style="width:100%;">{{ tx.visita_guardar }}</button>
+            <button type="submit" id="btnGuardarVisita" class="btn-copiar-op" style="width:100%;">{{ tx.visita_guardar }}</button>
         </form>
         <button class="btn-cerrar-modal" onclick="cerrarModalVisita()">{{ tx.cerrar }}</button>
     </div>
@@ -1148,6 +1148,12 @@ function guardarVisita(event) {
         return false;
     }
 
+    const btnGuardar = document.getElementById('btnGuardarVisita');
+    if (btnGuardar.disabled) return false;
+    const textoOriginal = btnGuardar.textContent;
+    btnGuardar.disabled = true;
+    btnGuardar.textContent = '⏳ Guardando...';
+
     const body = new URLSearchParams();
     body.append('csrf_token', CSRF_TOKEN);
     body.append('fecha_visita', fecha);
@@ -1167,11 +1173,15 @@ function guardarVisita(event) {
         } else {
             errBox.textContent = data.error || TX_VISITA_ERROR_GUARDAR;
             errBox.style.display = 'block';
+            btnGuardar.disabled = false;
+            btnGuardar.textContent = textoOriginal;
         }
     })
     .catch(() => {
         errBox.textContent = TX_VISITA_ERROR_CONEXION;
         errBox.style.display = 'block';
+        btnGuardar.disabled = false;
+        btnGuardar.textContent = textoOriginal;
     });
     return false;
 }
