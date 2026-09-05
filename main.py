@@ -9,6 +9,7 @@ import json
 import urllib.request
 import time
 import secrets
+import threading
 import cloudinary
 import cloudinary.uploader
 from cryptography.fernet import Fernet
@@ -1280,26 +1281,31 @@ def crear_visita(cliente_id, lead_id):
         log_accion('VISITA_CREADA', f"lead_id={lead_id}", get_remote_address(), id_clean)
 
         # ✅ Correo 1 de 3 (obligatorio): confirmación inmediata directo al prospecto
-        try:
-            lead_r = supabase.table("leads").select("*").eq("id", lead_id).execute()
-            if lead_r.data:
-                lead = lead_r.data[0]
-                lead_email = lead.get("email", "").strip()
-                if lead_email:
-                    propiedad_titulo = None
-                    if propiedad_id:
-                        prop_r = supabase.table("propiedades").select("titulo").eq("id", int(propiedad_id)).execute()
-                        if prop_r.data:
-                            propiedad_titulo = prop_r.data[0].get("titulo")
-                    cliente_dato = get_cliente(id_clean)
-                    lang_cliente = get_idioma_default(cliente_dato) if cliente_dato else 'es'
-                    fecha_str_legible = fecha_visita.strftime("%d/%m/%Y %H:%M")
-                    enviar_confirmacion_visita_prospecto(
-                        id_clean, lead.get("nombre", ""), lead_email,
-                        fecha_str_legible, propiedad_titulo, lang=lang_cliente
-                    )
-        except Exception as e:
-            print(f"⚠️ Error enviando confirmación de visita al prospecto: {e}")
+        # Se manda en un hilo separado para que el guardado responda al instante
+        # (antes, el envío de correo bloqueaba la respuesta varios segundos).
+        def _enviar_confirmacion_en_segundo_plano():
+            try:
+                lead_r = supabase.table("leads").select("*").eq("id", lead_id).execute()
+                if lead_r.data:
+                    lead = lead_r.data[0]
+                    lead_email = lead.get("email", "").strip()
+                    if lead_email:
+                        propiedad_titulo = None
+                        if propiedad_id:
+                            prop_r = supabase.table("propiedades").select("titulo").eq("id", int(propiedad_id)).execute()
+                            if prop_r.data:
+                                propiedad_titulo = prop_r.data[0].get("titulo")
+                        cliente_dato = get_cliente(id_clean)
+                        lang_cliente = get_idioma_default(cliente_dato) if cliente_dato else 'es'
+                        fecha_str_legible = fecha_visita.strftime("%d/%m/%Y %H:%M")
+                        enviar_confirmacion_visita_prospecto(
+                            id_clean, lead.get("nombre", ""), lead_email,
+                            fecha_str_legible, propiedad_titulo, lang=lang_cliente
+                        )
+            except Exception as e:
+                print(f"⚠️ Error enviando confirmación de visita al prospecto: {e}")
+
+        threading.Thread(target=_enviar_confirmacion_en_segundo_plano, daemon=True).start()
 
         return jsonify({"ok": True, "visita": resultado.data[0] if resultado.data else None})
     except Exception as e:
