@@ -949,7 +949,11 @@ def admin_login():
             error = "Error de seguridad. Recarga la página."
             return render_template("admin_login.html", error=error)
         password = request.form.get("password", "")
-        admin_pass = os.environ.get("ADMIN_PASSWORD", "admin_diego_2024")
+        admin_pass = os.environ.get("ADMIN_PASSWORD")
+        if not admin_pass:
+            log_accion('ADMIN_LOGIN_MISCONFIG', 'ADMIN_PASSWORD no configurada', get_remote_address())
+            error = "Configuración de administrador incompleta. Contacta al desarrollador."
+            return render_template("admin_login.html", error=error)
         if secrets.compare_digest(password, admin_pass):
             session["admin"] = True
             session["admin_time"] = datetime.now().isoformat()
@@ -1444,10 +1448,18 @@ def portal_confirmar_visita(token):
 # RUTAS PRINCIPALES
 # ============================================================
 
+def _obtener_cron_secret_o_bloquear():
+    """
+    Devuelve el CRON_SECRET desde variables de entorno. Si no está configurado,
+    NO se usa ningún valor por defecto (antes existía un fallback hardcodeado
+    visible en GitHub) — en su lugar, se bloquea la ruta devolviendo None.
+    """
+    return os.environ.get("CRON_SECRET")
+
 @app.route("/cron/seguimiento/<secret_key>", methods=["GET"])
 def cron_seguimiento(secret_key):
-    clave_esperada = os.environ.get("CRON_SECRET", "seguimiento_secreto_roberto_2024")
-    if not secrets.compare_digest(secret_key, clave_esperada):
+    clave_esperada = _obtener_cron_secret_o_bloquear()
+    if not clave_esperada or not secrets.compare_digest(secret_key, clave_esperada):
         return "No autorizado", 403
     try:
         job_seguimiento_automatico()
@@ -1457,8 +1469,8 @@ def cron_seguimiento(secret_key):
 
 @app.route("/cron/reporte-semanal/<secret_key>", methods=["GET"])
 def cron_reporte_semanal(secret_key):
-    clave_esperada = os.environ.get("CRON_SECRET", "seguimiento_secreto_roberto_2024")
-    if not secrets.compare_digest(secret_key, clave_esperada):
+    clave_esperada = _obtener_cron_secret_o_bloquear()
+    if not clave_esperada or not secrets.compare_digest(secret_key, clave_esperada):
         return "No autorizado", 403
     try:
         job_reporte_semanal()
@@ -1472,8 +1484,8 @@ def test_reporte_semanal(secret_key, cliente_id):
     RUTA DE PRUEBA — fuerza el envío del reporte semanal a un cliente
     específico, sin importar el día/hora. Úsala solo para probar.
     """
-    clave_esperada = os.environ.get("CRON_SECRET", "seguimiento_secreto_roberto_2024")
-    if not secrets.compare_digest(secret_key, clave_esperada):
+    clave_esperada = _obtener_cron_secret_o_bloquear()
+    if not clave_esperada or not secrets.compare_digest(secret_key, clave_esperada):
         return "No autorizado", 403
     try:
         cliente = get_cliente(cliente_id)
@@ -1490,8 +1502,8 @@ def test_reporte_semanal(secret_key, cliente_id):
 
 @app.route("/cron/recordatorios-visitas/<secret_key>", methods=["GET"])
 def cron_recordatorios_visitas(secret_key):
-    clave_esperada = os.environ.get("CRON_SECRET", "seguimiento_secreto_roberto_2024")
-    if not secrets.compare_digest(secret_key, clave_esperada):
+    clave_esperada = _obtener_cron_secret_o_bloquear()
+    if not clave_esperada or not secrets.compare_digest(secret_key, clave_esperada):
         return "No autorizado", 403
     try:
         job_recordatorios_visitas()
@@ -2204,16 +2216,18 @@ def llamar_openrouter(api_key, messages_payload):
 
 @app.route("/test-chat/<cliente_id>")
 def test_chat(cliente_id):
-    api_key = os.environ.get("OPENROUTER_API_KEY", "NO KEY")
+    api_key = os.environ.get("OPENROUTER_API_KEY", "")
     try:
         result = llamar_openrouter(api_key, [
             {"role": "user", "content": "Say exactly: WORKING"}
         ])
+        # ⚠️ Ya no se devuelve el prefijo de la API key en la respuesta —
+        # antes esta ruta pública exponía api_key[:12] en el JSON.
         if result:
-            return jsonify({"ok": True, "response": result, "key_prefix": api_key[:12]})
-        return jsonify({"ok": False, "error": "Ningún modelo respondió", "key_prefix": api_key[:12]})
+            return jsonify({"ok": True, "response": result})
+        return jsonify({"ok": False, "error": "Ningún modelo respondió"})
     except Exception as e:
-        return jsonify({"ok": False, "error": str(e), "key_prefix": api_key[:12]})
+        return jsonify({"ok": False, "error": str(e)})
 
 @app.route("/api/chat/<cliente_id>", methods=["POST"])
 @limiter.limit("30 per minute")
