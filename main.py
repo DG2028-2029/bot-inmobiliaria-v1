@@ -1142,7 +1142,14 @@ def borrar_asesor(cliente_id, asesor_id):
         return "No autorizado", 403
     verificar_csrf()
     try:
-        supabase.table("leads").update({"asesor_id": None}).eq("asesor_id", asesor_id).execute()
+        # ✅ Se verifica que el asesor pertenezca a este cliente ANTES de tocar
+        # nada — antes se desasignaban leads (update sobre "leads") sin haber
+        # confirmado que el asesor_id fuera de este cliente, lo que permitía
+        # afectar leads de otra inmobiliaria pasando un asesor_id ajeno.
+        asesor_check = supabase.table("asesores").select("id").eq("id", asesor_id).eq("cliente_id", id_clean).execute()
+        if not asesor_check.data:
+            return "Asesor no encontrado", 404
+        supabase.table("leads").update({"asesor_id": None}).eq("asesor_id", asesor_id).eq("vendedor", id_clean).execute()
         supabase.table("asesores").delete().eq("id", asesor_id).eq("cliente_id", id_clean).execute()
     except Exception as e:
         print(f"❌ Error eliminando asesor: {e}")
@@ -1160,7 +1167,7 @@ def detalle_asesor(cliente_id, asesor_id):
         if not asesor_r.data: return "Asesor no encontrado", 404
         asesor = asesor_r.data[0]
         asesor['activo'] = bool(asesor.get('activo', False))
-        leads_r = supabase.table("leads").select("*").eq("asesor_id", asesor_id).order("score", desc=True).execute()
+        leads_r = supabase.table("leads").select("*").eq("asesor_id", asesor_id).eq("vendedor", id_clean).order("score", desc=True).execute()
         leads = leads_r.data or []
         total = len(leads)
         clientes = sum(1 for l in leads if 'CLIENTE' in l.get('clasificacion', ''))
@@ -1852,7 +1859,10 @@ def editar_propiedad(cliente_id, prop_id):
     vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
-        prop_actual = supabase.table("propiedades").select("imagen_url").eq("id", prop_id).execute()
+        # ✅ Se agrega .eq("vendedor", id_clean) — antes esta lectura podía
+        # exponer las URLs de imágenes de una propiedad de otro cliente
+        # (el update final ya estaba protegido, pero esta lectura no).
+        prop_actual = supabase.table("propiedades").select("imagen_url").eq("id", prop_id).eq("vendedor", id_clean).execute()
         imagenes_existentes = []
         if prop_actual.data:
             try:
