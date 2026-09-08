@@ -784,6 +784,7 @@
                 {% if es_dueno and asesores %}
                 <td>
                     <form method="POST" action="{{ url_for('asignar_asesor_lead', cliente_id=cliente.usuario, lead_id=lead.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <select name="asesor_id" class="select-asesor" onchange="this.form.submit()">
                             <option value="">{{ tx.sin_asignar }}</option>
                             {% for a in asesores %}{% if a.activo %}<option value="{{ a.id }}" {% if lead.asesor_id == a.id %}selected{% endif %}>{{ a.nombre }}</option>{% endif %}{% endfor %}
@@ -795,10 +796,12 @@
                     <div class="acciones-container">
                         {% if "CLIENTE" not in lead.clasificacion %}
                         <form method="POST" action="{{ url_for('marcar_cliente', cliente_id=cliente.usuario, lead_id=lead.id) }}" style="width:100%;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn-marcar-cliente" onclick="return confirm('{{ textos.confirm_marcar.replace('{nombre}', lead.nombre) }}')">💎 {{ textos.btn_marcar_cliente }}</button>
                         </form>
                         {% else %}
                         <form method="POST" action="{{ url_for('desmarcar_cliente', cliente_id=cliente.usuario, lead_id=lead.id) }}" style="width:100%;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn-desmarcar-cliente" onclick="return confirm('{{ textos.confirm_desmarcar.replace('{nombre}', lead.nombre) }}')">❌ {{ textos.btn_desmarcar }}</button>
                         </form>
                         {% endif %}
@@ -851,6 +854,7 @@
         <div class="lead-card-actions">
             {% if "CLIENTE" not in lead.clasificacion %}
             <form method="POST" action="{{ url_for('marcar_cliente', cliente_id=cliente.usuario, lead_id=lead.id) }}" style="flex:1;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" style="background:var(--color);color:white;width:100%;padding:10px;border-radius:8px;border:none;cursor:pointer;font-weight:bold;font-size:12px;" onclick="return confirm('{{ textos.confirm_marcar.replace('{nombre}', lead.nombre) }}')">{{ tx.btn_cliente_m }}</button>
             </form>
             {% endif %}
@@ -936,16 +940,19 @@
                         <a href="{{ url_for('detalle_asesor', cliente_id=cliente.usuario, asesor_id=a.id) }}" class="btn-asesor-ver" target="_blank">{{ tx.btn_ver }}</a>
                         {% if a.activo %}
                         <form method="POST" action="{{ url_for('toggle_asesor', cliente_id=cliente.usuario, asesor_id=a.id) }}" onsubmit="return confirm('{{ tx.confirm_desact }}{{ a.nombre }}?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="nuevo_estado" value="false">
                             <button type="submit" class="btn-asesor-desactivar">{{ tx.btn_desact }}</button>
                         </form>
                         {% else %}
                         <form method="POST" action="{{ url_for('toggle_asesor', cliente_id=cliente.usuario, asesor_id=a.id) }}" onsubmit="return confirm('{{ tx.confirm_react }}{{ a.nombre }}?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="nuevo_estado" value="true">
                             <button type="submit" class="btn-asesor-reactivar">{{ tx.btn_react }}</button>
                         </form>
                         {% endif %}
                         <form method="POST" action="{{ url_for('borrar_asesor', cliente_id=cliente.usuario, asesor_id=a.id) }}" onsubmit="return confirm('{{ tx.confirm_borrar }}{{ a.nombre }}?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn-asesor-borrar">{{ tx.btn_borrar }}</button>
                         </form>
                     </div>
@@ -959,6 +966,7 @@
         <div class="form-nuevo-asesor">
             <h3>{{ tx.nuevo_titulo }}</h3>
             <form method="POST" action="{{ url_for('crear_asesor', cliente_id=cliente.usuario) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-grid-2">
                     <div class="form-group-modal"><label>{{ tx.lbl_nombre }}</label><input type="text" name="nombre" required placeholder="{{ tx.ph_nombre }}"></div>
                     <div class="form-group-modal"><label>{{ tx.lbl_usuario }}</label><input type="text" name="usuario" required placeholder="{{ tx.ph_usuario }}"></div>
