@@ -1191,10 +1191,12 @@ def asignar_asesor_lead(cliente_id, lead_id):
     verificar_csrf()
     try:
         asesor_id = request.form.get("asesor_id")
+        # ✅ Se agrega .eq("vendedor", id_clean) — antes esta ruta actualizaba
+        # cualquier lead por id sin verificar que perteneciera a este cliente.
         if asesor_id:
-            supabase.table("leads").update({"asesor_id": int(asesor_id)}).eq("id", lead_id).execute()
+            supabase.table("leads").update({"asesor_id": int(asesor_id)}).eq("id", lead_id).eq("vendedor", id_clean).execute()
         else:
-            supabase.table("leads").update({"asesor_id": None}).eq("id", lead_id).execute()
+            supabase.table("leads").update({"asesor_id": None}).eq("id", lead_id).eq("vendedor", id_clean).execute()
     except Exception as e:
         print(f"❌ Error asignando asesor: {e}")
     return redirect(url_for('historial', cliente_id=id_clean))
@@ -1209,10 +1211,12 @@ def guardar_nota(cliente_id, lead_id):
         return jsonify({"ok": False, "error": "CSRF"}), 403
     try:
         nota = request.form.get("nota", "").strip()
+        # ✅ Se agrega .eq("vendedor", id_clean) — antes cualquier cliente logueado
+        # podía editar la nota de un lead ajeno cambiando el id en la petición.
         supabase.table("leads").update({
             "notas": nota,
             "ultimo_contacto": datetime.now().strftime("%Y-%m-%d %H:%M")
-        }).eq("id", lead_id).execute()
+        }).eq("id", lead_id).eq("vendedor", id_clean).execute()
         return jsonify({"ok": True})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
@@ -1224,7 +1228,9 @@ def respuesta_sugerida(cliente_id, lead_id):
         return "No autorizado", 403
     try:
         lang = session.get('idioma', 'es')
-        resultado = supabase.table("leads").select("*").eq("id", lead_id).execute()
+        # ✅ Se agrega .eq("vendedor", id_clean) — antes se podía leer el lead
+        # (nombre, teléfono, presupuesto, etc.) de cualquier otro cliente por id.
+        resultado = supabase.table("leads").select("*").eq("id", lead_id).eq("vendedor", id_clean).execute()
         if resultado.data:
             respuestas = generar_respuesta_sugerida(resultado.data[0], lang)
             return jsonify({"respuestas": respuestas})
@@ -1245,7 +1251,9 @@ def actualizar_etapa(cliente_id, lead_id):
         etapas_validas = ['nuevo', 'contactado', 'visita', 'propuesta', 'cerrado']
         if nueva_etapa not in etapas_validas:
             return "Etapa inválida", 400
-        supabase.table("leads").update({"etapa": nueva_etapa}).eq("id", lead_id).execute()
+        # ✅ Se agrega .eq("vendedor", id_clean) — antes cualquier cliente logueado
+        # podía mover de etapa el lead de otra inmobiliaria cambiando el id.
+        supabase.table("leads").update({"etapa": nueva_etapa}).eq("id", lead_id).eq("vendedor", id_clean).execute()
         return jsonify({"ok": True, "etapa": nueva_etapa})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
@@ -1261,6 +1269,13 @@ def crear_visita(cliente_id, lead_id):
         return jsonify({"ok": False, "error": "No autorizado"}), 403
     verificar_csrf()
     try:
+        # ✅ Se verifica que el lead pertenezca a este cliente ANTES de crear
+        # la visita — antes se podía agendar una visita sobre un lead ajeno
+        # con solo cambiar el lead_id en la petición.
+        lead_check = supabase.table("leads").select("id").eq("id", lead_id).eq("vendedor", id_clean).execute()
+        if not lead_check.data:
+            return jsonify({"ok": False, "error": "Lead no encontrado"}), 404
+
         fecha_str = request.form.get("fecha_visita", "").strip()
         propiedad_id = request.form.get("propiedad_id", "").strip()
         notas = request.form.get("notas", "").strip()[:500]
@@ -1289,7 +1304,8 @@ def crear_visita(cliente_id, lead_id):
         # (antes, el envío de correo bloqueaba la respuesta varios segundos).
         def _enviar_confirmacion_en_segundo_plano():
             try:
-                lead_r = supabase.table("leads").select("*").eq("id", lead_id).execute()
+                # ✅ Filtrado también por vendedor, consistente con la verificación de arriba.
+                lead_r = supabase.table("leads").select("*").eq("id", lead_id).eq("vendedor", id_clean).execute()
                 if lead_r.data:
                     lead = lead_r.data[0]
                     lead_email = lead.get("email", "").strip()
@@ -1930,13 +1946,15 @@ def marcar_cliente(cliente_id, lead_id):
     vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
-        resultado = supabase.table("leads").select("*").eq("id", lead_id).execute()
+        # ✅ Se agrega .eq("vendedor", id_clean) en ambas consultas — antes se
+        # podía marcar como cliente el lead de otra inmobiliaria por id.
+        resultado = supabase.table("leads").select("*").eq("id", lead_id).eq("vendedor", id_clean).execute()
         if resultado.data:
             lead = resultado.data[0]
             supabase.table("leads").update({
                 "temperatura": "MUY_CALIENTE", "clasificacion": "💎 CLIENTE",
                 "seguimiento_enviado": True, "etapa": "cerrado"
-            }).eq("id", lead_id).execute()
+            }).eq("id", lead_id).eq("vendedor", id_clean).execute()
             log_accion('MARCAR_CLIENTE', f"lead_id={lead_id} nombre={lead.get('nombre')}", get_remote_address(), id_clean)
             notificar_vendedor_cliente_marcado(
                 cliente_id=id_clean, nombre=lead.get("nombre"), telefono=lead.get("telefono"),
@@ -1954,7 +1972,9 @@ def desmarcar_cliente(cliente_id, lead_id):
     vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     try:
-        resultado = supabase.table("leads").select("*").eq("id", lead_id).execute()
+        # ✅ Se agrega .eq("vendedor", id_clean) en ambas consultas — antes se
+        # podía desmarcar el lead de otra inmobiliaria por id.
+        resultado = supabase.table("leads").select("*").eq("id", lead_id).eq("vendedor", id_clean).execute()
         if not resultado.data: return "Lead no encontrado.", 404
         lead = resultado.data[0]
         lead_data = {
@@ -1968,7 +1988,7 @@ def desmarcar_cliente(cliente_id, lead_id):
             "score": score_nuevo, "clasificacion": clasificacion_nueva,
             "temperatura": temperatura_nueva, "seguimiento_enviado": False,
             "etapa": "contactado"
-        }).eq("id", lead_id).execute()
+        }).eq("id", lead_id).eq("vendedor", id_clean).execute()
         return redirect(url_for('historial', cliente_id=id_clean))
     except Exception as e:
         return f"Error: {str(e)}", 500
