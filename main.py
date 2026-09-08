@@ -1350,7 +1350,12 @@ def visitas_proximas(cliente_id):
     if session.get("cliente") != id_clean:
         return jsonify({"ok": False, "error": "No autorizado"}), 403
     try:
-        resultado = supabase.table("visitas").select("*").eq("vendedor", id_clean).eq("estado", "agendada").order("fecha_visita", desc=False).execute()
+        # ✅ Se agrega .gte("fecha_visita", ahora) — antes solo filtraba por
+        # estado="agendada", así que una visita vieja que nadie marcó como
+        # completada/cancelada seguía apareciendo como "próxima" para siempre,
+        # tapando la visita nueva si esta quedaba más lejos en el tiempo.
+        ahora_iso = datetime.now().isoformat()
+        resultado = supabase.table("visitas").select("*").eq("vendedor", id_clean).eq("estado", "agendada").gte("fecha_visita", ahora_iso).order("fecha_visita", desc=False).execute()
         return jsonify({"ok": True, "visitas": resultado.data or []})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
@@ -1422,7 +1427,10 @@ def portal_prospecto(token):
         propiedades_todas = props_r.data or []
         propiedades_match = buscar_propiedades_para_lead(lead, propiedades_todas)
 
-        visita_r = supabase.table("visitas").select("*").eq("lead_id", lead["id"]).eq("estado", "agendada").order("fecha_visita", desc=False).limit(1).execute()
+        # ✅ Se agrega .gte("fecha_visita", ahora) — mismo fix que en el badge
+        # del panel: ignora visitas viejas que quedaron marcadas "agendada".
+        ahora_iso_portal = datetime.now().isoformat()
+        visita_r = supabase.table("visitas").select("*").eq("lead_id", lead["id"]).eq("estado", "agendada").gte("fecha_visita", ahora_iso_portal).order("fecha_visita", desc=False).limit(1).execute()
         visita = visita_r.data[0] if visita_r.data else None
         visita_propiedad = None
         if visita and visita.get("propiedad_id"):
@@ -1445,7 +1453,9 @@ def portal_confirmar_visita(token):
         if not lead_r.data:
             return jsonify({"ok": False, "error": "Enlace no válido"}), 404
         lead = lead_r.data[0]
-        visita_r = supabase.table("visitas").select("*").eq("lead_id", lead["id"]).eq("estado", "agendada").order("fecha_visita", desc=False).limit(1).execute()
+        # ✅ Mismo fix: solo considerar visitas futuras al confirmar/reagendar.
+        ahora_iso_confirmar = datetime.now().isoformat()
+        visita_r = supabase.table("visitas").select("*").eq("lead_id", lead["id"]).eq("estado", "agendada").gte("fecha_visita", ahora_iso_confirmar).order("fecha_visita", desc=False).limit(1).execute()
         if not visita_r.data:
             return jsonify({"ok": False, "error": "No hay visita agendada"}), 404
         visita = visita_r.data[0]
