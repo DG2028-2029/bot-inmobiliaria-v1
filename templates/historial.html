@@ -250,6 +250,9 @@
         'ph_email': 'carlos@email.com',
         'btn_crear': '✅ Crear Asesor',
         'sin_asesores': 'No hay asesores aún.',
+        'asesor_err_duplicado': 'Ese nombre de usuario ya está en uso. Elige otro.',
+        'asesor_err_campos': 'Nombre, usuario y contraseña son obligatorios.',
+        'asesor_err_generico': 'No se pudo crear el asesor. Intenta de nuevo.',
         'card_tel': '📱 Teléfono',
         'card_zona': '📍 Zona',
         'card_presup': '💰 Presupuesto',
@@ -323,6 +326,9 @@
         'ph_email': 'john@email.com',
         'btn_crear': '✅ Create Agent',
         'sin_asesores': 'No agents yet.',
+        'asesor_err_duplicado': 'That username is already taken. Choose another.',
+        'asesor_err_campos': 'Name, username and password are required.',
+        'asesor_err_generico': "Couldn't create the agent. Try again.",
         'card_tel': '📱 Phone',
         'card_zona': '📍 Area',
         'card_presup': '💰 Budget',
@@ -396,6 +402,9 @@
         'ph_email': 'jean@email.com',
         'btn_crear': '✅ Créer Agent',
         'sin_asesores': "Aucun agent pour l'instant.",
+        'asesor_err_duplicado': "Ce nom d'utilisateur est déjà pris. Choisissez-en un autre.",
+        'asesor_err_campos': 'Nom, utilisateur et mot de passe sont obligatoires.',
+        'asesor_err_generico': "Impossible de créer l'agent. Réessayez.",
         'card_tel': '📱 Téléphone',
         'card_zona': '📍 Zone',
         'card_presup': '💰 Budget',
@@ -469,6 +478,9 @@
         'ph_email': 'max@email.com',
         'btn_crear': '✅ Agent erstellen',
         'sin_asesores': 'Noch keine Agenten.',
+        'asesor_err_duplicado': 'Dieser Benutzername ist bereits vergeben. Wählen Sie einen anderen.',
+        'asesor_err_campos': 'Name, Benutzername und Passwort sind erforderlich.',
+        'asesor_err_generico': 'Agent konnte nicht erstellt werden. Versuchen Sie es erneut.',
         'card_tel': '📱 Telefon',
         'card_zona': '📍 Bereich',
         'card_presup': '💰 Budget',
@@ -542,6 +554,9 @@
         'ph_email': 'carlos@email.com',
         'btn_crear': '✅ Criar Agente',
         'sin_asesores': 'Ainda sem agentes.',
+        'asesor_err_duplicado': 'Esse nome de usuário já está em uso. Escolha outro.',
+        'asesor_err_campos': 'Nome, usuário e senha são obrigatórios.',
+        'asesor_err_generico': 'Não foi possível criar o agente. Tente novamente.',
         'card_tel': '📱 Telefone',
         'card_zona': '📍 Zona',
         'card_presup': '💰 Orçamento',
@@ -615,6 +630,9 @@
         'ph_email': 'zhang@email.com',
         'btn_crear': '✅ 创建顾问',
         'sin_asesores': '暂无顾问。',
+        'asesor_err_duplicado': '该用户名已被使用，请选择其他用户名。',
+        'asesor_err_campos': '姓名、用户名和密码为必填项。',
+        'asesor_err_generico': '无法创建顾问，请重试。',
         'card_tel': '📱 电话',
         'card_zona': '📍 区域',
         'card_presup': '💰 预算',
@@ -1106,6 +1124,28 @@ function waOpcion(msgId, telefono) {
 function cerrarModalRespuesta() { document.getElementById('modalRespuesta').style.display = 'none'; }
 function abrirModalAsesores() { document.getElementById('modalAsesores').style.display = 'block'; }
 function cerrarModalAsesores() { document.getElementById('modalAsesores').style.display = 'none'; }
+
+// ✅ Si venimos de un intento fallido de crear asesor (error=duplicado, campos
+// vacíos, u otro), reabrimos el modal automáticamente y mostramos el motivo
+// en vez de dejar al usuario sin saber por qué no se creó.
+document.addEventListener('DOMContentLoaded', function() {
+    const params = new URLSearchParams(window.location.search);
+    const asesorError = params.get('asesor_error');
+    if (asesorError) {
+        const mensajes = {
+            'usuario_duplicado': "{{ tx.asesor_err_duplicado }}",
+            'campos_requeridos': "{{ tx.asesor_err_campos }}",
+            'error_generico': "{{ tx.asesor_err_generico }}"
+        };
+        alert(mensajes[asesorError] || mensajes['error_generico']);
+        const modalAsesores = document.getElementById('modalAsesores');
+        if (modalAsesores) modalAsesores.style.display = 'block';
+        // Limpia el parámetro de la URL para que un refresh no repita la alerta.
+        params.delete('asesor_error');
+        const nuevaUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+        window.history.replaceState({}, '', nuevaUrl);
+    }
+});
 
 function abrirModalVisita(leadId, nombre) {
     document.getElementById('visitaLeadId').value = leadId;
