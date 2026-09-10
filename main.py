@@ -1105,20 +1105,32 @@ def crear_asesor(cliente_id):
     if session.get("cliente") != id_clean or not es_dueno():
         return "No autorizado", 403
     verificar_csrf()
+    nombre = request.form.get("nombre", "").strip()
+    usuario = request.form.get("usuario", "").strip()
+    password_raw = request.form.get("password", "").strip()
+    # ✅ Validación server-side — el HTML ya marca estos campos "required",
+    # pero eso no protege si alguien manda el POST directo sin pasar por el form.
+    if not nombre or not usuario or not password_raw:
+        return redirect(url_for('historial', cliente_id=id_clean, asesor_error='campos_requeridos'))
     try:
-        password_raw = request.form.get("password", "").strip()
         data = {
             "cliente_id": id_clean,
-            "nombre": request.form.get("nombre", "").strip(),
-            "usuario": request.form.get("usuario", "").strip(),
-            "password": generate_password_hash(password_raw) if password_raw else generate_password_hash(secrets.token_hex(16)),
-            "email": request.form.get("email", "").strip(),
+            "nombre": nombre[:150],
+            "usuario": usuario[:80],
+            "password": generate_password_hash(password_raw),
+            "email": request.form.get("email", "").strip()[:150],
             "activo": True
         }
         supabase.table("asesores").insert(data).execute()
         log_accion('CREAR_ASESOR', f"cliente={id_clean}", get_remote_address(), id_clean)
     except Exception as e:
         print(f"❌ Error creando asesor: {e}")
+        # ✅ Antes este error se tragaba en silencio y el modal no decía nada.
+        # Si es un usuario duplicado (dentro del mismo cliente), se lo avisamos
+        # al usuario en vez de dejarlo adivinando por qué no se creó.
+        if 'duplicate key' in str(e) and 'usuario' in str(e):
+            return redirect(url_for('historial', cliente_id=id_clean, asesor_error='usuario_duplicado'))
+        return redirect(url_for('historial', cliente_id=id_clean, asesor_error='error_generico'))
     return redirect(url_for('historial', cliente_id=id_clean))
 
 @app.route("/asesores/<cliente_id>/toggle/<int:asesor_id>", methods=["POST"])
