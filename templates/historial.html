@@ -244,6 +244,10 @@
         'lbl_usuario': 'Usuario *',
         'lbl_pass': 'Contraseña *',
         'lbl_email': 'Email (opcional)',
+        'lbl_rol': 'Rol',
+        'rol_asesor': 'Asesor (solo sus leads)',
+        'rol_gerente': 'Gerente (ve todo, no gestiona asesores)',
+        'rol_tag_gerente': '★ Gerente',
         'ph_nombre': 'Carlos López',
         'ph_usuario': 'carlos',
         'ph_pass': 'contraseña123',
@@ -320,6 +324,10 @@
         'lbl_usuario': 'Username *',
         'lbl_pass': 'Password *',
         'lbl_email': 'Email (optional)',
+        'lbl_rol': 'Role',
+        'rol_asesor': 'Agent (own leads only)',
+        'rol_gerente': 'Manager (sees everything, no agent management)',
+        'rol_tag_gerente': '★ Manager',
         'ph_nombre': 'John Smith',
         'ph_usuario': 'john',
         'ph_pass': 'password123',
@@ -396,6 +404,10 @@
         'lbl_usuario': 'Utilisateur *',
         'lbl_pass': 'Mot de passe *',
         'lbl_email': 'Email (optionnel)',
+        'lbl_rol': 'Rôle',
+        'rol_asesor': 'Agent (ses leads uniquement)',
+        'rol_gerente': 'Gérant (voit tout, ne gère pas les agents)',
+        'rol_tag_gerente': '★ Gérant',
         'ph_nombre': 'Jean Dupont',
         'ph_usuario': 'jean',
         'ph_pass': 'motdepasse123',
@@ -472,6 +484,10 @@
         'lbl_usuario': 'Benutzername *',
         'lbl_pass': 'Passwort *',
         'lbl_email': 'Email (optional)',
+        'lbl_rol': 'Rolle',
+        'rol_asesor': 'Agent (nur eigene Leads)',
+        'rol_gerente': 'Manager (sieht alles, verwaltet keine Agenten)',
+        'rol_tag_gerente': '★ Manager',
         'ph_nombre': 'Max Müller',
         'ph_usuario': 'max',
         'ph_pass': 'passwort123',
@@ -548,6 +564,10 @@
         'lbl_usuario': 'Usuário *',
         'lbl_pass': 'Senha *',
         'lbl_email': 'Email (opcional)',
+        'lbl_rol': 'Função',
+        'rol_asesor': 'Agente (apenas seus leads)',
+        'rol_gerente': 'Gerente (vê tudo, não gerencia agentes)',
+        'rol_tag_gerente': '★ Gerente',
         'ph_nombre': 'Carlos Silva',
         'ph_usuario': 'carlos',
         'ph_pass': 'senha123',
@@ -624,6 +644,10 @@
         'lbl_usuario': '用户名 *',
         'lbl_pass': '密码 *',
         'lbl_email': '邮箱（可选）',
+        'lbl_rol': '角色',
+        'rol_asesor': '顾问（仅自己的线索）',
+        'rol_gerente': '经理（查看全部，不能管理顾问）',
+        'rol_tag_gerente': '★ 经理',
         'ph_nombre': '张伟',
         'ph_usuario': 'zhang',
         'ph_pass': 'mima123',
@@ -757,7 +781,7 @@
                 <th>{{ tx.col_seg }}</th>
                 <th>{{ tx.col_visita }}</th>
                 <th>{{ tx.col_notas }}</th>
-                {% if es_dueno and asesores %}<th>{{ tx.col_asesor }}</th>{% endif %}
+                {% if puede_ver_todo and asesores %}<th>{{ tx.col_asesor }}</th>{% endif %}
                 <th>{{ textos.col_acciones }}</th>
             </tr>
         </thead>
@@ -799,7 +823,7 @@
                     <span class="nota-texto" onclick="editarNota(this, {{ lead.id }})" title="Click">{{ lead.notas or tx.nota_ph }}</span>
                     <textarea class="nota-input" rows="2" onblur="guardarNota(this, {{ lead.id }})">{{ lead.notas or '' }}</textarea>
                 </td>
-                {% if es_dueno and asesores %}
+                {% if puede_ver_todo and asesores %}
                 <td>
                     <form method="POST" action="{{ url_for('asignar_asesor_lead', cliente_id=cliente.usuario, lead_id=lead.id) }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -951,6 +975,7 @@
                         <h4>{{ a.nombre }}
                             {% if a.activo %}<span class="badge-asesor-activo">{{ tx.activo }}</span>
                             {% else %}<span class="badge-asesor-inactivo">{{ tx.inactivo }}</span>{% endif %}
+                            {% if a.rol == 'gerente' %}<span class="badge-asesor-activo" style="background:#eaf4fb;color:#1a5276;">{{ tx.rol_tag_gerente }}</span>{% endif %}
                         </h4>
                         <div class="sub">👤 {{ a.usuario }}{% if a.email %} · 📧 {{ a.email }}{% endif %}</div>
                     </div>
@@ -990,6 +1015,13 @@
                     <div class="form-group-modal"><label>{{ tx.lbl_usuario }}</label><input type="text" name="usuario" required placeholder="{{ tx.ph_usuario }}"></div>
                     <div class="form-group-modal"><label>{{ tx.lbl_pass }}</label><input type="text" name="password" required placeholder="{{ tx.ph_pass }}"></div>
                     <div class="form-group-modal"><label>{{ tx.lbl_email }}</label><input type="email" name="email" placeholder="{{ tx.ph_email }}"></div>
+                    <div class="form-group-modal">
+                        <label>{{ tx.lbl_rol }}</label>
+                        <select name="rol" style="width:100%;padding:9px 11px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;background:#f8f9fa;">
+                            <option value="asesor" selected>{{ tx.rol_asesor }}</option>
+                            <option value="gerente">{{ tx.rol_gerente }}</option>
+                        </select>
+                    </div>
                 </div>
                 <button type="submit" class="btn-crear-asesor">{{ tx.btn_crear }}</button>
             </form>
