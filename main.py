@@ -170,6 +170,16 @@ def verificar_password(password_ingresada, password_guardada):
 def es_dueno():
     return session.get('cliente') and not session.get('asesor_id')
 
+def puede_ver_todo():
+    """
+    ✅ Sistema de roles: dueño y gerente ven todos los leads/stats/propiedades
+    de la inmobiliaria; un asesor normal solo ve lo suyo. Gestionar asesores
+    (crear/desactivar/borrar) sigue siendo exclusivo del dueño — ver es_dueno().
+    """
+    if es_dueno():
+        return True
+    return session.get('asesor_rol') == 'gerente'
+
 def get_asesores_de_cliente(cliente_id):
     try:
         resultado = supabase.table("asesores").select("*").eq("cliente_id", cliente_id).execute()
@@ -1108,6 +1118,11 @@ def crear_asesor(cliente_id):
     nombre = request.form.get("nombre", "").strip()
     usuario = request.form.get("usuario", "").strip()
     password_raw = request.form.get("password", "").strip()
+    # ✅ El rol solo puede ser 'asesor' o 'gerente' — cualquier otro valor
+    # (o ausente) cae a 'asesor' por seguridad.
+    rol = request.form.get("rol", "asesor").strip()
+    if rol not in ('asesor', 'gerente'):
+        rol = 'asesor'
     # ✅ Validación server-side — el HTML ya marca estos campos "required",
     # pero eso no protege si alguien manda el POST directo sin pasar por el form.
     if not nombre or not usuario or not password_raw:
@@ -1119,6 +1134,7 @@ def crear_asesor(cliente_id):
             "usuario": usuario[:80],
             "password": generate_password_hash(password_raw),
             "email": request.form.get("email", "").strip()[:150],
+            "rol": rol,
             "activo": True
         }
         supabase.table("asesores").insert(data).execute()
@@ -1205,7 +1221,9 @@ def detalle_asesor(cliente_id, asesor_id):
 @app.route("/leads/<cliente_id>/asignar/<int:lead_id>", methods=["POST"])
 def asignar_asesor_lead(cliente_id, lead_id):
     id_clean = cliente_id.lower()
-    if session.get("cliente") != id_clean or not es_dueno():
+    # ✅ Antes solo el dueño podía reasignar leads; ahora un gerente también
+    # puede (parte del rol), pero un asesor normal sigue sin poder.
+    if session.get("cliente") != id_clean or not puede_ver_todo():
         return "No autorizado", 403
     verificar_csrf()
     try:
@@ -1711,7 +1729,9 @@ def historial(cliente_id):
     textos = DICCIONARIO.get(idioma, DICCIONARIO['es'])
     query = supabase.table("leads").select("*").eq("vendedor", id_clean)
     asesor_id = session.get('asesor_id')
-    if asesor_id:
+    # ✅ Un asesor con rol "gerente" (o el dueño) ve todos los leads de la
+    # inmobiliaria; un asesor normal sigue viendo solo los suyos.
+    if asesor_id and not puede_ver_todo():
         query = query.eq("asesor_id", asesor_id)
     q = request.args.get('q', '')
     if q: query = query.ilike("nombre", f"%{q}%")
@@ -1725,12 +1745,13 @@ def historial(cliente_id):
         except:
             lead['dias'] = 0
     asesores = []
-    if es_dueno():
+    if puede_ver_todo():
         asesores = get_asesores_de_cliente(id_clean)
     return render_template("historial.html",
                            leads=leads, cliente=vendedor, textos=textos,
                            idioma_actual=idioma, asesores=asesores,
                            es_dueno=es_dueno(),
+                           puede_ver_todo=puede_ver_todo(),
                            asesor_nombre=session.get('asesor_nombre', ''))
 
 @app.route("/kanban/<cliente_id>")
@@ -1744,7 +1765,8 @@ def kanban(cliente_id):
     textos = DICCIONARIO.get(idioma, DICCIONARIO['es'])
     query = supabase.table("leads").select("*").eq("vendedor", id_clean)
     asesor_id = session.get('asesor_id')
-    if asesor_id:
+    # ✅ Mismo criterio que en historial(): gerente y dueño ven todo.
+    if asesor_id and not puede_ver_todo():
         query = query.eq("asesor_id", asesor_id)
     resultado = query.order("score", desc=True).execute()
     leads = resultado.data or []
@@ -1765,13 +1787,14 @@ def kanban(cliente_id):
         'cerrado':    [l for l in leads if l.get('etapa') == 'cerrado'],
     }
     asesores = []
-    if es_dueno():
+    if puede_ver_todo():
         asesores = get_asesores_de_cliente(id_clean)
     return render_template("kanban.html",
                            etapas=etapas, leads=leads,
                            cliente=vendedor, textos=textos,
                            idioma_actual=idioma, asesores=asesores,
                            es_dueno=es_dueno(),
+                           puede_ver_todo=puede_ver_todo(),
                            asesor_nombre=session.get('asesor_nombre', ''))
 
 @app.route("/inventario/<cliente_id>", methods=["GET"])
@@ -1818,6 +1841,9 @@ def inventario_publico(cliente_id):
 def agregar_propiedad(cliente_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean: return "Error 403: No autorizado.", 403
+    # ✅ Crear propiedades es solo para dueño/gerente — antes cualquier asesor
+    # logueado podía hacerlo sin restricción.
+    if not puede_ver_todo(): return "Error 403: No autorizado.", 403
     verificar_csrf()
     vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
@@ -1867,6 +1893,8 @@ def agregar_propiedad(cliente_id):
 def editar_propiedad(cliente_id, prop_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean: return "Error 403: No autorizado.", 403
+    # ✅ Editar propiedades es solo para dueño/gerente.
+    if not puede_ver_todo(): return "Error 403: No autorizado.", 403
     verificar_csrf()
     vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
@@ -1917,6 +1945,9 @@ def editar_propiedad(cliente_id, prop_id):
 def eliminar_propiedad(cliente_id, prop_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean: return "Error 403: No autorizado.", 403
+    # ✅ Borrar propiedades queda reservado solo al dueño (más sensible que
+    # editar; un gerente puede editar pero no eliminar).
+    if not es_dueno(): return "Error 403: No autorizado.", 403
     verificar_csrf()
     vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
@@ -1943,6 +1974,10 @@ def stats(cliente_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean:
         return redirect(url_for('login', cliente_id=id_clean))
+    # ✅ Las estadísticas generales del negocio son solo para dueño/gerente —
+    # antes cualquier asesor logueado podía verlas sin restricción.
+    if not puede_ver_todo():
+        return redirect(url_for('historial', cliente_id=id_clean))
     vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
     periodo = request.args.get('periodo', 'todo')
@@ -2050,6 +2085,7 @@ def login(cliente_id):
             session["login_time"] = datetime.now().isoformat()
             session.pop("asesor_id", None)
             session.pop("asesor_nombre", None)
+            session.pop("asesor_rol", None)
             log_accion('LOGIN_OK', f"usuario={usuario_form}", get_remote_address(), id_clean)
             return redirect(url_for('seleccion_idioma', cliente_id=id_clean))
         try:
@@ -2064,6 +2100,9 @@ def login(cliente_id):
                     session["login_time"] = datetime.now().isoformat()
                     session["asesor_id"] = asesor["id"]
                     session["asesor_nombre"] = asesor["nombre"]
+                    # ✅ Guarda el rol (asesor/gerente) en sesión para que
+                    # puede_ver_todo() decida qué puede ver este login.
+                    session["asesor_rol"] = asesor.get("rol", "asesor")
                     log_accion('LOGIN_ASESOR_OK', f"asesor={usuario_form}", get_remote_address(), id_clean)
                     return redirect(url_for('historial', cliente_id=id_clean))
         except Exception as e:
