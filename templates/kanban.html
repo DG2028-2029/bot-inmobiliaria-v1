@@ -22,7 +22,8 @@
         .lang-menu a.activo { color: var(--color); background: #f0f4ff; }
         .btn-logout { background: #e74c3c; color: white; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: bold; font-size: 13px; transition: 0.2s; }
         .btn-logout:hover { background: #c0392b; }
-        .asesor-banner { background: linear-gradient(135deg, var(--color), #1a1a2e); color: white; padding: 10px 16px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; font-weight: 600; }
+        .asesor-banner { background: linear-gradient(135deg, var(--color), #1a1a2e); color: white; padding: 10px 16px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .rol-tag { background: rgba(255,255,255,0.2); padding: 2px 9px; border-radius: 20px; font-size: 11px; }
         .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; background: white; padding: 14px 18px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); border-left: 5px solid var(--color); }
         .header-left { display: flex; align-items: center; gap: 12px; }
         .header-logo { width: 42px; height: 42px; border-radius: 10px; object-fit: contain; border: 2px solid var(--color); }
@@ -146,6 +147,7 @@
         'titulo_top': 'Proceso de Ventas',
         'cerrar': '🔒 Cerrar Sesión',
         'asesor_sesion': 'Sesión de asesor:',
+        'gerente_sesion': 'Sesión de gerente:',
         'titulo_header': 'Proceso de Ventas:',
         'btn_dashboard': '📊 Dashboard',
         'btn_inventario': '🏠 Inventario',
@@ -187,6 +189,7 @@
         'titulo_top': 'Sales Process',
         'cerrar': '🔒 Log Out',
         'asesor_sesion': 'Agent session:',
+        'gerente_sesion': 'Manager session:',
         'titulo_header': 'Sales Process:',
         'btn_dashboard': '📊 Dashboard',
         'btn_inventario': '🏠 Inventory',
@@ -228,6 +231,7 @@
         'titulo_top': 'Processus de Vente',
         'cerrar': '🔒 Déconnexion',
         'asesor_sesion': 'Session agent:',
+        'gerente_sesion': 'Session gérant:',
         'titulo_header': 'Processus de Vente:',
         'btn_dashboard': '📊 Tableau de bord',
         'btn_inventario': '🏠 Inventaire',
@@ -269,6 +273,7 @@
         'titulo_top': 'Verkaufsprozess',
         'cerrar': '🔒 Abmelden',
         'asesor_sesion': 'Agenten-Sitzung:',
+        'gerente_sesion': 'Manager-Sitzung:',
         'titulo_header': 'Verkaufsprozess:',
         'btn_dashboard': '📊 Dashboard',
         'btn_inventario': '🏠 Inventar',
@@ -310,6 +315,7 @@
         'titulo_top': 'Processo de Vendas',
         'cerrar': '🔒 Sair',
         'asesor_sesion': 'Sessão de agente:',
+        'gerente_sesion': 'Sessão de gerente:',
         'titulo_header': 'Processo de Vendas:',
         'btn_dashboard': '📊 Dashboard',
         'btn_inventario': '🏠 Inventário',
@@ -351,6 +357,7 @@
         'titulo_top': '销售流程',
         'cerrar': '🔒 退出登录',
         'asesor_sesion': '顾问会话:',
+        'gerente_sesion': '经理会话:',
         'titulo_header': '销售流程:',
         'btn_dashboard': '📊 仪表板',
         'btn_inventario': '🏠 库存',
@@ -413,7 +420,10 @@
 </div>
 
 {% if not es_dueno %}
-<div class="asesor-banner">👤 {{ t.asesor_sesion }} <strong>{{ asesor_nombre }}</strong></div>
+<div class="asesor-banner">
+    👤 {% if puede_ver_todo %}{{ t.gerente_sesion }}{% else %}{{ t.asesor_sesion }}{% endif %} <strong>{{ asesor_nombre }}</strong>
+    {% if puede_ver_todo %}<span class="rol-tag">★ Gerente</span>{% endif %}
+</div>
 {% endif %}
 
 <div class="header-container">
@@ -425,7 +435,9 @@
     <div class="header-buttons">
         <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="btn-nav" style="background:#2c3e50;">{{ t.btn_dashboard }}</a>
         <a href="{{ url_for('inventario', cliente_id=cliente.usuario) }}" class="btn-nav" style="background:var(--color);">{{ t.btn_inventario }}</a>
+        {% if puede_ver_todo %}
         <a href="{{ url_for('stats', cliente_id=cliente.usuario) }}" class="btn-nav" style="background:#3498db;">{{ t.btn_estadisticas }}</a>
+        {% endif %}
     </div>
 </div>
 
