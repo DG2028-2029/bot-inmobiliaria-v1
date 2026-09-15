@@ -113,6 +113,24 @@ def limpiar_telefono(tel):
         return ''
     return re.sub(r'[^\d+]', '', str(tel)).lstrip('+')
 
+# ✅ Validación de inputs — helpers reutilizables
+_EMAIL_REGEX = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+
+def email_valido(email):
+    """Devuelve True si el string tiene forma de email válida (o está vacío,
+    ya que la mayoría de estos campos son opcionales)."""
+    if not email:
+        return True
+    return bool(_EMAIL_REGEX.match(email.strip()))
+
+_CLIENTE_ID_REGEX = re.compile(r'^[a-z0-9_-]{3,50}$')
+
+def cliente_id_valido(cliente_id):
+    """El id de cliente se usa directamente en URLs (/login/<id>, /kanban/<id>,
+    etc.) — solo permitimos minúsculas, números, guion y guion bajo, 3-50
+    caracteres, para evitar ids que rompan rutas o se presten a confusión."""
+    return bool(_CLIENTE_ID_REGEX.match(cliente_id))
+
 # ============================================================
 # ✅ CSRF PROTECTION
 # ============================================================
@@ -127,6 +145,17 @@ def verificar_csrf():
     if not token_form or not token_session or not secrets.compare_digest(token_form, token_session):
         log_accion('CSRF_FAIL', request.endpoint, get_remote_address())
         abort(403)
+
+def csrf_valido():
+    """
+    ✅ Versión de verificar_csrf() que NO corta la ejecución — devuelve
+    True/False. La usan login() y admin_login() para poder reaccionar con
+    un mensaje amable y un token nuevo en vez de mandar al usuario a una
+    pantalla muerta de "403 Acceso denegado" sin salida.
+    """
+    token_form = request.form.get('csrf_token') or request.headers.get('X-CSRF-Token')
+    token_session = session.get('csrf_token')
+    return bool(token_form and token_session and secrets.compare_digest(token_form, token_session))
 
 app.jinja_env.globals['csrf_token'] = generar_csrf_token
 
@@ -787,7 +816,10 @@ def verificar_sesion():
         admin_time = session.get('admin_time')
         if admin_time:
             if datetime.now() - datetime.fromisoformat(admin_time) > timedelta(minutes=30):
-                session.clear()
+                # ✅ Antes session.clear() borraba también el csrf_token,
+                # rompiendo cualquier formulario abierto en otra pestaña.
+                session.pop('admin', None)
+                session.pop('admin_time', None)
                 return redirect(url_for('admin_login'))
             # ✅ Renovar el tiempo de actividad del admin en cada acción
             session['admin_time'] = datetime.now().isoformat()
@@ -797,13 +829,17 @@ def verificar_sesion():
         if login_time:
             if datetime.now() - datetime.fromisoformat(login_time) > timedelta(minutes=30):
                 cliente_id = session.get('cliente')
-                session.clear()
+                # ✅ Mismo fix: solo borrar claves de login, no toda la sesión.
+                for clave in ('cliente', 'login_time', 'asesor_id', 'asesor_nombre', 'asesor_rol'):
+                    session.pop(clave, None)
                 return redirect(url_for('login', cliente_id=cliente_id or 'roberto'))
             # ✅ Renovar el tiempo de actividad en cada acción (sesión por inactividad)
             session['login_time'] = datetime.now().isoformat()
         else:
             cliente_id = session.get('cliente')
-            session.clear()
+            # ✅ Mismo fix aquí también.
+            for clave in ('cliente', 'login_time', 'asesor_id', 'asesor_nombre', 'asesor_rol'):
+                session.pop(clave, None)
             return redirect(url_for('login', cliente_id=cliente_id or 'roberto'))
 
 @app.after_request
@@ -953,10 +989,11 @@ def generar_pdf_leads(cliente_id, periodo="todo", cliente_nombre="", textos=None
 def admin_login():
     error = None
     if request.method == "POST":
-        token_form = request.form.get('csrf_token')
-        token_session = session.get('csrf_token')
-        if not token_form or not token_session or not secrets.compare_digest(token_form, token_session):
-            error = "Error de seguridad. Recarga la página."
+        # ✅ Antes pedía "Recarga la página" — ahora se regenera el token
+        # solo, sin que el usuario tenga que hacerlo a mano.
+        if not csrf_valido():
+            session.pop('csrf_token', None)
+            error = "Tu sesión de formulario expiró. Intenta de nuevo."
             return render_template("admin_login.html", error=error)
         password = request.form.get("password", "")
         admin_pass = os.environ.get("ADMIN_PASSWORD")
@@ -1007,17 +1044,26 @@ def admin_nuevo_cliente():
         cliente_id = request.form.get("id", "").strip().lower().replace(" ", "_")
         if not cliente_id:
             return redirect(url_for('admin_panel'))
+        # ✅ Validación de inputs — el id de cliente se usa en URLs, así que
+        # limitamos su formato; y validamos el email si viene con contenido.
+        if not cliente_id_valido(cliente_id):
+            print(f"⚠️ admin_nuevo_cliente: id inválido rechazado: {cliente_id}")
+            return redirect(url_for('admin_panel'))
+        email_vendedor = request.form.get("email_vendedor", "").strip()
+        if not email_valido(email_vendedor):
+            print(f"⚠️ admin_nuevo_cliente: email inválido rechazado: {email_vendedor}")
+            return redirect(url_for('admin_panel'))
         password_raw = request.form.get("password", "").strip()
         password_hash = generate_password_hash(password_raw) if password_raw else generate_password_hash(secrets.token_hex(16))
         data = {
             "id": cliente_id,
-            "nombre": request.form.get("nombre", "").strip(),
-            "email_vendedor": request.form.get("email_vendedor", "").strip(),
-            "whatsapp": request.form.get("whatsapp", "").strip(),
-            "usuario": request.form.get("usuario", "").strip(),
+            "nombre": request.form.get("nombre", "").strip()[:150],
+            "email_vendedor": email_vendedor[:150],
+            "whatsapp": request.form.get("whatsapp", "").strip()[:30],
+            "usuario": request.form.get("usuario", "").strip()[:80],
             "password": password_hash,
             "idioma_default": request.form.get("idioma_default", "español"),
-            "pais": request.form.get("pais", "").strip(),
+            "pais": request.form.get("pais", "").strip()[:100],
             "color_primario": request.form.get("color_primario", "#667eea"),
             "premium_email": True,
             "email_api_key": request.form.get("email_api_key", "").strip(),
@@ -1035,13 +1081,17 @@ def admin_editar_cliente(cliente_id):
         return redirect(url_for('admin_panel'))
     verificar_csrf()
     try:
+        email_vendedor = request.form.get("email_vendedor", "").strip()
+        if not email_valido(email_vendedor):
+            print(f"⚠️ admin_editar_cliente: email inválido rechazado: {email_vendedor}")
+            return redirect(url_for('admin_panel'))
         data = {
-            "nombre": request.form.get("nombre", "").strip(),
-            "email_vendedor": request.form.get("email_vendedor", "").strip(),
-            "whatsapp": request.form.get("whatsapp", "").strip(),
-            "usuario": request.form.get("usuario", "").strip(),
+            "nombre": request.form.get("nombre", "").strip()[:150],
+            "email_vendedor": email_vendedor[:150],
+            "whatsapp": request.form.get("whatsapp", "").strip()[:30],
+            "usuario": request.form.get("usuario", "").strip()[:80],
             "idioma_default": request.form.get("idioma_default", "español"),
-            "pais": request.form.get("pais", "").strip(),
+            "pais": request.form.get("pais", "").strip()[:100],
             "color_primario": request.form.get("color_primario", "#667eea"),
             "email_api_key": request.form.get("email_api_key", "").strip(),
             "activo": request.form.get("activo") == "on"
@@ -1068,6 +1118,9 @@ def admin_config_email(cliente_id):
             gmail_email = request.form.get("gmail_email", "").strip()
             gmail_password = request.form.get("gmail_app_password", "").strip()
             if gmail_email:
+                if not email_valido(gmail_email):
+                    print(f"⚠️ admin_config_email: gmail_email inválido rechazado: {gmail_email}")
+                    return redirect(url_for('admin_panel'))
                 data["gmail_email"] = gmail_email
             if gmail_password:
                 data["gmail_app_password_cifrada"] = cifrar_texto(gmail_password)
@@ -1127,13 +1180,16 @@ def crear_asesor(cliente_id):
     # pero eso no protege si alguien manda el POST directo sin pasar por el form.
     if not nombre or not usuario or not password_raw:
         return redirect(url_for('historial', cliente_id=id_clean, asesor_error='campos_requeridos'))
+    email_asesor = request.form.get("email", "").strip()
+    if not email_valido(email_asesor):
+        return redirect(url_for('historial', cliente_id=id_clean, asesor_error='campos_requeridos'))
     try:
         data = {
             "cliente_id": id_clean,
             "nombre": nombre[:150],
             "usuario": usuario[:80],
             "password": generate_password_hash(password_raw),
-            "email": request.form.get("email", "").strip()[:150],
+            "email": email_asesor[:150],
             "rol": rol,
             "activo": True
         }
@@ -1610,6 +1666,12 @@ def formulario(cliente_id):
             return render_template("formulario.html", enviado=False, cliente_id=id_clean,
                                    textos=textos, cliente_nombre=vendedor['nombre'],
                                    idioma_actual=lang, error="Todos los campos son requeridos.")
+        # ✅ Validación de inputs — un teléfono sin dígitos suficientes no sirve
+        # para WhatsApp ni para contactar al lead; lo rechazamos con un mensaje.
+        if len(re.sub(r'\D', '', telefono)) < 5:
+            return render_template("formulario.html", enviado=False, cliente_id=id_clean,
+                                   textos=textos, cliente_nombre=vendedor['nombre'],
+                                   idioma_actual=lang, error="Ingresa un teléfono válido.")
         d = {
             "nombre": nombre[:100],
             "telefono": telefono[:30],
@@ -1621,6 +1683,11 @@ def formulario(cliente_id):
         score_final = motor_scoring_global(d)
         clasificacion, temperatura = calificar_lead_profesional(score_final)
         email_prospecto = request.form.get("email", "").strip()[:150]
+        # ✅ El email es opcional — si viene con formato inválido, lo
+        # descartamos en vez de guardarlo (evita que después falle
+        # silenciosamente el envío de correos con ese dato basura).
+        if not email_valido(email_prospecto):
+            email_prospecto = ""
         lead_data = {
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
             **d,
@@ -1678,6 +1745,12 @@ def formulario_asesor(cliente_id, asesor_usuario):
             return render_template("formulario.html", enviado=False, cliente_id=id_clean,
                                    textos=textos, cliente_nombre=vendedor['nombre'],
                                    idioma_actual=lang, error="Todos los campos son requeridos.")
+        # ✅ Validación de inputs — un teléfono sin dígitos suficientes no sirve
+        # para WhatsApp ni para contactar al lead; lo rechazamos con un mensaje.
+        if len(re.sub(r'\D', '', telefono)) < 5:
+            return render_template("formulario.html", enviado=False, cliente_id=id_clean,
+                                   textos=textos, cliente_nombre=vendedor['nombre'],
+                                   idioma_actual=lang, error="Ingresa un teléfono válido.")
         d = {
             "nombre": nombre[:100],
             "telefono": telefono[:30],
@@ -1689,6 +1762,11 @@ def formulario_asesor(cliente_id, asesor_usuario):
         score_final = motor_scoring_global(d)
         clasificacion, temperatura = calificar_lead_profesional(score_final)
         email_prospecto = request.form.get("email", "").strip()[:150]
+        # ✅ El email es opcional — si viene con formato inválido, lo
+        # descartamos en vez de guardarlo (evita que después falle
+        # silenciosamente el envío de correos con ese dato basura).
+        if not email_valido(email_prospecto):
+            email_prospecto = ""
         lead_data = {
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
             **d,
@@ -1814,11 +1892,15 @@ def inventario(cliente_id):
                                cliente_nombre=vendedor['nombre'],
                                propiedades_json=json.dumps(propiedades),
                                textos=textos, idioma_actual=idioma,
-                               match_id=match_id)
+                               match_id=match_id,
+                               puede_ver_todo=puede_ver_todo(),
+                               es_dueno=es_dueno())
     except Exception as e:
         return render_template("inventario.html", cliente_id=id_clean,
                                cliente_nombre=vendedor['nombre'], propiedades_json='[]',
-                               textos=textos, idioma_actual=idioma, match_id='')
+                               textos=textos, idioma_actual=idioma, match_id='',
+                               puede_ver_todo=puede_ver_todo(),
+                               es_dueno=es_dueno())
 
 @app.route("/propiedades/<cliente_id>", methods=["GET"])
 def inventario_publico(cliente_id):
@@ -1871,14 +1953,28 @@ def agregar_propiedad(cliente_id):
         if not titulo or not ubicacion:
             return "Título y ubicación requeridos", 400
 
+        # ✅ Validación de inputs — precio/habitaciones/baños/metros2 deben ser
+        # números válidos y no negativos; antes un valor no numérico tumbaba
+        # la ruta con un error 500 crudo en vez de un mensaje claro.
+        try:
+            precio_val = float(request.form.get("precio", 0) or 0)
+            habitaciones_val = int(habitaciones) if habitaciones else None
+            banos_val = float(banos) if banos else None
+            metros2_val = float(metros2) if metros2 else None
+        except ValueError:
+            return "Precio, habitaciones, baños y metros² deben ser números válidos.", 400
+        if precio_val < 0 or (habitaciones_val is not None and habitaciones_val < 0) or \
+           (banos_val is not None and banos_val < 0) or (metros2_val is not None and metros2_val < 0):
+            return "Los valores numéricos no pueden ser negativos.", 400
+
         propiedad_data = {
             "titulo": titulo,
             "descripcion": request.form.get("descripcion", "").strip()[:2000],
-            "precio": float(request.form.get("precio", 0)),
+            "precio": precio_val,
             "ubicacion": ubicacion,
-            "habitaciones": int(habitaciones) if habitaciones else None,
-            "banos": float(banos) if banos else None,
-            "metros2": float(metros2) if metros2 else None,
+            "habitaciones": habitaciones_val,
+            "banos": banos_val,
+            "metros2": metros2_val,
             "imagen_url": json.dumps(imagenes_urls),
             "vendedor": id_clean, "estado": "disponible"
         }
@@ -1926,14 +2022,25 @@ def editar_propiedad(cliente_id, prop_id):
         habitaciones = request.form.get("habitaciones", "").strip()
         banos = request.form.get("banos", "").strip()
         metros2 = request.form.get("metros2", "").strip()
+        # ✅ Misma validación que en agregar_propiedad — números válidos y no negativos.
+        try:
+            precio_val = float(request.form.get("precio", 0) or 0)
+            habitaciones_val = int(habitaciones) if habitaciones else None
+            banos_val = float(banos) if banos else None
+            metros2_val = float(metros2) if metros2 else None
+        except ValueError:
+            return "Precio, habitaciones, baños y metros² deben ser números válidos.", 400
+        if precio_val < 0 or (habitaciones_val is not None and habitaciones_val < 0) or \
+           (banos_val is not None and banos_val < 0) or (metros2_val is not None and metros2_val < 0):
+            return "Los valores numéricos no pueden ser negativos.", 400
         update_data = {
             "titulo": request.form.get("titulo", "").strip()[:200],
             "descripcion": request.form.get("descripcion", "").strip()[:2000],
-            "precio": float(request.form.get("precio", 0)),
+            "precio": precio_val,
             "ubicacion": request.form.get("ubicacion", "").strip()[:200],
-            "habitaciones": int(habitaciones) if habitaciones else None,
-            "banos": float(banos) if banos else None,
-            "metros2": float(metros2) if metros2 else None,
+            "habitaciones": habitaciones_val,
+            "banos": banos_val,
+            "metros2": metros2_val,
             "imagen_url": json.dumps(imagenes_existentes)
         }
         supabase.table("propiedades").update(update_data).eq("id", prop_id).eq("vendedor", id_clean).execute()
@@ -2076,7 +2183,15 @@ def login(cliente_id):
     lang = session.get('idioma', get_idioma_default(vendedor))
     textos = DICCIONARIO.get(lang, DICCIONARIO['es'])
     if request.method == "POST":
-        verificar_csrf()
+        # ✅ Antes verificar_csrf() mandaba directo a un 403 sin salida si el
+        # token había quedado viejo (ej. cerraste sesión en otra pestaña).
+        # Ahora se regenera el token y se vuelve a mostrar el formulario con
+        # un mensaje claro, sin que el usuario tenga que recargar a mano.
+        if not csrf_valido():
+            session.pop('csrf_token', None)
+            log_accion('CSRF_RETRY', 'login', get_remote_address(), id_clean)
+            return render_template("login.html", cliente=vendedor, textos=textos, idioma_actual=lang,
+                                   error="Tu sesión de formulario expiró. Intenta iniciar sesión de nuevo.")
         usuario_form = request.form.get("usuario", "").strip()
         password_form = request.form.get("password", "").strip()
         if usuario_form == vendedor["usuario"] and \
@@ -2248,7 +2363,13 @@ def reset_password(token):
 @app.route("/logout/<cliente_id>")
 def logout(cliente_id):
     log_accion('LOGOUT', '', get_remote_address(), session.get('cliente', ''))
-    session.clear()
+    # ✅ Antes usaba session.clear(), que borraba TODA la sesión — incluyendo
+    # el csrf_token. Eso invalidaba el formulario de login si lo tenías
+    # abierto en otra pestaña, dando "Acceso denegado" sin importar la
+    # contraseña hasta recargar. Ahora solo se borran las claves de sesión
+    # ligadas al login, dejando csrf_token intacto.
+    for clave in ('cliente', 'login_time', 'asesor_id', 'asesor_nombre', 'asesor_rol', 'idioma'):
+        session.pop(clave, None)
     return redirect(url_for('login', cliente_id=cliente_id.lower()))
 
 @app.route("/idioma/<lang>/<proximo>/<cliente_id>")
