@@ -269,6 +269,108 @@ def buscar_leads_matching(propiedad, leads):
     matches.sort(key=lambda x: (x.get('score_match', 0), x.get('score', 0)), reverse=True)
     return matches[:10]
 
+# ============================================================
+# ✅ SCORE DE CALIDAD DEL LISTADO
+# ============================================================
+def _parsear_imagenes_prop(propiedad):
+    try:
+        parsed = json.loads(propiedad.get('imagen_url') or '[]')
+        return parsed if isinstance(parsed, list) else []
+    except Exception:
+        return []
+
+def calcular_score_propiedad(propiedad, propiedades_misma_zona, leads_activos):
+    """
+    Da un score 0-100 de qué tan lista está una propiedad para venderse rápido,
+    y devuelve además las 1-2 mejoras más importantes a hacer. Cuatro factores:
+    fotos, descripción, specs completos, y precio vs otras propiedades de la
+    misma zona (comparando precio por m² cuando hay suficientes datos), más
+    cuántos leads activos le hacen match ahora mismo.
+    """
+    sugerencias = []
+
+    # Fotos — hasta 25 pts
+    n_fotos = len(_parsear_imagenes_prop(propiedad))
+    if n_fotos == 0:
+        fotos_pts = 0
+        sugerencias.append(('fotos', 0, 'Sin fotos — las propiedades con fotos reciben muchas más consultas.'))
+    elif n_fotos <= 2:
+        fotos_pts = 12
+        sugerencias.append(('fotos', 12, f'Solo tiene {n_fotos} foto(s) — agrega al menos 5 para verse más completa.'))
+    elif n_fotos <= 4:
+        fotos_pts = 19
+    else:
+        fotos_pts = 25
+
+    # Descripción — hasta 15 pts
+    desc = (propiedad.get('descripcion') or '').strip()
+    if not desc:
+        desc_pts = 0
+        sugerencias.append(('descripcion', 0, 'No tiene descripción — agrega detalles que ayuden a vender.'))
+    elif len(desc) < 60:
+        desc_pts = 8
+        sugerencias.append(('descripcion', 8, 'La descripción es muy corta — amplíala con más detalles.'))
+    else:
+        desc_pts = 15
+
+    # Specs completos — hasta 15 pts (5 c/u)
+    specs_pts = 0
+    faltantes = []
+    if propiedad.get('habitaciones'): specs_pts += 5
+    else: faltantes.append('habitaciones')
+    if propiedad.get('banos'): specs_pts += 5
+    else: faltantes.append('baños')
+    if propiedad.get('metros2'): specs_pts += 5
+    else: faltantes.append('metros²')
+    if faltantes:
+        sugerencias.append(('specs', specs_pts, f'Falta indicar: {", ".join(faltantes)}.'))
+
+    # Precio vs zona — hasta 25 pts (neutral si no hay suficiente base de comparación)
+    precio = float(propiedad.get('precio', 0) or 0)
+    metros2 = float(propiedad.get('metros2', 0) or 0)
+    otras_con_m2 = [
+        p for p in propiedades_misma_zona
+        if p.get('id') != propiedad.get('id') and float(p.get('metros2', 0) or 0) > 0 and float(p.get('precio', 0) or 0) > 0
+    ]
+    if metros2 > 0 and precio > 0 and len(otras_con_m2) >= 1:
+        precio_m2 = precio / metros2
+        precios_m2_otras = [float(p['precio']) / float(p['metros2']) for p in otras_con_m2]
+        promedio_zona = sum(precios_m2_otras) / len(precios_m2_otras)
+        ratio = precio_m2 / promedio_zona if promedio_zona > 0 else 1
+        if ratio <= 1.05:
+            precio_pts = 25
+        elif ratio <= 1.15:
+            precio_pts = 18
+        elif ratio <= 1.30:
+            precio_pts = 10
+            sugerencias.append(('precio', 10, 'El precio por m² está por encima del promedio de tu zona — considera ajustarlo.'))
+        else:
+            precio_pts = 0
+            sugerencias.append(('precio', 0, 'El precio por m² está muy por encima del resto de tu inventario en esa zona.'))
+    else:
+        precio_pts = 13  # neutral — no hay suficiente base de comparación
+
+    # Leads que le hacen match ahora — hasta 20 pts
+    matches = buscar_leads_matching(propiedad, leads_activos)
+    n_matches = len(matches)
+    if n_matches == 0:
+        leads_pts = 0
+        sugerencias.append(('leads', 0, 'Ningún lead activo hace match — revisa si el precio o zona limitan el alcance.'))
+    elif n_matches <= 2:
+        leads_pts = 10
+    else:
+        leads_pts = 20
+
+    total = fotos_pts + desc_pts + specs_pts + precio_pts + leads_pts
+    sugerencias.sort(key=lambda s: s[1])  # las de menor puntaje primero (más urgentes)
+    top_sugerencias = [s[2] for s in sugerencias[:2]]
+
+    return {
+        'score': int(total),
+        'sugerencias': top_sugerencias,
+        'leads_match': n_matches,
+    }
+
 @app.route("/matching/<cliente_id>/<int:prop_id>")
 def matching_propiedad(cliente_id, prop_id):
     id_clean = cliente_id.lower()
@@ -1887,6 +1989,23 @@ def inventario(cliente_id):
     try:
         resultado = supabase.table("propiedades").select("*").eq("vendedor", id_clean).order("created_at", desc=True).execute()
         propiedades = resultado.data or []
+        # ✅ Score de calidad del listado — se calcula una vez aquí y se
+        # embebe en cada propiedad para que el frontend solo lo muestre,
+        # sin tener que pedirlo aparte por cada card.
+        try:
+            leads_r = supabase.table("leads").select("*").eq("vendedor", id_clean).execute()
+            leads_activos = leads_r.data or []
+        except Exception:
+            leads_activos = []
+        for p in propiedades:
+            mismas_zona = [
+                o for o in propiedades
+                if o.get('id') != p.get('id') and (o.get('ubicacion') or '').strip().lower() == (p.get('ubicacion') or '').strip().lower()
+            ]
+            resultado_score = calcular_score_propiedad(p, mismas_zona, leads_activos)
+            p['calidad_score'] = resultado_score['score']
+            p['calidad_sugerencias'] = resultado_score['sugerencias']
+            p['calidad_leads_match'] = resultado_score['leads_match']
         match_id = request.args.get('match', '')
         return render_template("inventario.html", cliente_id=id_clean,
                                cliente_nombre=vendedor['nombre'],
