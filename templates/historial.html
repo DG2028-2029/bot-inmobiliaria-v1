@@ -727,9 +727,12 @@
     <div class="header-buttons">
         <a href="{{ url_for('inventario', cliente_id=cliente.usuario) }}" class="btn-inventario">🏠 {{ textos.btn_inventario }}</a>
         <a href="{{ url_for('herramientas', cliente_id=cliente.usuario) }}" class="btn-herramientas">🔧 {{ textos.btn_herramientas }}</a>
+        {% if puede_ver_todo %}
         <a href="{{ url_for('stats', cliente_id=cliente.usuario) }}" class="btn-stats">📈 {{ textos.btn_estadisticas }}</a>
+        {% endif %}
         <a href="{{ url_for('kanban', cliente_id=cliente.usuario) }}" class="btn-pipeline">{{ tx.pipeline }}</a>
         <button onclick="descargarExcel()" class="btn-excel">📥 {{ textos.btn_descargar }}</button>
+        <button onclick="togglePush()" id="btnPush" class="btn-herramientas" style="background:#8e44ad;">🔔 Notificaciones</button>
         {% if es_dueno %}
         <button onclick="abrirModalAsesores()" class="btn-asesores">👥 {{ tx.modal_titulo }} ({{ asesores | length }})</button>
         {% endif %}
@@ -1338,6 +1341,95 @@ window.onclick = function(e) {
     if (e.target == document.getElementById('modalAsesores')) cerrarModalAsesores();
     if (e.target == document.getElementById('modalVisita')) cerrarModalVisita();
 }
+
+// ===== NOTIFICACIONES PUSH =====
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+    return outputArray;
+}
+
+async function actualizarBotonPush() {
+    const btn = document.getElementById('btnPush');
+    if (!btn) return;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        btn.style.display = 'none';
+        return;
+    }
+    try {
+        const reg = await navigator.serviceWorker.getRegistration('/');
+        const sub = reg ? await reg.pushManager.getSubscription() : null;
+        btn.textContent = sub ? '🔕 Desactivar notificaciones' : '🔔 Activar notificaciones';
+    } catch (e) {
+        btn.textContent = '🔔 Activar notificaciones';
+    }
+}
+
+async function togglePush() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        alert('Tu navegador no soporta notificaciones push.');
+        return;
+    }
+    const btn = document.getElementById('btnPush');
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    try {
+        let reg = await navigator.serviceWorker.getRegistration('/');
+        if (!reg) reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        let sub = await reg.pushManager.getSubscription();
+
+        if (sub) {
+            // Ya estaba activo → desactivar
+            await fetch(`/push/unsubscribe/${clienteId}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN},
+                body: JSON.stringify({endpoint: sub.endpoint})
+            });
+            await sub.unsubscribe();
+            btn.textContent = '🔔 Activar notificaciones';
+        } else {
+            const permiso = await Notification.requestPermission();
+            if (permiso !== 'granted') {
+                alert('Necesitas permitir las notificaciones en tu navegador para activarlas.');
+                btn.textContent = textoOriginal;
+                btn.disabled = false;
+                return;
+            }
+            const keyRes = await fetch('/push/vapid-public-key');
+            const keyData = await keyRes.json();
+            if (!keyData.ok) {
+                alert('Las notificaciones push no están configuradas todavía en este servidor.');
+                btn.textContent = textoOriginal;
+                btn.disabled = false;
+                return;
+            }
+            sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(keyData.publicKey)
+            });
+            const subJson = sub.toJSON();
+            await fetch(`/push/subscribe/${clienteId}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN},
+                body: JSON.stringify({
+                    endpoint: subJson.endpoint,
+                    keys: subJson.keys
+                })
+            });
+            btn.textContent = '🔕 Desactivar notificaciones';
+        }
+    } catch (e) {
+        console.error('Error con notificaciones push:', e);
+        alert('No se pudo activar/desactivar las notificaciones. Intenta de nuevo.');
+        btn.textContent = textoOriginal;
+    }
+    btn.disabled = false;
+}
+
+document.addEventListener('DOMContentLoaded', actualizarBotonPush);
 </script>
 </body>
 </html>
