@@ -59,6 +59,12 @@
         .propiedad-titulo { font-size: 15px; font-weight: 700; color: white; margin-bottom: 6px; }
         .propiedad-precio { font-size: 18px; color: #69d08a; font-weight: 700; margin-bottom: 6px; }
         .propiedad-ubicacion { color: rgba(255,255,255,0.4); font-size: 12px; margin-bottom: 8px; }
+        .calidad-badge-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+        .calidad-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+        .calidad-badge.alta { background: rgba(39,174,96,0.15); color: #69d08a; border: 1px solid rgba(39,174,96,0.3); }
+        .calidad-badge.media { background: rgba(243,156,18,0.15); color: #f9ca74; border: 1px solid rgba(243,156,18,0.3); }
+        .calidad-badge.baja { background: rgba(231,76,60,0.15); color: #ff6b6b; border: 1px solid rgba(231,76,60,0.3); }
+        .calidad-sugerencia { font-size: 11px; color: rgba(255,255,255,0.4); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .propiedad-specs { display: flex; gap: 12px; margin-bottom: 10px; font-size: 12px; color: rgba(255,255,255,0.5); flex-wrap: wrap; }
         .propiedad-specs span { display: flex; align-items: center; gap: 4px; }
         .propiedad-descripcion { color: rgba(255,255,255,0.35); font-size: 12px; line-height: 1.6; margin-bottom: 14px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
@@ -1006,6 +1012,13 @@ function renderPropiedades(lista) {
                     <div class="propiedad-titulo">${prop.titulo}</div>
                     <div class="propiedad-precio">$${parseFloat(prop.precio).toLocaleString()}</div>
                     <div class="propiedad-ubicacion">📍 ${prop.ubicacion}</div>
+                    ${PUEDE_VER_TODO && typeof prop.calidad_score === 'number' ? `
+                    <div class="calidad-badge-row">
+                        <span class="calidad-badge ${prop.calidad_score >= 70 ? 'alta' : (prop.calidad_score >= 40 ? 'media' : 'baja')}" title="Score de calidad del listado: qué tan lista está para venderse rápido">
+                            ${prop.calidad_score >= 70 ? '✅' : (prop.calidad_score >= 40 ? '⚠️' : '🚨')} ${prop.calidad_score}/100
+                        </span>
+                        ${prop.calidad_sugerencias && prop.calidad_sugerencias.length ? `<span class="calidad-sugerencia" title="${prop.calidad_sugerencias.join(' ')}">${prop.calidad_sugerencias[0]}</span>` : ''}
+                    </div>` : ''}
                     ${specsHTML}
                     <div class="propiedad-descripcion">${prop.descripcion || T.sinDescripcion}</div>
                     <div class="card-botones">
