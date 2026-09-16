@@ -31,6 +31,8 @@ from email_service import (enviar_email_cliente, notificar_vendedor_lead_nuevo,
                            enviar_recordatorio_visita, enviar_confirmacion_visita_prospecto,
                            enviar_recordatorio_visita_prospecto)
 from stats import obtener_stats
+# ✅ Notificaciones push — pywebpush envía al navegador vía el estándar Web Push.
+from pywebpush import webpush, WebPushException
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -57,6 +59,62 @@ def descifrar_texto(texto_cifrado):
         return _fernet.decrypt(texto_cifrado.encode()).decode()
     except Exception:
         return None
+
+# ============================================================
+# ✅ NOTIFICACIONES PUSH (Web Push / VAPID)
+# ============================================================
+VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
+VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
+VAPID_CLAIM_EMAIL = os.environ.get("VAPID_CLAIM_EMAIL", "")
+_PUSH_CONFIGURADO = bool(VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY and VAPID_CLAIM_EMAIL)
+
+def enviar_push_notification(cliente_id, asesor_id, titulo, cuerpo, url_destino="/"):
+    """
+    Manda una notificación push a todas las suscripciones que apliquen:
+    - Si asesor_id es None → se manda al dueño Y a cualquier asesor suscrito
+      (caso: lead nuevo sin asignar, cualquiera puede tomarlo).
+    - Si asesor_id tiene valor → se manda solo a las suscripciones de ESE
+      asesor y al dueño (el dueño siempre ve todo).
+    Corre en un hilo aparte para no bloquear la respuesta al usuario, igual
+    que ya se hace con los correos de confirmación de visita.
+    """
+    if not _PUSH_CONFIGURADO:
+        return  # notificaciones push no configuradas en este entorno — no hacer nada
+
+    def _enviar():
+        try:
+            query = supabase.table("push_subscriptions").select("*").eq("cliente_id", cliente_id)
+            resultado = query.execute()
+            subs = resultado.data or []
+            payload = json.dumps({"title": titulo, "body": cuerpo, "url": url_destino})
+            for sub in subs:
+                # El dueño está suscrito con asesor_id=None y siempre recibe.
+                # Un asesor solo recibe si el lead es suyo o no está asignado.
+                sub_asesor_id = sub.get("asesor_id")
+                if sub_asesor_id is not None and asesor_id is not None and sub_asesor_id != asesor_id:
+                    continue
+                try:
+                    webpush(
+                        subscription_info={
+                            "endpoint": sub["endpoint"],
+                            "keys": {"p256dh": sub["p256dh"], "auth": sub["auth"]}
+                        },
+                        data=payload,
+                        vapid_private_key=VAPID_PRIVATE_KEY,
+                        vapid_claims={"sub": VAPID_CLAIM_EMAIL}
+                    )
+                except WebPushException as e:
+                    # 404/410 = la suscripción ya no existe (usuario desinstaló,
+                    # borró permisos, etc.) — la limpiamos de la base de datos.
+                    status = getattr(e.response, "status_code", None)
+                    if status in (404, 410):
+                        supabase.table("push_subscriptions").delete().eq("id", sub["id"]).execute()
+                    else:
+                        print(f"⚠️ Error push (endpoint {sub['endpoint'][:40]}...): {e}")
+        except Exception as e:
+            print(f"⚠️ Error general enviando push: {e}")
+
+    threading.Thread(target=_enviar, daemon=True).start()
 
 # ============================================================
 # ✅ SEGURIDAD — COOKIES Y SESIONES
@@ -884,6 +942,13 @@ def job_recordatorios_visitas():
                         visita["vendedor"], lead.get("nombre", ""), lead_email,
                         fecha_str, propiedad_titulo, "24h", lang=lang_cliente
                     )
+                # ✅ Push al agente 24h antes — dirigido al asesor del lead si tiene uno.
+                enviar_push_notification(
+                    visita["vendedor"], lead.get("asesor_id"),
+                    "📅 Visita en 24h",
+                    f"{lead.get('nombre','')} — {fecha_str}" + (f" — {propiedad_titulo}" if propiedad_titulo else ""),
+                    url_destino=f"/historial/{visita['vendedor']}"
+                )
                 supabase.table("visitas").update({"recordatorio_24h_enviado": True}).eq("id", visita["id"]).execute()
                 print(f"✅ Recordatorio 24h enviado — visita {visita['id']}")
 
@@ -897,6 +962,13 @@ def job_recordatorios_visitas():
                         visita["vendedor"], lead.get("nombre", ""), lead_email,
                         fecha_str, propiedad_titulo, "3h", lang=lang_cliente
                     )
+                # ✅ Push al agente 3h antes.
+                enviar_push_notification(
+                    visita["vendedor"], lead.get("asesor_id"),
+                    "📅 Visita en 3h",
+                    f"{lead.get('nombre','')} — {fecha_str}" + (f" — {propiedad_titulo}" if propiedad_titulo else ""),
+                    url_destino=f"/historial/{visita['vendedor']}"
+                )
                 supabase.table("visitas").update({"recordatorio_2h_enviado": True}).eq("id", visita["id"]).execute()
                 print(f"✅ Recordatorio 3h enviado — visita {visita['id']}")
     except Exception as e:
@@ -1582,6 +1654,96 @@ def propiedades_lista_json(cliente_id):
 
 
 # ============================================================
+# ✅ NOTIFICACIONES PUSH — rutas
+# ============================================================
+
+@app.route("/sw.js")
+def service_worker():
+    """
+    El service worker debe servirse en la raíz del sitio (no en /static/)
+    para que su 'scope' cubra todas las páginas del dashboard. Escucha el
+    evento 'push' del navegador y muestra la notificación del sistema.
+    """
+    sw_code = """
+self.addEventListener('push', function(event) {
+    let data = {title: 'Bot Inmobiliaria', body: 'Tienes una notificación nueva.', url: '/'};
+    try { data = event.data.json(); } catch (e) {}
+    event.waitUntil(
+        self.registration.showNotification(data.title, {
+            body: data.body,
+            icon: '/static/icono-notif.png',
+            badge: '/static/icono-notif.png',
+            data: { url: data.url || '/' }
+        })
+    );
+});
+
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close();
+    const url = (event.notification.data && event.notification.data.url) || '/';
+    event.waitUntil(clients.openWindow(url));
+});
+"""
+    return app.response_class(sw_code, mimetype="application/javascript")
+
+@app.route("/push/vapid-public-key")
+def push_vapid_public_key():
+    if not session.get("cliente"):
+        return jsonify({"ok": False, "error": "No autorizado"}), 403
+    if not _PUSH_CONFIGURADO:
+        return jsonify({"ok": False, "error": "Notificaciones push no configuradas"}), 503
+    return jsonify({"ok": True, "publicKey": VAPID_PUBLIC_KEY})
+
+@app.route("/push/subscribe/<cliente_id>", methods=["POST"])
+def push_subscribe(cliente_id):
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return jsonify({"ok": False, "error": "No autorizado"}), 403
+    verificar_csrf()
+    try:
+        data = request.get_json(silent=True) or {}
+        endpoint = data.get("endpoint", "")
+        keys = data.get("keys", {})
+        p256dh = keys.get("p256dh", "")
+        auth = keys.get("auth", "")
+        if not endpoint or not p256dh or not auth:
+            return jsonify({"ok": False, "error": "Datos de suscripción incompletos"}), 400
+        # ✅ El dueño se guarda con asesor_id=None; un asesor con su propio id
+        # — así enviar_push_notification() sabe a quién dirigir cada aviso.
+        asesor_id = session.get("asesor_id")
+        # Evita duplicados: si el mismo endpoint ya existe, lo actualiza en vez de duplicar.
+        existente = supabase.table("push_subscriptions").select("id").eq("endpoint", endpoint).execute()
+        if existente.data:
+            supabase.table("push_subscriptions").update({
+                "cliente_id": id_clean, "asesor_id": asesor_id,
+                "p256dh": p256dh, "auth": auth
+            }).eq("endpoint", endpoint).execute()
+        else:
+            supabase.table("push_subscriptions").insert({
+                "cliente_id": id_clean, "asesor_id": asesor_id,
+                "endpoint": endpoint, "p256dh": p256dh, "auth": auth
+            }).execute()
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+@app.route("/push/unsubscribe/<cliente_id>", methods=["POST"])
+def push_unsubscribe(cliente_id):
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return jsonify({"ok": False, "error": "No autorizado"}), 403
+    verificar_csrf()
+    try:
+        data = request.get_json(silent=True) or {}
+        endpoint = data.get("endpoint", "")
+        if endpoint:
+            supabase.table("push_subscriptions").delete().eq("endpoint", endpoint).eq("cliente_id", id_clean).execute()
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+# ============================================================
 # ✅ PORTAL DEL PROSPECTO
 # ============================================================
 
@@ -1811,6 +1973,14 @@ def formulario(cliente_id):
                 zona=d.get("zona_interes"), presupuesto=d.get("presupuesto"),
                 mensaje=d.get("mensaje"), score=score_final, email_prospecto=email_prospecto
             )
+            # ✅ Notificación push al instante — este formulario no tiene asesor
+            # asignado, así que la reciben el dueño y cualquier asesor suscrito.
+            enviar_push_notification(
+                id_clean, None,
+                "🆕 Nuevo lead",
+                f"{d.get('nombre')} — {d.get('zona_interes')} — score {score_final}",
+                url_destino=f"/historial/{id_clean}"
+            )
             return render_template("formulario.html", enviado=True, textos=textos,
                                    cliente_id=id_clean, whatsapp=vendedor['whatsapp'],
                                    cliente_nombre=vendedor['nombre'], idioma_actual=lang)
@@ -1889,6 +2059,14 @@ def formulario_asesor(cliente_id, asesor_usuario):
                 cliente_id=id_clean, nombre=d.get("nombre"), telefono=d.get("telefono"),
                 zona=d.get("zona_interes"), presupuesto=d.get("presupuesto"),
                 mensaje=d.get("mensaje"), score=score_final, email_prospecto=email_prospecto
+            )
+            # ✅ Este formulario SÍ trae asesor (viene de su link personal) —
+            # se dirige el push a ese asesor específico (y al dueño, siempre).
+            enviar_push_notification(
+                id_clean, asesor["id"] if asesor else None,
+                "🆕 Nuevo lead",
+                f"{d.get('nombre')} — {d.get('zona_interes')} — score {score_final}",
+                url_destino=f"/historial/{id_clean}"
             )
             return render_template("formulario.html", enviado=True, textos=textos,
                                    cliente_id=id_clean, whatsapp=vendedor['whatsapp'],
