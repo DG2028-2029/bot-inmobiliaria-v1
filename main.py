@@ -1666,7 +1666,7 @@ def service_worker():
     """
     sw_code = """
 self.addEventListener('push', function(event) {
-    let data = {title: 'Bot Inmobiliaria', body: 'Tienes una notificación nueva.', url: '/'};
+    let data = {title: 'IPOX', body: 'Tienes una notificación nueva.', url: '/'};
     try { data = event.data.json(); } catch (e) {}
     event.waitUntil(
         self.registration.showNotification(data.title, {
@@ -2705,7 +2705,7 @@ def llamar_openrouter(api_key, messages_payload):
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {api_key}",
                     "HTTP-Referer": "https://bot-inmobiliaria-v1.onrender.com",
-                    "X-Title": "Bot Inmobiliaria"
+                    "X-Title": "IPOX"
                 },
                 method="POST"
             )
@@ -2822,7 +2822,7 @@ INSTRUCTIONS:
 
 @app.route("/")
 def index():
-    return "PropTech Global Engine V4.0 [Active Mode] 🌐🚀"
+    return "IPOX — CRM Inmobiliario [Active Mode] 🌐🚀"
 
 @app.errorhandler(403)
 def forbidden(e):
