@@ -981,7 +981,8 @@ def verificar_sesion():
                       'inicio_formulario', 'chat_inmobiliario', 'test_chat', 'inventario_publico',
                       'recuperar_password', 'reset_password', 'cron_reporte_semanal',
                       'test_reporte_semanal', 'cron_recordatorios_visitas',
-                      'portal_prospecto', 'portal_confirmar_visita']
+                      'portal_prospecto', 'portal_confirmar_visita',
+                      'privacidad', 'terminos']
     if request.endpoint in rutas_publicas:
         return
     if request.endpoint and request.endpoint.startswith('admin'):
@@ -1894,6 +1895,26 @@ def cron_recordatorios_visitas(secret_key):
     except Exception as e:
         return f"❌ Error: {e}", 500
 
+# ============================================================
+# ✅ LEGALES — política de privacidad y términos de uso
+# ============================================================
+
+@app.route("/privacidad/<cliente_id>")
+def privacidad(cliente_id):
+    id_clean = cliente_id.lower()
+    vendedor = get_cliente(id_clean)
+    if not vendedor: return "Error 404: Vendedor no configurado.", 404
+    idioma = session.get('idioma', get_idioma_default(vendedor))
+    return render_template("privacidad.html", cliente=vendedor, cliente_id=id_clean, idioma_actual=idioma)
+
+@app.route("/terminos/<cliente_id>")
+def terminos(cliente_id):
+    id_clean = cliente_id.lower()
+    vendedor = get_cliente(id_clean)
+    if not vendedor: return "Error 404: Vendedor no configurado.", 404
+    idioma = session.get('idioma', get_idioma_default(vendedor))
+    return render_template("terminos.html", cliente=vendedor, cliente_id=id_clean, idioma_actual=idioma)
+
 @app.route("/inicio/<cliente_id>")
 def inicio_formulario(cliente_id):
     id_clean = cliente_id.lower()
@@ -1930,6 +1951,12 @@ def formulario(cliente_id):
             return render_template("formulario.html", enviado=False, cliente_id=id_clean,
                                    textos=textos, cliente_nombre=vendedor['nombre'],
                                    idioma_actual=lang, error="Todos los campos son requeridos.")
+        # ✅ Consentimiento de privacidad obligatorio — sin esto, la
+        # inmobiliaria estaría capturando datos personales sin base legal.
+        if not request.form.get("acepto_privacidad"):
+            return render_template("formulario.html", enviado=False, cliente_id=id_clean,
+                                   textos=textos, cliente_nombre=vendedor['nombre'],
+                                   idioma_actual=lang, error="Debes aceptar la política de privacidad para continuar.")
         # ✅ Validación de inputs — un teléfono sin dígitos suficientes no sirve
         # para WhatsApp ni para contactar al lead; lo rechazamos con un mensaje.
         if len(re.sub(r'\D', '', telefono)) < 5:
@@ -2017,6 +2044,12 @@ def formulario_asesor(cliente_id, asesor_usuario):
             return render_template("formulario.html", enviado=False, cliente_id=id_clean,
                                    textos=textos, cliente_nombre=vendedor['nombre'],
                                    idioma_actual=lang, error="Todos los campos son requeridos.")
+        # ✅ Consentimiento de privacidad obligatorio — sin esto, la
+        # inmobiliaria estaría capturando datos personales sin base legal.
+        if not request.form.get("acepto_privacidad"):
+            return render_template("formulario.html", enviado=False, cliente_id=id_clean,
+                                   textos=textos, cliente_nombre=vendedor['nombre'],
+                                   idioma_actual=lang, error="Debes aceptar la política de privacidad para continuar.")
         # ✅ Validación de inputs — un teléfono sin dígitos suficientes no sirve
         # para WhatsApp ni para contactar al lead; lo rechazamos con un mensaje.
         if len(re.sub(r'\D', '', telefono)) < 5:
