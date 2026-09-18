@@ -160,6 +160,8 @@
             accent-color: #667eea;
         }
         .checkbox-group label { font-size: 12px; color: rgba(255,255,255,0.33); line-height: 1.6; cursor: pointer; }
+        .checkbox-group label a { color: #a0b4ff; text-decoration: none; font-weight: 600; }
+        .checkbox-group label a:hover { text-decoration: underline; color: #667eea; }
         /* ✅ Aviso de privacidad */
         .privacy-notice {
             font-size: 11px;
@@ -251,6 +253,28 @@
     'de': 'Mit dem Absenden stimmen Sie der Verarbeitung Ihrer personenbezogenen Daten zu.',
     'pt': 'Ao enviar este formulário, você concorda com o tratamento de seus dados pessoais.',
     'zh': '提交此表单即表示您同意我们处理您的个人数据。'
+} %}
+{% set acepto_terminos_texts = {
+    'es': 'Acepto la',
+    'en': 'I accept the',
+    'fr': "J'accepte la",
+    'de': 'Ich akzeptiere die',
+    'pt': 'Aceito a',
+    'zh': '我接受'
+} %}
+{% set y_los_texts = {
+    'es': 'y los', 'en': 'and the', 'fr': 'et les',
+    'de': 'und die', 'pt': 'e os', 'zh': '和'
+} %}
+{% set label_privacidad_texts = {
+    'es': 'Política de Privacidad', 'en': 'Privacy Policy',
+    'fr': 'Politique de Confidentialité', 'de': 'Datenschutzrichtlinie',
+    'pt': 'Política de Privacidade', 'zh': '隐私政策'
+} %}
+{% set label_terminos_texts = {
+    'es': 'Términos de Uso', 'en': 'Terms of Use',
+    'fr': "Conditions d'Utilisation", 'de': 'Nutzungsbedingungen',
+    'pt': 'Termos de Uso', 'zh': '使用条款'
 } %}
 {% set lang = idioma_actual if idioma_actual in sistema_label else 'es' %}
 
@@ -352,7 +376,12 @@
             </div>
             <div class="checkbox-group">
                 <input type="checkbox" id="terminos" name="terminos" required>
-                <label for="terminos">{{ textos.acepto_terminos }}</label>
+                <label for="terminos">
+                    {{ acepto_terminos_texts[lang] }}
+                    <a href="{{ url_for('privacidad', cliente_id=cliente_id) }}" target="_blank" rel="noopener">{{ label_privacidad_texts[lang] }}</a>
+                    {{ y_los_texts[lang] }}
+                    <a href="{{ url_for('terminos', cliente_id=cliente_id) }}" target="_blank" rel="noopener">{{ label_terminos_texts[lang] }}</a>.
+                </label>
             </div>
             <button type="submit" class="btn-submit" id="btnEnviar">{{ textos.boton_enviar }} →</button>
             <p class="privacy-notice">🔒 {{ privacy_texts[lang] }}</p>
