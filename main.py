@@ -1953,7 +1953,7 @@ def formulario(cliente_id):
                                    idioma_actual=lang, error="Todos los campos son requeridos.")
         # ✅ Consentimiento de privacidad obligatorio — sin esto, la
         # inmobiliaria estaría capturando datos personales sin base legal.
-        if not request.form.get("acepto_privacidad"):
+        if not request.form.get("terminos"):
             return render_template("formulario.html", enviado=False, cliente_id=id_clean,
                                    textos=textos, cliente_nombre=vendedor['nombre'],
                                    idioma_actual=lang, error="Debes aceptar la política de privacidad para continuar.")
@@ -2046,7 +2046,7 @@ def formulario_asesor(cliente_id, asesor_usuario):
                                    idioma_actual=lang, error="Todos los campos son requeridos.")
         # ✅ Consentimiento de privacidad obligatorio — sin esto, la
         # inmobiliaria estaría capturando datos personales sin base legal.
-        if not request.form.get("acepto_privacidad"):
+        if not request.form.get("terminos"):
             return render_template("formulario.html", enviado=False, cliente_id=id_clean,
                                    textos=textos, cliente_nombre=vendedor['nombre'],
                                    idioma_actual=lang, error="Debes aceptar la política de privacidad para continuar.")
