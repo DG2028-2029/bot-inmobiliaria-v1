@@ -1,25 +1,33 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ t.lang_attr }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Términos de Uso - {{ cliente.nombre }}</title>
+    <title>{{ t.t_titulo }} - {{ cliente.nombre }}</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #0a0a0f; min-height: 100vh; }
         .bg-glow { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 20% 10%, rgba(102,126,234,0.12) 0%, transparent 50%); }
         .container { max-width: 800px; margin: 0 auto; padding: 32px 20px 80px; position: relative; z-index: 1; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
         .back-link { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
         .back-link:hover { color: white; }
+
+        .region-selector { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 16px 18px; margin-bottom: 22px; }
+        .region-selector-titulo { color: white; font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+        .region-selector-sub { color: rgba(255,255,255,0.35); font-size: 11px; margin-bottom: 12px; }
+        .region-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .region-chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-decoration: none; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); color: rgba(255,255,255,0.6); transition: 0.2s; }
+        .region-chip:hover { background: rgba(255,255,255,0.09); color: white; }
+        .region-chip.activo { background: rgba(102,126,234,0.2); border-color: rgba(102,126,234,0.4); color: #a0b4ff; }
+
         .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 18px; padding: 32px 28px; }
         .card h1 { color: white; font-size: 24px; font-weight: 800; margin-bottom: 6px; }
-        .card .actualizado { color: rgba(255,255,255,0.35); font-size: 12px; margin-bottom: 26px; }
+        .card .actualizado { color: rgba(255,255,255,0.35); font-size: 12px; margin-bottom: 8px; }
+        .region-tag { display: inline-flex; align-items: center; gap: 6px; background: rgba(102,126,234,0.12); border: 1px solid rgba(102,126,234,0.25); color: #a0b4ff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 22px; }
         .card h2 { color: #a0b4ff; font-size: 15px; font-weight: 700; margin-top: 26px; margin-bottom: 10px; }
         .card p, .card li { color: rgba(255,255,255,0.6); font-size: 14px; line-height: 1.75; }
-        .card ul { margin-left: 20px; margin-bottom: 10px; }
-        .card li { margin-bottom: 6px; }
         .card strong { color: rgba(255,255,255,0.85); }
         .aviso-box { background: rgba(102,126,234,0.08); border: 1px solid rgba(102,126,234,0.2); border-radius: 10px; padding: 14px 16px; font-size: 12px; color: rgba(160,180,255,0.85); margin-top: 30px; line-height: 1.6; }
         .contacto-box { background: rgba(39,174,96,0.08); border: 1px solid rgba(39,174,96,0.2); border-radius: 10px; padding: 14px 16px; margin-top: 16px; font-size: 13px; color: rgba(255,255,255,0.7); }
@@ -33,43 +41,41 @@
 <div class="bg-glow"></div>
 <div class="container">
     <div class="top-bar">
-        <a href="javascript:history.back()" class="back-link">← Volver</a>
+        <a href="javascript:history.back()" class="back-link">{{ t.volver }}</a>
     </div>
+
+    <div class="region-selector">
+        <div class="region-selector-titulo">🌍 {{ t.selector_titulo }}</div>
+        <div class="region-selector-sub">{{ t.selector_sub }}</div>
+        <div class="region-grid">
+            {% for key, reg in regiones.items() %}
+            <a href="{{ url_for('terminos', cliente_id=cliente_id, region=key) }}" class="region-chip {% if key == region_actual %}activo{% endif %}">
+                {{ reg.bandera }} {{ reg.nombre_display }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
     <div class="card">
-        <h1>📋 Términos de Uso</h1>
-        <div class="actualizado">{{ cliente.nombre }} — condiciones para usar nuestro formulario y portal de seguimiento</div>
+        <h1>{{ t.t_titulo }}</h1>
+        <div class="actualizado">{{ cliente.nombre }} — {{ t.t_subtitulo }}</div>
+        <div class="region-tag">{{ r.bandera }} {{ r.nombre_display }}</div>
 
-        <p>Al completar nuestro formulario de contacto o usar nuestro portal de seguimiento, usted acepta los siguientes términos.</p>
+        <p>{{ t.t_intro.format(nombre=cliente.nombre) }}</p>
 
-        <h2>1. Sobre este servicio</h2>
-        <p><strong>{{ cliente.nombre }}</strong> pone a su disposición un formulario de contacto y un portal de seguimiento para facilitar su búsqueda de propiedades y la comunicación con nuestro equipo de asesores.</p>
-
-        <h2>2. Uso adecuado</h2>
-        <p>Usted se compromete a proporcionar información veraz y actualizada al completar nuestro formulario. Nos reservamos el derecho de no dar seguimiento a solicitudes con información falsa o incompleta.</p>
-
-        <h2>3. Sin garantía de disponibilidad</h2>
-        <p>Las propiedades mostradas en nuestro portal están sujetas a disponibilidad y pueden cambiar sin previo aviso. No garantizamos que una propiedad de su interés siga disponible al momento de contactarlo.</p>
-
-        <h2>4. Comunicación</h2>
-        <p>Al proporcionarnos su teléfono y/o correo electrónico, usted autoriza a que nuestro equipo se comunique con usted por esos medios (incluyendo WhatsApp y correo electrónico) para dar seguimiento a su solicitud.</p>
-
-        <h2>5. Visitas agendadas</h2>
-        <p>Si agenda una visita a través de nuestro portal, usted se compromete a confirmar o reagendar con anticipación si no puede asistir, para no afectar la disponibilidad de nuestros asesores.</p>
-
-        <h2>6. Propiedad del contenido</h2>
-        <p>El contenido, fotos y descripciones de las propiedades publicadas son propiedad de {{ cliente.nombre }} y no pueden reproducirse sin autorización.</p>
-
-        <h2>7. Cambios a estos términos</h2>
-        <p>Podemos actualizar estos términos ocasionalmente. La versión vigente siempre estará disponible en esta misma página.</p>
+        {% for titulo, texto in t.t_secciones %}
+        <h2>{{ titulo }}</h2>
+        <p>{{ texto.format(nombre=cliente.nombre) }}</p>
+        {% endfor %}
 
         <div class="contacto-box">
-            📩 <strong>¿Dudas sobre estos términos?</strong> Contacte a {{ cliente.nombre }} directamente
-            {% if cliente.whatsapp %}por WhatsApp al {{ cliente.whatsapp }}{% endif %}
-            {% if cliente.email_vendedor %} o al correo {{ cliente.email_vendedor }}{% endif %}.
+            {{ t.t_contacto_label.format(nombre=cliente.nombre) }}
+            {% if cliente.whatsapp %} {{ t.p_whatsapp_txt }} {{ cliente.whatsapp }}{% endif %}
+            {% if cliente.email_vendedor %} {{ t.p_correo_txt }} {{ cliente.email_vendedor }}{% endif %}.
         </div>
 
         <div class="aviso-box">
-            ℹ️ Este documento es una plantilla general y no sustituye asesoría legal especializada. Le recomendamos consultar con un abogado para adaptar este texto a las leyes de su país.
+            ℹ️ Este documento es una plantilla general orientada al marco legal seleccionado ({{ r.nombre_display }}) y no sustituye asesoría legal especializada. Recomendamos consultar con un abogado local antes de operar con clientes reales en esta jurisdicción.
         </div>
     </div>
 </div>
