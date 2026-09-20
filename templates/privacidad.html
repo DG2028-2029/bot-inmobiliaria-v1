@@ -1,21 +1,31 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ t.lang_attr }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Política de Privacidad - {{ cliente.nombre }}</title>
+    <title>{{ t.p_titulo }} - {{ cliente.nombre }}</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #0a0a0f; min-height: 100vh; }
         .bg-glow { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 20% 10%, rgba(102,126,234,0.12) 0%, transparent 50%); }
         .container { max-width: 800px; margin: 0 auto; padding: 32px 20px 80px; position: relative; z-index: 1; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
         .back-link { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
         .back-link:hover { color: white; }
+
+        .region-selector { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 16px 18px; margin-bottom: 22px; }
+        .region-selector-titulo { color: white; font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+        .region-selector-sub { color: rgba(255,255,255,0.35); font-size: 11px; margin-bottom: 12px; }
+        .region-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .region-chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-decoration: none; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); color: rgba(255,255,255,0.6); transition: 0.2s; }
+        .region-chip:hover { background: rgba(255,255,255,0.09); color: white; }
+        .region-chip.activo { background: rgba(102,126,234,0.2); border-color: rgba(102,126,234,0.4); color: #a0b4ff; }
+
         .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 18px; padding: 32px 28px; }
         .card h1 { color: white; font-size: 24px; font-weight: 800; margin-bottom: 6px; }
-        .card .actualizado { color: rgba(255,255,255,0.35); font-size: 12px; margin-bottom: 26px; }
+        .card .actualizado { color: rgba(255,255,255,0.35); font-size: 12px; margin-bottom: 8px; }
+        .region-tag { display: inline-flex; align-items: center; gap: 6px; background: rgba(102,126,234,0.12); border: 1px solid rgba(102,126,234,0.25); color: #a0b4ff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 22px; }
         .card h2 { color: #a0b4ff; font-size: 15px; font-weight: 700; margin-top: 26px; margin-bottom: 10px; }
         .card p, .card li { color: rgba(255,255,255,0.6); font-size: 14px; line-height: 1.75; }
         .card ul { margin-left: 20px; margin-bottom: 10px; }
@@ -33,65 +43,76 @@
 <div class="bg-glow"></div>
 <div class="container">
     <div class="top-bar">
-        <a href="javascript:history.back()" class="back-link">← Volver</a>
+        <a href="javascript:history.back()" class="back-link">{{ t.volver }}</a>
     </div>
+
+    <div class="region-selector">
+        <div class="region-selector-titulo">🌍 {{ t.selector_titulo }}</div>
+        <div class="region-selector-sub">{{ t.selector_sub }}</div>
+        <div class="region-grid">
+            {% for key, reg in regiones.items() %}
+            <a href="{{ url_for('privacidad', cliente_id=cliente_id, region=key) }}" class="region-chip {% if key == region_actual %}activo{% endif %}">
+                {{ reg.bandera }} {{ reg.nombre_display }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
     <div class="card">
-        <h1>🔒 Política de Privacidad</h1>
-        <div class="actualizado">{{ cliente.nombre }} — datos personales que recopilamos y cómo los usamos</div>
+        <h1>{{ t.p_titulo }}</h1>
+        <div class="actualizado">{{ cliente.nombre }} — {{ t.p_subtitulo }}</div>
+        <div class="region-tag">{{ r.bandera }} {{ r.nombre_display }}</div>
 
-        <p>Esta política explica qué información personal recopila <strong>{{ cliente.nombre }}</strong> cuando usted completa nuestro formulario de contacto, y cómo la usamos para atenderle mejor.</p>
+        <p>{{ t.p_intro.format(nombre=cliente.nombre) }}</p>
 
-        <h2>1. Responsable del tratamiento</h2>
-        <p><strong>{{ cliente.nombre }}</strong> es responsable de los datos personales que usted comparte a través de nuestro formulario de contacto y nuestro portal de seguimiento.</p>
+        <h2>{{ t.p_resp_titulo }}</h2>
+        <p>{{ t.p_resp_texto.format(nombre=cliente.nombre) }}</p>
 
-        <h2>2. Datos que recopilamos</h2>
-        <p>Cuando completa nuestro formulario, recopilamos:</p>
+        <h2>{{ t.p_datos_titulo }}</h2>
+        <p>{{ t.p_datos_intro }}</p>
         <ul>
-            <li>Nombre completo</li>
-            <li>Número de teléfono</li>
-            <li>Correo electrónico (si lo proporciona)</li>
-            <li>Zona de interés y presupuesto aproximado</li>
-            <li>Cualquier mensaje adicional que nos escriba</li>
+            {% for item in t.p_datos_lista %}<li>{{ item }}</li>{% endfor %}
         </ul>
 
-        <h2>3. Para qué usamos sus datos</h2>
+        <h2>{{ t.p_finalidad_titulo }}</h2>
         <ul>
-            <li>Contactarlo para darle seguimiento a su búsqueda de propiedad</li>
-            <li>Recomendarle propiedades que coincidan con lo que busca</li>
-            <li>Coordinar y recordarle visitas agendadas a propiedades</li>
-            <li>Enviarle actualizaciones relevantes sobre su proceso de búsqueda</li>
+            {% for item in t.p_finalidad_lista %}<li>{{ item }}</li>{% endfor %}
         </ul>
 
-        <h2>4. Con quién compartimos sus datos</h2>
-        <p>Sus datos se procesan a través de nuestro sistema de gestión (CRM) para uso exclusivo de nuestro equipo de ventas. No vendemos ni compartimos su información con terceros para fines de mercadeo ajenos a nuestra relación comercial con usted. Podemos usar herramientas de correo electrónico (como Gmail) y WhatsApp para comunicarnos directamente con usted.</p>
+        <h2>{{ t.p_comparticion_titulo }}</h2>
+        <p>{{ t.p_comparticion_texto }}</p>
 
-        <h2>5. Cuánto tiempo conservamos sus datos</h2>
-        <p>Conservamos su información mientras exista una relación comercial activa o potencial, o hasta que usted solicite su eliminación.</p>
+        <h2>{{ t.p_conservacion_titulo }}</h2>
+        <p>{{ t.p_conservacion_texto }}</p>
 
-        <h2>6. Sus derechos</h2>
-        <p>Usted puede solicitarnos en cualquier momento:</p>
+        <!-- ✅ Sección específica de la región: ley, autoridad y derechos correctos -->
+        <h2>⚖️ {{ r.nombre_display }} — {{ r.derechos_titulo }}</h2>
+        <p><strong>{{ r.ley_referencia }}</strong></p>
+        <p>{{ r.base_legal }}</p>
         <ul>
-            <li>Acceder a los datos que tenemos sobre usted</li>
-            <li>Corregir información incorrecta o desactualizada</li>
-            <li>Solicitar la eliminación de sus datos de nuestro sistema</li>
-            <li>Oponerse a que sigamos contactándolo</li>
+            {% for derecho in r.derechos_lista %}<li>{{ derecho }}</li>{% endfor %}
         </ul>
-        <p>Para ejercer cualquiera de estos derechos, contáctenos directamente (ver abajo).</p>
+        {% if r.transferencias %}
+        <p>{{ r.transferencias }}</p>
+        {% endif %}
+        <p style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:10px;">
+            {{ r.nota_juridica }}
+        </p>
 
-        <h2>7. Cookies y sesión</h2>
-        <p>Nuestro portal de seguimiento usa una cookie de sesión técnica necesaria para que la página funcione correctamente. No usamos cookies de rastreo publicitario.</p>
+        <h2>{{ t.p_cookies_titulo }}</h2>
+        <p>{{ t.p_cookies_texto }}</p>
 
-        <h2>8. Cambios a esta política</h2>
-        <p>Podemos actualizar esta política ocasionalmente. La fecha de la versión vigente siempre estará disponible en esta misma página.</p>
+        <h2>{{ t.p_cambios_titulo }}</h2>
+        <p>{{ t.p_cambios_texto }}</p>
 
         <div class="contacto-box">
-            📩 <strong>¿Preguntas sobre sus datos?</strong> Contacte a {{ cliente.nombre }} directamente
-            {% if cliente.whatsapp %}por WhatsApp al {{ cliente.whatsapp }}{% endif %}
-            {% if cliente.email_vendedor %} o al correo {{ cliente.email_vendedor }}{% endif %}.
+            {{ t.p_contacto_label.format(nombre=cliente.nombre) }}
+            {% if cliente.whatsapp %} {{ t.p_whatsapp_txt }} {{ cliente.whatsapp }}{% endif %}
+            {% if cliente.email_vendedor %} {{ t.p_correo_txt }} {{ cliente.email_vendedor }}{% endif %}.
         </div>
 
         <div class="aviso-box">
-            ℹ️ Este documento es una plantilla general de buenas prácticas de privacidad y no sustituye asesoría legal especializada. Si su negocio opera bajo regulaciones específicas de protección de datos (como GDPR en Europa, o leyes locales de su país), le recomendamos consultar con un abogado para adaptar este texto a su jurisdicción.
+            ℹ️ Este documento es una plantilla general orientada al marco legal seleccionado ({{ r.nombre_display }}) y no sustituye asesoría legal especializada. Recomendamos consultar con un abogado local antes de operar con clientes reales en esta jurisdicción.
         </div>
     </div>
 </div>
