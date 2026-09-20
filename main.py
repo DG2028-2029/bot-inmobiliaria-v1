@@ -33,6 +33,8 @@ from email_service import (enviar_email_cliente, notificar_vendedor_lead_nuevo,
 from stats import obtener_stats
 # ✅ Notificaciones push — pywebpush envía al navegador vía el estándar Web Push.
 from pywebpush import webpush, WebPushException
+# ✅ Contenido legal multi-idioma / multi-región (privacidad y términos)
+from legal_content import IDIOMAS, REGIONES, LANG_TO_REGION_DEFAULT
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -1899,21 +1901,45 @@ def cron_recordatorios_visitas(secret_key):
 # ✅ LEGALES — política de privacidad y términos de uso
 # ============================================================
 
+# ============================================================
+# ✅ LEGALES — política de privacidad y términos de uso (multi-región)
+# ============================================================
+
+def _resolver_region(vendedor, id_clean):
+    """
+    Determina qué región legal mostrar: usa ?region=xxx si viene en la URL
+    y es válida; si no, cae al idioma de sesión/del cliente mapeado a su
+    región legal más probable (LANG_TO_REGION_DEFAULT).
+    """
+    region_param = request.args.get('region', '').strip()
+    if region_param in REGIONES:
+        return region_param
+    idioma = session.get('idioma', get_idioma_default(vendedor))
+    return LANG_TO_REGION_DEFAULT.get(idioma, 'es-latam')
+
 @app.route("/privacidad/<cliente_id>")
 def privacidad(cliente_id):
     id_clean = cliente_id.lower()
     vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no configurado.", 404
-    idioma = session.get('idioma', get_idioma_default(vendedor))
-    return render_template("privacidad.html", cliente=vendedor, cliente_id=id_clean, idioma_actual=idioma)
+    region_key = _resolver_region(vendedor, id_clean)
+    region = REGIONES[region_key]
+    idioma_texto = IDIOMAS[region['idioma']]
+    return render_template("privacidad.html", cliente=vendedor, cliente_id=id_clean,
+                           idioma_actual=region['idioma'], t=idioma_texto, r=region,
+                           region_actual=region_key, regiones=REGIONES)
 
 @app.route("/terminos/<cliente_id>")
 def terminos(cliente_id):
     id_clean = cliente_id.lower()
     vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no configurado.", 404
-    idioma = session.get('idioma', get_idioma_default(vendedor))
-    return render_template("terminos.html", cliente=vendedor, cliente_id=id_clean, idioma_actual=idioma)
+    region_key = _resolver_region(vendedor, id_clean)
+    region = REGIONES[region_key]
+    idioma_texto = IDIOMAS[region['idioma']]
+    return render_template("terminos.html", cliente=vendedor, cliente_id=id_clean,
+                           idioma_actual=region['idioma'], t=idioma_texto, r=region,
+                           region_actual=region_key, regiones=REGIONES)
 
 @app.route("/inicio/<cliente_id>")
 def inicio_formulario(cliente_id):
