@@ -2005,6 +2005,11 @@ def formulario(cliente_id):
         # silenciosamente el envío de correos con ese dato basura).
         if not email_valido(email_prospecto):
             email_prospecto = ""
+        # ✅ Registro de consentimiento — evidencia de que el lead aceptó
+        # la política de privacidad: fecha, IP, y qué región/marco legal se le
+        # mostró según el idioma del formulario. Esto es lo que un regulador (o
+        # un abogado en caso de reclamo) pide ver primero.
+        region_legal_lead = LANG_TO_REGION_DEFAULT.get(lang, 'es-latam')
         lead_data = {
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
             **d,
@@ -2014,7 +2019,10 @@ def formulario(cliente_id):
             "estado": "Nuevo",
             "email": email_prospecto,
             "seguimiento_enviado": False,
-            "etapa": "nuevo"
+            "etapa": "nuevo",
+            "consentimiento_fecha": datetime.now().isoformat(),
+            "consentimiento_ip": get_remote_address(),
+            "consentimiento_region": region_legal_lead
         }
         try:
             supabase.table("leads").insert(lead_data).execute()
@@ -2098,6 +2106,8 @@ def formulario_asesor(cliente_id, asesor_usuario):
         # silenciosamente el envío de correos con ese dato basura).
         if not email_valido(email_prospecto):
             email_prospecto = ""
+        # ✅ Mismo registro de consentimiento que en formulario().
+        region_legal_lead = LANG_TO_REGION_DEFAULT.get(lang, 'es-latam')
         lead_data = {
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
             **d,
@@ -2108,7 +2118,10 @@ def formulario_asesor(cliente_id, asesor_usuario):
             "email": email_prospecto,
             "seguimiento_enviado": False,
             "asesor_id": asesor["id"] if asesor else None,
-            "etapa": "nuevo"
+            "etapa": "nuevo",
+            "consentimiento_fecha": datetime.now().isoformat(),
+            "consentimiento_ip": get_remote_address(),
+            "consentimiento_region": region_legal_lead
         }
         try:
             supabase.table("leads").insert(lead_data).execute()
