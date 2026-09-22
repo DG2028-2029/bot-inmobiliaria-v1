@@ -99,6 +99,21 @@
             {{ r.nota_juridica }}
         </p>
 
+        <h2>{{ t.p_ejercicio_titulo }}</h2>
+        <p>{{ t.p_ejercicio_texto.format(plazo=r.plazo_respuesta) }}</p>
+
+        <h2>{{ t.p_seguridad_titulo }}</h2>
+        <p>{{ t.p_seguridad_texto.format(nombre=cliente.nombre) }}</p>
+
+        <h2>{{ t.p_minimizacion_titulo }}</h2>
+        <p>{{ t.p_minimizacion_texto }}</p>
+
+        <h2>{{ t.p_menores_titulo }}</h2>
+        <p>{{ t.p_menores_texto }}</p>
+
+        <h2>{{ t.p_brecha_titulo }}</h2>
+        <p>{{ t.p_brecha_texto }}</p>
+
         <h2>{{ t.p_cookies_titulo }}</h2>
         <p>{{ t.p_cookies_texto }}</p>
 
