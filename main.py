@@ -249,6 +249,23 @@ def get_idioma_default(vendedor):
     nombre = vendedor.get('idioma_default', 'español').lower()
     return IDIOMA_NOMBRE_A_CODIGO.get(nombre, 'es')
 
+# ✅ Zona horaria usada si el cliente no tiene país configurado o no está en PAISES_TIMEZONE
+TZ_POR_DEFECTO = "America/Guatemala"
+
+def ahora_local_cliente(cliente):
+    """
+    Hora actual en la zona horaria del cliente (según su país), sin tzinfo.
+    Las visitas se guardan con la hora que escribe el asesor (hora local),
+    así que hay que compararlas con la hora local del cliente y no con la
+    del servidor (que es UTC).
+    """
+    pais = (cliente or {}).get("pais", "")
+    tz_name = PAISES_TIMEZONE.get(pais, TZ_POR_DEFECTO)
+    try:
+        return datetime.now(ZoneInfo(tz_name)).replace(tzinfo=None)
+    except Exception:
+        return datetime.now(ZoneInfo(TZ_POR_DEFECTO)).replace(tzinfo=None)
+
 def verificar_password(password_ingresada, password_guardada):
     if not password_guardada or not password_ingresada:
         return False
@@ -904,7 +921,7 @@ def job_recordatorios_visitas():
     """
     print(f"🔄 [{datetime.now().strftime('%Y-%m-%d %H:%M')}] Revisando recordatorios de visitas...")
     try:
-        ahora = datetime.now()
+        _clientes_cache = {}
         resultado = supabase.table("visitas").select("*").eq("estado", "agendada").execute()
         visitas = resultado.data or []
         for visita in visitas:
@@ -912,6 +929,13 @@ def job_recordatorios_visitas():
                 fecha_visita = datetime.fromisoformat(visita["fecha_visita"].replace("Z", "+00:00")).replace(tzinfo=None)
             except:
                 continue
+            # ✅ Hora local del cliente dueño de la visita (no la del servidor, que es UTC)
+            if visita["vendedor"] not in _clientes_cache:
+                _clientes_cache[visita["vendedor"]] = get_cliente(visita["vendedor"])
+            cliente_visita = _clientes_cache[visita["vendedor"]]
+            if not cliente_visita:
+                continue
+            ahora = ahora_local_cliente(cliente_visita)
             delta = fecha_visita - ahora
             if delta.total_seconds() <= 0:
                 continue
@@ -1624,7 +1648,7 @@ def visitas_proximas(cliente_id):
         # estado="agendada", así que una visita vieja que nadie marcó como
         # completada/cancelada seguía apareciendo como "próxima" para siempre,
         # tapando la visita nueva si esta quedaba más lejos en el tiempo.
-        ahora_iso = datetime.now().isoformat()
+        ahora_iso = ahora_local_cliente(get_cliente(id_clean)).isoformat()
         resultado = supabase.table("visitas").select("*").eq("vendedor", id_clean).eq("estado", "agendada").gte("fecha_visita", ahora_iso).order("fecha_visita", desc=False).execute()
         return jsonify({"ok": True, "visitas": resultado.data or []})
     except Exception as e:
@@ -1789,7 +1813,7 @@ def portal_prospecto(token):
 
         # ✅ Se agrega .gte("fecha_visita", ahora) — mismo fix que en el badge
         # del panel: ignora visitas viejas que quedaron marcadas "agendada".
-        ahora_iso_portal = datetime.now().isoformat()
+        ahora_iso_portal = ahora_local_cliente(vendedor).isoformat()
         visita_r = supabase.table("visitas").select("*").eq("lead_id", lead["id"]).eq("estado", "agendada").gte("fecha_visita", ahora_iso_portal).order("fecha_visita", desc=False).limit(1).execute()
         visita = visita_r.data[0] if visita_r.data else None
         visita_propiedad = None
@@ -1814,7 +1838,7 @@ def portal_confirmar_visita(token):
             return jsonify({"ok": False, "error": "Enlace no válido"}), 404
         lead = lead_r.data[0]
         # ✅ Mismo fix: solo considerar visitas futuras al confirmar/reagendar.
-        ahora_iso_confirmar = datetime.now().isoformat()
+        ahora_iso_confirmar = ahora_local_cliente(get_cliente(lead["vendedor"])).isoformat()
         visita_r = supabase.table("visitas").select("*").eq("lead_id", lead["id"]).eq("estado", "agendada").gte("fecha_visita", ahora_iso_confirmar).order("fecha_visita", desc=False).limit(1).execute()
         if not visita_r.data:
             return jsonify({"ok": False, "error": "No hay visita agendada"}), 404
