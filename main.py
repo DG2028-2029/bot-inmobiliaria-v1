@@ -13,7 +13,7 @@ import threading
 import cloudinary
 import cloudinary.uploader
 from cryptography.fernet import Fernet
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
@@ -24,6 +24,9 @@ from reportlab.lib.units import inch
 import config
 from traducciones import DICCIONARIO
 from paises import PAISES_TIMEZONE
+from planes import (PLANES, ORDEN_PLANES, FUNCIONES, ESTADOS_PLAN, ESTADO_TEXTOS,
+                    DIAS_PRUEBA, calcular_plan_info, limite_alcanzado,
+                    mensaje_bloqueo, promo_instalacion)
 from reporte_semanal import generar_resumen_semanal
 from email_service import (enviar_email_cliente, notificar_vendedor_lead_nuevo,
                            notificar_vendedor_cliente_marcado, enviar_seguimiento_automatico,
@@ -82,6 +85,13 @@ def enviar_push_notification(cliente_id, asesor_id, titulo, cuerpo, url_destino=
     """
     if not _PUSH_CONFIGURADO:
         return  # notificaciones push no configuradas en este entorno — no hacer nada
+    # ✅ Plan: solo si incluye notificaciones push y la cuenta no está en solo lectura
+    try:
+        info_plan = get_plan_info(cliente_id)
+        if 'push' not in info_plan['funciones'] or info_plan['solo_lectura']:
+            return
+    except Exception:
+        pass
 
     def _enviar():
         try:
@@ -303,6 +313,86 @@ def get_asesores_de_cliente(cliente_id):
         return []
 
 # ============================================================
+# ✅ PLANES Y LÍMITES — la configuración vive en planes.py
+# ============================================================
+_PLAN_CACHE = {}
+_PLAN_CACHE_TTL = 60  # segundos: evita consultar la base en cada clic
+
+def get_plan_info(cliente_id):
+    """
+    Plan efectivo de un cliente (con caché de 60 s). Si algo falla, devuelve
+    el plan abierto: ante un error nunca se castiga al cliente.
+    """
+    ahora = time.time()
+    cached = _PLAN_CACHE.get(cliente_id)
+    if cached and ahora - cached[0] < _PLAN_CACHE_TTL:
+        return cached[1]
+    info = calcular_plan_info(get_cliente(cliente_id))
+    _PLAN_CACHE[cliente_id] = (ahora, info)
+    return info
+
+def invalidar_plan_cache(cliente_id=None):
+    if cliente_id is None:
+        _PLAN_CACHE.clear()
+    else:
+        _PLAN_CACHE.pop(cliente_id, None)
+
+def contar_asesores_activos(cliente_id):
+    try:
+        r = supabase.table("asesores").select("id", count="exact") \
+            .eq("cliente_id", cliente_id).eq("activo", True).execute()
+        return r.count or 0
+    except Exception:
+        return 0
+
+def contar_propiedades(cliente_id):
+    try:
+        r = supabase.table("propiedades").select("id", count="exact") \
+            .eq("vendedor", cliente_id).execute()
+        return r.count or 0
+    except Exception:
+        return 0
+
+def _respuesta_bloqueo(cliente_id, clave, como_json):
+    msg = mensaje_bloqueo(clave, session.get('idioma', 'es'))
+    if como_json:
+        return jsonify({"ok": False, "error": msg, "codigo": "plan"}), 403
+    return redirect(url_for('mi_plan', cliente_id=cliente_id, bloqueado=clave))
+
+def bloqueo_funcion(cliente_id, funcion, como_json=False):
+    """Devuelve None si el plan incluye la función; si no, la respuesta que la bloquea."""
+    if funcion in get_plan_info(cliente_id)['funciones']:
+        return None
+    return _respuesta_bloqueo(cliente_id, funcion, como_json)
+
+def bloqueo_limite(cliente_id, recurso, como_json=False):
+    """Devuelve None si todavía hay espacio; si no, la respuesta que bloquea."""
+    info = get_plan_info(cliente_id)
+    if info['limites'].get(recurso) is None:
+        return None
+    if recurso == 'asesores':
+        uso = contar_asesores_activos(cliente_id)
+    else:
+        uso = contar_propiedades(cliente_id)
+    if limite_alcanzado(info, recurso, uso):
+        return _respuesta_bloqueo(cliente_id, f'limite_{recurso}', como_json)
+    return None
+
+# Rutas que responden JSON (para devolver un error legible en vez de redirigir)
+ENDPOINTS_JSON = {'guardar_nota', 'actualizar_etapa', 'crear_visita', 'cancelar_visita',
+                  'push_subscribe', 'push_unsubscribe'}
+# Rutas que se permiten aunque el plan esté vencido (modo solo lectura)
+ENDPOINTS_SIEMPRE_PERMITIDOS = {'push_unsubscribe'}
+
+@app.context_processor
+def inyectar_plan():
+    """Deja `plan_info` disponible en todas las plantillas (para el rediseño)."""
+    cid = session.get('cliente')
+    if not cid:
+        return {}
+    return {'plan_info': get_plan_info(cid)}
+
+# ============================================================
 # ✅ MATCHING AUTOMÁTICO LEADS ↔ PROPIEDADES
 # ============================================================
 def buscar_leads_matching(propiedad, leads):
@@ -453,6 +543,9 @@ def matching_propiedad(cliente_id, prop_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean:
         return jsonify({"ok": False, "error": "No autorizado"}), 403
+    bloqueo = bloqueo_funcion(id_clean, 'matching', como_json=True)
+    if bloqueo:
+        return bloqueo
     try:
         prop_r = supabase.table("propiedades").select("*").eq("id", prop_id).eq("vendedor", id_clean).execute()
         if not prop_r.data:
@@ -854,6 +947,10 @@ def job_seguimiento_automatico():
             email = lead.get("email", "").strip()
             if not email:
                 continue
+            # ✅ Plan: solo si incluye seguimiento automático y no está en solo lectura
+            info_plan = get_plan_info(lead.get("vendedor"))
+            if 'seguimiento_auto' not in info_plan['funciones'] or info_plan['solo_lectura']:
+                continue
             enviado = enviar_seguimiento_automatico(
                 cliente_id=lead.get("vendedor"),
                 nombre=lead.get("nombre", ""),
@@ -882,6 +979,10 @@ def job_reporte_semanal():
         resultado = supabase.table("clientes").select("*").eq("activo", True).execute()
         clientes = resultado.data or []
         for cliente in clientes:
+            # ✅ Plan: solo si incluye reporte semanal y no está en solo lectura
+            info_plan = calcular_plan_info(cliente)
+            if 'reporte_semanal' not in info_plan['funciones'] or info_plan['solo_lectura']:
+                continue
             pais = cliente.get("pais", "")
             tz_name = PAISES_TIMEZONE.get(pais)
             if not tz_name:
@@ -936,6 +1037,10 @@ def job_recordatorios_visitas():
             if not cliente_visita:
                 continue
             ahora = ahora_local_cliente(cliente_visita)
+            # ✅ Plan: recordatorios solo si incluye visitas y no está en solo lectura
+            info_plan = calcular_plan_info(cliente_visita)
+            if 'visitas' not in info_plan['funciones'] or info_plan['solo_lectura']:
+                continue
             delta = fecha_visita - ahora
             if delta.total_seconds() <= 0:
                 continue
@@ -1042,6 +1147,14 @@ def verificar_sesion():
             for clave in ('cliente', 'login_time', 'asesor_id', 'asesor_nombre', 'asesor_rol'):
                 session.pop(clave, None)
             return redirect(url_for('login', cliente_id=cliente_id or 'roberto'))
+    # ✅ PLANES — si el plan está vencido/cancelado, la cuenta queda en solo lectura
+    # (se puede ver y exportar, pero no crear ni modificar). Los formularios
+    # públicos de leads NO se bloquean, para no perder prospectos.
+    if session.get('cliente') and request.method in ('POST', 'PUT', 'PATCH', 'DELETE') \
+            and request.endpoint not in ENDPOINTS_SIEMPRE_PERMITIDOS:
+        if get_plan_info(session.get('cliente'))['solo_lectura']:
+            return _respuesta_bloqueo(session.get('cliente'), 'solo_lectura',
+                                      request.endpoint in ENDPOINTS_JSON)
 
 @app.after_request
 def agregar_headers_seguridad(response):
@@ -1360,6 +1473,185 @@ def admin_borrar_cliente(cliente_id):
     return redirect(url_for('admin_panel'))
 
 # ============================================================
+# ✅ PLANES — página del cliente y administración de planes/pagos
+# ============================================================
+CONTACTO_VENTAS_WHATSAPP = os.environ.get("CONTACTO_VENTAS_WHATSAPP", "")
+CONTACTO_VENTAS_EMAIL = os.environ.get("CONTACTO_VENTAS_EMAIL", "")
+_TIPOS_PAGO = ('mensualidad', 'anual', 'instalacion', 'extra')
+_MONEDA_REGEX = re.compile(r'^[A-Z]{3}$')
+
+def _fecha_a_timestamp(fecha_txt):
+    """'2026-11-30' -> '2026-11-30T23:59:59+00:00' (fin de ese día, UTC), o None."""
+    fecha_txt = (fecha_txt or "").strip()
+    if not fecha_txt:
+        return None
+    try:
+        d = datetime.strptime(fecha_txt, "%Y-%m-%d")
+    except ValueError:
+        return None
+    return d.replace(hour=23, minute=59, second=59, tzinfo=timezone.utc).isoformat()
+
+@app.route("/mi-plan/<cliente_id>")
+def mi_plan(cliente_id):
+    id_clean = cliente_id.lower()
+    if session.get("cliente") != id_clean:
+        return redirect(url_for('login', cliente_id=id_clean))
+    # La facturación es solo del dueño de la inmobiliaria
+    if not es_dueno():
+        return redirect(url_for('historial', cliente_id=id_clean))
+    vendedor = get_cliente(id_clean)
+    if not vendedor:
+        return "Error 404", 404
+    info = calcular_plan_info(vendedor)
+    uso = {
+        'asesores': contar_asesores_activos(id_clean),
+        'propiedades': contar_propiedades(id_clean),
+    }
+    try:
+        pagos_r = supabase.table("pagos").select("*").eq("cliente_id", id_clean) \
+            .order("created_at", desc=True).limit(12).execute()
+        pagos = pagos_r.data or []
+    except Exception:
+        pagos = []
+    bloqueado = request.args.get('bloqueado', '').strip()[:40]
+    mensaje = mensaje_bloqueo(bloqueado, session.get('idioma', 'es')) if bloqueado else ''
+    return render_template("mi_plan.html",
+                           cliente=vendedor, cliente_id=id_clean, info=info, uso=uso,
+                           pagos=pagos, planes=PLANES, orden_planes=ORDEN_PLANES,
+                           funciones=FUNCIONES, mensaje_bloqueo=mensaje,
+                           contacto_wa=limpiar_telefono(CONTACTO_VENTAS_WHATSAPP),
+                           contacto_email=CONTACTO_VENTAS_EMAIL)
+
+@app.route("/admin/planes")
+def admin_planes():
+    if not session.get("admin"):
+        return redirect(url_for('admin_login'))
+    try:
+        res = supabase.table("clientes").select("*").order("created_at", desc=True).execute()
+        clientes = res.data or []
+    except Exception as e:
+        print(f"❌ Error cargando clientes en admin_planes: {e}")
+        clientes = []
+    filas = []
+    nombres = {}
+    for c in clientes:
+        nombres[c['id']] = c.get('nombre', c['id'])
+        filas.append({
+            'c': c,
+            'info': calcular_plan_info(c),
+            'uso_asesores': contar_asesores_activos(c['id']),
+            'uso_propiedades': contar_propiedades(c['id']),
+        })
+    try:
+        pagos_r = supabase.table("pagos").select("*").order("created_at", desc=True).limit(25).execute()
+        pagos = pagos_r.data or []
+    except Exception:
+        pagos = []
+    promo_activa, promo_fecha = promo_instalacion()
+    return render_template("admin_planes.html",
+                           filas=filas, planes=PLANES, orden_planes=['fundador'] + ORDEN_PLANES,
+                           estados=ESTADOS_PLAN, estado_textos=ESTADO_TEXTOS, funciones=FUNCIONES,
+                           pagos=pagos, nombres=nombres, tipos_pago=_TIPOS_PAGO,
+                           promo_activa=promo_activa, promo_fecha=promo_fecha,
+                           dias_prueba=DIAS_PRUEBA)
+
+@app.route("/admin/planes/guardar/<cliente_id>", methods=["POST"])
+def admin_plan_guardar(cliente_id):
+    if not session.get("admin"):
+        return redirect(url_for('admin_login'))
+    verificar_csrf()
+    try:
+        plan = request.form.get("plan", "fundador")
+        estado = request.form.get("plan_estado", "activo")
+        if plan not in PLANES or estado not in ESTADOS_PLAN:
+            return redirect(url_for('admin_planes'))
+        extras = {
+            "asesores": max(0, int(request.form.get("extra_asesores", 0) or 0)),
+            "propiedades": max(0, int(request.form.get("extra_propiedades", 0) or 0)),
+            "funciones": [f for f in request.form.getlist("funciones_extra") if f in FUNCIONES],
+        }
+        supabase.table("clientes").update({
+            "plan": plan,
+            "plan_estado": estado,
+            "plan_vence": _fecha_a_timestamp(request.form.get("plan_vence", "")),
+            "limites_extra": extras,
+        }).eq("id", cliente_id).execute()
+        invalidar_plan_cache(cliente_id)
+        log_accion('ADMIN_PLAN_GUARDADO', f"id={cliente_id} plan={plan} estado={estado}", get_remote_address())
+    except Exception as e:
+        print(f"❌ Error guardando plan: {e}")
+    return redirect(url_for('admin_planes'))
+
+@app.route("/admin/planes/prueba/<cliente_id>", methods=["POST"])
+def admin_plan_prueba(cliente_id):
+    """Inicia una prueba gratis (DIAS_PRUEBA días) para ese cliente."""
+    if not session.get("admin"):
+        return redirect(url_for('admin_login'))
+    verificar_csrf()
+    try:
+        plan = request.form.get("plan", "profesional")
+        if plan not in PLANES:
+            plan = "profesional"
+        hasta = (datetime.now(timezone.utc) + timedelta(days=DIAS_PRUEBA)).strftime("%Y-%m-%d")
+        supabase.table("clientes").update({
+            "plan": plan,
+            "plan_estado": "prueba",
+            "plan_vence": _fecha_a_timestamp(hasta),
+        }).eq("id", cliente_id).execute()
+        invalidar_plan_cache(cliente_id)
+        log_accion('ADMIN_PRUEBA_INICIADA', f"id={cliente_id} plan={plan}", get_remote_address())
+    except Exception as e:
+        print(f"❌ Error iniciando prueba: {e}")
+    return redirect(url_for('admin_planes'))
+
+@app.route("/admin/planes/pago/<cliente_id>", methods=["POST"])
+def admin_pago_registrar(cliente_id):
+    """Registra un pago hecho a mano (transferencia, PayPal, etc.) y, si se
+    marca, extiende el plan hasta la fecha indicada."""
+    if not session.get("admin"):
+        return redirect(url_for('admin_login'))
+    verificar_csrf()
+    try:
+        tipo = request.form.get("tipo", "mensualidad")
+        if tipo not in _TIPOS_PAGO:
+            return redirect(url_for('admin_planes'))
+        monto = max(0.0, float(request.form.get("monto", 0) or 0))
+        moneda = (request.form.get("moneda", "USD") or "USD").strip().upper()
+        if not _MONEDA_REGEX.match(moneda):
+            moneda = "USD"
+        desde_txt = (request.form.get("periodo_desde", "") or "").strip()
+        hasta_txt = (request.form.get("periodo_hasta", "") or "").strip()
+        pago = {
+            "cliente_id": cliente_id,
+            "tipo": tipo,
+            "monto": monto,
+            "moneda": moneda,
+            "metodo": request.form.get("metodo", "").strip()[:40],
+            "referencia": request.form.get("referencia", "").strip()[:80],
+            "periodo_desde": desde_txt or datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "periodo_hasta": hasta_txt or None,
+            "notas": request.form.get("notas", "").strip()[:300],
+        }
+        supabase.table("pagos").insert(pago).execute()
+
+        cambios = {}
+        plan_nuevo = request.form.get("plan", "").strip()
+        if plan_nuevo in PLANES:
+            cambios["plan"] = plan_nuevo
+        if request.form.get("extender") == "on" and tipo in ('mensualidad', 'anual') and hasta_txt:
+            venc = _fecha_a_timestamp(hasta_txt)
+            if venc:
+                cambios["plan_vence"] = venc
+                cambios["plan_estado"] = "activo"
+        if cambios:
+            supabase.table("clientes").update(cambios).eq("id", cliente_id).execute()
+        invalidar_plan_cache(cliente_id)
+        log_accion('ADMIN_PAGO_REGISTRADO', f"id={cliente_id} tipo={tipo} monto={monto} {moneda}", get_remote_address())
+    except Exception as e:
+        print(f"❌ Error registrando pago: {e}")
+    return redirect(url_for('admin_planes'))
+
+# ============================================================
 # GESTIÓN DE ASESORES
 # ============================================================
 
@@ -1377,6 +1669,14 @@ def crear_asesor(cliente_id):
     rol = request.form.get("rol", "asesor").strip()
     if rol not in ('asesor', 'gerente'):
         rol = 'asesor'
+    # ✅ Plan: rol de gerente y límite de asesores
+    if rol == 'gerente':
+        bloqueo = bloqueo_funcion(id_clean, 'rol_gerente')
+        if bloqueo:
+            return bloqueo
+    bloqueo = bloqueo_limite(id_clean, 'asesores')
+    if bloqueo:
+        return bloqueo
     # ✅ Validación server-side — el HTML ya marca estos campos "required",
     # pero eso no protege si alguien manda el POST directo sin pasar por el form.
     if not nombre or not usuario or not password_raw:
@@ -1562,6 +1862,10 @@ def crear_visita(cliente_id, lead_id):
     if session.get("cliente") != id_clean:
         return jsonify({"ok": False, "error": "No autorizado"}), 403
     verificar_csrf()
+    # ✅ Plan: la agenda de visitas es de planes Profesional en adelante
+    bloqueo = bloqueo_funcion(id_clean, 'visitas', como_json=True)
+    if bloqueo:
+        return bloqueo
     try:
         # ✅ Se verifica que el lead pertenezca a este cliente ANTES de crear
         # la visita — antes se podía agendar una visita sobre un lead ajeno
@@ -1726,6 +2030,9 @@ def push_subscribe(cliente_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean:
         return jsonify({"ok": False, "error": "No autorizado"}), 403
+    bloqueo = bloqueo_funcion(id_clean, 'push', como_json=True)
+    if bloqueo:
+        return bloqueo
     verificar_csrf()
     try:
         data = request.get_json(silent=True) or {}
@@ -1779,6 +2086,9 @@ def obtener_link_portal(cliente_id, lead_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean:
         return jsonify({"ok": False, "error": "No autorizado"}), 403
+    bloqueo = bloqueo_funcion(id_clean, 'portal', como_json=True)
+    if bloqueo:
+        return bloqueo
     try:
         lead_r = supabase.table("leads").select("*").eq("id", lead_id).eq("vendedor", id_clean).execute()
         if not lead_r.data:
@@ -1801,6 +2111,9 @@ def portal_prospecto(token):
         vendedor = get_cliente(lead["vendedor"])
         if not vendedor:
             return "Error 404", 404
+        # ✅ Plan: si el plan de la inmobiliaria ya no incluye el portal, el enlace deja de abrir
+        if 'portal' not in calcular_plan_info(vendedor)['funciones']:
+            return "Este enlace no está disponible por ahora.", 404
 
         lang_default = get_idioma_default(vendedor)
         lang_solicitado = request.args.get('lang', '').strip()
@@ -1837,6 +2150,8 @@ def portal_confirmar_visita(token):
         if not lead_r.data:
             return jsonify({"ok": False, "error": "Enlace no válido"}), 404
         lead = lead_r.data[0]
+        if 'portal' not in get_plan_info(lead["vendedor"])['funciones']:
+            return jsonify({"ok": False, "error": "Enlace no disponible"}), 404
         # ✅ Mismo fix: solo considerar visitas futuras al confirmar/reagendar.
         ahora_iso_confirmar = ahora_local_cliente(get_cliente(lead["vendedor"])).isoformat()
         visita_r = supabase.table("visitas").select("*").eq("lead_id", lead["id"]).eq("estado", "agendada").gte("fecha_visita", ahora_iso_confirmar).order("fecha_visita", desc=False).limit(1).execute()
@@ -2322,6 +2637,10 @@ def agregar_propiedad(cliente_id):
     verificar_csrf()
     vendedor = get_cliente(id_clean)
     if not vendedor: return "Error 404: Vendedor no encontrado.", 404
+    # ✅ Plan: límite de propiedades
+    bloqueo = bloqueo_limite(id_clean, 'propiedades')
+    if bloqueo:
+        return bloqueo
     try:
         imagenes_urls = []
         archivos = request.files.getlist("imagenes")[:7]
@@ -2474,6 +2793,9 @@ def stats(cliente_id):
     id_clean = cliente_id.lower()
     if session.get("cliente") != id_clean:
         return redirect(url_for('login', cliente_id=id_clean))
+    bloqueo = bloqueo_funcion(id_clean, 'estadisticas')
+    if bloqueo:
+        return bloqueo
     # ✅ Las estadísticas generales del negocio son solo para dueño/gerente —
     # antes cualquier asesor logueado podía verlas sin restricción.
     if not puede_ver_todo():
@@ -2841,6 +3163,10 @@ def chat_inmobiliario(cliente_id):
     vendedor = get_cliente(id_clean)
     if not vendedor:
         return jsonify({"response": "Lo siento, no pude conectarme."}), 200
+    # ✅ Plan: el chatbot es un extra fuera de los planes (cuesta por uso)
+    if 'chatbot' not in calcular_plan_info(vendedor)['funciones']:
+        wa_plan = vendedor.get('whatsapp', '')
+        return jsonify({"response": f"El asistente no está disponible por ahora. Escríbenos por WhatsApp: {wa_plan} 💬"}), 200
     try:
         data = request.get_json()
         if not data:
