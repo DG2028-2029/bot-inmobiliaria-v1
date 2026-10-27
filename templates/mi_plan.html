@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mi plan · {{ cliente.nombre }}</title>
+<style>
+  :root {
+    --c: {{ cliente.color_primario or '#667eea' }};
+    --bg: #f5f6fa; --card: #ffffff; --txt: #1f2430; --muted: #6b7280; --line: #e5e7eb;
+    --ok: #15803d; --okbg: #dcfce7; --warn: #92400e; --warnbg: #fef3c7;
+    --bad: #991b1b; --badbg: #fee2e2; --info: #1e40af; --infobg: #dbeafe;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#12141a; --card:#1b1f29; --txt:#e8eaf0; --muted:#9aa3b2; --line:#2c3240;
+            --okbg:#14351f; --ok:#86efac; --warnbg:#3b2a0d; --warn:#fcd34d;
+            --badbg:#3b1414; --bad:#fca5a5; --infobg:#14264a; --info:#93c5fd; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt);
+         font-family: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; line-height:1.5; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 24px 16px 64px; }
+  .top { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+  h1 { font-size: 1.5rem; margin:0; }
+  h2 { font-size: 1.05rem; margin: 0 0 14px; }
+  a.back { color: var(--c); text-decoration:none; font-weight:600; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:16px; }
+  .banner { border-radius:12px; padding:14px 16px; margin-bottom:16px; font-size:.95rem; }
+  .b-warn { background:var(--warnbg); color:var(--warn); }
+  .b-bad  { background:var(--badbg);  color:var(--bad); }
+  .b-info { background:var(--infobg); color:var(--info); }
+  .plan-row { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  .plan-name { font-size:1.6rem; font-weight:700; }
+  .badge { display:inline-block; padding:3px 12px; border-radius:999px; font-size:.8rem; font-weight:700; }
+  .s-activo, .s-prueba { background:var(--okbg); color:var(--ok); }
+  .s-prueba { background:var(--infobg); color:var(--info); }
+  .s-gracia { background:var(--warnbg); color:var(--warn); }
+  .s-vencido, .s-cancelado { background:var(--badbg); color:var(--bad); }
+  .muted { color:var(--muted); font-size:.9rem; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
+  .bar { height:10px; background:var(--line); border-radius:999px; overflow:hidden; margin:8px 0 4px; }
+  .bar > span { display:block; height:100%; background:var(--c); border-radius:999px; }
+  .bar.full > span { background:#dc2626; }
+  table { width:100%; border-collapse:collapse; font-size:.92rem; }
+  th, td { padding:9px 8px; border-bottom:1px solid var(--line); text-align:left; }
+  th { color:var(--muted); font-weight:600; font-size:.8rem; text-transform:uppercase; letter-spacing:.03em; }
+  td.c, th.c { text-align:center; }
+  .yes { color:var(--ok); font-weight:700; } .no { color:var(--muted); }
+  tr.cur td, th.cur { background: color-mix(in srgb, var(--c) 10%, transparent); }
+  .btn { display:inline-block; padding:10px 18px; border-radius:10px; background:var(--c); color:#fff;
+         text-decoration:none; font-weight:600; margin: 4px 8px 4px 0; }
+  .btn.alt { background:transparent; color:var(--c); border:1px solid var(--c); }
+  .scroll { overflow-x:auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div>
+      <a class="back" href="{{ url_for('historial', cliente_id=cliente_id) }}">← Volver al panel</a>
+      <h1>Mi plan</h1>
+    </div>
+    <div class="muted">{{ cliente.nombre }}</div>
+  </div>
+
+  {% if mensaje_bloqueo %}
+  <div class="banner b-warn"><strong>{{ mensaje_bloqueo }}</strong><br>
+    Si lo necesitas, escríbenos y mejoramos tu plan.</div>
+  {% endif %}
+
+  {% if info.estado_efectivo == 'gracia' %}
+  <div class="banner b-warn"><strong>Tu pago está pendiente.</strong>
+    Todo sigue funcionando por unos días; regulariza tu pago para evitar que tu cuenta pase a modo solo lectura.</div>
+  {% elif info.solo_lectura %}
+  <div class="banner b-bad"><strong>Tu plan está vencido.</strong>
+    Tu cuenta está en modo solo lectura: puedes ver y exportar tus datos, pero no crear ni modificar. Tus datos están a salvo.</div>
+  {% elif info.estado == 'prueba' and info.vence_texto %}
+  <div class="banner b-info"><strong>Estás en tu prueba gratis.</strong>
+    Termina el {{ info.vence_texto }}{% if info.dias_restantes is not none and info.dias_restantes >= 0 %} (te quedan {{ info.dias_restantes }} días){% endif %}.</div>
+  {% endif %}
+
+  <div class="card">
+    <div class="plan-row">
+      <div>
+        <div class="muted">Plan actual</div>
+        <div class="plan-name">{{ info.plan_nombre }}</div>
+      </div>
+      <div style="text-align:right">
+        <span class="badge s-{{ info.estado_efectivo }}">{{ info.estado_texto }}</span>
+        <div class="muted" style="margin-top:6px">
+          {% if info.vence_texto %}
+            {% if info.estado == 'prueba' %}Termina{% else %}Vence{% endif %}: {{ info.vence_texto }}
+          {% else %}
+            Sin fecha de vencimiento
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Asesores activos</h2>
+      {% set lim = info.limites.asesores %}
+      <strong>{{ uso.asesores }}</strong> de {{ lim if lim is not none else 'ilimitados' }}
+      {% if lim is not none %}
+        {% set pct = ((uso.asesores / lim) * 100) if lim > 0 else 100 %}
+        <div class="bar {{ 'full' if uso.asesores >= lim else '' }}"><span style="width: {{ [pct, 100]|min }}%"></span></div>
+      {% endif %}
+    </div>
+    <div class="card">
+      <h2>Propiedades</h2>
+      {% set limp = info.limites.propiedades %}
+      <strong>{{ uso.propiedades }}</strong> de {{ limp if limp is not none else 'ilimitadas' }}
+      {% if limp is not none %}
+        {% set pctp = ((uso.propiedades / limp) * 100) if limp > 0 else 100 %}
+        <div class="bar {{ 'full' if uso.propiedades >= limp else '' }}"><span style="width: {{ [pctp, 100]|min }}%"></span></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Qué incluye cada plan</h2>
+    <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Función</th>
+          {% for p in orden_planes %}
+            <th class="c {{ 'cur' if info.plan == p else '' }}">{{ planes[p].nombre }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Asesores incluidos</td>
+          {% for p in orden_planes %}
+            <td class="c {{ 'cur' if info.plan == p else '' }}">{{ planes[p].limites.asesores if planes[p].limites.asesores is not none else 'Ilimitados' }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td>Propiedades</td>
+          {% for p in orden_planes %}
+            <td class="c {{ 'cur' if info.plan == p else '' }}">{{ planes[p].limites.propiedades if planes[p].limites.propiedades is not none else 'Ilimitadas' }}</td>
+          {% endfor %}
+        </tr>
+        {% for k, nombre in funciones.items() %}
+          {% if k != 'chatbot' %}
+          <tr>
+            <td>{{ nombre }}</td>
+            {% for p in orden_planes %}
+              <td class="c {{ 'cur' if info.plan == p else '' }}">
+                {% if k in planes[p].funciones %}<span class="yes">✓</span>{% else %}<span class="no">—</span>{% endif %}
+              </td>
+            {% endfor %}
+          </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% if info.plan == 'fundador' %}
+    <p class="muted" style="margin-top:12px">Tienes el plan <strong>Fundador</strong>: incluye todas las funciones, sin límites.</p>
+    {% endif %}
+  </div>
+
+  {% if contacto_wa or contacto_email %}
+  <div class="card">
+    <h2>¿Quieres mejorar tu plan?</h2>
+    <p class="muted">Escríbenos y lo activamos.</p>
+    {% if contacto_wa %}<a class="btn" href="https://wa.me/{{ contacto_wa }}?text={{ ('Hola, quiero mejorar el plan de ' ~ cliente.nombre)|urlencode }}" target="_blank" rel="noopener">WhatsApp</a>{% endif %}
+    {% if contacto_email %}<a class="btn alt" href="mailto:{{ contacto_email }}?subject={{ ('Mejorar plan - ' ~ cliente.nombre)|urlencode }}">Correo</a>{% endif %}
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h2>Historial de pagos</h2>
+    {% if pagos %}
+    <div class="scroll">
+    <table>
+      <thead><tr><th>Fecha</th><th>Concepto</th><th>Monto</th><th>Cubre hasta</th></tr></thead>
+      <tbody>
+      {% for p in pagos %}
+        <tr>
+          <td>{{ (p.created_at or '')[:10] }}</td>
+          <td>{{ {'mensualidad':'Mensualidad','anual':'Pago anual','instalacion':'Instalación','extra':'Extra'}.get(p.tipo, p.tipo) }}</td>
+          <td>{{ '%.2f'|format(p.monto|float) }} {{ p.moneda }}</td>
+          <td>{{ p.periodo_hasta or '—' }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="muted">Todavía no hay pagos registrados.</p>
+    {% endif %}
+  </div>
+
+</div>
+</body>
+</html>
