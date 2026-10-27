@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planes y cobros · Admin</title>
+<style>
+  :root {
+    --c:#4f46e5; --bg:#f5f6fa; --card:#fff; --txt:#1f2430; --muted:#6b7280; --line:#e5e7eb;
+    --ok:#15803d; --okbg:#dcfce7; --warn:#92400e; --warnbg:#fef3c7;
+    --bad:#991b1b; --badbg:#fee2e2; --info:#1e40af; --infobg:#dbeafe;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#12141a; --card:#1b1f29; --txt:#e8eaf0; --muted:#9aa3b2; --line:#2c3240;
+            --okbg:#14351f; --ok:#86efac; --warnbg:#3b2a0d; --warn:#fcd34d;
+            --badbg:#3b1414; --bad:#fca5a5; --infobg:#14264a; --info:#93c5fd; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt);
+         font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; line-height:1.5; }
+  .wrap { max-width:1100px; margin:0 auto; padding:24px 16px 64px; }
+  h1 { font-size:1.5rem; margin:0 0 4px; } h2 { font-size:1.05rem; margin:0 0 12px; }
+  h3 { font-size:.95rem; margin:0 0 8px; }
+  a { color:var(--c); font-weight:600; text-decoration:none; }
+  .muted { color:var(--muted); font-size:.9rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:16px; }
+  .banner { border-radius:12px; padding:12px 16px; margin-bottom:16px; font-size:.92rem; }
+  .b-ok { background:var(--okbg); color:var(--ok); } .b-warn { background:var(--warnbg); color:var(--warn); }
+  table { width:100%; border-collapse:collapse; font-size:.9rem; }
+  th,td { padding:9px 8px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; }
+  th { color:var(--muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.03em; }
+  .scroll { overflow-x:auto; }
+  .badge { display:inline-block; padding:2px 10px; border-radius:999px; font-size:.78rem; font-weight:700; }
+  .s-activo { background:var(--okbg); color:var(--ok); } .s-prueba { background:var(--infobg); color:var(--info); }
+  .s-gracia { background:var(--warnbg); color:var(--warn); }
+  .s-vencido,.s-cancelado { background:var(--badbg); color:var(--bad); }
+  details { border-top:1px solid var(--line); padding:10px 0; }
+  summary { cursor:pointer; font-weight:600; color:var(--c); }
+  .forms { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; margin-top:14px; }
+  .box { border:1px solid var(--line); border-radius:12px; padding:14px; }
+  label { display:block; font-size:.8rem; color:var(--muted); margin:8px 0 3px; }
+  input,select { width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px;
+                 background:var(--bg); color:var(--txt); font:inherit; }
+  input[type=checkbox] { width:auto; margin-right:6px; }
+  .chk { display:flex; align-items:center; font-size:.88rem; color:var(--txt); margin:4px 0; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  button { margin-top:12px; padding:9px 16px; border:0; border-radius:10px; background:var(--c);
+           color:#fff; font-weight:700; cursor:pointer; font:inherit; font-weight:700; }
+  button.alt { background:transparent; color:var(--c); border:1px solid var(--c); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p style="margin:0 0 8px"><a href="{{ url_for('admin_panel') }}">← Volver al panel de admin</a></p>
+  <h1>Planes y cobros</h1>
+  <p class="muted">Cambia el plan de cada inmobiliaria, inicia pruebas y registra pagos hechos a mano.</p>
+
+  {% if promo_activa %}
+    <div class="banner b-ok"><strong>Instalación gratis</strong> (promoción activa hasta {{ promo_fecha }}). Se controla con la variable <code>PROMO_INSTALACION_HASTA</code> en Render.</div>
+  {% else %}
+    <div class="banner b-warn"><strong>Instalación: se cobra.</strong> No hay promoción activa. Para regalarla por un tiempo, crea en Render la variable <code>PROMO_INSTALACION_HASTA</code> con una fecha (ej. 2027-03-31).</div>
+  {% endif %}
+
+  <div class="card">
+    <h2>Inmobiliarias</h2>
+    {% for f in filas %}
+    {% set c = f.c %}{% set info = f.info %}
+    <details>
+      <summary>
+        {{ c.nombre or c.id }} <span class="muted">({{ c.id }})</span>
+        &nbsp;<span class="badge s-{{ info.estado_efectivo }}">{{ estado_textos[info.estado_efectivo] }}</span>
+        &nbsp;<span class="muted">Plan {{ info.plan_nombre }}{% if info.vence_texto %} · hasta {{ info.vence_texto }}{% endif %}
+          · Asesores {{ f.uso_asesores }}/{{ info.limites.asesores if info.limites.asesores is not none else '∞' }}
+          · Propiedades {{ f.uso_propiedades }}/{{ info.limites.propiedades if info.limites.propiedades is not none else '∞' }}</span>
+      </summary>
+
+      <div class="forms">
+        <!-- 1) Cambiar plan -->
+        <form class="box" method="post" action="{{ url_for('admin_plan_guardar', cliente_id=c.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <h3>Plan y límites</h3>
+          <div class="row2">
+            <div><label>Plan</label>
+              <select name="plan">
+                {% for p in orden_planes %}<option value="{{ p }}" {{ 'selected' if info.plan == p else '' }}>{{ planes[p].nombre }}</option>{% endfor %}
+              </select></div>
+            <div><label>Estado</label>
+              <select name="plan_estado">
+                {% for e in estados %}<option value="{{ e }}" {{ 'selected' if info.estado == e else '' }}>{{ estado_textos[e] }}</option>{% endfor %}
+              </select></div>
+          </div>
+          <label>Vence (vacío = sin vencimiento)</label>
+          <input type="date" name="plan_vence" value="{{ info.vence_texto }}">
+          <div class="row2">
+            <div><label>Asesores extra</label><input type="number" min="0" name="extra_asesores" value="{{ info.extras.asesores }}"></div>
+            <div><label>Propiedades extra</label><input type="number" min="0" name="extra_propiedades" value="{{ info.extras.propiedades }}"></div>
+          </div>
+          <label>Funciones extra para este cliente</label>
+          {% for k, nombre in funciones.items() %}
+            {% if k not in ['leads','score_leads','respuestas','exportar','inventario'] %}
+              <label class="chk"><input type="checkbox" name="funciones_extra" value="{{ k }}" {{ 'checked' if k in info.extras.funciones else '' }}>{{ nombre }}</label>
+            {% endif %}
+          {% endfor %}
+          <button type="submit">Guardar</button>
+        </form>
+
+        <!-- 2) Prueba gratis -->
+        <form class="box" method="post" action="{{ url_for('admin_plan_prueba', cliente_id=c.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <h3>Prueba gratis</h3>
+          <p class="muted">Abre todas las funciones por {{ dias_prueba }} días con los límites del plan elegido. Al terminar, la cuenta pasa a solo lectura hasta que se registre un pago.</p>
+          <label>Plan que va a probar</label>
+          <select name="plan">
+            {% for p in ['esencial','profesional','agencia'] %}<option value="{{ p }}" {{ 'selected' if p == 'profesional' else '' }}>{{ planes[p].nombre }}</option>{% endfor %}
+          </select>
+          <button type="submit" class="alt">Iniciar prueba de {{ dias_prueba }} días</button>
+        </form>
+
+        <!-- 3) Registrar pago -->
+        <form class="box" method="post" action="{{ url_for('admin_pago_registrar', cliente_id=c.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <h3>Registrar pago</h3>
+          <div class="row2">
+            <div><label>Concepto</label>
+              <select name="tipo">
+                {% for t in tipos_pago %}<option value="{{ t }}">{{ {'mensualidad':'Mensualidad','anual':'Pago anual','instalacion':'Instalación','extra':'Extra'}[t] }}</option>{% endfor %}
+              </select></div>
+            <div><label>Plan que paga (opcional)</label>
+              <select name="plan">
+                <option value="">No cambiar</option>
+                {% for p in orden_planes %}<option value="{{ p }}">{{ planes[p].nombre }}</option>{% endfor %}
+              </select></div>
+          </div>
+          <div class="row2">
+            <div><label>Monto</label><input type="number" step="0.01" min="0" name="monto" value="0"></div>
+            <div><label>Moneda</label><input name="moneda" value="USD" maxlength="3"></div>
+          </div>
+          <div class="row2">
+            <div><label>Método</label><input name="metodo" placeholder="transferencia, PayPal..." maxlength="40"></div>
+            <div><label>Referencia</label><input name="referencia" maxlength="80"></div>
+          </div>
+          <div class="row2">
+            <div><label>Desde</label><input type="date" name="periodo_desde"></div>
+            <div><label>Cubre hasta</label><input type="date" name="periodo_hasta"></div>
+          </div>
+          <label>Notas</label><input name="notas" maxlength="300">
+          <label class="chk"><input type="checkbox" name="extender" checked>Extender el plan hasta la fecha "cubre hasta"</label>
+          <button type="submit">Registrar pago</button>
+        </form>
+      </div>
+    </details>
+    {% else %}
+      <p class="muted">No hay inmobiliarias todavía.</p>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <h2>Últimos pagos registrados</h2>
+    {% if pagos %}
+    <div class="scroll">
+    <table>
+      <thead><tr><th>Fecha</th><th>Inmobiliaria</th><th>Concepto</th><th>Monto</th><th>Método</th><th>Referencia</th><th>Cubre hasta</th></tr></thead>
+      <tbody>
+      {% for p in pagos %}
+        <tr>
+          <td>{{ (p.created_at or '')[:10] }}</td>
+          <td>{{ nombres.get(p.cliente_id, p.cliente_id) }}</td>
+          <td>{{ {'mensualidad':'Mensualidad','anual':'Pago anual','instalacion':'Instalación','extra':'Extra'}.get(p.tipo, p.tipo) }}</td>
+          <td>{{ '%.2f'|format(p.monto|float) }} {{ p.moneda }}</td>
+          <td>{{ p.metodo or '—' }}</td>
+          <td>{{ p.referencia or '—' }}</td>
+          <td>{{ p.periodo_hasta or '—' }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}<p class="muted">Todavía no hay pagos registrados.</p>{% endif %}
+  </div>
+</div>
+</body>
+</html>
