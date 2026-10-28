@@ -176,6 +176,7 @@
 <div class="topbar">
     <h1>🔐 Panel de Administración — PropTech</h1>
     <div class="topbar-buttons">
+        <a href="{{ url_for('admin_planes') }}" class="btn-topbar">💳 Planes y cobros</a>
         <a href="{{ url_for('admin_logout') }}" class="btn-logout-top">🔒 Cerrar Sesión</a>
     </div>
 </div>
@@ -236,6 +237,7 @@
                 <div class="cliente-row"><span>🌐 Idioma:</span><strong>{{ c.idioma_default or 'español' }}</strong></div>
                 <div class="cliente-row"><span>🌍 País:</span><strong>{{ c.pais or '—' }}</strong></div>
                 <div class="cliente-row"><span>📊 Leads:</span><strong>{{ c.total_leads }}</strong></div>
+                <div class="cliente-row"><span>💳 Plan:</span><strong>{{ (c.plan or 'fundador') | capitalize }}</strong></div>
                 <div class="cliente-row">
                     <span>🎨 Color:</span>
                     <strong style="display:flex;align-items:center;gap:6px;">
