@@ -3,83 +3,214 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Planes y cobros · Admin</title>
+<title>Planes y cobros · PropTech</title>
 <style>
   :root {
-    --c:#4f46e5; --bg:#f5f6fa; --card:#fff; --txt:#1f2430; --muted:#6b7280; --line:#e5e7eb;
-    --ok:#15803d; --okbg:#dcfce7; --warn:#92400e; --warnbg:#fef3c7;
-    --bad:#991b1b; --badbg:#fee2e2; --info:#1e40af; --infobg:#dbeafe;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#12141a; --card:#1b1f29; --txt:#e8eaf0; --muted:#9aa3b2; --line:#2c3240;
-            --okbg:#14351f; --ok:#86efac; --warnbg:#3b2a0d; --warn:#fcd34d;
-            --badbg:#3b1414; --bad:#fca5a5; --infobg:#14264a; --info:#93c5fd; }
+    --brand:#667eea; --brand-d:#5468d4; --navy:#2c3e50; --navy-d:#1a252f;
+    --bg:#f0f2f5; --card:#ffffff; --txt:#1f2937; --muted:#6b7280; --line:#e5e7eb;
+    --green:#27ae60; --blue:#3498db; --purple:#8e44ad; --red:#e74c3c; --amber:#f59e0b;
   }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--txt);
-         font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; line-height:1.5; }
-  .wrap { max-width:1100px; margin:0 auto; padding:24px 16px 64px; }
-  h1 { font-size:1.5rem; margin:0 0 4px; } h2 { font-size:1.05rem; margin:0 0 12px; }
-  h3 { font-size:.95rem; margin:0 0 8px; }
-  a { color:var(--c); font-weight:600; text-decoration:none; }
-  .muted { color:var(--muted); font-size:.9rem; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:16px; }
-  .banner { border-radius:12px; padding:12px 16px; margin-bottom:16px; font-size:.92rem; }
-  .b-ok { background:var(--okbg); color:var(--ok); } .b-warn { background:var(--warnbg); color:var(--warn); }
-  table { width:100%; border-collapse:collapse; font-size:.9rem; }
-  th,td { padding:9px 8px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; }
-  th { color:var(--muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.03em; }
+         font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; line-height:1.45; }
+  a { text-decoration:none; }
+
+  /* Encabezado */
+  .hdr { background:linear-gradient(135deg,var(--navy),var(--navy-d)); color:#fff; }
+  .hdr-in { max-width:1100px; margin:0 auto; padding:18px 16px; display:flex; align-items:center;
+            justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .ttl { font-size:1.15rem; font-weight:700; }
+  .btn { display:inline-block; border:0; border-radius:8px; padding:9px 16px; font:inherit; font-size:.88rem;
+         font-weight:700; cursor:pointer; color:#fff; background:var(--brand); }
+  .btn:hover { filter:brightness(.95); }
+  .btn.red { background:var(--red); } .btn.green { background:var(--green); }
+  .btn.blue { background:var(--blue); } .btn.purple { background:var(--purple); }
+  .btn.ghost { background:rgba(255,255,255,.14); }
+  .btn.line { background:#fff; color:var(--txt); border:1px solid var(--line); }
+  .hdr .btn { margin-left:6px; }
+
+  .wrap { max-width:1100px; margin:0 auto; padding:22px 16px 70px; }
+
+  /* Aviso de confirmación */
+  .toast { background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; border-radius:12px;
+           padding:12px 16px; margin-bottom:16px; font-weight:600; }
+  .toast.err { background:#fef2f2; color:#991b1b; border-color:#fecaca; }
+
+  /* Resumen */
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:18px; }
+  .kpi { background:var(--card); border-radius:14px; padding:18px 12px; text-align:center;
+         box-shadow:0 1px 3px rgba(0,0,0,.06); }
+  .kpi .n { font-size:1.9rem; font-weight:800; color:var(--brand); line-height:1.1; }
+  .kpi .l { font-size:.78rem; color:var(--muted); margin-top:4px; }
+  .kpi.warn .n { color:var(--red); } .kpi.money .n { font-size:1.25rem; color:var(--green); padding:7px 0; }
+
+  .note { border-radius:12px; padding:12px 16px; margin-bottom:18px; font-size:.9rem; }
+  .note.ok { background:#ecfdf5; color:#065f46; } .note.warn { background:#fffbeb; color:#92400e; }
+  code { background:rgba(0,0,0,.07); padding:1px 6px; border-radius:5px; font-size:.85em; }
+
+  .panel { background:var(--card); border-radius:14px; padding:18px; margin-bottom:18px;
+           box-shadow:0 1px 3px rgba(0,0,0,.06); }
+  .panel h2 { margin:0 0 12px; font-size:1rem; }
+  .alert { display:flex; gap:10px; align-items:center; padding:9px 12px; border-radius:10px; margin-bottom:8px; font-size:.9rem; }
+  .alert.bad { background:#fef2f2; color:#991b1b; } .alert.warn { background:#fffbeb; color:#92400e; }
+  .alert.info { background:#eff6ff; color:#1e40af; }
+  .alert b { white-space:nowrap; }
+
+  .toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin:6px 0 14px; }
+  .toolbar h2 { margin:0; font-size:1.05rem; }
+  .search { padding:9px 14px; border:1px solid var(--line); border-radius:999px; min-width:240px; font:inherit; font-size:.9rem; background:#fff; }
+
+  /* Tarjetas de clientes */
+  .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px; margin-bottom:22px; }
+  .cli { background:var(--card); border-radius:16px; box-shadow:0 1px 4px rgba(0,0,0,.08); overflow:hidden; }
+  .cli-top { display:flex; align-items:center; gap:12px; padding:16px 16px 8px; }
+  .avatar { width:42px; height:42px; border-radius:10px; background:#eef0ff; border:1px solid #d9deff;
+            display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex:none; }
+  .cli-name { font-weight:700; } .cli-id { font-size:.74rem; color:var(--muted); font-family:ui-monospace,monospace; }
+  .grow { flex:1; min-width:0; }
+  .badge { display:inline-block; padding:3px 11px; border-radius:999px; font-size:.72rem; font-weight:700; white-space:nowrap; }
+  .s-activo { background:#dcfce7; color:#166534; } .s-prueba { background:#dbeafe; color:#1e40af; }
+  .s-gracia { background:#fef3c7; color:#92400e; } .s-vencido, .s-cancelado { background:#fee2e2; color:#991b1b; }
+  .cli-body { padding:6px 16px 14px; }
+  .plan-line { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:6px 0 12px; flex-wrap:wrap; }
+  .pill { padding:4px 14px; border-radius:8px; font-weight:800; font-size:.86rem; }
+  .p-fundador { background:#fef3c7; color:#92400e; } .p-esencial { background:#e0f2fe; color:#075985; }
+  .p-profesional { background:#ede9fe; color:#5b21b6; } .p-agencia { background:#1f2937; color:#fff; }
+  .venc { font-size:.8rem; color:var(--muted); }
+  .use { margin:8px 0; font-size:.8rem; }
+  .use .row { display:flex; justify-content:space-between; color:var(--muted); }
+  .use .row b { color:var(--txt); }
+  .bar { height:7px; background:#edf0f5; border-radius:999px; overflow:hidden; margin-top:4px; }
+  .bar span { display:block; height:100%; background:var(--brand); border-radius:999px; }
+  .bar.full span { background:var(--red); }
+  .acts { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:0 16px 16px; }
+  .acts .btn { padding:9px 6px; font-size:.8rem; text-align:center; }
+
+  /* Tabla */
   .scroll { overflow-x:auto; }
-  .badge { display:inline-block; padding:2px 10px; border-radius:999px; font-size:.78rem; font-weight:700; }
-  .s-activo { background:var(--okbg); color:var(--ok); } .s-prueba { background:var(--infobg); color:var(--info); }
-  .s-gracia { background:var(--warnbg); color:var(--warn); }
-  .s-vencido,.s-cancelado { background:var(--badbg); color:var(--bad); }
-  details { border-top:1px solid var(--line); padding:10px 0; }
-  summary { cursor:pointer; font-weight:600; color:var(--c); }
-  .forms { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; margin-top:14px; }
-  .box { border:1px solid var(--line); border-radius:12px; padding:14px; }
-  label { display:block; font-size:.8rem; color:var(--muted); margin:8px 0 3px; }
-  input,select { width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px;
-                 background:var(--bg); color:var(--txt); font:inherit; }
-  input[type=checkbox] { width:auto; margin-right:6px; }
-  .chk { display:flex; align-items:center; font-size:.88rem; color:var(--txt); margin:4px 0; }
-  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  button { margin-top:12px; padding:9px 16px; border:0; border-radius:10px; background:var(--c);
-           color:#fff; font-weight:700; cursor:pointer; font:inherit; font-weight:700; }
-  button.alt { background:transparent; color:var(--c); border:1px solid var(--c); }
+  table { width:100%; border-collapse:collapse; font-size:.88rem; }
+  th, td { padding:10px 8px; border-bottom:1px solid var(--line); text-align:left; }
+  th { color:var(--muted); font-size:.74rem; text-transform:uppercase; letter-spacing:.04em; }
+  .muted { color:var(--muted); font-size:.88rem; }
+
+  /* Ventanas (formularios) */
+  dialog { border:0; border-radius:16px; padding:0; width:min(560px,94vw); max-height:92vh;
+           box-shadow:0 20px 60px rgba(0,0,0,.35); color:var(--txt); }
+  dialog::backdrop { background:rgba(15,23,42,.55); }
+  .dlg-h { padding:16px 20px; background:linear-gradient(135deg,var(--navy),var(--navy-d)); color:#fff; font-weight:700; }
+  .dlg-h small { display:block; font-weight:400; opacity:.75; }
+  .dlg-b { padding:8px 20px 20px; overflow-y:auto; max-height:70vh; }
+  label { display:block; font-size:.78rem; color:var(--muted); margin:12px 0 4px; font-weight:600; }
+  input, select { width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:10px; font:inherit; background:#fff; color:var(--txt); }
+  input:focus, select:focus { outline:2px solid var(--brand); outline-offset:0; border-color:var(--brand); }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .chk { display:flex; align-items:center; gap:8px; font-size:.88rem; color:var(--txt); margin:6px 0; font-weight:500; }
+  .chk input { width:auto; }
+  .hint { font-size:.8rem; color:var(--muted); margin:8px 0 0; }
+  .dlg-f { display:flex; gap:10px; justify-content:flex-end; margin-top:18px; }
+  @media (max-width:520px) { .two { grid-template-columns:1fr; } .acts { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <p style="margin:0 0 8px"><a href="{{ url_for('admin_panel') }}">← Volver al panel de admin</a></p>
-  <h1>Planes y cobros</h1>
-  <p class="muted">Cambia el plan de cada inmobiliaria, inicia pruebas y registra pagos hechos a mano.</p>
 
-  {% if promo_activa %}
-    <div class="banner b-ok"><strong>Instalación gratis</strong> (promoción activa hasta {{ promo_fecha }}). Se controla con la variable <code>PROMO_INSTALACION_HASTA</code> en Render.</div>
-  {% else %}
-    <div class="banner b-warn"><strong>Instalación: se cobra.</strong> No hay promoción activa. Para regalarla por un tiempo, crea en Render la variable <code>PROMO_INSTALACION_HASTA</code> con una fecha (ej. 2027-03-31).</div>
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="ttl">💳 Planes y cobros — PropTech</div>
+    <div>
+      <a class="btn ghost" href="{{ url_for('admin_panel') }}">← Panel</a>
+      <a class="btn red" href="{{ url_for('admin_logout') }}">🔓 Cerrar sesión</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  {% if aviso %}
+    <div class="toast {{ 'err' if aviso.startswith('❌') else '' }}" id="toast">{{ aviso }}</div>
   {% endif %}
 
-  <div class="card">
-    <h2>Inmobiliarias</h2>
-    {% for f in filas %}
-    {% set c = f.c %}{% set info = f.info %}
-    <details>
-      <summary>
-        {{ c.nombre or c.id }} <span class="muted">({{ c.id }})</span>
-        &nbsp;<span class="badge s-{{ info.estado_efectivo }}">{{ estado_textos[info.estado_efectivo] }}</span>
-        &nbsp;<span class="muted">Plan {{ info.plan_nombre }}{% if info.vence_texto %} · hasta {{ info.vence_texto }}{% endif %}
-          · Asesores {{ f.uso_asesores }}/{{ info.limites.asesores if info.limites.asesores is not none else '∞' }}
-          · Propiedades {{ f.uso_propiedades }}/{{ info.limites.propiedades if info.limites.propiedades is not none else '∞' }}</span>
-      </summary>
+  <!-- Resumen -->
+  <section class="kpis">
+    <div class="kpi"><div class="n">{{ kpis.total }}</div><div class="l">Inmobiliarias</div></div>
+    <div class="kpi"><div class="n">{{ kpis.pagando }}</div><div class="l">Pagando</div></div>
+    <div class="kpi"><div class="n">{{ kpis.fundadores }}</div><div class="l">Plan Fundador (sin cobro)</div></div>
+    <div class="kpi"><div class="n">{{ kpis.pruebas }}</div><div class="l">En prueba</div></div>
+    <div class="kpi {{ 'warn' if kpis.problemas else '' }}"><div class="n">{{ kpis.problemas }}</div><div class="l">Requieren atención</div></div>
+    <div class="kpi money"><div class="n">{{ ingresos_txt }}</div><div class="l">Pagos registrados este mes</div></div>
+  </section>
 
-      <div class="forms">
-        <!-- 1) Cambiar plan -->
-        <form class="box" method="post" action="{{ url_for('admin_plan_guardar', cliente_id=c.id) }}">
+  {% if promo_activa %}
+    <div class="note ok"><strong>🎁 Instalación gratis</strong> — promoción activa hasta {{ promo_fecha }}. Se controla con la variable <code>PROMO_INSTALACION_HASTA</code> en Render.</div>
+  {% else %}
+    <div class="note warn"><strong>Instalación: se cobra.</strong> No hay promoción activa. Para regalarla por un tiempo, crea en Render la variable <code>PROMO_INSTALACION_HASTA</code> con una fecha (ej. 2027-03-31).</div>
+  {% endif %}
+
+  {% if atencion %}
+  <section class="panel">
+    <h2>⚠️ Requieren atención</h2>
+    {% for a in atencion %}
+      <div class="alert {{ a.nivel }}"><b>{{ a.nombre }}</b> <span>{{ a.texto }}</span></div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <!-- Clientes -->
+  <div class="toolbar">
+    <h2>🏢 Inmobiliarias</h2>
+    <input class="search" id="buscar" type="search" placeholder="Buscar inmobiliaria…">
+  </div>
+
+  <section class="cards">
+  {% for f in filas %}
+    {% set c = f.c %}{% set info = f.info %}
+    {% set la = info.limites.asesores %}{% set lp = info.limites.propiedades %}
+    <article class="cli" data-nombre="{{ ((c.nombre or '') ~ ' ' ~ c.id)|lower }}">
+      <div class="cli-top">
+        <div class="avatar">🏠</div>
+        <div class="grow">
+          <div class="cli-name">{{ c.nombre or c.id }}</div>
+          <div class="cli-id">ID: {{ c.id }}</div>
+        </div>
+        <span class="badge s-{{ info.estado_efectivo }}">{{ estado_textos[info.estado_efectivo] }}</span>
+      </div>
+      <div class="cli-body">
+        <div class="plan-line">
+          <span class="pill p-{{ info.plan }}">{{ info.plan_nombre }}</span>
+          <span class="venc">
+            {% if info.vence_texto %}
+              {% if info.estado == 'prueba' %}Prueba hasta{% else %}Vence{% endif %} {{ info.vence_texto }}
+              {% if info.dias_restantes is not none %}
+                ({% if info.dias_restantes >= 0 %}en {{ info.dias_restantes }} días{% else %}hace {{ -info.dias_restantes }} días{% endif %})
+              {% endif %}
+            {% else %}Sin vencimiento{% endif %}
+          </span>
+        </div>
+
+        <div class="use">
+          <div class="row"><span>Asesores</span><b>{{ f.uso_asesores }} / {{ la if la is not none else '∞' }}</b></div>
+          {% if la is not none %}
+            <div class="bar {{ 'full' if f.uso_asesores >= la else '' }}"><span style="width: {{ [((f.uso_asesores / la) * 100) if la > 0 else 100, 100]|min }}%"></span></div>
+          {% endif %}
+        </div>
+        <div class="use">
+          <div class="row"><span>Propiedades</span><b>{{ f.uso_propiedades }} / {{ lp if lp is not none else '∞' }}</b></div>
+          {% if lp is not none %}
+            <div class="bar {{ 'full' if f.uso_propiedades >= lp else '' }}"><span style="width: {{ [((f.uso_propiedades / lp) * 100) if lp > 0 else 100, 100]|min }}%"></span></div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="acts">
+        <button type="button" class="btn blue" onclick="abrir('dlg-plan-{{ c.id }}')">✏️ Plan</button>
+        <button type="button" class="btn green" onclick="abrir('dlg-pago-{{ c.id }}')">💵 Pago</button>
+        <button type="button" class="btn purple" onclick="abrir('dlg-prueba-{{ c.id }}')">🎁 Prueba</button>
+      </div>
+
+      <!-- Ventana: plan y límites -->
+      <dialog id="dlg-plan-{{ c.id }}">
+        <div class="dlg-h">Plan y límites<small>{{ c.nombre or c.id }}</small></div>
+        <form class="dlg-b" method="post" action="{{ url_for('admin_plan_guardar', cliente_id=c.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <h3>Plan y límites</h3>
-          <div class="row2">
+          <div class="two">
             <div><label>Plan</label>
               <select name="plan">
                 {% for p in orden_planes %}<option value="{{ p }}" {{ 'selected' if info.plan == p else '' }}>{{ planes[p].nombre }}</option>{% endfor %}
@@ -91,71 +222,86 @@
           </div>
           <label>Vence (vacío = sin vencimiento)</label>
           <input type="date" name="plan_vence" value="{{ info.vence_texto }}">
-          <div class="row2">
+          <div class="two">
             <div><label>Asesores extra</label><input type="number" min="0" name="extra_asesores" value="{{ info.extras.asesores }}"></div>
             <div><label>Propiedades extra</label><input type="number" min="0" name="extra_propiedades" value="{{ info.extras.propiedades }}"></div>
           </div>
-          <label>Funciones extra para este cliente</label>
+          <label>Funciones extra solo para este cliente</label>
           {% for k, nombre in funciones.items() %}
             {% if k not in ['leads','score_leads','respuestas','exportar','inventario'] %}
               <label class="chk"><input type="checkbox" name="funciones_extra" value="{{ k }}" {{ 'checked' if k in info.extras.funciones else '' }}>{{ nombre }}</label>
             {% endif %}
           {% endfor %}
-          <button type="submit">Guardar</button>
+          <div class="dlg-f">
+            <button type="button" class="btn line" onclick="this.closest('dialog').close()">Cancelar</button>
+            <button type="submit" class="btn blue">Guardar</button>
+          </div>
         </form>
+      </dialog>
 
-        <!-- 2) Prueba gratis -->
-        <form class="box" method="post" action="{{ url_for('admin_plan_prueba', cliente_id=c.id) }}">
+      <!-- Ventana: registrar pago -->
+      <dialog id="dlg-pago-{{ c.id }}">
+        <div class="dlg-h">Registrar pago<small>{{ c.nombre or c.id }}</small></div>
+        <form class="dlg-b f-pago" method="post" action="{{ url_for('admin_pago_registrar', cliente_id=c.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <h3>Prueba gratis</h3>
-          <p class="muted">Abre todas las funciones por {{ dias_prueba }} días con los límites del plan elegido. Al terminar, la cuenta pasa a solo lectura hasta que se registre un pago.</p>
-          <label>Plan que va a probar</label>
-          <select name="plan">
-            {% for p in ['esencial','profesional','agencia'] %}<option value="{{ p }}" {{ 'selected' if p == 'profesional' else '' }}>{{ planes[p].nombre }}</option>{% endfor %}
-          </select>
-          <button type="submit" class="alt">Iniciar prueba de {{ dias_prueba }} días</button>
-        </form>
-
-        <!-- 3) Registrar pago -->
-        <form class="box" method="post" action="{{ url_for('admin_pago_registrar', cliente_id=c.id) }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <h3>Registrar pago</h3>
-          <div class="row2">
+          <div class="two">
             <div><label>Concepto</label>
               <select name="tipo">
                 {% for t in tipos_pago %}<option value="{{ t }}">{{ {'mensualidad':'Mensualidad','anual':'Pago anual','instalacion':'Instalación','extra':'Extra'}[t] }}</option>{% endfor %}
               </select></div>
-            <div><label>Plan que paga (opcional)</label>
+            <div><label>Plan que paga</label>
               <select name="plan">
-                <option value="">No cambiar</option>
+                <option value="">No cambiar ({{ info.plan_nombre }})</option>
                 {% for p in orden_planes %}<option value="{{ p }}">{{ planes[p].nombre }}</option>{% endfor %}
               </select></div>
           </div>
-          <div class="row2">
+          <div class="two">
             <div><label>Monto</label><input type="number" step="0.01" min="0" name="monto" value="0"></div>
             <div><label>Moneda</label><input name="moneda" value="USD" maxlength="3"></div>
           </div>
-          <div class="row2">
-            <div><label>Método</label><input name="metodo" placeholder="transferencia, PayPal..." maxlength="40"></div>
+          <div class="two">
+            <div><label>Método</label><input name="metodo" placeholder="transferencia, PayPal…" maxlength="40"></div>
             <div><label>Referencia</label><input name="referencia" maxlength="80"></div>
           </div>
-          <div class="row2">
+          <div class="two">
             <div><label>Desde</label><input type="date" name="periodo_desde"></div>
             <div><label>Cubre hasta</label><input type="date" name="periodo_hasta"></div>
           </div>
           <label>Notas</label><input name="notas" maxlength="300">
           <label class="chk"><input type="checkbox" name="extender" checked>Extender el plan hasta la fecha "cubre hasta"</label>
-          <button type="submit">Registrar pago</button>
+          <p class="hint">Para una instalación regalada, registra el concepto "Instalación" con monto 0.</p>
+          <div class="dlg-f">
+            <button type="button" class="btn line" onclick="this.closest('dialog').close()">Cancelar</button>
+            <button type="submit" class="btn green">Registrar pago</button>
+          </div>
         </form>
-      </div>
-    </details>
-    {% else %}
-      <p class="muted">No hay inmobiliarias todavía.</p>
-    {% endfor %}
-  </div>
+      </dialog>
 
-  <div class="card">
-    <h2>Últimos pagos registrados</h2>
+      <!-- Ventana: prueba gratis -->
+      <dialog id="dlg-prueba-{{ c.id }}">
+        <div class="dlg-h">Prueba gratis<small>{{ c.nombre or c.id }}</small></div>
+        <form class="dlg-b" method="post" action="{{ url_for('admin_plan_prueba', cliente_id=c.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <p class="muted" style="margin-top:14px">Abre todas las funciones por {{ dias_prueba }} días con los límites del plan elegido. Al terminar, la cuenta pasa a solo lectura hasta que registres un pago.</p>
+          <label>Plan que va a probar</label>
+          <select name="plan">
+            {% for p in ['esencial','profesional','agencia'] %}<option value="{{ p }}" {{ 'selected' if p == 'profesional' else '' }}>{{ planes[p].nombre }}</option>{% endfor %}
+          </select>
+          <div class="dlg-f">
+            <button type="button" class="btn line" onclick="this.closest('dialog').close()">Cancelar</button>
+            <button type="submit" class="btn purple">Iniciar prueba de {{ dias_prueba }} días</button>
+          </div>
+        </form>
+      </dialog>
+    </article>
+  {% else %}
+    <p class="muted">No hay inmobiliarias todavía.</p>
+  {% endfor %}
+  </section>
+
+  <!-- Pagos -->
+  <section class="panel">
+    <h2>🧾 Últimos pagos registrados</h2>
     {% if pagos %}
     <div class="scroll">
     <table>
@@ -176,7 +322,45 @@
     </table>
     </div>
     {% else %}<p class="muted">Todavía no hay pagos registrados.</p>{% endif %}
-  </div>
-</div>
+  </section>
+</main>
+
+<script>
+  function abrir(id) {
+    var d = document.getElementById(id);
+    if (d.showModal) { d.showModal(); } else { d.setAttribute('open', ''); }
+  }
+
+  // Buscador de inmobiliarias
+  document.getElementById('buscar').addEventListener('input', function (e) {
+    var q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.cli').forEach(function (el) {
+      el.style.display = el.dataset.nombre.indexOf(q) !== -1 ? '' : 'none';
+    });
+  });
+
+  // Formulario de pago: sugiere la fecha "cubre hasta" según el concepto
+  function sugerir(form) {
+    var tipo = form.querySelector('[name=tipo]').value;
+    var hasta = form.querySelector('[name=periodo_hasta]');
+    var extender = form.querySelector('[name=extender]');
+    var esPeriodo = (tipo === 'mensualidad' || tipo === 'anual');
+    extender.checked = esPeriodo;
+    if (!esPeriodo) { hasta.value = ''; return; }
+    if (hasta.dataset.manual) { return; }
+    var d = new Date();
+    if (tipo === 'mensualidad') { d.setMonth(d.getMonth() + 1); } else { d.setFullYear(d.getFullYear() + 1); }
+    hasta.value = d.toISOString().slice(0, 10);
+  }
+  document.querySelectorAll('form.f-pago').forEach(function (f) {
+    f.querySelector('[name=tipo]').addEventListener('change', function () { sugerir(f); });
+    f.querySelector('[name=periodo_hasta]').addEventListener('input', function (e) { e.target.dataset.manual = '1'; });
+    sugerir(f);
+  });
+
+  // El aviso de confirmación se oculta solo
+  var t = document.getElementById('toast');
+  if (t) { setTimeout(function () { t.style.display = 'none'; }, 6000); }
+</script>
 </body>
 </html>
