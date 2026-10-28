@@ -1526,6 +1526,7 @@ def mi_plan(cliente_id):
 def admin_planes():
     if not session.get("admin"):
         return redirect(url_for('admin_login'))
+    aviso = session.pop('aviso_planes', '')
     try:
         res = supabase.table("clientes").select("*").order("created_at", desc=True).execute()
         clientes = res.data or []
@@ -1542,6 +1543,44 @@ def admin_planes():
             'uso_asesores': contar_asesores_activos(c['id']),
             'uso_propiedades': contar_propiedades(c['id']),
         })
+
+    # Resumen general
+    kpis = {
+        'total': len(filas),
+        'pagando': sum(1 for f in filas if f['info']['plan'] != 'fundador'
+                       and f['info']['estado_efectivo'] in ('activo', 'gracia')),
+        'fundadores': sum(1 for f in filas if f['info']['plan'] == 'fundador'),
+        'pruebas': sum(1 for f in filas if f['info']['estado_efectivo'] == 'prueba'),
+        'problemas': sum(1 for f in filas if f['info']['estado_efectivo'] in ('gracia', 'vencido', 'cancelado')),
+    }
+
+    # Clientes que requieren atención (vencidos, pago pendiente, pruebas o planes por vencer)
+    atencion = []
+    for f in filas:
+        info, c = f['info'], f['c']
+        ef, d = info['estado_efectivo'], info['dias_restantes']
+        base = {'id': c['id'], 'nombre': c.get('nombre') or c['id']}
+        if ef == 'vencido':
+            atencion.append({**base, 'nivel': 'bad', 'texto': 'Plan vencido: la cuenta está en solo lectura'})
+        elif ef == 'cancelado':
+            atencion.append({**base, 'nivel': 'bad', 'texto': 'Plan cancelado: la cuenta está en solo lectura'})
+        elif ef == 'gracia':
+            atencion.append({**base, 'nivel': 'warn', 'texto': 'Pago pendiente: está en los días de gracia'})
+        elif ef == 'prueba' and d is not None and d <= 3:
+            atencion.append({**base, 'nivel': 'info', 'texto': f'La prueba termina en {max(d, 0)} día(s)'})
+        elif ef == 'activo' and d is not None and 0 <= d <= 7:
+            atencion.append({**base, 'nivel': 'info', 'texto': f'El plan vence en {d} día(s)'})
+
+    # Pagos registrados este mes (por moneda) y últimos pagos
+    mes = datetime.now(timezone.utc).strftime("%Y-%m")
+    ingresos = {}
+    try:
+        r = supabase.table("pagos").select("monto,moneda").gte("created_at", f"{mes}-01").execute()
+        for p in r.data or []:
+            ingresos[p.get('moneda') or 'USD'] = ingresos.get(p.get('moneda') or 'USD', 0) + float(p.get('monto') or 0)
+    except Exception:
+        pass
+    ingresos_txt = " · ".join(f"{v:,.2f} {k}" for k, v in ingresos.items()) or "0.00"
     try:
         pagos_r = supabase.table("pagos").select("*").order("created_at", desc=True).limit(25).execute()
         pagos = pagos_r.data or []
@@ -1553,7 +1592,8 @@ def admin_planes():
                            estados=ESTADOS_PLAN, estado_textos=ESTADO_TEXTOS, funciones=FUNCIONES,
                            pagos=pagos, nombres=nombres, tipos_pago=_TIPOS_PAGO,
                            promo_activa=promo_activa, promo_fecha=promo_fecha,
-                           dias_prueba=DIAS_PRUEBA)
+                           dias_prueba=DIAS_PRUEBA, kpis=kpis, atencion=atencion,
+                           ingresos_txt=ingresos_txt, aviso=aviso)
 
 @app.route("/admin/planes/guardar/<cliente_id>", methods=["POST"])
 def admin_plan_guardar(cliente_id):
@@ -1564,6 +1604,7 @@ def admin_plan_guardar(cliente_id):
         plan = request.form.get("plan", "fundador")
         estado = request.form.get("plan_estado", "activo")
         if plan not in PLANES or estado not in ESTADOS_PLAN:
+            session['aviso_planes'] = "❌ Plan o estado no válido."
             return redirect(url_for('admin_planes'))
         extras = {
             "asesores": max(0, int(request.form.get("extra_asesores", 0) or 0)),
@@ -1577,8 +1618,10 @@ def admin_plan_guardar(cliente_id):
             "limites_extra": extras,
         }).eq("id", cliente_id).execute()
         invalidar_plan_cache(cliente_id)
+        session['aviso_planes'] = f"✅ Plan guardado: {PLANES[plan]['nombre']} ({ESTADO_TEXTOS[estado]})."
         log_accion('ADMIN_PLAN_GUARDADO', f"id={cliente_id} plan={plan} estado={estado}", get_remote_address())
     except Exception as e:
+        session['aviso_planes'] = "❌ No se pudo guardar el plan. Revisa los datos."
         print(f"❌ Error guardando plan: {e}")
     return redirect(url_for('admin_planes'))
 
@@ -1599,8 +1642,10 @@ def admin_plan_prueba(cliente_id):
             "plan_vence": _fecha_a_timestamp(hasta),
         }).eq("id", cliente_id).execute()
         invalidar_plan_cache(cliente_id)
+        session['aviso_planes'] = f"✅ Prueba de {DIAS_PRUEBA} días iniciada (hasta {hasta})."
         log_accion('ADMIN_PRUEBA_INICIADA', f"id={cliente_id} plan={plan}", get_remote_address())
     except Exception as e:
+        session['aviso_planes'] = "❌ No se pudo iniciar la prueba."
         print(f"❌ Error iniciando prueba: {e}")
     return redirect(url_for('admin_planes'))
 
@@ -1614,6 +1659,7 @@ def admin_pago_registrar(cliente_id):
     try:
         tipo = request.form.get("tipo", "mensualidad")
         if tipo not in _TIPOS_PAGO:
+            session['aviso_planes'] = "❌ Tipo de pago no válido."
             return redirect(url_for('admin_planes'))
         monto = max(0.0, float(request.form.get("monto", 0) or 0))
         moneda = (request.form.get("moneda", "USD") or "USD").strip().upper()
@@ -1646,8 +1692,11 @@ def admin_pago_registrar(cliente_id):
         if cambios:
             supabase.table("clientes").update(cambios).eq("id", cliente_id).execute()
         invalidar_plan_cache(cliente_id)
+        extendido = " Plan extendido." if "plan_vence" in cambios else ""
+        session['aviso_planes'] = f"✅ Pago registrado: {monto:,.2f} {moneda}.{extendido}"
         log_accion('ADMIN_PAGO_REGISTRADO', f"id={cliente_id} tipo={tipo} monto={monto} {moneda}", get_remote_address())
     except Exception as e:
+        session['aviso_planes'] = "❌ No se pudo registrar el pago. Revisa los datos."
         print(f"❌ Error registrando pago: {e}")
     return redirect(url_for('admin_planes'))
 
