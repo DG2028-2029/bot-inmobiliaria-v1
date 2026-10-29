@@ -62,7 +62,8 @@
 
   /* Tarjetas de clientes */
   .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px; margin-bottom:22px; }
-  .cli { background:var(--card); border-radius:16px; box-shadow:0 1px 4px rgba(0,0,0,.08); overflow:hidden; }
+  .cli { background:var(--card); border-radius:16px; box-shadow:0 1px 4px rgba(0,0,0,.08); overflow:hidden; display:flex; flex-direction:column; }
+  .cli .cli-body { flex:1; }
   .cli-top { display:flex; align-items:center; gap:12px; padding:16px 16px 8px; }
   .avatar { width:42px; height:42px; border-radius:10px; background:#eef0ff; border:1px solid #d9deff;
             display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex:none; }
@@ -99,7 +100,7 @@
   dialog::backdrop { background:rgba(15,23,42,.55); }
   .dlg-h { padding:16px 20px; background:linear-gradient(135deg,var(--navy),var(--navy-d)); color:#fff; font-weight:700; }
   .dlg-h small { display:block; font-weight:400; opacity:.75; }
-  .dlg-b { padding:8px 20px 20px; overflow-y:auto; max-height:70vh; }
+  .dlg-b { padding:8px 20px 0; overflow-y:auto; max-height:70vh; }
   label { display:block; font-size:.78rem; color:var(--muted); margin:12px 0 4px; font-weight:600; }
   input, select { width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:10px; font:inherit; background:#fff; color:var(--txt); }
   input:focus, select:focus { outline:2px solid var(--brand); outline-offset:0; border-color:var(--brand); }
@@ -107,7 +108,21 @@
   .chk { display:flex; align-items:center; gap:8px; font-size:.88rem; color:var(--txt); margin:6px 0; font-weight:500; }
   .chk input { width:auto; }
   .hint { font-size:.8rem; color:var(--muted); margin:8px 0 0; }
-  .dlg-f { display:flex; gap:10px; justify-content:flex-end; margin-top:18px; }
+  .dlg-f { display:flex; gap:10px; justify-content:flex-end; margin-top:14px; padding:12px 0 16px;
+           position:sticky; bottom:0; background:#fff; border-top:1px solid var(--line); }
+  .extras { display:grid; grid-template-columns:1fr 1fr; gap:0 14px; }
+  @media (max-width:520px) { .extras { grid-template-columns:1fr; } }
+  .panel.oferta { border-left:5px solid var(--line); }
+  .panel.oferta.on { border-left-color:var(--green); }
+  .oferta-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .oferta-head h2 { margin:0; }
+  .oferta-form { display:grid; grid-template-columns:auto 170px auto auto; gap:16px; align-items:end; }
+  .chk.big { font-size:.95rem; font-weight:600; margin:0 0 10px; }
+  .precio-line { margin:0 0 10px; font-size:.88rem; }
+  .precio-line s { color:var(--muted); } .precio-line b { font-size:1rem; }
+  .tag { display:inline-block; padding:2px 9px; border-radius:999px; font-size:.7rem; font-weight:700; background:#fef3c7; color:#92400e; margin-left:4px; }
+  .tag.green { background:#dcfce7; color:#166534; }
+  @media (max-width:760px) { .oferta-form { grid-template-columns:1fr; } }
   @media (max-width:520px) { .two { grid-template-columns:1fr; } .acts { grid-template-columns:1fr; } }
 </style>
 </head>
@@ -139,11 +154,43 @@
     <div class="kpi money"><div class="n">{{ ingresos_txt }}</div><div class="l">Pagos registrados este mes</div></div>
   </section>
 
-  {% if promo_activa %}
-    <div class="note ok"><strong>🎁 Instalación gratis</strong> — promoción activa hasta {{ promo_fecha }}. Se controla con la variable <code>PROMO_INSTALACION_HASTA</code> en Render.</div>
-  {% else %}
-    <div class="note warn"><strong>Instalación: se cobra.</strong> No hay promoción activa. Para regalarla por un tiempo, crea en Render la variable <code>PROMO_INSTALACION_HASTA</code> con una fecha (ej. 2027-03-31).</div>
-  {% endif %}
+  <!-- Oferta de lanzamiento -->
+  <section class="panel oferta {{ 'on' if oferta.activa else 'off' }}">
+    <div class="oferta-head">
+      <h2>🎁 Oferta de lanzamiento</h2>
+      <span class="badge {{ 's-activo' if oferta.activa else 's-vencido' }}">{{ 'ACTIVA' if oferta.activa else 'Apagada' }}</span>
+    </div>
+    <form method="post" action="{{ url_for('admin_oferta_guardar') }}" class="oferta-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label class="chk big"><input type="checkbox" name="activa" {{ 'checked' if oferta.activa else '' }}>Oferta activa</label>
+      <div><label>Descuento mensual (%)</label><input type="number" min="0" max="100" name="descuento_pct" value="{{ oferta.descuento_pct }}"></div>
+      <label class="chk big"><input type="checkbox" name="instalacion_gratis" {{ 'checked' if oferta.instalacion_gratis else '' }}>Instalación gratis</label>
+      <button class="btn green" type="submit">Guardar oferta</button>
+    </form>
+    <p class="muted" style="margin-top:12px">Sin fecha de fin: la enciendes o la apagas cuando quieras. Con <b>"Usar oferta vigente"</b> en un cliente, su descuento y su instalación gratis quedan guardados en él y se conservan mientras su suscripción siga activa, aunque después apagues la oferta. A los clientes nuevos, sin oferta activa, se les cobra el precio de lista.</p>
+  </section>
+
+  <section class="panel">
+    <h2>💲 Lista de precios (USD al mes)</h2>
+    {% set fac = (100 - oferta.descuento_pct) / 100 if oferta.activa else 1 %}
+    <div class="scroll">
+    <table>
+      <thead><tr><th>Región</th>{% for p in ['esencial','profesional','agencia'] %}<th>{{ planes[p].nombre }}</th>{% endfor %}<th>Asesor extra</th></tr></thead>
+      <tbody>
+      {% for reg, etiqueta in [('global', 'EE. UU., Canadá y Europa'), ('latam', 'Latinoamérica')] %}
+        <tr>
+          <td><b>{{ etiqueta }}</b></td>
+          {% for p in ['esencial','profesional','agencia'] %}
+            <td>${{ precios[p][reg] }}{% if oferta.activa and oferta.descuento_pct %}<br><span class="muted">con oferta: <b>${{ '%.2f'|format(precios[p][reg] * fac) }}</b></span>{% endif %}</td>
+          {% endfor %}
+          <td>${{ asesor_extra[reg] }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    <p class="muted" style="margin-top:10px">Pagando el año: {{ meses_gratis }} meses gratis. Instalación (pago único): en Latinoamérica 1 mensualidad de lista; en EE. UU./Europa, sin cuota. Los precios se cambian en <code>planes.py</code>.</p>
+  </section>
 
   {% if atencion %}
   <section class="panel">
@@ -186,6 +233,16 @@
           </span>
         </div>
 
+        {% if f.precio %}
+        <div class="precio-line">
+          {% if f.precio.descuento_pct %}<s>${{ '%.2f'|format(f.precio.lista) }}</s> <b>${{ '%.2f'|format(f.precio.final) }}</b> / mes <span class="tag">−{{ f.precio.descuento_pct }}% de por vida</span>
+          {% else %}<b>${{ '%.2f'|format(f.precio.lista) }}</b> / mes{% endif %}
+          {% if f.precio.instalacion_gratis %}<span class="tag green">Instalación gratis</span>{% endif %}
+        </div>
+        {% else %}
+        <div class="precio-line muted">Plan Fundador: sin cobro por ahora</div>
+        {% endif %}
+
         <div class="use">
           <div class="row"><span>Asesores</span><b>{{ f.uso_asesores }} / {{ la if la is not none else '∞' }}</b></div>
           {% if la is not none %}
@@ -208,7 +265,7 @@
       <!-- Ventana: plan y límites -->
       <dialog id="dlg-plan-{{ c.id }}">
         <div class="dlg-h">Plan y límites<small>{{ c.nombre or c.id }}</small></div>
-        <form class="dlg-b" method="post" action="{{ url_for('admin_plan_guardar', cliente_id=c.id) }}">
+        <form class="dlg-b f-plan" data-region="{{ f.region }}" method="post" action="{{ url_for('admin_plan_guardar', cliente_id=c.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="two">
             <div><label>Plan</label>
@@ -226,12 +283,20 @@
             <div><label>Asesores extra</label><input type="number" min="0" name="extra_asesores" value="{{ info.extras.asesores }}"></div>
             <div><label>Propiedades extra</label><input type="number" min="0" name="extra_propiedades" value="{{ info.extras.propiedades }}"></div>
           </div>
+          <div class="two">
+            <div><label>Descuento permanente (%)</label><input type="number" min="0" max="100" name="descuento_pct" value="{{ f.descuento_pct }}"></div>
+            <div><label>&nbsp;</label><label class="chk"><input type="checkbox" name="instalacion_gratis" {{ 'checked' if f.instalacion_gratis else '' }}>Instalación gratis</label></div>
+          </div>
+          {% if oferta.activa %}<button type="button" class="btn line usar-oferta" data-pct="{{ oferta.descuento_pct }}" data-inst="{{ 1 if oferta.instalacion_gratis else 0 }}" style="margin-top:6px">🎁 Usar oferta vigente ({{ oferta.descuento_pct }}%{% if oferta.instalacion_gratis %} + instalación gratis{% endif %})</button>{% endif %}
+          <p class="hint prev-precio"></p>
           <label>Funciones extra solo para este cliente</label>
+          <div class="extras">
           {% for k, nombre in funciones.items() %}
             {% if k not in ['leads','score_leads','respuestas','exportar','inventario'] %}
               <label class="chk"><input type="checkbox" name="funciones_extra" value="{{ k }}" {{ 'checked' if k in info.extras.funciones else '' }}>{{ nombre }}</label>
             {% endif %}
           {% endfor %}
+          </div>
           <div class="dlg-f">
             <button type="button" class="btn line" onclick="this.closest('dialog').close()">Cancelar</button>
             <button type="submit" class="btn blue">Guardar</button>
@@ -242,7 +307,7 @@
       <!-- Ventana: registrar pago -->
       <dialog id="dlg-pago-{{ c.id }}">
         <div class="dlg-h">Registrar pago<small>{{ c.nombre or c.id }}</small></div>
-        <form class="dlg-b f-pago" method="post" action="{{ url_for('admin_pago_registrar', cliente_id=c.id) }}">
+        <form class="dlg-b f-pago" data-region="{{ f.region }}" data-plan="{{ info.plan }}" data-desc="{{ f.descuento_pct }}" data-instgratis="{{ 1 if f.instalacion_gratis else 0 }}" method="post" action="{{ url_for('admin_pago_registrar', cliente_id=c.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="two">
             <div><label>Concepto</label>
@@ -269,7 +334,7 @@
           </div>
           <label>Notas</label><input name="notas" maxlength="300">
           <label class="chk"><input type="checkbox" name="extender" checked>Extender el plan hasta la fecha "cubre hasta"</label>
-          <p class="hint">Para una instalación regalada, registra el concepto "Instalación" con monto 0.</p>
+          <p class="hint sug-monto"></p>
           <div class="dlg-f">
             <button type="button" class="btn line" onclick="this.closest('dialog').close()">Cancelar</button>
             <button type="submit" class="btn green">Registrar pago</button>
@@ -326,6 +391,10 @@
 </main>
 
 <script>
+  var PRECIOS = {{ precios|tojson }};
+  var INSTALACION = {{ instalacion|tojson }};
+  var MESES_GRATIS = {{ meses_gratis }};
+  function fmt(n) { return Number(n).toFixed(2); }
   function abrir(id) {
     var d = document.getElementById(id);
     if (d.showModal) { d.showModal(); } else { d.setAttribute('open', ''); }
@@ -352,10 +421,60 @@
     if (tipo === 'mensualidad') { d.setMonth(d.getMonth() + 1); } else { d.setFullYear(d.getFullYear() + 1); }
     hasta.value = d.toISOString().slice(0, 10);
   }
+  // Monto sugerido según plan, región, descuento del cliente y concepto
+  function sugerirMonto(form) {
+    var tipo = form.querySelector('[name=tipo]').value;
+    var plan = form.querySelector('[name=plan]').value || form.dataset.plan;
+    var region = form.dataset.region;
+    var pct = parseInt(form.dataset.desc || 0, 10);
+    var hint = form.querySelector('.sug-monto');
+    var monto = form.querySelector('[name=monto]');
+    var lista = (PRECIOS[plan] || {})[region];
+    if (lista === undefined) { hint.textContent = 'Plan Fundador: sin cobro. Elige el plan que paga para ver el monto sugerido.'; return; }
+    var final = lista * (100 - pct) / 100;
+    var val = 0, txt = '';
+    if (tipo === 'mensualidad') { val = final; txt = 'mensualidad' + (pct ? ' con ' + pct + '% de descuento' : ''); }
+    else if (tipo === 'anual') { val = final * (12 - MESES_GRATIS); txt = 'año completo (' + MESES_GRATIS + ' meses gratis)'; }
+    else if (tipo === 'instalacion') {
+      val = form.dataset.instgratis === '1' ? 0 : ((INSTALACION[plan] || {})[region] || 0);
+      txt = form.dataset.instgratis === '1' ? 'instalación gratis (oferta)' : 'instalación (pago único)';
+    } else { txt = 'monto libre'; }
+    hint.textContent = 'Monto sugerido: $' + fmt(val) + ' — ' + txt + '. Puedes cambiarlo.';
+    if (!monto.dataset.manual) { monto.value = fmt(val); }
+  }
   document.querySelectorAll('form.f-pago').forEach(function (f) {
-    f.querySelector('[name=tipo]').addEventListener('change', function () { sugerir(f); });
+    f.querySelector('[name=tipo]').addEventListener('change', function () { sugerir(f); sugerirMonto(f); });
+    f.querySelector('[name=plan]').addEventListener('change', function () { sugerirMonto(f); });
+    f.querySelector('[name=monto]').addEventListener('input', function (e) { e.target.dataset.manual = '1'; });
     f.querySelector('[name=periodo_hasta]').addEventListener('input', function (e) { e.target.dataset.manual = '1'; });
     sugerir(f);
+    sugerirMonto(f);
+  });
+
+  // Diálogo de plan: vista previa del precio y botón "usar oferta vigente"
+  function prevPlan(form) {
+    var plan = form.querySelector('[name=plan]').value;
+    var pct = parseInt(form.querySelector('[name=descuento_pct]').value || 0, 10);
+    var region = form.dataset.region;
+    var out = form.querySelector('.prev-precio');
+    var lista = (PRECIOS[plan] || {})[region];
+    if (lista === undefined) { out.textContent = 'Plan Fundador: sin cobro.'; return; }
+    var final = lista * (100 - pct) / 100;
+    out.textContent = 'Precio final: $' + fmt(final) + ' al mes' + (pct ? ' (lista $' + fmt(lista) + ', −' + pct + '%)' : '') +
+      ' · ' + (region === 'latam' ? 'Latinoamérica' : 'EE. UU., Canadá y Europa');
+  }
+  document.querySelectorAll('form.f-plan').forEach(function (f) {
+    f.querySelector('[name=plan]').addEventListener('change', function () { prevPlan(f); });
+    f.querySelector('[name=descuento_pct]').addEventListener('input', function () { prevPlan(f); });
+    var b = f.querySelector('.usar-oferta');
+    if (b) {
+      b.addEventListener('click', function () {
+        f.querySelector('[name=descuento_pct]').value = b.dataset.pct;
+        f.querySelector('[name=instalacion_gratis]').checked = (b.dataset.inst === '1');
+        prevPlan(f);
+      });
+    }
+    prevPlan(f);
   });
 
   // El aviso de confirmación se oculta solo
