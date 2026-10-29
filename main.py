@@ -26,7 +26,9 @@ from traducciones import DICCIONARIO
 from paises import PAISES_TIMEZONE
 from planes import (PLANES, ORDEN_PLANES, FUNCIONES, ESTADOS_PLAN, ESTADO_TEXTOS,
                     DIAS_PRUEBA, calcular_plan_info, limite_alcanzado,
-                    mensaje_bloqueo, promo_instalacion)
+                    mensaje_bloqueo, PRECIOS_USD, ASESOR_EXTRA_USD, INSTALACION_USD,
+                    MESES_GRATIS_ANUAL, OFERTA_CLAVE, calcular_precio_cliente,
+                    region_precio, normalizar_oferta)
 from reporte_semanal import generar_resumen_semanal
 from email_service import (enviar_email_cliente, notificar_vendedor_lead_nuevo,
                            notificar_vendedor_cliente_marcado, enviar_seguimiento_automatico,
@@ -1491,6 +1493,32 @@ def _fecha_a_timestamp(fecha_txt):
         return None
     return d.replace(hour=23, minute=59, second=59, tzinfo=timezone.utc).isoformat()
 
+_OFERTA_CACHE = {'t': 0, 'v': None}
+
+def get_oferta():
+    """Oferta de lanzamiento vigente (caché de 30 s). Si falla, queda apagada."""
+    ahora = time.time()
+    if _OFERTA_CACHE['v'] is not None and ahora - _OFERTA_CACHE['t'] < 30:
+        return _OFERTA_CACHE['v']
+    valor = {}
+    try:
+        r = supabase.table("configuracion").select("valor").eq("clave", OFERTA_CLAVE).execute()
+        if r.data:
+            valor = r.data[0].get("valor") or {}
+    except Exception as e:
+        print(f"⚠️ No se pudo leer la oferta de lanzamiento: {e}")
+    oferta = normalizar_oferta(valor)
+    _OFERTA_CACHE.update({'t': ahora, 'v': oferta})
+    return oferta
+
+def guardar_oferta(oferta):
+    """Guarda la oferta (actualiza si ya existe, si no la crea)."""
+    fila = {"valor": oferta, "updated_at": datetime.now(timezone.utc).isoformat()}
+    r = supabase.table("configuracion").update(fila).eq("clave", OFERTA_CLAVE).execute()
+    if not r.data:
+        supabase.table("configuracion").insert({"clave": OFERTA_CLAVE, **fila}).execute()
+    _OFERTA_CACHE['v'] = None
+
 @app.route("/mi-plan/<cliente_id>")
 def mi_plan(cliente_id):
     id_clean = cliente_id.lower()
@@ -1513,12 +1541,13 @@ def mi_plan(cliente_id):
         pagos = pagos_r.data or []
     except Exception:
         pagos = []
+    precio = calcular_precio_cliente(vendedor)
     bloqueado = request.args.get('bloqueado', '').strip()[:40]
     mensaje = mensaje_bloqueo(bloqueado, session.get('idioma', 'es')) if bloqueado else ''
     return render_template("mi_plan.html",
                            cliente=vendedor, cliente_id=id_clean, info=info, uso=uso,
                            pagos=pagos, planes=PLANES, orden_planes=ORDEN_PLANES,
-                           funciones=FUNCIONES, mensaje_bloqueo=mensaje,
+                           funciones=FUNCIONES, mensaje_bloqueo=mensaje, precio=precio,
                            contacto_wa=limpiar_telefono(CONTACTO_VENTAS_WHATSAPP),
                            contacto_email=CONTACTO_VENTAS_EMAIL)
 
@@ -1542,6 +1571,10 @@ def admin_planes():
             'info': calcular_plan_info(c),
             'uso_asesores': contar_asesores_activos(c['id']),
             'uso_propiedades': contar_propiedades(c['id']),
+            'precio': calcular_precio_cliente(c),
+            'region': region_precio(c.get('pais')),
+            'descuento_pct': int(c.get('descuento_pct') or 0),
+            'instalacion_gratis': bool(c.get('instalacion_gratis')),
         })
 
     # Resumen general
@@ -1586,12 +1619,12 @@ def admin_planes():
         pagos = pagos_r.data or []
     except Exception:
         pagos = []
-    promo_activa, promo_fecha = promo_instalacion()
     return render_template("admin_planes.html",
                            filas=filas, planes=PLANES, orden_planes=['fundador'] + ORDEN_PLANES,
                            estados=ESTADOS_PLAN, estado_textos=ESTADO_TEXTOS, funciones=FUNCIONES,
                            pagos=pagos, nombres=nombres, tipos_pago=_TIPOS_PAGO,
-                           promo_activa=promo_activa, promo_fecha=promo_fecha,
+                           oferta=get_oferta(), precios=PRECIOS_USD, asesor_extra=ASESOR_EXTRA_USD,
+                           instalacion=INSTALACION_USD, meses_gratis=MESES_GRATIS_ANUAL,
                            dias_prueba=DIAS_PRUEBA, kpis=kpis, atencion=atencion,
                            ingresos_txt=ingresos_txt, aviso=aviso)
 
@@ -1611,11 +1644,14 @@ def admin_plan_guardar(cliente_id):
             "propiedades": max(0, int(request.form.get("extra_propiedades", 0) or 0)),
             "funciones": [f for f in request.form.getlist("funciones_extra") if f in FUNCIONES],
         }
+        descuento = max(0, min(100, int(request.form.get("descuento_pct", 0) or 0)))
         supabase.table("clientes").update({
             "plan": plan,
             "plan_estado": estado,
             "plan_vence": _fecha_a_timestamp(request.form.get("plan_vence", "")),
             "limites_extra": extras,
+            "descuento_pct": descuento,
+            "instalacion_gratis": request.form.get("instalacion_gratis") == "on",
         }).eq("id", cliente_id).execute()
         invalidar_plan_cache(cliente_id)
         session['aviso_planes'] = f"✅ Plan guardado: {PLANES[plan]['nombre']} ({ESTADO_TEXTOS[estado]})."
@@ -1623,6 +1659,28 @@ def admin_plan_guardar(cliente_id):
     except Exception as e:
         session['aviso_planes'] = "❌ No se pudo guardar el plan. Revisa los datos."
         print(f"❌ Error guardando plan: {e}")
+    return redirect(url_for('admin_planes'))
+
+@app.route("/admin/planes/oferta", methods=["POST"])
+def admin_oferta_guardar():
+    """Enciende/apaga la oferta de lanzamiento y define su descuento. Sin fecha de fin."""
+    if not session.get("admin"):
+        return redirect(url_for('admin_login'))
+    verificar_csrf()
+    try:
+        descuento = int(request.form.get("descuento_pct", 0) or 0)   # si no es número, cae al aviso de error
+        oferta = normalizar_oferta({
+            "activa": request.form.get("activa") == "on",
+            "descuento_pct": descuento,
+            "instalacion_gratis": request.form.get("instalacion_gratis") == "on",
+        })
+        guardar_oferta(oferta)
+        estado = "ACTIVA" if oferta["activa"] else "apagada"
+        session['aviso_planes'] = f"✅ Oferta de lanzamiento {estado} ({oferta['descuento_pct']}% de descuento)."
+        log_accion('ADMIN_OFERTA_GUARDADA', f"activa={oferta['activa']} pct={oferta['descuento_pct']} inst={oferta['instalacion_gratis']}", get_remote_address())
+    except Exception as e:
+        session['aviso_planes'] = "❌ No se pudo guardar la oferta."
+        print(f"❌ Error guardando oferta: {e}")
     return redirect(url_for('admin_planes'))
 
 @app.route("/admin/planes/prueba/<cliente_id>", methods=["POST"])
