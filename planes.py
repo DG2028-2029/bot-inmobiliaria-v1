@@ -7,6 +7,9 @@ se edita este archivo. No tiene precios a propósito: los precios se definen
 con tus clientes y se cobran fuera del código (por ahora a mano).
 
 Este archivo NO usa Flask ni Supabase: son funciones puras, fáciles de probar.
+
+PRECIOS: viven en el bloque PRECIOS_USD de más abajo. Los precios de lista son los
+"normales"; el descuento de lanzamiento se aplica por cliente (clientes.descuento_pct).
 """
 import os
 from datetime import datetime, timedelta, timezone
@@ -87,21 +90,103 @@ ESTADO_TEXTOS = {
 }
 
 # ------------------------------------------------------------
-# Promoción de instalación gratis (se controla con una variable de
-# entorno en Render: PROMO_INSTALACION_HASTA=2027-03-31). Si está vacía,
-# la instalación se cobra normal.
+# PRECIOS DE LISTA (USD al mes). Para cambiarlos, edita SOLO este bloque.
+# El descuento de cada cliente se guarda aparte (clientes.descuento_pct).
 # ------------------------------------------------------------
-def promo_instalacion(hoy=None):
-    """Devuelve (activa, fecha_texto)."""
-    fecha_txt = (os.environ.get("PROMO_INSTALACION_HASTA") or "").strip()
-    if not fecha_txt:
-        return (False, "")
+PRECIOS_USD = {
+    'esencial':    {'global': 49,  'latam': 25},
+    'profesional': {'global': 119, 'latam': 59},
+    'agencia':     {'global': 249, 'latam': 119},
+}
+ASESOR_EXTRA_USD = {'global': 5, 'latam': 3}   # por asesor adicional, al mes
+MESES_GRATIS_ANUAL = 2                         # pagando el año: 12 - 2 = 10 mensualidades
+
+# Cuota de instalación (pago único). LatAm: 1 mensualidad de lista, con acompañamiento.
+# EE. UU./Europa: registro por su cuenta, sin cuota.
+INSTALACION_USD = {
+    'esencial':    {'global': 0, 'latam': 25},
+    'profesional': {'global': 0, 'latam': 59},
+    'agencia':     {'global': 0, 'latam': 119},
+}
+
+PAISES_LATAM = {
+    'Argentina', 'Bolivia', 'Brasil', 'Chile', 'Colombia', 'Costa Rica', 'Cuba', 'Ecuador',
+    'El Salvador', 'Guatemala', 'Honduras', 'México', 'Nicaragua', 'Panamá', 'Paraguay',
+    'Perú', 'República Dominicana', 'Uruguay', 'Venezuela',
+}
+
+
+def region_precio(pais):
+    """'latam' o 'global' según el país del cliente (sin país: se asume latam)."""
+    pais = (pais or '').strip()
+    if not pais:
+        return 'latam'
+    return 'latam' if pais in PAISES_LATAM else 'global'
+
+
+def _pct(valor):
     try:
-        limite = datetime.strptime(fecha_txt, "%Y-%m-%d").date()
-    except ValueError:
-        return (False, "")
-    hoy = hoy or datetime.now(timezone.utc).date()
-    return (hoy <= limite, fecha_txt)
+        return min(100, max(0, int(valor)))
+    except (TypeError, ValueError):
+        return 0
+
+
+def calcular_precio_cliente(cliente):
+    """
+    Lo que paga un cliente según su plan, su región y su descuento permanente.
+    Devuelve None para el plan Fundador (sin cobro).
+    """
+    cliente = cliente or {}
+    plan = cliente.get('plan') or 'fundador'
+    if plan not in PRECIOS_USD:
+        return None
+    region = region_precio(cliente.get('pais'))
+    pct = _pct(cliente.get('descuento_pct'))
+    factor = (100 - pct) / 100
+    lista = PRECIOS_USD[plan][region]
+    final = round(lista * factor, 2)
+    inst_lista = INSTALACION_USD[plan][region]
+    inst_gratis = bool(cliente.get('instalacion_gratis'))
+    return {
+        'plan': plan,
+        'region': region,
+        'region_texto': 'Latinoamérica' if region == 'latam' else 'EE. UU., Canadá y Europa',
+        'lista': lista,
+        'descuento_pct': pct,
+        'final': final,
+        'ahorro': round(lista - final, 2),
+        'anual': round(final * (12 - MESES_GRATIS_ANUAL), 2),
+        'asesor_extra': round(ASESOR_EXTRA_USD[region] * factor, 2),
+        'instalacion_lista': inst_lista,
+        'instalacion_gratis': inst_gratis,
+        'instalacion_final': 0 if inst_gratis else inst_lista,
+    }
+
+
+# ------------------------------------------------------------
+# OFERTA DE LANZAMIENTO — un interruptor que se maneja desde el panel de admin
+# (tabla `configuracion`). No tiene fecha de fin. Cuando se aplica a un cliente,
+# el descuento y la instalación gratis quedan guardados EN ese cliente, así que
+# apagar la oferta después no le quita lo que ya se le dio.
+# ------------------------------------------------------------
+OFERTA_CLAVE = 'oferta_lanzamiento'
+
+
+def normalizar_oferta(valor):
+    """Convierte lo guardado (dict o texto JSON) en una oferta limpia y segura."""
+    import json
+    if isinstance(valor, str):
+        try:
+            valor = json.loads(valor)
+        except ValueError:
+            valor = {}
+    if not isinstance(valor, dict):
+        valor = {}
+    return {
+        'activa': bool(valor.get('activa')),
+        'descuento_pct': _pct(valor.get('descuento_pct')),
+        'instalacion_gratis': bool(valor.get('instalacion_gratis')),
+    }
 
 
 # ------------------------------------------------------------
