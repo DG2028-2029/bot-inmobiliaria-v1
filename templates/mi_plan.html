@@ -99,6 +99,27 @@
     </div>
   </div>
 
+  {% if precio %}
+  <div class="card">
+    <h2>Tu suscripción</h2>
+    <div class="plan-row">
+      <div>
+        <div class="muted">Precio mensual</div>
+        <div class="plan-name">${{ '%.2f'|format(precio.final) }} <span class="muted" style="font-size:1rem">USD / mes</span></div>
+        {% if precio.descuento_pct %}<div class="muted">Precio normal: <s>${{ '%.2f'|format(precio.lista) }}</s></div>{% endif %}
+      </div>
+      <div style="text-align:right">
+        {% if precio.descuento_pct %}<span class="badge s-prueba" style="background:var(--warnbg);color:var(--warn)">{{ precio.descuento_pct }}% de descuento</span>{% endif %}
+        {% if precio.instalacion_gratis %}<span class="badge s-activo">Instalación incluida</span>{% endif %}
+        <div class="muted" style="margin-top:6px">Pagando el año: ${{ '%.2f'|format(precio.anual) }} (2 meses gratis)</div>
+      </div>
+    </div>
+    {% if precio.descuento_pct %}
+    <p class="muted" style="margin:12px 0 0">Tienes {{ precio.descuento_pct }}% de descuento por la oferta de lanzamiento, mientras tu suscripción siga activa.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
   <div class="grid">
     <div class="card">
       <h2>Asesores activos</h2>
