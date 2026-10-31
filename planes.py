@@ -8,8 +8,8 @@ con tus clientes y se cobran fuera del código (por ahora a mano).
 
 Este archivo NO usa Flask ni Supabase: son funciones puras, fáciles de probar.
 
-PRECIOS: viven en el bloque PRECIOS_USD de más abajo. Los precios de lista son los
-"normales"; el descuento de lanzamiento se aplica por cliente (clientes.descuento_pct).
+PRECIOS: viven en el bloque PRECIOS_USD de más abajo. Son los precios de lista ("normales");
+el descuento de lanzamiento se aplica por cliente (clientes.descuento_pct).
 """
 import os
 from datetime import datetime, timedelta, timezone
@@ -90,23 +90,28 @@ ESTADO_TEXTOS = {
 }
 
 # ------------------------------------------------------------
-# PRECIOS DE LISTA (USD al mes). Para cambiarlos, edita SOLO este bloque.
+# PRECIOS DE LISTA ("precio normal", USD al mes). Para cambiarlos, edita SOLO este bloque.
+# Con la oferta de lanzamiento (30%) el cliente paga el precio de lista menos el
+# descuento, redondeado al dólar:
+#   EE. UU./Europa: 70 -> 49 | 170 -> 119 | 356 -> 249
+#   Latinoamérica : 36 -> 25 | 84  -> 59  | 170 -> 119
 # El descuento de cada cliente se guarda aparte (clientes.descuento_pct).
 # ------------------------------------------------------------
 PRECIOS_USD = {
-    'esencial':    {'global': 49,  'latam': 25},
-    'profesional': {'global': 119, 'latam': 59},
-    'agencia':     {'global': 249, 'latam': 119},
+    'esencial':    {'global': 70,  'latam': 36},
+    'profesional': {'global': 170, 'latam': 84},
+    'agencia':     {'global': 356, 'latam': 170},
 }
-ASESOR_EXTRA_USD = {'global': 5, 'latam': 3}   # por asesor adicional, al mes
+ASESOR_EXTRA_USD = {'global': 7, 'latam': 4}   # por asesor adicional, al mes (precio de lista)
 MESES_GRATIS_ANUAL = 2                         # pagando el año: 12 - 2 = 10 mensualidades
 
-# Cuota de instalación (pago único). LatAm: 1 mensualidad de lista, con acompañamiento.
+# Cuota de instalación (pago único, precio de lista). LatAm: 1 mensualidad con acompañamiento.
 # EE. UU./Europa: registro por su cuenta, sin cuota.
+# POR AHORA LA INSTALACIÓN ES GRATIS para todos (oferta de lanzamiento).
 INSTALACION_USD = {
-    'esencial':    {'global': 0, 'latam': 25},
-    'profesional': {'global': 0, 'latam': 59},
-    'agencia':     {'global': 0, 'latam': 119},
+    'esencial':    {'global': 0, 'latam': 36},
+    'profesional': {'global': 0, 'latam': 84},
+    'agencia':     {'global': 0, 'latam': 170},
 }
 
 PAISES_LATAM = {
@@ -131,6 +136,11 @@ def _pct(valor):
         return 0
 
 
+def _al_dolar(x):
+    """Redondea al dólar más cercano (0.5 sube): 249.2 -> 249, 58.8 -> 59."""
+    return int(x + 0.5)
+
+
 def calcular_precio_cliente(cliente):
     """
     Lo que paga un cliente según su plan, su región y su descuento permanente.
@@ -142,9 +152,8 @@ def calcular_precio_cliente(cliente):
         return None
     region = region_precio(cliente.get('pais'))
     pct = _pct(cliente.get('descuento_pct'))
-    factor = (100 - pct) / 100
     lista = PRECIOS_USD[plan][region]
-    final = round(lista * factor, 2)
+    final = _al_dolar(lista * (100 - pct) / 100)
     inst_lista = INSTALACION_USD[plan][region]
     inst_gratis = bool(cliente.get('instalacion_gratis'))
     return {
@@ -154,9 +163,9 @@ def calcular_precio_cliente(cliente):
         'lista': lista,
         'descuento_pct': pct,
         'final': final,
-        'ahorro': round(lista - final, 2),
-        'anual': round(final * (12 - MESES_GRATIS_ANUAL), 2),
-        'asesor_extra': round(ASESOR_EXTRA_USD[region] * factor, 2),
+        'ahorro': lista - final,
+        'anual': final * (12 - MESES_GRATIS_ANUAL),
+        'asesor_extra': _al_dolar(ASESOR_EXTRA_USD[region] * (100 - pct) / 100),
         'instalacion_lista': inst_lista,
         'instalacion_gratis': inst_gratis,
         'instalacion_final': 0 if inst_gratis else inst_lista,
