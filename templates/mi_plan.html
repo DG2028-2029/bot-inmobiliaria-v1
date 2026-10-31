@@ -51,6 +51,9 @@
          text-decoration:none; font-weight:600; margin: 4px 8px 4px 0; }
   .btn.alt { background:transparent; color:var(--c); border:1px solid var(--c); }
   .scroll { overflow-x:auto; }
+  .inst-banner { display:flex; align-items:center; gap:10px; margin-top:14px; padding:12px 16px; border-radius:12px;
+                 background:var(--okbg); color:var(--ok); font-weight:800; font-size:1.05rem; }
+  .inst-banner small { display:block; font-weight:500; font-size:.85rem; opacity:.9; }
 </style>
 </head>
 <body>
@@ -110,10 +113,12 @@
       </div>
       <div style="text-align:right">
         {% if precio.descuento_pct %}<span class="badge s-prueba" style="background:var(--warnbg);color:var(--warn)">{{ precio.descuento_pct }}% de descuento</span>{% endif %}
-        {% if precio.instalacion_gratis %}<span class="badge s-activo">Instalación incluida</span>{% endif %}
         <div class="muted" style="margin-top:6px">Pagando el año: ${{ '%.2f'|format(precio.anual) }} (2 meses gratis)</div>
       </div>
     </div>
+    {% if precio.instalacion_gratis %}
+    <div class="inst-banner"><span style="font-size:1.4rem">🎁</span><div>Sin costo de instalación<small>Instalación incluida en tu plan. No pagas nada por dejarlo funcionando.</small></div></div>
+    {% endif %}
     {% if precio.descuento_pct %}
     <p class="muted" style="margin:12px 0 0">Tienes {{ precio.descuento_pct }}% de descuento por la oferta de lanzamiento, mientras tu suscripción siga activa.</p>
     {% endif %}
