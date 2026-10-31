@@ -157,7 +157,7 @@
   <!-- Oferta de lanzamiento -->
   <section class="panel oferta {{ 'on' if oferta.activa else 'off' }}">
     <div class="oferta-head">
-      <h2>🎁 Oferta de lanzamiento</h2>
+      <h2>🎁 Oferta de lanzamiento <span class="muted" style="font-weight:600;font-size:.85rem">· {{ oferta.descuento_pct }}% menos{% if oferta.instalacion_gratis %} · SIN COSTO DE INSTALACIÓN{% endif %}</span></h2>
       <span class="badge {{ 's-activo' if oferta.activa else 's-vencido' }}">{{ 'ACTIVA' if oferta.activa else 'Apagada' }}</span>
     </div>
     <form method="post" action="{{ url_for('admin_oferta_guardar') }}" class="oferta-form">
@@ -171,7 +171,7 @@
   </section>
 
   <section class="panel">
-    <h2>💲 Lista de precios (USD al mes)</h2>
+    <h2>💲 Precios (USD al mes): normal y con oferta</h2>
     {% set fac = (100 - oferta.descuento_pct) / 100 if oferta.activa else 1 %}
     <div class="scroll">
     <table>
@@ -181,7 +181,7 @@
         <tr>
           <td><b>{{ etiqueta }}</b></td>
           {% for p in ['esencial','profesional','agencia'] %}
-            <td>${{ precios[p][reg] }}{% if oferta.activa and oferta.descuento_pct %}<br><span class="muted">con oferta: <b>${{ '%.2f'|format(precios[p][reg] * fac) }}</b></span>{% endif %}</td>
+            <td>${{ precios[p][reg] }}{% if oferta.activa and oferta.descuento_pct %}<br><span class="muted">con oferta: <b>${{ ((precios[p][reg] * fac) + 0.5)|int }}</b></span>{% endif %}</td>
           {% endfor %}
           <td>${{ asesor_extra[reg] }}</td>
         </tr>
@@ -189,7 +189,7 @@
       </tbody>
     </table>
     </div>
-    <p class="muted" style="margin-top:10px">Pagando el año: {{ meses_gratis }} meses gratis. Instalación (pago único): en Latinoamérica 1 mensualidad de lista; en EE. UU./Europa, sin cuota. Los precios se cambian en <code>planes.py</code>.</p>
+    <p class="muted" style="margin-top:10px">Pagando el año: {{ meses_gratis }} meses gratis. Los precios se cambian en <code>planes.py</code>. {% if oferta.activa and oferta.instalacion_gratis %}<b>Instalación: GRATIS por ahora, para todos los clientes.</b>{% else %}<b>Instalación: se cobra</b> (Latinoamérica: 1 mensualidad de lista; EE. UU. y Europa: sin cuota).{% endif %}</p>
   </section>
 
   {% if atencion %}
@@ -307,7 +307,7 @@
       <!-- Ventana: registrar pago -->
       <dialog id="dlg-pago-{{ c.id }}">
         <div class="dlg-h">Registrar pago<small>{{ c.nombre or c.id }}</small></div>
-        <form class="dlg-b f-pago" data-region="{{ f.region }}" data-plan="{{ info.plan }}" data-desc="{{ f.descuento_pct }}" data-instgratis="{{ 1 if f.instalacion_gratis else 0 }}" method="post" action="{{ url_for('admin_pago_registrar', cliente_id=c.id) }}">
+        <form class="dlg-b f-pago" data-region="{{ f.region }}" data-plan="{{ info.plan }}" data-desc="{{ f.descuento_pct }}" data-instgratis="{{ 1 if f.instalacion_gratis else 0 }}" data-ofertainst="{{ 1 if (oferta.activa and oferta.instalacion_gratis) else 0 }}" method="post" action="{{ url_for('admin_pago_registrar', cliente_id=c.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="two">
             <div><label>Concepto</label>
@@ -395,6 +395,7 @@
   var INSTALACION = {{ instalacion|tojson }};
   var MESES_GRATIS = {{ meses_gratis }};
   function fmt(n) { return Number(n).toFixed(2); }
+  function redondear(n) { return Math.floor(n + 0.5); }
   function abrir(id) {
     var d = document.getElementById(id);
     if (d.showModal) { d.showModal(); } else { d.setAttribute('open', ''); }
@@ -431,13 +432,14 @@
     var monto = form.querySelector('[name=monto]');
     var lista = (PRECIOS[plan] || {})[region];
     if (lista === undefined) { hint.textContent = 'Plan Fundador: sin cobro. Elige el plan que paga para ver el monto sugerido.'; return; }
-    var final = lista * (100 - pct) / 100;
+    var final = redondear(lista * (100 - pct) / 100);
     var val = 0, txt = '';
     if (tipo === 'mensualidad') { val = final; txt = 'mensualidad' + (pct ? ' con ' + pct + '% de descuento' : ''); }
     else if (tipo === 'anual') { val = final * (12 - MESES_GRATIS); txt = 'año completo (' + MESES_GRATIS + ' meses gratis)'; }
     else if (tipo === 'instalacion') {
-      val = form.dataset.instgratis === '1' ? 0 : ((INSTALACION[plan] || {})[region] || 0);
-      txt = form.dataset.instgratis === '1' ? 'instalación gratis (oferta)' : 'instalación (pago único)';
+      var sinCuota = (form.dataset.instgratis === '1' || form.dataset.ofertainst === '1');
+      val = sinCuota ? 0 : ((INSTALACION[plan] || {})[region] || 0);
+      txt = sinCuota ? 'sin costo de instalación (oferta de lanzamiento)' : 'instalación (pago único)';
     } else { txt = 'monto libre'; }
     hint.textContent = 'Monto sugerido: $' + fmt(val) + ' — ' + txt + '. Puedes cambiarlo.';
     if (!monto.dataset.manual) { monto.value = fmt(val); }
@@ -459,8 +461,8 @@
     var out = form.querySelector('.prev-precio');
     var lista = (PRECIOS[plan] || {})[region];
     if (lista === undefined) { out.textContent = 'Plan Fundador: sin cobro.'; return; }
-    var final = lista * (100 - pct) / 100;
-    out.textContent = 'Precio final: $' + fmt(final) + ' al mes' + (pct ? ' (lista $' + fmt(lista) + ', −' + pct + '%)' : '') +
+    var final = redondear(lista * (100 - pct) / 100);
+    out.textContent = 'Precio final: $' + fmt(final) + ' al mes' + (pct ? ' (precio normal $' + fmt(lista) + ', −' + pct + '%)' : '') +
       ' · ' + (region === 'latam' ? 'Latinoamérica' : 'EE. UU., Canadá y Europa');
   }
   document.querySelectorAll('form.f-plan').forEach(function (f) {
