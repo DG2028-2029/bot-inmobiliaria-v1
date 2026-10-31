@@ -94,11 +94,11 @@ ESTADO_TEXTOS = {
 # Con la oferta de lanzamiento (30%) el cliente paga el precio de lista menos el
 # descuento, redondeado al dólar:
 #   EE. UU./Europa: 70 -> 49 | 170 -> 119 | 356 -> 249
-#   Latinoamérica : 36 -> 25 | 84  -> 59  | 170 -> 119
+#   Latinoamérica : 41 -> 29 | 84  -> 59  | 170 -> 119
 # El descuento de cada cliente se guarda aparte (clientes.descuento_pct).
 # ------------------------------------------------------------
 PRECIOS_USD = {
-    'esencial':    {'global': 70,  'latam': 36},
+    'esencial':    {'global': 70,  'latam': 41},
     'profesional': {'global': 170, 'latam': 84},
     'agencia':     {'global': 356, 'latam': 170},
 }
@@ -109,7 +109,7 @@ MESES_GRATIS_ANUAL = 2                         # pagando el año: 12 - 2 = 10 me
 # EE. UU./Europa: registro por su cuenta, sin cuota.
 # POR AHORA LA INSTALACIÓN ES GRATIS para todos (oferta de lanzamiento).
 INSTALACION_USD = {
-    'esencial':    {'global': 0, 'latam': 36},
+    'esencial':    {'global': 0, 'latam': 41},
     'profesional': {'global': 0, 'latam': 84},
     'agencia':     {'global': 0, 'latam': 170},
 }
