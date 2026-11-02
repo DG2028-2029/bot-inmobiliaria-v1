@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Planes y cobros · PropTech</title>
+<title>Planes y cobros · IPOX</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%230B1F3A%22/%3E%3Cpath d=%22M7 17 16 8l9 9%22 fill=%22none%22 stroke=%22%23C9A24B%22 stroke-width=%222.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Crect x=%2214.4%22 y=%2215%22 width=%223.2%22 height=%229%22 rx=%221.2%22 fill=%22%23fff%22/%3E%3C/svg%3E">
 <style>
   :root {
-    --brand:#667eea; --brand-d:#5468d4; --navy:#2c3e50; --navy-d:#1a252f;
-    --bg:#f0f2f5; --card:#ffffff; --txt:#1f2937; --muted:#6b7280; --line:#e5e7eb;
-    --green:#27ae60; --blue:#3498db; --purple:#8e44ad; --red:#e74c3c; --amber:#f59e0b;
+    --brand:#0B1F3A; --brand-d:#132C50; --navy:#0B1F3A; --navy-d:#132C50;
+    --bg:#F6F4EF; --card:#ffffff; --txt:#18233A; --muted:#6B7385; --line:#E8E3D6;
+    --green:#2F7D5B; --blue:#1D3A66; --purple:#9A7A2E; --red:#A33B35; --amber:#C9A24B;
   }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--txt);
@@ -16,7 +17,7 @@
   a { text-decoration:none; }
 
   /* Encabezado */
-  .hdr { background:linear-gradient(135deg,var(--navy),var(--navy-d)); color:#fff; }
+  .hdr { background:linear-gradient(180deg,var(--navy),var(--navy-d)); color:#fff; border-bottom:3px solid #C9A24B; }
   .hdr-in { max-width:1100px; margin:0 auto; padding:18px 16px; display:flex; align-items:center;
             justify-content:space-between; gap:12px; flex-wrap:wrap; }
   .ttl { font-size:1.15rem; font-weight:700; }
@@ -25,7 +26,7 @@
   .btn:hover { filter:brightness(.95); }
   .btn.red { background:var(--red); } .btn.green { background:var(--green); }
   .btn.blue { background:var(--blue); } .btn.purple { background:var(--purple); }
-  .btn.ghost { background:rgba(255,255,255,.14); }
+  .btn.ghost { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.28); }
   .btn.line { background:#fff; color:var(--txt); border:1px solid var(--line); }
   .hdr .btn { margin-left:6px; }
 
@@ -124,13 +125,20 @@
   .tag.green { background:#dcfce7; color:#166534; }
   @media (max-width:760px) { .oferta-form { grid-template-columns:1fr; } }
   @media (max-width:520px) { .two { grid-template-columns:1fr; } .acts { grid-template-columns:1fr; } }
+
+  /* ===== Marca IPOX ===== */
+  .ix-brand { display:flex; align-items:center; gap:14px; color:#fff; text-decoration:none; }
+  .ix-mark { width:36px; height:36px; flex:none; }
+  .ix-word { font-family:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif; font-size:22px; letter-spacing:.3em; font-weight:600; line-height:1; display:block; }
+  .ix-sub { display:block; font-size:9.5px; letter-spacing:.24em; text-transform:uppercase; color:#E6D3A0; margin-top:6px; font-weight:500; }
+  h1, h2, h3, .kpi .n { font-family:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif; font-weight:600; }
 </style>
 </head>
 <body>
 
 <header class="hdr">
   <div class="hdr-in">
-    <div class="ttl">💳 Planes y cobros — PropTech</div>
+    <a class="ix-brand" href="{{ url_for('admin_panel') }}" title="IPOX"><svg class="ix-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#13294B"/><rect x=".75" y=".75" width="30.5" height="30.5" rx="7.25" fill="none" stroke="#C9A24B" stroke-opacity=".55" stroke-width="1.5"/><path d="M7 17 16 8l9 9" fill="none" stroke="#C9A24B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="14.4" y="15" width="3.2" height="9" rx="1.2" fill="#fff"/></svg><span><span class="ix-word">IPOX</span><span class="ix-sub">Planes y cobros</span></span></a>
     <div>
       <a class="btn ghost" href="{{ url_for('admin_panel') }}">← Panel</a>
       <a class="btn red" href="{{ url_for('admin_logout') }}">🔓 Cerrar sesión</a>
