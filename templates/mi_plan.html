@@ -1,62 +1,68 @@
+{% set _c = (cliente.color_primario or '')|lower %}{% set acento = cliente.color_primario if (plan_info and 'marca_propia' in plan_info.funciones and _c and _c != '#667eea') else '#C9A24B' %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mi plan · {{ cliente.nombre }}</title>
+<title>Mi plan · {{ cliente.nombre }} · IPOX</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%230B1F3A%22/%3E%3Cpath d=%22M7 17 16 8l9 9%22 fill=%22none%22 stroke=%22%23C9A24B%22 stroke-width=%222.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Crect x=%2214.4%22 y=%2215%22 width=%223.2%22 height=%229%22 rx=%221.2%22 fill=%22%23fff%22/%3E%3C/svg%3E">
 <style>
   :root {
-    --c: {{ cliente.color_primario or '#667eea' }};
-    --bg: #f5f6fa; --card: #ffffff; --txt: #1f2430; --muted: #6b7280; --line: #e5e7eb;
-    --ok: #15803d; --okbg: #dcfce7; --warn: #92400e; --warnbg: #fef3c7;
-    --bad: #991b1b; --badbg: #fee2e2; --info: #1e40af; --infobg: #dbeafe;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#12141a; --card:#1b1f29; --txt:#e8eaf0; --muted:#9aa3b2; --line:#2c3240;
-            --okbg:#14351f; --ok:#86efac; --warnbg:#3b2a0d; --warn:#fcd34d;
-            --badbg:#3b1414; --bad:#fca5a5; --infobg:#14264a; --info:#93c5fd; }
+    --c: {{ acento }};
+    --bg:#F6F4EF; --card:#ffffff; --txt:#18233A; --muted:#6B7385; --line:#E8E3D6;
+    --ok:#2F7D5B; --okbg:#E6F2EC; --warn:#8F6410; --warnbg:#FBF1D9;
+    --bad:#A33B35; --badbg:#F8E6E4; --info:#2B5C9A; --infobg:#E4EDF8;
   }
   * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--txt);
-         font-family: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; line-height:1.5; }
-  .wrap { max-width: 920px; margin: 0 auto; padding: 24px 16px 64px; }
+  body { margin:0; background:var(--bg); color:var(--txt); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .hdr { background:linear-gradient(180deg,#0B1F3A,#132C50); border-bottom:3px solid var(--c); }
+  .hdr-in { max-width:920px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .wrap { max-width:920px; margin:0 auto; padding:24px 16px 64px; }
   .top { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
-  h1 { font-size: 1.5rem; margin:0; }
-  h2 { font-size: 1.05rem; margin: 0 0 14px; }
-  a.back { color: var(--c); text-decoration:none; font-weight:600; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:16px; }
+  h1 { font-size:1.7rem; margin:0; }
+  h2 { font-size:1.1rem; margin:0 0 14px; }
+  a.back { color:#0B1F3A; text-decoration:none; font-weight:600; font-size:.9rem; }
+  a.back:hover { color:var(--c); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px; margin-bottom:16px; box-shadow:0 1px 2px rgba(11,31,58,.05), 0 10px 28px rgba(11,31,58,.05); }
   .banner { border-radius:12px; padding:14px 16px; margin-bottom:16px; font-size:.95rem; }
   .b-warn { background:var(--warnbg); color:var(--warn); }
   .b-bad  { background:var(--badbg);  color:var(--bad); }
   .b-info { background:var(--infobg); color:var(--info); }
   .plan-row { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
-  .plan-name { font-size:1.6rem; font-weight:700; }
-  .badge { display:inline-block; padding:3px 12px; border-radius:999px; font-size:.8rem; font-weight:700; }
+  .plan-name { font-size:1.8rem; }
+  .badge { display:inline-block; padding:4px 13px; border-radius:999px; font-size:.78rem; font-weight:700; }
   .s-activo, .s-prueba { background:var(--okbg); color:var(--ok); }
   .s-prueba { background:var(--infobg); color:var(--info); }
   .s-gracia { background:var(--warnbg); color:var(--warn); }
   .s-vencido, .s-cancelado { background:var(--badbg); color:var(--bad); }
   .muted { color:var(--muted); font-size:.9rem; }
-  .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
-  .bar { height:10px; background:var(--line); border-radius:999px; overflow:hidden; margin:8px 0 4px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
+  .bar { height:10px; background:#EEE9DB; border-radius:999px; overflow:hidden; margin:8px 0 4px; }
   .bar > span { display:block; height:100%; background:var(--c); border-radius:999px; }
-  .bar.full > span { background:#dc2626; }
+  .bar.full > span { background:#A33B35; }
   table { width:100%; border-collapse:collapse; font-size:.92rem; }
-  th, td { padding:9px 8px; border-bottom:1px solid var(--line); text-align:left; }
-  th { color:var(--muted); font-weight:600; font-size:.8rem; text-transform:uppercase; letter-spacing:.03em; }
+  th, td { padding:10px 8px; border-bottom:1px solid #F0ECE0; text-align:left; }
+  th { color:var(--muted); font-weight:600; font-size:.74rem; text-transform:uppercase; letter-spacing:.07em; }
   td.c, th.c { text-align:center; }
-  .yes { color:var(--ok); font-weight:700; } .no { color:var(--muted); }
-  tr.cur td, th.cur { background: color-mix(in srgb, var(--c) 10%, transparent); }
-  .btn { display:inline-block; padding:10px 18px; border-radius:10px; background:var(--c); color:#fff;
-         text-decoration:none; font-weight:600; margin: 4px 8px 4px 0; }
-  .btn.alt { background:transparent; color:var(--c); border:1px solid var(--c); }
+  .yes { color:var(--ok); font-weight:700; } .no { color:#B9B4A3; }
+  tr.cur td, th.cur { background:#F7F0DC; }
+  .btn { display:inline-block; padding:10px 20px; border-radius:999px; background:#0B1F3A; color:#fff; text-decoration:none; font-weight:700; margin:4px 8px 4px 0; }
+  .btn:hover { background:var(--c); color:#0B1F3A; }
+  .btn.alt { background:transparent; color:#0B1F3A; border:1px solid #0B1F3A; }
   .scroll { overflow-x:auto; }
-  .inst-banner { display:flex; align-items:center; gap:10px; margin-top:14px; padding:12px 16px; border-radius:12px;
-                 background:var(--okbg); color:var(--ok); font-weight:800; font-size:1.05rem; }
+  .inst-banner { display:flex; align-items:center; gap:10px; margin-top:14px; padding:14px 18px; border-radius:12px; background:var(--okbg); color:var(--ok); font-weight:800; font-size:1.05rem; border:1px solid #BBD9CA; }
   .inst-banner small { display:block; font-weight:500; font-size:.85rem; opacity:.9; }
+  h1, h2, .plan-name { font-family:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif; font-weight:600; }
+  .ix-brand { display:flex; align-items:center; gap:14px; color:#fff; text-decoration:none; }
+  .ix-mark { width:34px; height:34px; flex:none; }
+  .ix-word { font-family:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif; font-size:21px; letter-spacing:.3em; font-weight:600; line-height:1; display:block; }
+  .ix-sub { display:block; font-size:9.5px; letter-spacing:.24em; text-transform:uppercase; color:#E6D3A0; margin-top:6px; font-weight:500; }
 </style>
 </head>
 <body>
+<header class="hdr"><div class="hdr-in">
+  <a class="ix-brand" href="{{ url_for('historial', cliente_id=cliente_id) }}" title="IPOX"><svg class="ix-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#13294B"/><rect x=".75" y=".75" width="30.5" height="30.5" rx="7.25" fill="none" stroke="#C9A24B" stroke-opacity=".55" stroke-width="1.5"/><path d="M7 17 16 8l9 9" fill="none" stroke="#C9A24B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="14.4" y="15" width="3.2" height="9" rx="1.2" fill="#fff"/></svg><span><span class="ix-word">IPOX</span><span class="ix-sub">CRM Inmobiliario</span></span></a>
+</div></header>
 <div class="wrap">
 
   <div class="top">
