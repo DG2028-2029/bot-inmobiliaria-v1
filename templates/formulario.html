@@ -4,226 +4,242 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ cliente_nombre }}</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%230B1F3A%22/%3E%3Cpath d=%22M7 17 16 8l9 9%22 fill=%22none%22 stroke=%22%23C9A24B%22 stroke-width=%222.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Crect x=%2214.4%22 y=%2215%22 width=%223.2%22 height=%229%22 rx=%221.2%22 fill=%22%23fff%22/%3E%3C/svg%3E">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        :root {
+            --ix-navy:#0B1F3A; --ix-navy-2:#132C50; --ix-navy-3:#1D3A66;
+            --ix-gold:#C9A24B; --ix-gold-2:#E6D3A0; --ix-gold-3:#F7F0DC;
+            --ix-ivory:#F6F4EF; --ix-card:#FFFFFF; --ix-ink:#18233A; --ix-muted:#6B7385; --ix-line:#E8E3D6;
+            --ix-ok:#2F7D5B; --ix-ok-bg:#E6F2EC; --ix-warn:#8F6410; --ix-warn-bg:#FBF1D9;
+            --ix-bad:#A33B35; --ix-bad-bg:#F8E6E4; --ix-info:#2B5C9A; --ix-info-bg:#E4EDF8;
+            --ix-serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+            --ix-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+            --ix-radius:16px; --ix-shadow:0 1px 2px rgba(11,31,58,.05), 0 10px 28px rgba(11,31,58,.07);
+            --accent:#C9A24B;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { -webkit-text-size-adjust: 100%; }
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: var(--ix-sans);
             min-height: 100vh;
-            background: #0a0a0f;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
+            background: var(--ix-ivory);
+            color: var(--ix-ink);
+            line-height: 1.45;
+            -webkit-font-smoothing: antialiased;
+            padding: 20px 16px 40px;
+            position: relative;
         }
-        .bg-glow {
-            position: fixed; inset: 0; pointer-events: none;
-            background: radial-gradient(ellipse at 20% 20%, rgba(102,126,234,0.12) 0%, transparent 55%);
+        /* Banda azul superior con borde dorado */
+        body::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 200px;
+            background: linear-gradient(180deg, var(--ix-navy), var(--ix-navy-2));
+            border-bottom: 3px solid var(--accent);
+            pointer-events: none;
         }
-        .grid-bg {
-            position: fixed; inset: 0; pointer-events: none;
-            background-image:
-                linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-            background-size: 50px 50px;
-        }
-        .lang-wrapper { position: fixed; top: 20px; right: 20px; z-index: 999; }
+
+        /* ===== Selector de idioma ===== */
+        .lang-wrapper { position: absolute; top: 18px; right: 18px; z-index: 999; }
         .lang-selector { position: relative; }
         .lang-selector-btn {
             display: flex; align-items: center; gap: 8px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 50px;
-            padding: 9px 14px 9px 10px;
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.3);
+            border-radius: 999px;
+            padding: 7px 12px 7px 12px;
             cursor: pointer; font-family: inherit;
-            font-size: 13px; font-weight: 600;
-            color: rgba(255,255,255,0.8);
-            transition: 0.2s; white-space: nowrap;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            font-size: 12.5px; font-weight: 600;
+            color: #fff; transition: .2s; white-space: nowrap;
         }
-        .lang-selector-btn:hover { border-color: rgba(255,255,255,0.35); color: white; background: rgba(255,255,255,0.12); }
-        .lang-flag { font-size: 18px; }
-        .lang-nombre { font-size: 12px; font-weight: 600; }
-        .lang-arrow-wrap {
-            width: 22px; height: 22px;
-            background: rgba(255,255,255,0.12);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 9px; color: rgba(255,255,255,0.7);
-            transition: transform 0.2s;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
+        .lang-selector-btn:hover { background: rgba(255,255,255,.16); }
+        .lang-selector-btn:focus-visible { outline: 2px solid var(--ix-gold-2); outline-offset: 2px; }
+        .lang-flag { font-size: 17px; line-height: 1; }
+        .lang-nombre { font-size: 12.5px; font-weight: 600; }
+        .lang-arrow-wrap { font-size: 10px; opacity: .7; transition: transform .2s; }
         .lang-selector.abierto .lang-arrow-wrap { transform: rotate(180deg); }
         .lang-menu {
             display: none; position: absolute;
             top: calc(100% + 8px); right: 0;
-            background: #1a1a24;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 14px;
+            background: #fff;
+            border: 1px solid var(--ix-line);
+            border-radius: 12px;
             min-width: 190px; overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            box-shadow: 0 18px 40px rgba(11,31,58,.28);
         }
         .lang-selector.abierto .lang-menu { display: block; }
         .lang-menu a {
             display: flex; align-items: center; gap: 10px;
             padding: 11px 16px; text-decoration: none;
-            color: rgba(255,255,255,0.6); font-size: 13px;
-            font-weight: 500; transition: 0.15s;
+            color: var(--ix-ink); font-size: 13px;
+            font-weight: 500; transition: .15s;
         }
-        .lang-menu a:hover { background: rgba(255,255,255,0.06); color: white; }
-        .lang-menu a.activo { color: #667eea; background: rgba(102,126,234,0.08); }
-        .lang-menu-flag { font-size: 20px; }
-        .wrapper { position: relative; z-index: 1; width: 100%; max-width: 500px; }
+        .lang-menu a:hover { background: var(--ix-gold-3); }
+        .lang-menu a.activo { color: var(--ix-navy); font-weight: 700; background: var(--ix-gold-3); }
+        .lang-menu-flag { font-size: 18px; }
+
+        /* ===== Estructura ===== */
+        .wrapper { position: relative; z-index: 1; width: 100%; max-width: 500px; margin: 62px auto 0; }
         .brand {
             display: flex; align-items: center; gap: 14px;
-            margin-bottom: 20px;
-            padding: 18px 22px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 16px;
+            margin-bottom: 16px;
+            padding: 16px 20px;
+            background: var(--ix-card);
+            border: 1px solid var(--ix-line);
+            border-left: 5px solid var(--accent);
+            border-radius: var(--ix-radius);
+            box-shadow: var(--ix-shadow);
         }
         .brand-logo {
-            width: 46px; height: 46px; border-radius: 13px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            width: 46px; height: 46px; border-radius: 12px;
+            background: var(--ix-navy);
             display: flex; align-items: center; justify-content: center;
-            font-size: 21px; flex-shrink: 0;
-            box-shadow: 0 6px 20px rgba(102,126,234,0.3);
+            flex-shrink: 0;
         }
-        .brand-name { font-size: 15px; font-weight: 700; color: white; }
-        .brand-sub { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 3px; }
+        .brand-logo svg { width: 26px; height: 26px; }
+        .brand-name { font-family: var(--ix-serif); font-size: 19px; font-weight: 600; color: var(--ix-navy); line-height: 1.2; }
+        .brand-sub { font-size: 11.5px; color: var(--ix-muted); margin-top: 4px; }
+
         .form-card {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 22px;
+            background: var(--ix-card);
+            border: 1px solid var(--ix-line);
+            border-radius: var(--ix-radius);
+            box-shadow: var(--ix-shadow);
             padding: 30px 26px;
         }
-        .form-title { font-size: 19px; font-weight: 700; color: white; margin-bottom: 6px; }
-        .form-sub { font-size: 13px; color: rgba(255,255,255,0.35); margin-bottom: 26px; line-height: 1.6; }
-        .form-group { margin-bottom: 14px; }
+        .form-title { font-family: var(--ix-serif); font-size: 23px; font-weight: 600; color: var(--ix-navy); margin-bottom: 6px; line-height: 1.25; }
+        .form-sub { font-size: 14px; color: var(--ix-muted); margin-bottom: 26px; line-height: 1.6; }
+        .form-group { margin-bottom: 15px; }
         .form-label {
             display: block;
-            font-size: 10px; font-weight: 700;
-            color: rgba(255,255,255,0.4);
-            text-transform: uppercase; letter-spacing: 0.6px;
+            font-size: 11px; font-weight: 700;
+            color: var(--ix-muted);
+            text-transform: uppercase; letter-spacing: .08em;
             margin-bottom: 7px;
         }
         .input-wrap { position: relative; }
         .input-icon {
             position: absolute; left: 13px; top: 50%;
             transform: translateY(-50%);
-            font-size: 14px; opacity: 0.3;
+            font-size: 14px; opacity: .55;
             pointer-events: none;
         }
         .form-group input,
         .form-group textarea {
             width: 100%;
-            padding: 12px 13px 12px 38px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 11px;
-            font-size: 14px; font-family: inherit;
-            color: white; transition: 0.2s;
+            padding: 12px 13px 12px 40px;
+            background: var(--ix-ivory);
+            border: 1px solid var(--ix-line);
+            border-radius: 10px;
+            font-size: 15px; font-family: inherit;
+            color: var(--ix-ink); transition: .2s;
         }
-        .form-group textarea { padding-top: 12px; resize: vertical; min-height: 85px; }
+        .form-group textarea { padding-top: 12px; resize: vertical; min-height: 90px; }
         .form-group input::placeholder,
-        .form-group textarea::placeholder { color: rgba(255,255,255,0.18); }
+        .form-group textarea::placeholder { color: #A5ABB8; }
         .form-group input:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: rgba(102,126,234,0.55);
-            background: rgba(255,255,255,0.07);
-            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+            border-color: var(--accent);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(201,162,75,.2);
         }
-        /* ✅ Error box */
         .error-box {
-            background: rgba(231,76,60,0.1);
-            border: 1px solid rgba(231,76,60,0.3);
+            background: var(--ix-bad-bg);
+            border: 1px solid #EBC5C1;
             border-radius: 10px;
             padding: 12px 14px;
             font-size: 13px;
-            color: #ff6b6b;
+            color: var(--ix-bad);
             margin-bottom: 16px;
             display: flex; align-items: center; gap: 8px;
         }
         .checkbox-group {
             display: flex; align-items: flex-start; gap: 11px;
-            margin: 18px 0;
+            margin: 20px 0;
             padding: 13px 14px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.06);
+            background: var(--ix-ivory);
+            border: 1px solid var(--ix-line);
             border-radius: 10px;
         }
         .checkbox-group input[type="checkbox"] {
-            width: 17px; height: 17px;
+            width: 18px; height: 18px;
             padding: 0; margin-top: 1px;
             flex-shrink: 0; cursor: pointer;
-            accent-color: #667eea;
+            accent-color: var(--ix-navy);
         }
-        .checkbox-group label { font-size: 12px; color: rgba(255,255,255,0.33); line-height: 1.6; cursor: pointer; }
-        .checkbox-group label a { color: #a0b4ff; text-decoration: none; font-weight: 600; }
-        .checkbox-group label a:hover { text-decoration: underline; color: #667eea; }
-        /* ✅ Aviso de privacidad */
+        .checkbox-group label { font-size: 12.5px; color: var(--ix-muted); line-height: 1.6; cursor: pointer; }
+        .checkbox-group label a { color: var(--ix-navy-3); text-decoration: underline; text-underline-offset: 2px; font-weight: 600; }
+        .checkbox-group label a:hover { color: var(--ix-navy); }
         .privacy-notice {
-            font-size: 11px;
-            color: rgba(255,255,255,0.2);
+            font-size: 11.5px;
+            color: var(--ix-muted);
             text-align: center;
-            margin-top: 12px;
+            margin-top: 14px;
             line-height: 1.5;
         }
-        .privacy-notice a { color: rgba(102,126,234,0.6); text-decoration: none; }
-        .privacy-notice a:hover { color: #667eea; }
+        .privacy-notice a { color: var(--ix-navy-3); text-decoration: underline; }
         .btn-submit {
             width: 100%; padding: 14px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white; border: none; border-radius: 11px;
-            font-size: 14px; font-weight: 700; font-family: inherit;
-            cursor: pointer; transition: 0.3s;
-            box-shadow: 0 8px 24px rgba(102,126,234,0.3);
+            background: var(--ix-navy);
+            color: #fff; border: none; border-radius: 999px;
+            font-size: 14.5px; font-weight: 700; font-family: inherit;
+            cursor: pointer; transition: .2s;
         }
-        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(102,126,234,0.4); }
-        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-submit:hover { background: var(--accent); color: var(--ix-navy); }
+        .btn-submit:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+        .btn-submit:disabled { opacity: .55; cursor: not-allowed; }
+
+        /* ===== Pantalla de éxito ===== */
         .success-card {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 22px; padding: 44px 28px; text-align: center;
+            background: var(--ix-card);
+            border: 1px solid var(--ix-line);
+            border-radius: var(--ix-radius);
+            box-shadow: var(--ix-shadow);
+            padding: 44px 28px; text-align: center;
         }
         .success-icon-wrap {
-            width: 76px; height: 76px; border-radius: 50%;
-            background: rgba(39,174,96,0.15);
-            border: 2px solid rgba(39,174,96,0.3);
+            width: 72px; height: 72px; border-radius: 50%;
+            background: var(--ix-ok-bg);
+            border: 2px solid #BBD9CA;
             display: flex; align-items: center; justify-content: center;
-            font-size: 34px; margin: 0 auto 22px;
+            font-size: 32px; margin: 0 auto 22px;
         }
-        .success-title { font-size: 21px; font-weight: 800; color: white; margin-bottom: 10px; }
-        .success-text { font-size: 14px; color: rgba(255,255,255,0.4); line-height: 1.7; margin-bottom: 26px; }
+        .success-title { font-family: var(--ix-serif); font-size: 23px; font-weight: 600; color: var(--ix-navy); margin-bottom: 10px; line-height: 1.25; }
+        .success-text { font-size: 14.5px; color: var(--ix-muted); line-height: 1.7; margin-bottom: 26px; }
         .success-btns { display: flex; flex-direction: column; gap: 10px; }
         .btn-wa {
             display: flex; align-items: center; justify-content: center; gap: 10px;
-            padding: 13px 24px; background: #25D366; color: white;
-            border-radius: 11px; text-decoration: none;
-            font-size: 14px; font-weight: 700; transition: 0.2s;
+            padding: 13px 24px; background: #25A25A; color: #fff;
+            border-radius: 999px; text-decoration: none;
+            font-size: 14px; font-weight: 700; transition: .2s;
         }
-        .btn-wa:hover { background: #20ba5c; transform: translateY(-2px); }
+        .btn-wa:hover { background: #1B8648; }
         .btn-inv {
             display: flex; align-items: center; justify-content: center; gap: 10px;
             padding: 13px 24px;
-            background: rgba(142,68,173,0.2);
-            border: 1px solid rgba(142,68,173,0.3);
-            color: #c39bd3; border-radius: 11px; text-decoration: none;
-            font-size: 14px; font-weight: 600; transition: 0.2s;
+            background: #fff;
+            border: 1px solid var(--ix-line);
+            color: var(--ix-navy); border-radius: 999px; text-decoration: none;
+            font-size: 14px; font-weight: 600; transition: .2s;
         }
-        .btn-inv:hover { background: rgba(142,68,173,0.3); color: white; }
+        .btn-inv:hover { background: var(--ix-navy); border-color: var(--ix-navy); color: #fff; }
+
+        /* ===== Pie con la marca ===== */
+        .ix-foot { display: flex; align-items: center; justify-content: center; gap: 9px; margin-top: 24px; opacity: .85; }
+        .ix-foot svg { width: 20px; height: 20px; }
+        .ix-foot span { font-family: var(--ix-serif); font-size: 12px; letter-spacing: .3em; font-weight: 600; color: var(--ix-navy); }
+
         @media (max-width: 480px) {
-            body { padding: 16px; }
-            .form-card { padding: 22px 18px; }
+            body { padding: 14px 12px 32px; }
+            body::before { height: 190px; }
+            .wrapper { margin-top: 56px; }
+            .form-card { padding: 24px 18px; }
+            .success-card { padding: 36px 20px; }
             .brand { padding: 14px 16px; }
             .lang-wrapper { top: 12px; right: 12px; }
         }
     </style>
 </head>
 <body>
-<div class="bg-glow"></div>
-<div class="grid-bg"></div>
 
 {% set sistema_label = {
     'es': 'Sistema de gestión inmobiliaria',
@@ -285,7 +301,7 @@
                 {% if idioma_actual == 'es' %}🇪🇸{% elif idioma_actual == 'en' %}🇺🇸{% elif idioma_actual == 'fr' %}🇫🇷{% elif idioma_actual == 'de' %}🇩🇪{% elif idioma_actual == 'pt' %}🇵🇹{% elif idioma_actual == 'zh' %}🇨🇳{% else %}🇪🇸{% endif %}
             </span>
             <span class="lang-nombre">{{ textos['btn_' + idioma_actual] if ('btn_' + idioma_actual) in textos else 'Idioma' }}</span>
-            <span class="lang-arrow-wrap">▼</span>
+            <span class="lang-arrow-wrap">▾</span>
         </button>
         <div class="lang-menu">
             <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente_id) }}" {% if idioma_actual == 'es' %}class="activo"{% endif %}>
@@ -312,7 +328,9 @@
 
 <div class="wrapper">
     <div class="brand">
-        <div class="brand-logo">🏠</div>
+        <div class="brand-logo">
+            <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 17 16 7l11 10" fill="none" stroke="#C9A24B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 15.5V25h14v-9.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
         <div>
             <div class="brand-name">{{ cliente_nombre }}</div>
             <div class="brand-sub">{{ sistema_label[lang] }}</div>
@@ -363,7 +381,7 @@
             <div class="form-group">
                 <label class="form-label">{{ textos.placeholder_propiedad }}</label>
                 <div class="input-wrap">
-                    <textarea name="mensaje" placeholder="{{ textos.placeholder_propiedad }}" required maxlength="1000" style="padding-left:38px;"></textarea>
+                    <textarea name="mensaje" placeholder="{{ textos.placeholder_propiedad }}" required maxlength="1000" style="padding-left:40px;"></textarea>
                     <span class="input-icon" style="top:16px;transform:none;">💬</span>
                 </div>
             </div>
@@ -402,6 +420,11 @@
         </div>
     </div>
     {% endif %}
+
+    <div class="ix-foot" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#0B1F3A"/><path d="M7 17 16 8l9 9" fill="none" stroke="#C9A24B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="14.4" y="15" width="3.2" height="9" rx="1.2" fill="#fff"/></svg>
+        <span>IPOX</span>
+    </div>
 </div>
 
 <script>
