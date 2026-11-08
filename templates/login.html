@@ -1,24 +1,37 @@
+{% set _c = (cliente.color_primario or '')|lower %}{% set acento = cliente.color_primario if (plan_info and 'marca_propia' in plan_info.funciones and _c and _c != '#667eea') else '#C9A24B' %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ cliente.nombre }} — Acceso</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%230B1F3A%22/%3E%3Cpath d=%22M7 17 16 8l9 9%22 fill=%22none%22 stroke=%22%23C9A24B%22 stroke-width=%222.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Crect x=%2214.4%22 y=%2215%22 width=%223.2%22 height=%229%22 rx=%221.2%22 fill=%22%23fff%22/%3E%3C/svg%3E">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         :root {
-            --color: {{ cliente.color_primario or '#667eea' }};
-            --color-dark: color-mix(in srgb, var(--color) 70%, black);
-            --color-light: color-mix(in srgb, var(--color) 15%, white);
+            --ix-navy:#0B1F3A; --ix-navy-2:#132C50; --ix-navy-3:#1D3A66;
+            --ix-gold:#C9A24B; --ix-gold-2:#E6D3A0; --ix-gold-3:#F7F0DC;
+            --ix-ivory:#F6F4EF; --ix-card:#FFFFFF; --ix-ink:#18233A; --ix-muted:#6B7385; --ix-line:#E8E3D6;
+            --ix-ok:#2F7D5B; --ix-ok-bg:#E6F2EC; --ix-warn:#8F6410; --ix-warn-bg:#FBF1D9;
+            --ix-bad:#A33B35; --ix-bad-bg:#F8E6E4; --ix-info:#2B5C9A; --ix-info-bg:#E4EDF8;
+            --ix-serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+            --ix-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+            --ix-radius:16px;
+            --accent: {{ acento }};
+            --color: var(--accent);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { -webkit-text-size-adjust: 100%; }
         body {
-            font-family: 'Inter', 'Segoe UI', sans-serif;
+            font-family: var(--ix-sans);
             min-height: 100vh;
             display: flex;
-            background: #0a0a0f;
-            overflow: hidden;
+            background: var(--ix-ivory);
+            color: var(--ix-ink);
+            line-height: 1.45;
+            -webkit-font-smoothing: antialiased;
         }
+
+        /* ===== Panel izquierdo (solo escritorio) ===== */
         .left-panel {
             flex: 1;
             position: relative;
@@ -27,295 +40,146 @@
             justify-content: flex-end;
             padding: 48px;
             overflow: hidden;
+            min-height: 100vh;
         }
-        .left-bg {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, var(--color) 0%, #0a0a0f 70%);
-        }
-        .left-bg::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background:
-                radial-gradient(ellipse at 20% 20%, color-mix(in srgb, var(--color) 40%, transparent) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 80%, rgba(255,255,255,0.03) 0%, transparent 50%);
-        }
+        .left-bg { position: absolute; inset: 0; background: linear-gradient(160deg, var(--ix-navy) 0%, var(--ix-navy-2) 62%, var(--ix-navy-3) 130%); }
+        .left-bg::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 18% 14%, rgba(201,162,75,.2) 0%, transparent 55%); }
         .grid-overlay {
-            position: absolute;
-            inset: 0;
+            position: absolute; inset: 0;
             background-image:
-                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+                linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
             background-size: 60px 60px;
         }
-        .circle {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(1px);
-            opacity: 0.12;
-        }
-        .circle-1 {
-            width: 400px; height: 400px;
-            border: 1px solid rgba(255,255,255,0.4);
-            top: -100px; left: -100px;
-        }
-        .circle-2 {
-            width: 250px; height: 250px;
-            border: 1px solid rgba(255,255,255,0.3);
-            top: 80px; left: 60px;
-        }
-        .circle-3 {
-            width: 160px; height: 160px;
-            background: var(--color);
-            bottom: 120px; right: 80px;
-            opacity: 0.2;
-            filter: blur(40px);
-        }
-        .stat-cards {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            width: 280px;
-        }
+        .circle { position: absolute; border-radius: 50%; opacity: .5; }
+        .circle-1 { width: 400px; height: 400px; border: 1px solid rgba(230,211,160,.22); top: -120px; right: -120px; }
+        .circle-2 { width: 250px; height: 250px; border: 1px solid rgba(230,211,160,.18); top: 60px; right: 40px; }
+        .circle-3 { width: 180px; height: 180px; background: var(--ix-gold); bottom: 140px; left: 60px; opacity: .12; filter: blur(46px); }
+
+        .left-brand { position: absolute; top: 40px; left: 48px; z-index: 2; }
+        .ix-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff; }
+        .ix-mark { width: 38px; height: 38px; flex: none; }
+        .ix-word { font-family: var(--ix-serif); font-size: 22px; letter-spacing: .3em; font-weight: 600; line-height: 1; display: block; }
+        .ix-sub { display: block; font-size: 9.5px; letter-spacing: .24em; text-transform: uppercase; color: var(--ix-gold-2); margin-top: 6px; font-weight: 500; }
+
+        .stat-cards { position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; gap: 12px; width: 290px; z-index: 1; }
         .stat-card {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,.06);
+            border: 1px solid rgba(230,211,160,.22);
             border-radius: 14px;
             padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
+            display: flex; align-items: center; gap: 14px;
             animation: float 6s ease-in-out infinite;
         }
         .stat-card:nth-child(2) { animation-delay: 2s; margin-left: 24px; }
         .stat-card:nth-child(3) { animation-delay: 4s; }
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
-        }
-        .stat-icon {
-            width: 40px; height: 40px;
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
-            flex-shrink: 0;
-        }
-        .stat-icon.green { background: rgba(39,174,96,0.2); }
-        .stat-icon.blue { background: rgba(52,152,219,0.2); }
-        .stat-icon.purple { background: rgba(142,68,173,0.2); }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+        @media (prefers-reduced-motion: reduce) { .stat-card { animation: none; } }
+        .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .stat-icon.green { background: rgba(79,163,126,.25); }
+        .stat-icon.blue { background: rgba(120,160,220,.22); }
+        .stat-icon.purple { background: rgba(201,162,75,.25); }
         .stat-info { flex: 1; }
-        .stat-num { color: white; font-size: 20px; font-weight: 700; line-height: 1; }
-        .stat-lbl { color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 2px; }
+        .stat-num { font-family: var(--ix-serif); color: #fff; font-size: 22px; font-weight: 600; line-height: 1; }
+        .stat-lbl { color: rgba(255,255,255,.6); font-size: 11.5px; margin-top: 4px; }
+
         .left-content { position: relative; z-index: 1; }
-        .left-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.15);
-            backdrop-filter: blur(10px);
-            border-radius: 50px;
-            padding: 6px 14px;
-            font-size: 12px; color: rgba(255,255,255,0.8);
-            font-weight: 500;
-            margin-bottom: 20px;
-        }
-        .left-badge span { width: 6px; height: 6px; background: #27ae60; border-radius: 50%; }
-        .left-title {
-            font-size: 36px; font-weight: 800;
-            color: white; line-height: 1.15;
-            margin-bottom: 16px;
-            letter-spacing: -0.5px;
-        }
-        .left-title em { color: var(--color); font-style: normal; }
-        .left-desc {
-            font-size: 15px; color: rgba(255,255,255,0.55);
-            line-height: 1.7; max-width: 360px;
-        }
+        .left-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.2); border-radius: 999px; padding: 6px 14px; font-size: 12px; color: var(--ix-gold-2); font-weight: 600; letter-spacing: .04em; margin-bottom: 20px; }
+        .left-badge span { width: 6px; height: 6px; background: #4FA37E; border-radius: 50%; }
+        .left-title { font-family: var(--ix-serif); font-size: 40px; font-weight: 600; color: #fff; line-height: 1.15; margin-bottom: 16px; letter-spacing: .005em; }
+        .left-title em { color: var(--ix-gold-2); font-style: italic; }
+        .left-desc { font-size: 15px; color: rgba(255,255,255,.7); line-height: 1.7; max-width: 380px; }
+
+        /* ===== Panel derecho (formulario) ===== */
         .right-panel {
-            width: 480px;
-            flex-shrink: 0;
-            background: #0f0f16;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            width: 480px; flex-shrink: 0;
+            background: var(--ix-card);
+            display: flex; flex-direction: column; justify-content: center;
             padding: 48px 44px;
             position: relative;
-            border-left: 1px solid rgba(255,255,255,0.06);
+            border-left: 3px solid var(--accent);
+            min-height: 100vh;
         }
-        .lang-wrapper {
-            position: absolute;
-            top: 24px; right: 24px;
-        }
+        .mobile-brand { display: none; margin-bottom: 26px; }
+        .mobile-brand .ix-brand { color: var(--ix-navy); }
+        .mobile-brand .ix-sub { color: var(--ix-warn); }
+
+        .lang-wrapper { position: absolute; top: 24px; right: 24px; }
         .lang-selector { position: relative; }
         .lang-selector-btn {
             display: flex; align-items: center; gap: 8px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 8px;
-            padding: 8px 12px; cursor: pointer;
-            font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.6);
-            transition: 0.2s; font-family: inherit;
+            background: #fff; border: 1px solid var(--ix-line); border-radius: 999px;
+            padding: 7px 13px; cursor: pointer;
+            font-size: 12.5px; font-weight: 600; color: var(--ix-navy);
+            transition: .2s; font-family: inherit;
         }
-        .lang-selector-btn:hover { border-color: rgba(255,255,255,0.2); color: white; }
-        .lang-arrow { font-size: 10px; color: rgba(255,255,255,0.3); transition: transform 0.2s; }
+        .lang-selector-btn:hover { border-color: var(--ix-navy); }
+        .lang-selector-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        .lang-arrow { font-size: 10px; color: var(--ix-muted); transition: transform .2s; }
         .lang-selector.abierto .lang-arrow { transform: rotate(180deg); }
         .lang-menu {
-            display: none; position: absolute;
-            top: calc(100% + 8px); right: 0;
-            background: #1a1a24;
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 10px;
+            display: none; position: absolute; top: calc(100% + 8px); right: 0;
+            background: #fff; border: 1px solid var(--ix-line); border-radius: 12px;
             min-width: 180px; overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            box-shadow: 0 18px 40px rgba(11,31,58,.22); z-index: 50;
         }
         .lang-selector.abierto .lang-menu { display: block; }
-        .lang-menu a {
-            display: flex; align-items: center; gap: 10px;
-            padding: 10px 14px; text-decoration: none;
-            color: rgba(255,255,255,0.6); font-size: 13px; transition: 0.15s;
-        }
-        .lang-menu a:hover { background: rgba(255,255,255,0.05); color: white; }
-        .lang-menu a.activo { color: var(--color); }
-        .logo-wrap {
-            display: flex; align-items: center; gap: 14px;
-            margin-bottom: 40px;
-        }
-        .logo-img {
-            width: 52px; height: 52px;
-            border-radius: 14px;
-            object-fit: contain;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .logo-icon {
-            width: 52px; height: 52px;
-            border-radius: 14px;
-            background: linear-gradient(135deg, var(--color), var(--color-dark));
-            display: flex; align-items: center; justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 8px 24px color-mix(in srgb, var(--color) 30%, transparent);
-        }
-        .logo-text { flex: 1; }
-        .logo-name {
-            font-size: 17px; font-weight: 700;
-            color: white; line-height: 1.2;
-        }
-        .logo-sub { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 2px; }
-        .form-title {
-            font-size: 28px; font-weight: 800;
-            color: white; letter-spacing: -0.5px;
-            margin-bottom: 6px;
-        }
-        .form-sub {
-            font-size: 14px; color: rgba(255,255,255,0.4);
-            margin-bottom: 36px; line-height: 1.5;
-        }
+        .lang-menu a { display: flex; align-items: center; gap: 10px; padding: 10px 14px; text-decoration: none; color: var(--ix-ink); font-size: 13px; transition: .15s; }
+        .lang-menu a:hover { background: var(--ix-gold-3); }
+        .lang-menu a.activo { color: var(--ix-navy); font-weight: 700; background: var(--ix-gold-3); }
+
+        .logo-wrap { display: flex; align-items: center; gap: 14px; margin-bottom: 36px; }
+        .logo-img { width: 54px; height: 54px; border-radius: 12px; object-fit: contain; border: 1px solid var(--ix-line); background: #fff; }
+        .logo-icon { width: 54px; height: 54px; border-radius: 12px; background: var(--ix-navy); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .logo-icon svg { width: 28px; height: 28px; }
+        .logo-text { flex: 1; min-width: 0; }
+        .logo-name { font-family: var(--ix-serif); font-size: 19px; font-weight: 600; color: var(--ix-navy); line-height: 1.2; }
+        .logo-sub { font-size: 12px; color: var(--ix-muted); margin-top: 3px; }
+
+        .form-title { font-family: var(--ix-serif); font-size: 30px; font-weight: 600; color: var(--ix-navy); margin-bottom: 6px; line-height: 1.2; }
+        .form-sub { font-size: 14px; color: var(--ix-muted); margin-bottom: 30px; line-height: 1.5; }
         .form-group { margin-bottom: 18px; }
-        .form-group label {
-            display: block;
-            font-size: 12px; font-weight: 600;
-            color: rgba(255,255,255,0.5);
-            text-transform: uppercase; letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
+        .form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--ix-muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 7px; }
         .input-wrap { position: relative; }
-        .input-icon {
-            position: absolute; left: 14px; top: 50%;
-            transform: translateY(-50%);
-            font-size: 15px; opacity: 0.4;
-            pointer-events: none;
-        }
+        .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 15px; opacity: .55; pointer-events: none; }
         .form-group input {
-            width: 100%;
-            padding: 14px 14px 14px 42px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 12px;
-            font-size: 14px; font-family: inherit;
-            color: white;
-            transition: 0.2s;
+            width: 100%; padding: 14px 14px 14px 42px;
+            background: var(--ix-ivory); border: 1px solid var(--ix-line); border-radius: 10px;
+            font-size: 15px; font-family: inherit; color: var(--ix-ink); transition: .2s;
         }
-        .form-group input::placeholder { color: rgba(255,255,255,0.2); }
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--color);
-            background: rgba(255,255,255,0.06);
-            box-shadow: 0 0 0 3px color-mix(in srgb, var(--color) 20%, transparent);
-        }
-        .olvido-wrap {
-            text-align: right;
-            margin-top: -8px;
-            margin-bottom: 18px;
-        }
-        .olvido-wrap a {
-            font-size: 12.5px;
-            color: rgba(255,255,255,0.4);
-            text-decoration: none;
-            transition: 0.2s;
-        }
-        .olvido-wrap a:hover {
-            color: var(--color);
-        }
+        .form-group input::placeholder { color: #A5ABB8; }
+        .form-group input:focus { outline: none; border-color: var(--accent); background: #fff; box-shadow: 0 0 0 3px rgba(201,162,75,.2); }
+
+        .olvido-wrap { text-align: right; margin-top: -6px; margin-bottom: 20px; }
+        .olvido-wrap a { font-size: 13px; color: var(--ix-navy-3); text-decoration: underline; text-underline-offset: 2px; transition: .2s; }
+        .olvido-wrap a:hover { color: var(--ix-navy); }
+
         .btn-login {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, var(--color), var(--color-dark));
-            color: white; border: none;
-            border-radius: 12px;
-            font-size: 15px; font-weight: 700;
-            font-family: inherit;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 8px;
-            letter-spacing: 0.3px;
-            box-shadow: 0 8px 24px color-mix(in srgb, var(--color) 35%, transparent);
-            position: relative;
-            overflow: hidden;
+            width: 100%; padding: 15px;
+            background: var(--ix-navy); color: #fff; border: none; border-radius: 999px;
+            font-size: 15px; font-weight: 700; font-family: inherit;
+            cursor: pointer; transition: .2s; margin-top: 6px; letter-spacing: .02em;
         }
-        .btn-login::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
-            opacity: 0;
-            transition: 0.3s;
-        }
-        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 12px 32px color-mix(in srgb, var(--color) 45%, transparent); }
-        .btn-login:hover::before { opacity: 1; }
-        .btn-login:active { transform: translateY(0); }
+        .btn-login:hover { background: var(--accent); color: var(--ix-navy); }
+        .btn-login:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
         .error-msg {
             display: flex; align-items: center; gap: 10px;
-            background: rgba(231,76,60,0.1);
-            border: 1px solid rgba(231,76,60,0.2);
-            color: #ff6b6b;
-            padding: 12px 16px;
-            border-radius: 10px;
-            font-size: 13px; font-weight: 500;
-            margin-top: 16px;
+            background: var(--ix-bad-bg); border: 1px solid #EBC5C1; color: var(--ix-bad);
+            padding: 12px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-top: 16px;
         }
-        .form-footer {
-            margin-top: 36px;
-            padding-top: 24px;
-            border-top: 1px solid rgba(255,255,255,0.06);
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        .footer-badge {
-            display: flex; align-items: center; gap: 6px;
-            font-size: 11px; color: rgba(255,255,255,0.2);
-        }
-        .footer-dot { width: 5px; height: 5px; background: #27ae60; border-radius: 50%; }
-        .footer-security {
-            font-size: 11px; color: rgba(255,255,255,0.2);
-            display: flex; align-items: center; gap: 4px;
-        }
+
+        .form-footer { margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--ix-line); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+        .footer-badge, .footer-security { font-size: 11.5px; color: var(--ix-muted); display: flex; align-items: center; gap: 6px; }
+        .footer-dot { width: 6px; height: 6px; background: var(--ix-ok); border-radius: 50%; }
+
         @media (max-width: 900px) {
             .left-panel { display: none; }
-            .right-panel { width: 100%; padding: 40px 28px; }
+            .right-panel { width: 100%; padding: 40px 24px; border-left: none; border-top: 3px solid var(--accent); }
+            .mobile-brand { display: block; }
+            .lang-wrapper { top: 18px; right: 18px; }
+            .form-title { font-size: 27px; }
         }
+        @media (max-height: 780px) { .stat-cards { display: none; } }
     </style>
 </head>
 <body>
@@ -459,6 +323,13 @@
     <div class="circle circle-2"></div>
     <div class="circle circle-3"></div>
 
+    <div class="left-brand">
+        <div class="ix-brand">
+            <svg class="ix-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#13294B"/><rect x=".75" y=".75" width="30.5" height="30.5" rx="7.25" fill="none" stroke="#C9A24B" stroke-opacity=".55" stroke-width="1.5"/><path d="M7 17 16 8l9 9" fill="none" stroke="#C9A24B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="14.4" y="15" width="3.2" height="9" rx="1.2" fill="#fff"/></svg>
+            <span><span class="ix-word">IPOX</span><span class="ix-sub">CRM Inmobiliario</span></span>
+        </div>
+    </div>
+
     <div class="stat-cards">
         <div class="stat-card">
             <div class="stat-icon green">🎯</div>
@@ -515,13 +386,20 @@
                 <span class="lang-arrow">▾</span>
             </button>
             <div class="lang-menu">
-                <a href="{{ url_for('cambiar_idioma', lang='es', proximo='login', cliente_id=cliente.usuario) }}" {% if lang == 'es' %}class="activo"{% endif %}>🇪🇸 Español</a>
-                <a href="{{ url_for('cambiar_idioma', lang='en', proximo='login', cliente_id=cliente.usuario) }}" {% if lang == 'en' %}class="activo"{% endif %}>🇺🇸 English</a>
-                <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='login', cliente_id=cliente.usuario) }}" {% if lang == 'fr' %}class="activo"{% endif %}>🇫🇷 Français</a>
-                <a href="{{ url_for('cambiar_idioma', lang='de', proximo='login', cliente_id=cliente.usuario) }}" {% if lang == 'de' %}class="activo"{% endif %}>🇩🇪 Deutsch</a>
-                <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='login', cliente_id=cliente.usuario) }}" {% if lang == 'pt' %}class="activo"{% endif %}>🇵🇹 Português</a>
-                <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='login', cliente_id=cliente.usuario) }}" {% if lang == 'zh' %}class="activo"{% endif %}>🇨🇳 中文</a>
+                <a href="{{ url_for('cambiar_idioma', lang='es', proximo='login', cliente_id=cliente.id) }}" {% if lang == 'es' %}class="activo"{% endif %}>🇪🇸 Español</a>
+                <a href="{{ url_for('cambiar_idioma', lang='en', proximo='login', cliente_id=cliente.id) }}" {% if lang == 'en' %}class="activo"{% endif %}>🇺🇸 English</a>
+                <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='login', cliente_id=cliente.id) }}" {% if lang == 'fr' %}class="activo"{% endif %}>🇫🇷 Français</a>
+                <a href="{{ url_for('cambiar_idioma', lang='de', proximo='login', cliente_id=cliente.id) }}" {% if lang == 'de' %}class="activo"{% endif %}>🇩🇪 Deutsch</a>
+                <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='login', cliente_id=cliente.id) }}" {% if lang == 'pt' %}class="activo"{% endif %}>🇵🇹 Português</a>
+                <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='login', cliente_id=cliente.id) }}" {% if lang == 'zh' %}class="activo"{% endif %}>🇨🇳 中文</a>
             </div>
+        </div>
+    </div>
+
+    <div class="mobile-brand">
+        <div class="ix-brand">
+            <svg class="ix-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0B1F3A"/><rect x=".75" y=".75" width="30.5" height="30.5" rx="7.25" fill="none" stroke="#C9A24B" stroke-opacity=".55" stroke-width="1.5"/><path d="M7 17 16 8l9 9" fill="none" stroke="#C9A24B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="14.4" y="15" width="3.2" height="9" rx="1.2" fill="#fff"/></svg>
+            <span><span class="ix-word">IPOX</span><span class="ix-sub">CRM Inmobiliario</span></span>
         </div>
     </div>
 
@@ -529,7 +407,7 @@
         {% if cliente.logo_url %}
         <img src="{{ cliente.logo_url }}" alt="{{ cliente.nombre }}" class="logo-img">
         {% else %}
-        <div class="logo-icon">🏠</div>
+        <div class="logo-icon"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 17 16 7l11 10" fill="none" stroke="#C9A24B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 15.5V25h14v-9.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         {% endif %}
         <div class="logo-text">
             <div class="logo-name">{{ cliente.nombre }}</div>
@@ -570,7 +448,7 @@
             </div>
         </div>
         <div class="olvido-wrap">
-            <a href="{{ url_for('recuperar_password', cliente_id=cliente.usuario) }}">{{ lxt.olvido }}</a>
+            <a href="{{ url_for('recuperar_password', cliente_id=cliente.id) }}">{{ lxt.olvido }}</a>
         </div>
         <button type="submit" class="btn-login">{{ lxt.btn }}</button>
         {% if error %}
