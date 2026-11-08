@@ -4,117 +4,123 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso Administrativo | Sistema Inmobiliario</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%230B1F3A%22/%3E%3Cpath d=%22M7 17 16 8l9 9%22 fill=%22none%22 stroke=%22%23C9A24B%22 stroke-width=%222.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Crect x=%2214.4%22 y=%2215%22 width=%223.2%22 height=%229%22 rx=%221.2%22 fill=%22%23fff%22/%3E%3C/svg%3E">
     <style>
-        :root { 
-            --primary: #1e293b; 
-            --accent: #d4af37; 
-            --bg: #0f172a; 
-            --card-bg: #1e293b;
-            --text-main: #ffffff;
-            --text-dim: #94a3b8;
+        :root {
+            --ix-navy:#0B1F3A; --ix-navy-2:#132C50; --ix-navy-3:#1D3A66;
+            --ix-gold:#C9A24B; --ix-gold-2:#E6D3A0; --ix-gold-3:#F7F0DC;
+            --ix-ivory:#F6F4EF; --ix-card:#FFFFFF; --ix-ink:#18233A; --ix-muted:#6B7385; --ix-line:#E8E3D6;
+            --ix-serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+            --ix-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+            --ix-radius:16px; --ix-shadow:0 1px 2px rgba(11,31,58,.05), 0 10px 28px rgba(11,31,58,.07);
+            --accent:#C9A24B;
         }
-        body { 
-            margin: 0; 
-            padding: 0; 
-            font-family: 'Inter', sans-serif; 
-            background: var(--bg); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            min-height: 100vh; 
-            color: var(--text-main); 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { -webkit-text-size-adjust: 100%; }
+        body {
+            font-family: var(--ix-sans);
+            background: var(--ix-ivory);
+            color: var(--ix-ink);
+            line-height: 1.45;
+            min-height: 100vh;
+            padding-bottom: 40px;
+            -webkit-font-smoothing: antialiased;
         }
-        .card { 
-            background: var(--card-bg); 
-            width: 90%; 
-            max-width: 400px; 
-            padding: 40px; 
-            border-radius: 24px; 
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
-            text-align: center; 
-            border: 1px solid #334155; 
+        .hero {
+            background: linear-gradient(180deg, var(--ix-navy), var(--ix-navy-2));
+            border-bottom: 3px solid var(--accent);
+            padding: 40px 20px 96px;
+            text-align: center;
         }
-        .logo-icon { 
-            font-size: 50px; 
-            margin-bottom: 20px; 
-            display: inline-block;
+        .ix-brand { display: inline-flex; align-items: center; gap: 12px; color: #fff; text-align: left; }
+        .ix-mark { width: 40px; height: 40px; flex: none; }
+        .ix-word { font-family: var(--ix-serif); font-size: 24px; letter-spacing: .3em; font-weight: 600; line-height: 1; display: block; }
+        .ix-sub { display: block; font-size: 9.5px; letter-spacing: .24em; text-transform: uppercase; color: var(--ix-gold-2); margin-top: 6px; font-weight: 500; }
+
+        .wrap { width: 100%; max-width: 440px; margin: -58px auto 0; padding: 0 16px; position: relative; z-index: 1; }
+        .card {
+            background: var(--ix-card);
+            border: 1px solid var(--ix-line);
+            border-radius: var(--ix-radius);
+            box-shadow: var(--ix-shadow);
+            padding: 34px 28px 30px;
+            text-align: center;
         }
-        h2 { 
-            font-size: 24px; 
-            margin-bottom: 10px; 
-            font-weight: 700; 
-            letter-spacing: -0.025em;
+        .logo-icon {
+            width: 60px; height: 60px; border-radius: 50%;
+            background: var(--ix-gold-3); border: 1px solid var(--ix-gold-2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; margin: 0 auto 16px;
         }
-        .subtitle { 
-            color: var(--text-dim); 
-            margin-bottom: 30px; 
-            font-size: 15px; 
+        h2 { font-family: var(--ix-serif); font-size: 25px; font-weight: 600; color: var(--ix-navy); margin-bottom: 8px; line-height: 1.25; }
+        .subtitle { color: var(--ix-muted); margin-bottom: 26px; font-size: 14.5px; line-height: 1.6; }
+        .languages-grid { display: grid; gap: 10px; }
+        .btn-lang {
+            display: flex; align-items: center;
+            padding: 14px 18px;
+            background: var(--ix-ivory);
+            border: 1px solid var(--ix-line);
+            border-radius: 14px;
+            text-decoration: none;
+            color: var(--ix-navy);
+            font-weight: 700; font-size: 15px;
+            transition: .2s;
         }
-        .languages-grid { 
-            display: grid; 
-            gap: 12px; 
-        }
-        .btn-lang { 
-            display: flex; 
-            align-items: center; 
-            padding: 16px 20px; 
-            background: #334155; 
-            border: 1px solid #475569; 
-            border-radius: 14px; 
-            text-decoration: none; 
-            color: white; 
-            font-weight: 600; 
-            font-size: 16px;
-            transition: all 0.2s ease; 
-        }
-        .btn-lang:hover { 
-            background: #475569; 
-            border-color: var(--accent); 
-            transform: translateY(-2px); 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-        }
-        .flag-icon { 
-            font-size: 22px; 
-            margin-right: 15px; 
-        }
-        .footer-tag {
-            margin-top: 30px;
-            font-size: 12px;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
+        .btn-lang:hover { background: var(--ix-gold-3); border-color: var(--accent); box-shadow: 0 8px 22px rgba(11,31,58,.1); }
+        .btn-lang:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        .flag-icon { font-size: 24px; margin-right: 14px; line-height: 1; }
+
+        .footer-tag { display: flex; align-items: center; justify-content: center; gap: 9px; margin-top: 28px; opacity: .85; }
+        .footer-tag svg { width: 20px; height: 20px; }
+        .footer-tag span { font-family: var(--ix-serif); font-size: 12px; letter-spacing: .3em; font-weight: 600; color: var(--ix-navy); }
+
+        @media (max-width: 480px) {
+            .hero { padding: 32px 16px 88px; }
+            .wrap { padding: 0 12px; }
+            .card { padding: 28px 18px 26px; }
         }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="logo-icon">🔑</div>
-        <h2>Acceso Administrativo</h2>
-        <p class="subtitle">Seleccione el idioma para gestionar sus leads</p>
-        
-        <div class="languages-grid">
-            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='login', cliente_id=cliente.usuario) }}" class="btn-lang">
-                <span class="flag-icon">🇪🇸</span> Español
-            </a>
-            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='login', cliente_id=cliente.usuario) }}" class="btn-lang">
-                <span class="flag-icon">🇺🇸</span> English
-            </a>
-            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='login', cliente_id=cliente.usuario) }}" class="btn-lang">
-                <span class="flag-icon">🇫🇷</span> Français
-            </a>
-            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='login', cliente_id=cliente.usuario) }}" class="btn-lang">
-                <span class="flag-icon">🇩🇪</span> Deutsch
-            </a>
-            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='login', cliente_id=cliente.usuario) }}" class="btn-lang">
-                <span class="flag-icon">🇵🇹</span> Português
-            </a>
-            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='login', cliente_id=cliente.usuario) }}" class="btn-lang">
-                <span class="flag-icon">🇨🇳</span> 简体中文
-            </a>
+    <div class="hero">
+        <div class="ix-brand">
+            <svg class="ix-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#13294B"/><rect x=".75" y=".75" width="30.5" height="30.5" rx="7.25" fill="none" stroke="#C9A24B" stroke-opacity=".55" stroke-width="1.5"/><path d="M7 17 16 8l9 9" fill="none" stroke="#C9A24B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="14.4" y="15" width="3.2" height="9" rx="1.2" fill="#fff"/></svg>
+            <span><span class="ix-word">IPOX</span><span class="ix-sub">CRM Inmobiliario</span></span>
         </div>
-        
-        <div class="footer-tag">PropTech Engine V4.0</div>
+    </div>
+
+    <div class="wrap">
+        <div class="card">
+            <div class="logo-icon">🔑</div>
+            <h2>Acceso Administrativo</h2>
+            <p class="subtitle">Seleccione el idioma para gestionar sus leads</p>
+
+            <div class="languages-grid">
+                <a href="{{ url_for('cambiar_idioma', lang='es', proximo='login', cliente_id=cliente.id) }}" class="btn-lang">
+                    <span class="flag-icon">🇪🇸</span> Español
+                </a>
+                <a href="{{ url_for('cambiar_idioma', lang='en', proximo='login', cliente_id=cliente.id) }}" class="btn-lang">
+                    <span class="flag-icon">🇺🇸</span> English
+                </a>
+                <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='login', cliente_id=cliente.id) }}" class="btn-lang">
+                    <span class="flag-icon">🇫🇷</span> Français
+                </a>
+                <a href="{{ url_for('cambiar_idioma', lang='de', proximo='login', cliente_id=cliente.id) }}" class="btn-lang">
+                    <span class="flag-icon">🇩🇪</span> Deutsch
+                </a>
+                <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='login', cliente_id=cliente.id) }}" class="btn-lang">
+                    <span class="flag-icon">🇵🇹</span> Português
+                </a>
+                <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='login', cliente_id=cliente.id) }}" class="btn-lang">
+                    <span class="flag-icon">🇨🇳</span> 简体中文
+                </a>
+            </div>
+        </div>
+
+        <div class="footer-tag" aria-hidden="true">
+            <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#0B1F3A"/><path d="M7 17 16 8l9 9" fill="none" stroke="#C9A24B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="14.4" y="15" width="3.2" height="9" rx="1.2" fill="#fff"/></svg>
+            <span>IPOX</span>
+        </div>
     </div>
 </body>
 </html>
