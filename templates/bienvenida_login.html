@@ -96,22 +96,22 @@
             <p class="subtitle">Seleccione el idioma para gestionar sus leads</p>
 
             <div class="languages-grid">
-                <a href="{{ url_for('cambiar_idioma', lang='es', proximo='login', cliente_id=cliente.id) }}" class="btn-lang">
+                <a href="{{ url_for('cambiar_idioma', lang='es', proximo='login', cliente_id=cliente.usuario) }}" class="btn-lang">
                     <span class="flag-icon">🇪🇸</span> Español
                 </a>
-                <a href="{{ url_for('cambiar_idioma', lang='en', proximo='login', cliente_id=cliente.id) }}" class="btn-lang">
+                <a href="{{ url_for('cambiar_idioma', lang='en', proximo='login', cliente_id=cliente.usuario) }}" class="btn-lang">
                     <span class="flag-icon">🇺🇸</span> English
                 </a>
-                <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='login', cliente_id=cliente.id) }}" class="btn-lang">
+                <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='login', cliente_id=cliente.usuario) }}" class="btn-lang">
                     <span class="flag-icon">🇫🇷</span> Français
                 </a>
-                <a href="{{ url_for('cambiar_idioma', lang='de', proximo='login', cliente_id=cliente.id) }}" class="btn-lang">
+                <a href="{{ url_for('cambiar_idioma', lang='de', proximo='login', cliente_id=cliente.usuario) }}" class="btn-lang">
                     <span class="flag-icon">🇩🇪</span> Deutsch
                 </a>
-                <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='login', cliente_id=cliente.id) }}" class="btn-lang">
+                <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='login', cliente_id=cliente.usuario) }}" class="btn-lang">
                     <span class="flag-icon">🇵🇹</span> Português
                 </a>
-                <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='login', cliente_id=cliente.id) }}" class="btn-lang">
+                <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='login', cliente_id=cliente.usuario) }}" class="btn-lang">
                     <span class="flag-icon">🇨🇳</span> 简体中文
                 </a>
             </div>
