@@ -142,32 +142,32 @@
         </div>
 
         <div class="lang-grid">
-            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente.id) }}" class="lang-btn">
+            <a href="{{ url_for('cambiar_idioma', lang='es', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-btn">
                 <span class="lang-flag">🇪🇸</span>
                 <span class="lang-name">Español</span>
                 <span class="lang-native">Spanish</span>
             </a>
-            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente.id) }}" class="lang-btn">
+            <a href="{{ url_for('cambiar_idioma', lang='en', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-btn">
                 <span class="lang-flag">🇺🇸</span>
                 <span class="lang-name">English</span>
                 <span class="lang-native">Inglés</span>
             </a>
-            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente.id) }}" class="lang-btn">
+            <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-btn">
                 <span class="lang-flag">🇫🇷</span>
                 <span class="lang-name">Français</span>
                 <span class="lang-native">Francés</span>
             </a>
-            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente.id) }}" class="lang-btn">
+            <a href="{{ url_for('cambiar_idioma', lang='de', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-btn">
                 <span class="lang-flag">🇩🇪</span>
                 <span class="lang-name">Deutsch</span>
                 <span class="lang-native">Alemán</span>
             </a>
-            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente.id) }}" class="lang-btn">
+            <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-btn">
                 <span class="lang-flag">🇵🇹</span>
                 <span class="lang-name">Português</span>
                 <span class="lang-native">Portugués</span>
             </a>
-            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente.id) }}" class="lang-btn">
+            <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='formulario', cliente_id=cliente.usuario) }}" class="lang-btn">
                 <span class="lang-flag">🇨🇳</span>
                 <span class="lang-name">中文</span>
                 <span class="lang-native">Chino</span>
@@ -180,7 +180,7 @@
             <div class="divider-line"></div>
         </div>
 
-        <a href="{{ url_for('formulario', cliente_id=cliente.id) }}" class="btn-continue">
+        <a href="{{ url_for('formulario', cliente_id=cliente.usuario) }}" class="btn-continue">
             Continuar en español →
         </a>
     </div>
