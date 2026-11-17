@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ textos.historial_titulo }} | {{ cliente.nombre }} · IPOX</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%230B1F3A%22/%3E%3Cpath d=%22M7 17 16 8l9 9%22 fill=%22none%22 stroke=%22%23C9A24B%22 stroke-width=%222.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Crect x=%2214.4%22 y=%2215%22 width=%223.2%22 height=%229%22 rx=%221.2%22 fill=%22%23fff%22/%3E%3C/svg%3E">
-    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
             --ix-navy:#0B1F3A; --ix-navy-2:#132C50; --ix-navy-3:#1D3A66;
@@ -842,7 +842,7 @@
                     {% else %}<span class="dias-badge {{ dias_clase }}">{% if dias == 0 %}{{ tx.hoy }}{% elif dias == 1 %}1d{% else %}{{ dias }}d{% endif %}</span>{% endif %}
                 </td>
                 <td><strong style="color:var(--ix-navy);">{{ lead.nombre }}</strong></td>
-                <td><a href="https://wa.me/{{ lead.telefono }}" target="_blank" style="color:var(--ix-ok);text-decoration:none;font-weight:bold;font-size:11px;">📱 {{ lead.telefono }}</a></td>
+                <td><a href="https://wa.me/{{ lead.telefono }}" target="_blank" rel="noopener noreferrer" style="color:var(--ix-ok);text-decoration:none;font-weight:bold;font-size:11px;">📱 {{ lead.telefono }}</a></td>
                 <td style="color:#555;">{{ lead.zona_interes }}</td>
                 <td style="font-weight:600;color:var(--ix-ok);">${{ "{:,.0f}".format(lead.presupuesto|float) if lead.presupuesto else "0" }}</td>
                 <td><span class="badge {{ badge_clase }}">{{ textos['class_' + lead.clasificacion] if ('class_' + lead.clasificacion) in textos else lead.clasificacion }}</span></td>
@@ -880,17 +880,17 @@
                         {% if "CLIENTE" not in lead.clasificacion %}
                         <form method="POST" action="{{ url_for('marcar_cliente', cliente_id=cliente.id, lead_id=lead.id) }}" style="width:100%;">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn-marcar-cliente" onclick="return confirm('{{ textos.confirm_marcar.replace('{nombre}', lead.nombre) }}')">💎 {{ textos.btn_marcar_cliente }}</button>
+                            <button type="submit" class="btn-marcar-cliente" onclick='return confirm({{ textos.confirm_marcar.replace("{nombre}", lead.nombre)|tojson }})'>💎 {{ textos.btn_marcar_cliente }}</button>
                         </form>
                         {% else %}
                         <form method="POST" action="{{ url_for('desmarcar_cliente', cliente_id=cliente.id, lead_id=lead.id) }}" style="width:100%;">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn-desmarcar-cliente" onclick="return confirm('{{ textos.confirm_desmarcar.replace('{nombre}', lead.nombre) }}')">❌ {{ textos.btn_desmarcar }}</button>
+                            <button type="submit" class="btn-desmarcar-cliente" onclick='return confirm({{ textos.confirm_desmarcar.replace("{nombre}", lead.nombre)|tojson }})'>❌ {{ textos.btn_desmarcar }}</button>
                         </form>
                         {% endif %}
-                        <button class="btn-respuesta" onclick="verRespuesta({{ lead.id }}, '{{ lead.nombre }}', '{{ lead.telefono }}')">{{ tx.btn_que_decir_m }}</button>
-                        <button class="btn-whatsapp-quick" onclick="abrirWhatsAppDirecto('{{ lead.telefono }}', {{ lead.id }})">📱 WhatsApp</button>
-                        <button class="btn-agendar-visita" onclick="abrirModalVisita({{ lead.id }}, '{{ lead.nombre }}')">{{ tx.visita_boton }}</button>
+                        <button class="btn-respuesta" onclick='verRespuesta({{ lead.id }}, {{ lead.nombre|tojson }}, {{ lead.telefono|tojson }})'>{{ tx.btn_que_decir_m }}</button>
+                        <button class="btn-whatsapp-quick" onclick='abrirWhatsAppDirecto({{ lead.telefono|tojson }}, {{ lead.id }})'>📱 WhatsApp</button>
+                        <button class="btn-agendar-visita" onclick='abrirModalVisita({{ lead.id }}, {{ lead.nombre|tojson }})'>{{ tx.visita_boton }}</button>
                         <button class="btn-portal-link" id="btnPortal_{{ lead.id }}" onclick="copiarLinkPortal({{ lead.id }})">{{ tx.portal_boton }}</button>
                     </div>
                 </td>
@@ -926,7 +926,7 @@
                 <span class="badge-visita" id="visitaBadgeM_{{ lead.id }}"></span>
             </div>
         </div>
-        <div class="lead-card-row"><span class="lead-card-label">{{ tx.card_tel }}</span><span class="lead-card-valor"><a href="https://wa.me/{{ lead.telefono }}" style="color:var(--ix-ok);font-weight:bold;">{{ lead.telefono }}</a></span></div>
+        <div class="lead-card-row"><span class="lead-card-label">{{ tx.card_tel }}</span><span class="lead-card-valor"><a href="https://wa.me/{{ lead.telefono }}" rel="noopener noreferrer" style="color:var(--ix-ok);font-weight:bold;">{{ lead.telefono }}</a></span></div>
         <div class="lead-card-row"><span class="lead-card-label">{{ tx.card_zona }}</span><span class="lead-card-valor">{{ lead.zona_interes }}</span></div>
         <div class="lead-card-row"><span class="lead-card-label">{{ tx.card_presup }}</span><span class="lead-card-valor" style="color:var(--ix-ok);">${{ "{:,.0f}".format(lead.presupuesto|float) if lead.presupuesto else "0" }}</span></div>
         <div class="lead-card-row"><span class="lead-card-label">{{ tx.card_email }}</span><span class="lead-card-valor">{% if lead.email %}<span class="email-si">{{ tx.email_si }}</span>{% else %}<span class="email-no">{{ tx.email_no }}</span>{% endif %}</span></div>
@@ -938,12 +938,12 @@
             {% if "CLIENTE" not in lead.clasificacion %}
             <form method="POST" action="{{ url_for('marcar_cliente', cliente_id=cliente.id, lead_id=lead.id) }}" style="flex:1;">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" style="background:var(--color);color:white;width:100%;padding:10px;border-radius:8px;border:none;cursor:pointer;font-weight:bold;font-size:12px;" onclick="return confirm('{{ textos.confirm_marcar.replace('{nombre}', lead.nombre) }}')">{{ tx.btn_cliente_m }}</button>
+                <button type="submit" style="background:var(--color);color:white;width:100%;padding:10px;border-radius:8px;border:none;cursor:pointer;font-weight:bold;font-size:12px;" onclick='return confirm({{ textos.confirm_marcar.replace("{nombre}", lead.nombre)|tojson }})'>{{ tx.btn_cliente_m }}</button>
             </form>
             {% endif %}
-            <button onclick="verRespuesta({{ lead.id }}, '{{ lead.nombre }}', '{{ lead.telefono }}')" style="background:#fff;color:var(--ix-navy);border:1px solid var(--ix-line);flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:bold;">{{ tx.btn_que_decir_m }}</button>
-            <button onclick="abrirWhatsAppDirecto('{{ lead.telefono }}', {{ lead.id }})" style="background:#25A25A;color:white;flex:1;padding:10px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:bold;">{{ tx.btn_wa_m }}</button>
-            <button onclick="abrirModalVisita({{ lead.id }}, '{{ lead.nombre }}')" style="background:var(--ix-ok-bg);color:var(--ix-ok);border:1px solid #BBD9CA;flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:bold;">{{ tx.visita_boton }}</button>
+            <button onclick='verRespuesta({{ lead.id }}, {{ lead.nombre|tojson }}, {{ lead.telefono|tojson }})' style="background:#fff;color:var(--ix-navy);border:1px solid var(--ix-line);flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:bold;">{{ tx.btn_que_decir_m }}</button>
+            <button onclick='abrirWhatsAppDirecto({{ lead.telefono|tojson }}, {{ lead.id }})' style="background:#25A25A;color:white;flex:1;padding:10px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:bold;">{{ tx.btn_wa_m }}</button>
+            <button onclick='abrirModalVisita({{ lead.id }}, {{ lead.nombre|tojson }})' style="background:var(--ix-ok-bg);color:var(--ix-ok);border:1px solid #BBD9CA;flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:bold;">{{ tx.visita_boton }}</button>
             <button id="btnPortalM_{{ lead.id }}" onclick="copiarLinkPortal({{ lead.id }}, true)" style="background:var(--ix-gold-3);color:#7A5A12;border:1px solid var(--ix-gold-2);flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:bold;">{{ tx.portal_boton }}</button>
         </div>
     </div>
@@ -1023,21 +1023,21 @@
                         <div class="sub">👤 {{ a.usuario }}{% if a.email %} · 📧 {{ a.email }}{% endif %}</div>
                     </div>
                     <div class="asesor-acciones">
-                        <a href="{{ url_for('detalle_asesor', cliente_id=cliente.id, asesor_id=a.id) }}" class="btn-asesor-ver" target="_blank">{{ tx.btn_ver }}</a>
+                        <a href="{{ url_for('detalle_asesor', cliente_id=cliente.id, asesor_id=a.id) }}" class="btn-asesor-ver" target="_blank" rel="noopener noreferrer">{{ tx.btn_ver }}</a>
                         {% if a.activo %}
-                        <form method="POST" action="{{ url_for('toggle_asesor', cliente_id=cliente.id, asesor_id=a.id) }}" onsubmit="return confirm('{{ tx.confirm_desact }}{{ a.nombre }}?')">
+                        <form method="POST" action="{{ url_for('toggle_asesor', cliente_id=cliente.id, asesor_id=a.id) }}" onsubmit='return confirm({{ (tx.confirm_desact ~ a.nombre ~ "?")|tojson }})'>
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="nuevo_estado" value="false">
                             <button type="submit" class="btn-asesor-desactivar">{{ tx.btn_desact }}</button>
                         </form>
                         {% else %}
-                        <form method="POST" action="{{ url_for('toggle_asesor', cliente_id=cliente.id, asesor_id=a.id) }}" onsubmit="return confirm('{{ tx.confirm_react }}{{ a.nombre }}?')">
+                        <form method="POST" action="{{ url_for('toggle_asesor', cliente_id=cliente.id, asesor_id=a.id) }}" onsubmit='return confirm({{ (tx.confirm_react ~ a.nombre ~ "?")|tojson }})'>
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="nuevo_estado" value="true">
                             <button type="submit" class="btn-asesor-reactivar">{{ tx.btn_react }}</button>
                         </form>
                         {% endif %}
-                        <form method="POST" action="{{ url_for('borrar_asesor', cliente_id=cliente.id, asesor_id=a.id) }}" onsubmit="return confirm('{{ tx.confirm_borrar }}{{ a.nombre }}?')">
+                        <form method="POST" action="{{ url_for('borrar_asesor', cliente_id=cliente.id, asesor_id=a.id) }}" onsubmit='return confirm({{ (tx.confirm_borrar ~ a.nombre ~ "?")|tojson }})'>
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn-asesor-borrar">{{ tx.btn_borrar }}</button>
                         </form>
@@ -1051,12 +1051,12 @@
         {% endif %}
         <div class="form-nuevo-asesor">
             <h3>{{ tx.nuevo_titulo }}</h3>
-            <form method="POST" action="{{ url_for('crear_asesor', cliente_id=cliente.id) }}">
+            <form method="POST" action="{{ url_for('crear_asesor', cliente_id=cliente.id) }}" autocomplete="off">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-grid-2">
                     <div class="form-group-modal"><label>{{ tx.lbl_nombre }}</label><input type="text" name="nombre" required placeholder="{{ tx.ph_nombre }}"></div>
-                    <div class="form-group-modal"><label>{{ tx.lbl_usuario }}</label><input type="text" name="usuario" required placeholder="{{ tx.ph_usuario }}"></div>
-                    <div class="form-group-modal"><label>{{ tx.lbl_pass }}</label><input type="text" name="password" required placeholder="{{ tx.ph_pass }}"></div>
+                    <div class="form-group-modal"><label>{{ tx.lbl_usuario }}</label><input type="text" name="usuario" required placeholder="{{ tx.ph_usuario }}" autocomplete="off"></div>
+                    <div class="form-group-modal"><label>{{ tx.lbl_pass }}</label><input type="password" name="password" required placeholder="{{ tx.ph_pass }}" autocomplete="new-password" minlength="6"></div>
                     <div class="form-group-modal"><label>{{ tx.lbl_email }}</label><input type="email" name="email" placeholder="{{ tx.ph_email }}"></div>
                     <div class="form-group-modal">
                         <label>{{ tx.lbl_rol }}</label>
@@ -1074,20 +1074,32 @@
 {% endif %}
 
 <script>
-const clienteId = "{{ cliente.id }}";
-const CSRF_TOKEN = "{{ csrf_token() }}";
-const TX_COPIAR = "{{ tx.btn_copiar }}";
-const TX_COPIADO = "{{ tx.copiado }}";
-const TX_ANALIZANDO = "{{ tx.analizando }}";
-const TX_RECOMENDADO = "{{ tx.recomendado }}";
-const TX_ERROR = "{{ tx.error_resp }}";
-const TX_WA = "{{ tx.btn_wa_modal }}";
-const TX_VISITA_SIN_PROPIEDAD = "{{ tx.visita_sin_propiedad }}";
-const TX_VISITA_FECHA_REQUERIDA = "{{ tx.visita_fecha_requerida }}";
-const TX_VISITA_ERROR_GUARDAR = "{{ tx.visita_error_guardar }}";
-const TX_VISITA_ERROR_CONEXION = "{{ tx.visita_error_conexion }}";
-const TX_PORTAL_ERROR = "{{ tx.portal_error }}";
+const clienteId = {{ cliente.id|tojson }};
+const CSRF_TOKEN = {{ csrf_token()|tojson }};
+const NOMBRE_CLIENTE = {{ cliente.nombre|tojson }};
+const TX_COPIAR = {{ tx.btn_copiar|tojson }};
+const TX_COPIADO = {{ tx.copiado|tojson }};
+const TX_ANALIZANDO = {{ tx.analizando|tojson }};
+const TX_RECOMENDADO = {{ tx.recomendado|tojson }};
+const TX_ERROR = {{ tx.error_resp|tojson }};
+const TX_WA = {{ tx.btn_wa_modal|tojson }};
+const TX_NOTA_PH = {{ tx.nota_ph|tojson }};
+const TX_VISITA_SIN_PROPIEDAD = {{ tx.visita_sin_propiedad|tojson }};
+const TX_VISITA_FECHA_REQUERIDA = {{ tx.visita_fecha_requerida|tojson }};
+const TX_VISITA_ERROR_GUARDAR = {{ tx.visita_error_guardar|tojson }};
+const TX_VISITA_ERROR_CONEXION = {{ tx.visita_error_conexion|tojson }};
+const TX_PORTAL_ERROR = {{ tx.portal_error|tojson }};
 let propiedadesCache = null;
+
+// Escapa texto antes de meterlo en el HTML de la página (evita que datos de
+// prospectos o mensajes generados ejecuten código en el navegador).
+function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c];
+    });
+}
+// WhatsApp solo acepta dígitos en el número.
+function soloDigitos(t) { return String(t == null ? '' : t).replace(/\D/g, ''); }
 
 function toggleLangMenu() { document.getElementById('langSelector').classList.toggle('abierto'); }
 document.addEventListener('click', function(e) {
@@ -1099,7 +1111,7 @@ function descargarExcel() {
     const table = document.getElementById("tabla-leads");
     if (!table) return;
     var wb = XLSX.utils.table_to_book(table, {sheet: "Leads"});
-    XLSX.writeFile(wb, "Reporte_{{ cliente.nombre }}_" + new Date().toISOString().split('T')[0] + ".xlsx");
+    XLSX.writeFile(wb, "Reporte_" + NOMBRE_CLIENTE + "_" + new Date().toISOString().split('T')[0] + ".xlsx");
 }
 
 function editarNota(span, leadId) {
@@ -1107,7 +1119,7 @@ function editarNota(span, leadId) {
     const textarea = cell.querySelector('.nota-input');
     span.style.display = 'none';
     textarea.style.display = 'block';
-    textarea.value = span.textContent.trim() === '{{ tx.nota_ph }}' ? '' : span.textContent.trim();
+    textarea.value = span.textContent.trim() === TX_NOTA_PH ? '' : span.textContent.trim();
     textarea.focus();
 }
 
@@ -1117,10 +1129,10 @@ function guardarNota(textarea, leadId) {
     const nota = textarea.value.trim();
     fetch(`/leads/${clienteId}/nota/${leadId}`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: `nota=${encodeURIComponent(nota)}`
+        headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': CSRF_TOKEN},
+        body: `nota=${encodeURIComponent(nota)}&csrf_token=${encodeURIComponent(CSRF_TOKEN)}`
     }).then(r => r.json()).then(() => {
-        span.textContent = nota || '{{ tx.nota_ph }}';
+        span.textContent = nota || TX_NOTA_PH;
         span.style.display = 'block';
         textarea.style.display = 'none';
     }).catch(() => {
@@ -1132,7 +1144,7 @@ function guardarNota(textarea, leadId) {
 function verRespuesta(leadId, nombre, telefono) {
     document.getElementById('nombreRespuesta').textContent = nombre;
     document.getElementById('opcionesContainer').innerHTML =
-        `<div style="text-align:center;padding:30px;color:#999;">⏳ ${TX_ANALIZANDO}</div>`;
+        `<div style="text-align:center;padding:30px;color:#999;">⏳ ${esc(TX_ANALIZANDO)}</div>`;
     document.getElementById('modalRespuesta').style.display = 'block';
 
     fetch(`/leads/${clienteId}/respuesta/${leadId}`)
@@ -1141,24 +1153,24 @@ function verRespuesta(leadId, nombre, telefono) {
             const respuestas = data.respuestas || [];
             if (!respuestas.length) {
                 document.getElementById('opcionesContainer').innerHTML =
-                    `<p style="color:#e74c3c;text-align:center;">${TX_ERROR}</p>`;
+                    `<p style="color:#e74c3c;text-align:center;">${esc(TX_ERROR)}</p>`;
                 return;
             }
             document.getElementById('opcionesContainer').innerHTML = respuestas.map((op, i) => `
                 <div class="opcion-card">
                     <div class="opcion-titulo">
-                        ${op.titulo}
-                        ${i === 0 ? `<span class="recomendado-tag">${TX_RECOMENDADO}</span>` : ''}
+                        ${esc(op.titulo)}
+                        ${i === 0 ? `<span class="recomendado-tag">${esc(TX_RECOMENDADO)}</span>` : ''}
                     </div>
-                    <div class="opcion-msg" id="msg_h_${leadId}_${i}">${op.msg}</div>
+                    <div class="opcion-msg" id="msg_h_${leadId}_${i}">${esc(op.msg)}</div>
                     <div class="opcion-btns">
                         <button class="btn-copiar-op" id="btnCopy_h_${leadId}_${i}"
                             onclick="copiarOpcion('msg_h_${leadId}_${i}', 'btnCopy_h_${leadId}_${i}')">
-                            📋 ${TX_COPIAR}
+                            📋 ${esc(TX_COPIAR)}
                         </button>
-                        <button class="btn-wa-op"
-                            onclick="waOpcion('msg_h_${leadId}_${i}', '${telefono}')">
-                            📱 ${TX_WA}
+                        <button class="btn-wa-op" data-msg="msg_h_${leadId}_${i}" data-tel="${esc(soloDigitos(telefono))}"
+                            onclick="waOpcion(this.dataset.msg, this.dataset.tel)">
+                            📱 ${esc(TX_WA)}
                         </button>
                     </div>
                 </div>
@@ -1166,7 +1178,7 @@ function verRespuesta(leadId, nombre, telefono) {
         })
         .catch(() => {
             document.getElementById('opcionesContainer').innerHTML =
-                `<p style="color:#e74c3c;text-align:center;">${TX_ERROR}</p>`;
+                `<p style="color:#e74c3c;text-align:center;">${esc(TX_ERROR)}</p>`;
         });
 }
 
@@ -1175,7 +1187,7 @@ function abrirWhatsAppDirecto(telefono, leadId) {
         .then(r => r.json())
         .then(data => {
             const msg = (data.respuestas || [])[0]?.msg || '';
-            if (msg) window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(msg)}`, '_blank');
+            if (msg) window.open(`https://wa.me/${soloDigitos(telefono)}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
         });
 }
 
@@ -1193,7 +1205,7 @@ function copiarOpcion(msgId, btnId) {
 
 function waOpcion(msgId, telefono) {
     const msg = document.getElementById(msgId)?.textContent || '';
-    if (msg) window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(msg)}`, '_blank');
+    if (msg) window.open(`https://wa.me/${soloDigitos(telefono)}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
 }
 
 function cerrarModalRespuesta() { document.getElementById('modalRespuesta').style.display = 'none'; }
@@ -1208,9 +1220,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const asesorError = params.get('asesor_error');
     if (asesorError) {
         const mensajes = {
-            'usuario_duplicado': "{{ tx.asesor_err_duplicado }}",
-            'campos_requeridos': "{{ tx.asesor_err_campos }}",
-            'error_generico': "{{ tx.asesor_err_generico }}"
+            'usuario_duplicado': {{ tx.asesor_err_duplicado|tojson }},
+            'campos_requeridos': {{ tx.asesor_err_campos|tojson }},
+            'error_generico': {{ tx.asesor_err_generico|tojson }}
         };
         alert(mensajes[asesorError] || mensajes['error_generico']);
         const modalAsesores = document.getElementById('modalAsesores');
@@ -1251,8 +1263,8 @@ function cargarPropiedadesSelect() {
 }
 function renderPropiedadesSelect(props) {
     const sel = document.getElementById('visitaPropiedad');
-    sel.innerHTML = `<option value="">${TX_VISITA_SIN_PROPIEDAD}</option>` +
-        props.map(p => `<option value="${p.id}">${p.titulo}</option>`).join('');
+    sel.innerHTML = `<option value="">${esc(TX_VISITA_SIN_PROPIEDAD)}</option>` +
+        props.map(p => `<option value="${esc(p.id)}">${esc(p.titulo)}</option>`).join('');
 }
 function guardarVisita(event) {
     event.preventDefault();
