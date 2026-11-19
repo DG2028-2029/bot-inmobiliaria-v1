@@ -278,12 +278,34 @@ def ahora_local_cliente(cliente):
     except Exception:
         return datetime.now(ZoneInfo(TZ_POR_DEFECTO)).replace(tzinfo=None)
 
+def _es_hash_de_password(valor):
+    """True si el valor guardado ya es una contraseña cifrada (hash)."""
+    return bool(valor) and (valor.startswith('scrypt:') or valor.startswith('pbkdf2:'))
+
 def verificar_password(password_ingresada, password_guardada):
     if not password_guardada or not password_ingresada:
         return False
-    if password_guardada.startswith('scrypt:') or password_guardada.startswith('pbkdf2:'):
+    if _es_hash_de_password(password_guardada):
         return check_password_hash(password_guardada, password_ingresada)
-    return secrets.compare_digest(password_ingresada, password_guardada)
+    # Cuenta antigua con contraseña en texto plano: se compara en bytes para que
+    # una ñ o un acento no provoquen un error 500.
+    return secrets.compare_digest(password_ingresada.encode('utf-8'),
+                                  password_guardada.encode('utf-8'))
+
+def migrar_password_si_es_texto_plano(tabla, fila_id, password_ingresada, password_guardada):
+    """
+    Si la contraseña guardada está en texto plano (cuenta antigua) y el inicio
+    de sesión fue correcto, la reemplaza por su versión cifrada. Así las
+    cuentas antiguas se van protegiendo solas, sin que nadie cambie nada.
+    """
+    if password_guardada and not _es_hash_de_password(password_guardada):
+        try:
+            supabase.table(tabla).update(
+                {"password": generate_password_hash(password_ingresada)}
+            ).eq("id", fila_id).execute()
+            log_accion('PASSWORD_MIGRADA', f"tabla={tabla}", get_remote_address())
+        except Exception as e:
+            print(f"⚠️ No se pudo cifrar la contraseña ({tabla}): {e}")
 
 def es_dueno():
     return session.get('cliente') and not session.get('asesor_id')
@@ -1111,7 +1133,7 @@ def job_recordatorios_visitas():
 def verificar_sesion():
     rutas_publicas = ['formulario', 'formulario_asesor', 'index', 'seleccion_idioma_login',
                       'static', 'login', 'cambiar_idioma', 'cron_seguimiento', 'admin_login',
-                      'inicio_formulario', 'chat_inmobiliario', 'test_chat', 'inventario_publico',
+                      'inicio_formulario', 'chat_inmobiliario', 'inventario_publico',
                       'recuperar_password', 'reset_password', 'cron_reporte_semanal',
                       'test_reporte_semanal', 'cron_recordatorios_visitas',
                       'portal_prospecto', 'portal_confirmar_visita',
@@ -3018,6 +3040,8 @@ def login(cliente_id):
         password_form = request.form.get("password", "").strip()
         if usuario_form == vendedor["usuario"] and \
            verificar_password(password_form, vendedor["password"]):
+            # ✅ Si la cuenta era antigua (contraseña en texto plano), se cifra ahora.
+            migrar_password_si_es_texto_plano("clientes", id_clean, password_form, vendedor["password"])
             session["cliente"] = id_clean
             session["login_time"] = datetime.now().isoformat()
             session.pop("asesor_id", None)
@@ -3033,6 +3057,8 @@ def login(cliente_id):
             if asesores_r.data:
                 asesor = asesores_r.data[0]
                 if verificar_password(password_form, asesor["password"]):
+                    # ✅ Igual para asesores con contraseña antigua en texto plano.
+                    migrar_password_si_es_texto_plano("asesores", asesor["id"], password_form, asesor["password"])
                     session["cliente"] = id_clean
                     session["login_time"] = datetime.now().isoformat()
                     session["asesor_id"] = asesor["id"]
@@ -3247,21 +3273,6 @@ def llamar_openrouter(api_key, messages_payload):
             print(f"⚠️ OpenRouter {modelo} error: {e}")
             continue
     return None
-
-@app.route("/test-chat/<cliente_id>")
-def test_chat(cliente_id):
-    api_key = os.environ.get("OPENROUTER_API_KEY", "")
-    try:
-        result = llamar_openrouter(api_key, [
-            {"role": "user", "content": "Say exactly: WORKING"}
-        ])
-        # ⚠️ Ya no se devuelve el prefijo de la API key en la respuesta —
-        # antes esta ruta pública exponía api_key[:12] en el JSON.
-        if result:
-            return jsonify({"ok": True, "response": result})
-        return jsonify({"ok": False, "error": "Ningún modelo respondió"})
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)})
 
 @app.route("/api/chat/<cliente_id>", methods=["POST"])
 @limiter.limit("30 per minute")
