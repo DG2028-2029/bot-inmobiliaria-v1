@@ -1,141 +1,174 @@
+{% set _c = (cliente.color_primario or '')|lower %}{% set acento = cliente.color_primario if (plan_info and 'marca_propia' in plan_info.funciones and _c and _c != '#667eea') else '#C9A24B' %}
 <!DOCTYPE html>
 <html lang="{{ idioma_actual or 'es' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pipeline | {{ cliente.nombre }}</title>
+    <title>Pipeline | {{ cliente.nombre }} · IPOX</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%230B1F3A%22/%3E%3Cpath d=%22M7 17 16 8l9 9%22 fill=%22none%22 stroke=%22%23C9A24B%22 stroke-width=%222.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Crect x=%2214.4%22 y=%2215%22 width=%223.2%22 height=%229%22 rx=%221.2%22 fill=%22%23fff%22/%3E%3C/svg%3E">
     <style>
-        :root { --color: {{ cliente.color_primario or '#667eea' }}; }
+        :root {
+            --ix-navy:#0B1F3A; --ix-navy-2:#132C50; --ix-navy-3:#1D3A66;
+            --ix-gold:#C9A24B; --ix-gold-2:#E6D3A0; --ix-gold-3:#F7F0DC;
+            --ix-ivory:#F6F4EF; --ix-card:#FFFFFF; --ix-ink:#18233A; --ix-muted:#6B7385; --ix-line:#E8E3D6;
+            --ix-ok:#2F7D5B; --ix-ok-bg:#E6F2EC; --ix-warn:#8F6410; --ix-warn-bg:#FBF1D9;
+            --ix-bad:#A33B35; --ix-bad-bg:#F8E6E4; --ix-info:#2B5C9A; --ix-info-bg:#E4EDF8;
+            --ix-serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+            --ix-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+            --ix-radius:16px; --ix-shadow:0 1px 2px rgba(11,31,58,.05), 0 10px 28px rgba(11,31,58,.07);
+            --accent: {{ acento }};
+            --color: var(--ix-navy);
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f2f6; padding: 16px; min-height: 100vh; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
-        .top-bar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        html { -webkit-text-size-adjust: 100%; }
+        body { font-family: var(--ix-sans); background: var(--ix-ivory); color: var(--ix-ink); line-height: 1.45; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+        .ix-wrap { max-width: 1480px; margin: 0 auto; padding: 22px 20px 60px; }
+
+        /* ===== Barra superior con la marca ===== */
+        .top-bar { background: linear-gradient(180deg, var(--ix-navy), var(--ix-navy-2)); padding: 12px 26px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; border-bottom: 3px solid var(--accent); }
+        .ix-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff; }
+        .ix-mark { width: 36px; height: 36px; flex: none; }
+        .ix-word { font-family: var(--ix-serif); font-size: 22px; letter-spacing: .3em; font-weight: 600; line-height: 1; display: block; }
+        .ix-sub { display: block; font-size: 9.5px; letter-spacing: .24em; text-transform: uppercase; color: var(--ix-gold-2); margin-top: 6px; font-weight: 500; }
+        .top-bar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .lang-selector { position: relative; display: inline-block; }
-        .lang-selector-btn { display: flex; align-items: center; gap: 6px; background: white; border: 1px solid #ddd; border-radius: 8px; padding: 7px 12px; cursor: pointer; font-size: 13px; font-weight: 600; color: #2c3e50; box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-family: inherit; transition: 0.2s; }
-        .lang-selector-btn:hover { border-color: var(--color); }
-        .lang-arrow { font-size: 9px; color: #999; transition: transform 0.2s; }
+        .lang-selector-btn { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.25); color: #fff; border-radius: 999px; padding: 7px 14px; cursor: pointer; font: 600 12.5px var(--ix-sans); transition: .2s; }
+        .lang-selector-btn:hover { background: rgba(255,255,255,.15); }
+        .lang-arrow { font-size: 10px; opacity: .7; transition: transform .2s; }
         .lang-selector.abierto .lang-arrow { transform: rotate(180deg); }
-        .lang-menu { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: white; border-radius: 10px; box-shadow: 0 8px 25px rgba(0,0,0,0.18); min-width: 170px; overflow: hidden; z-index: 200; }
+        .lang-menu { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: #fff; border-radius: 12px; box-shadow: 0 18px 40px rgba(11,31,58,.28); min-width: 180px; overflow: hidden; z-index: 200; border: 1px solid var(--ix-line); }
         .lang-selector.abierto .lang-menu { display: block; }
-        .lang-menu a { display: flex; align-items: center; gap: 8px; padding: 10px 14px; text-decoration: none; color: #2c3e50; font-size: 13px; transition: 0.15s; }
-        .lang-menu a:hover { background: #f8f9fa; }
-        .lang-menu a.activo { color: var(--color); background: #f0f4ff; }
-        .btn-logout { background: #e74c3c; color: white; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: bold; font-size: 13px; transition: 0.2s; }
-        .btn-logout:hover { background: #c0392b; }
-        .asesor-banner { background: linear-gradient(135deg, var(--color), #1a1a2e); color: white; padding: 10px 16px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .rol-tag { background: rgba(255,255,255,0.2); padding: 2px 9px; border-radius: 20px; font-size: 11px; }
-        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; background: white; padding: 14px 18px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); border-left: 5px solid var(--color); }
-        .header-left { display: flex; align-items: center; gap: 12px; }
-        .header-logo { width: 42px; height: 42px; border-radius: 10px; object-fit: contain; border: 2px solid var(--color); }
-        .header-logo-placeholder { width: 42px; height: 42px; border-radius: 10px; background: var(--color); display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .header-container h2 { color: #2c3e50; font-size: 18px; }
-        .header-container h2 span { color: var(--color); }
+        .lang-menu a { display: flex; align-items: center; gap: 8px; padding: 11px 16px; text-decoration: none; color: var(--ix-ink); font-size: 13px; }
+        .lang-menu a:hover { background: var(--ix-gold-3); }
+        .lang-menu a.activo { color: var(--ix-navy); font-weight: 700; background: var(--ix-gold-3); }
+        .btn-logout { color: #fff; text-decoration: none; border: 1px solid rgba(255,255,255,.4); padding: 7px 16px; border-radius: 999px; font-weight: 600; font-size: 12.5px; transition: .2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-logout:hover { background: #fff; color: var(--ix-navy); }
+
+        .asesor-banner { background: var(--ix-navy); color: #fff; padding: 11px 18px; border-radius: 12px; margin-bottom: 14px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-left: 4px solid var(--accent); }
+        .rol-tag { background: rgba(255,255,255,.14); padding: 2px 10px; border-radius: 999px; font-size: 11px; color: var(--ix-gold-2); }
+
+        /* ===== Encabezado ===== */
+        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 14px; background: var(--ix-card); padding: 18px 24px; border-radius: var(--ix-radius); box-shadow: var(--ix-shadow); border: 1px solid var(--ix-line); border-left: 5px solid var(--accent); }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .header-logo { width: 48px; height: 48px; border-radius: 12px; object-fit: contain; border: 1px solid var(--ix-line); background: #fff; }
+        .header-logo-placeholder { width: 48px; height: 48px; border-radius: 12px; background: var(--ix-navy); color: var(--ix-gold); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .header-container h2 { font-family: var(--ix-serif); color: var(--ix-navy); font-size: 22px; font-weight: 600; }
+        .header-container h2 span { color: var(--ix-navy-3); font-style: italic; }
         .header-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
-        .btn-nav { color: white; text-decoration: none; padding: 9px 14px; border-radius: 8px; font-weight: bold; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; border: none; cursor: pointer; transition: 0.2s; }
-        .btn-nav:hover { opacity: 0.85; transform: translateY(-1px); }
-        .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
-        .stat-pill { background: white; padding: 12px 16px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 3px solid var(--etapa-color, #667eea); }
-        .stat-pill .num { font-size: 24px; font-weight: bold; color: var(--etapa-color, #667eea); }
-        .stat-pill .lbl { font-size: 11px; color: #999; margin-top: 2px; }
+        .btn-nav { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 999px; font: 600 12.5px var(--ix-sans); text-decoration: none; cursor: pointer; border: 1px solid var(--ix-line); background: #fff; color: var(--ix-navy); transition: .2s; }
+        .btn-nav:hover { background: var(--ix-navy); border-color: var(--ix-navy); color: #fff; }
+        .btn-nav.principal { background: var(--ix-navy); border-color: var(--ix-navy); color: #fff; }
+        .btn-nav.principal:hover { background: var(--accent); border-color: var(--accent); color: var(--ix-navy); }
+
+        /* ===== Resumen por etapa ===== */
+        .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 18px; }
+        .stat-pill { background: var(--ix-card); padding: 14px 16px; border-radius: var(--ix-radius); text-align: center; box-shadow: var(--ix-shadow); border: 1px solid var(--ix-line); border-top: 4px solid var(--etapa-color, var(--ix-muted)); }
+        .stat-pill .num { font-family: var(--ix-serif); font-size: 28px; font-weight: 700; color: var(--ix-navy); line-height: 1.1; }
+        .stat-pill .lbl { font-size: 11.5px; color: var(--ix-muted); margin-top: 4px; font-weight: 600; }
+
+        /* ===== Tablero ===== */
         .kanban-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; align-items: start; }
-        .kanban-col { background: #f8f9fa; border-radius: 12px; padding: 12px; min-height: 400px; }
-        .kanban-col-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid var(--col-color); }
-        .kanban-col-titulo { font-size: 13px; font-weight: 700; color: #2c3e50; display: flex; align-items: center; gap: 6px; }
-        .kanban-col-count { background: var(--col-color); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; flex-shrink: 0; }
-        .kanban-card { background: white; border-radius: 10px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 3px solid var(--col-color); cursor: grab; transition: 0.2s; position: relative; }
-        .kanban-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.14); transform: translateY(-2px); }
-        .kanban-card.dragging { opacity: 0.5; cursor: grabbing; }
-        .kanban-col.drag-over { background: #e8f4fd; outline: 2px dashed var(--color); }
-        .card-nombre { font-size: 13px; font-weight: 700; color: #2c3e50; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .card-zona { font-size: 11px; color: #999; margin-bottom: 6px; }
-        .card-presupuesto { font-size: 12px; font-weight: 700; color: #27ae60; margin-bottom: 8px; }
+        .kanban-col { background: #EFEBDF; border: 1px solid var(--ix-line); border-radius: var(--ix-radius); padding: 12px; min-height: 400px; transition: .15s; }
+        .kanban-col-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 3px solid var(--col-color); }
+        .kanban-col-titulo { font-family: var(--ix-serif); font-size: 15px; font-weight: 600; color: var(--ix-navy); display: flex; align-items: center; gap: 6px; }
+        .kanban-col-count { background: var(--col-color); color: #fff; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+        .kanban-card { background: var(--ix-card); border: 1px solid var(--ix-line); border-left: 4px solid var(--col-color); border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(11,31,58,.05); cursor: grab; transition: box-shadow .2s, border-color .2s; position: relative; }
+        .kanban-card:hover { box-shadow: 0 1px 2px rgba(11,31,58,.06), 0 12px 28px rgba(11,31,58,.12); }
+        .kanban-card.dragging { opacity: .5; cursor: grabbing; }
+        .kanban-col.drag-over { background: var(--ix-gold-3); outline: 2px dashed var(--accent); }
+        .card-nombre { font-family: var(--ix-serif); font-size: 14.5px; font-weight: 600; color: var(--ix-navy); margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-zona { font-size: 11.5px; color: var(--ix-muted); margin-bottom: 6px; }
+        .card-presupuesto { font-size: 13px; font-weight: 700; color: var(--ix-ok); margin-bottom: 8px; }
         .card-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
-        .badge { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; }
-        .badge-alto { background: #fdf2f2; color: #e74c3c; border: 1px solid #f5b7b1; }
-        .badge-medio { background: #fef9e7; color: #d68910; border: 1px solid #fad7a0; }
-        .badge-bajo { background: #f4f6f7; color: #7f8c8d; border: 1px solid #d5dbdb; }
-        .badge-cliente { background: #eaf4fb; color: #1a5276; border: 1px solid #aed6f1; }
-        .badge-visita { display: none; background: #eafaf1; color: #196f3d; border: 1px solid #a9dfbf; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; }
+        .badge-alto { background: var(--ix-bad-bg); color: var(--ix-bad); border: 1px solid #EBC5C1; }
+        .badge-medio { background: var(--ix-warn-bg); color: var(--ix-warn); border: 1px solid #EDD9A6; }
+        .badge-bajo { background: #F1EFEA; color: #6B7385; border: 1px solid #E1DDD0; }
+        .badge-cliente { background: var(--ix-gold-3); color: #7A5A12; border: 1px solid var(--ix-gold-2); }
+        .badge-visita { display: none; background: var(--ix-ok-bg); color: var(--ix-ok); border: 1px solid #BBD9CA; padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; }
         .card-score { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
-        .score-bar-wrap { flex: 1; background: #ecf0f1; border-radius: 4px; height: 5px; overflow: hidden; }
-        .score-bar { height: 100%; border-radius: 4px; }
-        .score-bar.alto  { background: linear-gradient(90deg, #27ae60, #2ecc71); }
-        .score-bar.medio { background: linear-gradient(90deg, #f39c12, #f1c40f); }
-        .score-bar.bajo  { background: linear-gradient(90deg, #e74c3c, #ec7063); }
-        .score-label { font-size: 10px; font-weight: 700; flex-shrink: 0; }
-        .score-label.alto { color: #27ae60; }
-        .score-label.medio { color: #d68910; }
-        .score-label.bajo { color: #e74c3c; }
-        .dias-badge { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; }
-        .dias-nuevo  { background: #e8f8f0; color: #27ae60; }
-        .dias-ok     { background: #fefde7; color: #b7950b; }
-        .dias-alerta { background: #fdf2f2; color: #c0392b; }
-        .dias-riesgo { background: #7f0000; color: white; animation: pulso 1.5s infinite; }
-        @keyframes pulso { 0%,100%{opacity:1} 50%{opacity:0.6} }
-        .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f5f5f5; }
-        .card-tel { font-size: 11px; color: #27ae60; text-decoration: none; font-weight: bold; }
+        .score-bar-wrap { flex: 1; background: #EEE9DB; border-radius: 6px; height: 5px; overflow: hidden; }
+        .score-bar { height: 100%; border-radius: 6px; }
+        .score-bar.alto  { background: linear-gradient(90deg, #2F7D5B, #4FA37E); }
+        .score-bar.medio { background: linear-gradient(90deg, #C9A24B, #E3C77D); }
+        .score-bar.bajo  { background: linear-gradient(90deg, #A33B35, #C9605A); }
+        .score-label { font-size: 10.5px; font-weight: 700; flex-shrink: 0; }
+        .score-label.alto { color: var(--ix-ok); } .score-label.medio { color: var(--ix-warn); } .score-label.bajo { color: var(--ix-bad); }
+        .dias-badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; }
+        .dias-nuevo  { background: var(--ix-ok-bg); color: var(--ix-ok); border: 1px solid #BBD9CA; }
+        .dias-ok     { background: var(--ix-warn-bg); color: var(--ix-warn); border: 1px solid #EDD9A6; }
+        .dias-alerta { background: var(--ix-bad-bg); color: var(--ix-bad); border: 1px solid #EBC5C1; }
+        .dias-riesgo { background: #7A2A26; color: #fff; border: 1px solid #5D1D1A; animation: pulso 1.5s infinite; }
+        @keyframes pulso { 0%,100% { opacity: 1; } 50% { opacity: .65; } }
+        @media (prefers-reduced-motion: reduce) { .dias-riesgo { animation: none; } }
+        .card-nota { font-size: 10.5px; color: #5C6578; background: var(--ix-ivory); border: 1px solid var(--ix-line); padding: 5px 8px; border-radius: 8px; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #F0ECE0; flex-wrap: wrap; }
+        .card-tel { font-size: 11px; color: var(--ix-ok); text-decoration: none; font-weight: 700; }
         .card-tel:hover { text-decoration: underline; }
         .card-actions { display: flex; gap: 4px; flex-wrap: wrap; }
-        .btn-card { padding: 5px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 10px; font-weight: bold; transition: 0.2s; }
-        .btn-wa { background: #25D366; color: white; }
-        .btn-wa:hover { background: #128C7E; }
-        .btn-msg { background: #f0f4ff; color: var(--color); border: 1px solid var(--color); }
-        .btn-msg:hover { background: var(--color); color: white; }
-        .btn-visita { background: #eafaf1; color: #196f3d; border: 1px solid #a9dfbf; }
-        .btn-visita:hover { background: #196f3d; color: white; }
-        .btn-portal { background: #f3eefc; color: #6c3fbf; border: 1px solid #d8c4f5; }
-        .btn-portal:hover { background: #6c3fbf; color: white; }
-        .etapa-select { width: 100%; font-size: 11px; padding: 5px 6px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer; margin-top: 6px; }
-        .etapa-select:focus { outline: none; border-color: var(--color); }
+        .btn-card { padding: 6px 9px; border-radius: 9px; border: 1px solid transparent; cursor: pointer; font-size: 11px; font-weight: 700; transition: .2s; }
+        .btn-wa { background: #25A25A; color: #fff; }
+        .btn-wa:hover { background: #1B8648; }
+        .btn-msg { background: #fff; color: var(--ix-navy); border-color: var(--ix-line); }
+        .btn-msg:hover { background: var(--ix-gold-3); border-color: var(--accent); }
+        .btn-visita { background: var(--ix-ok-bg); color: var(--ix-ok); border-color: #BBD9CA; }
+        .btn-visita:hover { background: var(--ix-ok); color: #fff; }
+        .btn-portal { background: var(--ix-gold-3); color: #7A5A12; border-color: var(--ix-gold-2); }
+        .btn-portal:hover { background: var(--accent); color: var(--ix-navy); }
+        .etapa-select { width: 100%; font-size: 11.5px; padding: 7px 8px; border: 1px solid var(--ix-line); border-radius: 9px; background: #fff; cursor: pointer; margin-top: 6px; color: var(--ix-ink); font-family: inherit; }
+        .etapa-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,162,75,.2); }
+        .col-vacia { text-align: center; padding: 30px 10px; color: #A5ABB8; font-size: 12.5px; font-family: var(--ix-serif); }
 
-        .modal-respuesta { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); overflow-y: auto; }
-        .modal-respuesta-content { background: white; margin: 6% auto; padding: 24px; border-radius: 12px; max-width: 540px; width: 92%; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
-        .modal-resp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .modal-resp-titulo { font-size: 16px; font-weight: 700; color: #2c3e50; }
-        .modal-resp-cerrar { background: none; border: none; font-size: 22px; cursor: pointer; color: #999; }
-        .modal-resp-cerrar:hover { color: #e74c3c; }
-        .opcion-card { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 10px; padding: 14px; margin-bottom: 10px; border-left: 4px solid var(--color); }
-        .opcion-titulo { font-size: 13px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .recomendado-tag { background: #eaf4fb; color: var(--color); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; border: 1px solid #aed6f1; }
-        .opcion-msg { font-size: 13px; color: #444; line-height: 1.7; background: white; border-radius: 6px; padding: 10px 12px; margin-bottom: 10px; border: 1px solid #eee; }
+        /* ===== Ventanas ===== */
+        .modal-respuesta { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(11,31,58,.55); overflow-y: auto; }
+        .modal-respuesta-content { background: #fff; margin: 5% auto; padding: 26px; border-radius: 18px; max-width: 560px; width: 92%; box-shadow: 0 30px 70px rgba(11,31,58,.4); border-top: 4px solid var(--accent); }
+        .modal-resp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+        .modal-resp-titulo { font-family: var(--ix-serif); font-size: 19px; font-weight: 600; color: var(--ix-navy); }
+        .modal-resp-cerrar { background: none; border: none; font-size: 22px; cursor: pointer; color: #9AA1B2; line-height: 1; }
+        .modal-resp-cerrar:hover { color: var(--ix-bad); }
+        .opcion-card { background: var(--ix-ivory); border: 1px solid var(--ix-line); border-radius: 12px; padding: 14px; margin-bottom: 10px; border-left: 4px solid var(--accent); }
+        .opcion-titulo { font-size: 13px; font-weight: 700; color: var(--ix-navy); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .recomendado-tag { background: var(--ix-gold-3); color: #7A5A12; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--ix-gold-2); }
+        .opcion-msg { font-size: 13px; color: #3A4458; line-height: 1.7; background: #fff; border-radius: 10px; padding: 11px 13px; margin-bottom: 10px; border: 1px solid var(--ix-line); }
         .opcion-btns { display: flex; gap: 8px; }
-        .btn-copiar-op { flex: 1; padding: 9px; background: var(--color); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; font-family: inherit; }
-        .btn-copiar-op:hover { opacity: 0.85; }
-        .btn-wa-op { flex: 1; padding: 9px; background: #25D366; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; font-family: inherit; }
-        .btn-wa-op:hover { background: #128C7E; }
-        .btn-cerrar-modal-k { width: 100%; margin-top: 8px; padding: 11px; background: #ecf0f1; color: #555; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; }
+        .btn-copiar-op { flex: 1; padding: 10px; background: var(--ix-navy); color: #fff; border: none; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 700; transition: .2s; font-family: inherit; }
+        .btn-copiar-op:hover { background: var(--ix-navy-3); }
+        .btn-wa-op { flex: 1; padding: 10px; background: #25A25A; color: #fff; border: none; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 700; transition: .2s; font-family: inherit; }
+        .btn-wa-op:hover { background: #1B8648; }
+        .btn-cerrar-modal-k { width: 100%; margin-top: 8px; padding: 11px; background: transparent; color: var(--ix-muted); border: 1px solid var(--ix-line); border-radius: 10px; cursor: pointer; font-size: 13px; font-family: inherit; }
+        .btn-cerrar-modal-k:hover { border-color: var(--ix-navy); color: var(--ix-navy); }
 
         .form-visita-group { margin-bottom: 14px; }
-        .form-visita-group label { display: block; font-size: 12px; font-weight: 700; color: #555; margin-bottom: 5px; }
-        .form-visita-group input, .form-visita-group select, .form-visita-group textarea {
-            width: 100%; padding: 9px 10px; border: 1px solid #ddd; border-radius: 8px;
-            font-size: 13px; font-family: inherit; background: white;
-        }
-        .form-visita-group input:focus, .form-visita-group select:focus, .form-visita-group textarea:focus {
-            outline: none; border-color: var(--color);
-        }
+        .form-visita-group label { display: block; font-size: 11px; font-weight: 700; color: var(--ix-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .08em; }
+        .form-visita-group input, .form-visita-group select, .form-visita-group textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--ix-line); border-radius: 10px; font-size: 13px; font-family: inherit; background: #fff; color: var(--ix-ink); }
+        .form-visita-group input:focus, .form-visita-group select:focus, .form-visita-group textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,162,75,.2); }
         .form-visita-group textarea { resize: vertical; }
-        .visita-error { color: #e74c3c; font-size: 12px; margin-bottom: 10px; display: none; background: #fdf2f2; padding: 8px 10px; border-radius: 6px; }
-        .hora-picker-wrap { border: 1px solid #ddd; border-radius: 8px; background: white; }
-        .hora-picker-lista { max-height: 168px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #ccc #f8f9fa; }
+        .visita-error { color: var(--ix-bad); font-size: 12px; margin-bottom: 10px; display: none; background: var(--ix-bad-bg); padding: 9px 12px; border-radius: 8px; }
+        .hora-picker-wrap { border: 1px solid var(--ix-line); border-radius: 10px; background: #fff; overflow: hidden; }
+        .hora-picker-lista { max-height: 168px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #CFC8B4 #F6F4EF; }
         .hora-picker-lista::-webkit-scrollbar { width: 7px; }
-        .hora-picker-lista::-webkit-scrollbar-track { background: #f8f9fa; border-radius: 8px; }
-        .hora-picker-lista::-webkit-scrollbar-thumb { background: #ccc; border-radius: 8px; }
-        .hora-picker-lista::-webkit-scrollbar-thumb:hover { background: #aaa; }
-        .hora-picker-item { padding: 9px 14px; font-size: 13px; cursor: pointer; color: #444; transition: 0.15s; }
-        .hora-picker-item:hover { background: #f5f5f5; }
-        .hora-picker-item.seleccionada { background: var(--color); color: white; font-weight: 700; }
+        .hora-picker-lista::-webkit-scrollbar-track { background: #F6F4EF; }
+        .hora-picker-lista::-webkit-scrollbar-thumb { background: #CFC8B4; border-radius: 8px; }
+        .hora-picker-item { padding: 9px 14px; font-size: 13px; cursor: pointer; color: #3A4458; transition: .15s; }
+        .hora-picker-item:hover { background: var(--ix-gold-3); }
+        .hora-picker-item.seleccionada { background: var(--ix-navy); color: var(--ix-gold-2); font-weight: 700; }
 
-        @media (max-width: 900px) {
+        @media (max-width: 1100px) {
             .kanban-board { grid-template-columns: repeat(3, 1fr); }
             .stats-row { grid-template-columns: repeat(3, 1fr); }
         }
-        @media (max-width: 600px) {
+        @media (max-width: 700px) {
+            .top-bar { padding: 10px 14px; }
+            .ix-word { font-size: 19px; }
+            .ix-wrap { padding: 14px 12px 50px; }
+            .header-container { padding: 14px 16px; }
+            .header-container h2 { font-size: 18px; }
             .kanban-board { grid-template-columns: 1fr; }
             .stats-row { grid-template-columns: repeat(2, 1fr); }
             .header-buttons { gap: 6px; }
-            .btn-nav { padding: 7px 10px; font-size: 11px; }
+            .btn-nav { padding: 8px 12px; font-size: 11.5px; }
             .opcion-btns { flex-direction: column; }
+            .modal-respuesta-content { margin: 2% auto; padding: 18px; }
         }
     </style>
 </head>
@@ -399,25 +432,31 @@
 {% set t = kn[lang] if lang in kn else kn['es'] %}
 
 <div class="top-bar">
-    <div style="font-size:14px;font-weight:600;color:#2c3e50;">📋 {{ t.titulo_top }} — {{ cliente.nombre }}</div>
+    <a class="ix-brand" href="{{ url_for('historial', cliente_id=cliente.id) }}" title="IPOX">
+        <svg class="ix-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#13294B"/><rect x=".75" y=".75" width="30.5" height="30.5" rx="7.25" fill="none" stroke="#C9A24B" stroke-opacity=".55" stroke-width="1.5"/><path d="M7 17 16 8l9 9" fill="none" stroke="#C9A24B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="14.4" y="15" width="3.2" height="9" rx="1.2" fill="#fff"/></svg>
+        <span><span class="ix-word">IPOX</span><span class="ix-sub">CRM Inmobiliario</span></span>
+    </a>
     <div class="top-bar-right">
         <div class="lang-selector" id="langSelector">
             <button type="button" class="lang-selector-btn" onclick="toggleLang()">
                 <span>{% if lang == 'es' %}🇪🇸{% elif lang == 'en' %}🇺🇸{% elif lang == 'fr' %}🇫🇷{% elif lang == 'de' %}🇩🇪{% elif lang == 'pt' %}🇵🇹{% elif lang == 'zh' %}🇨🇳{% else %}🇪🇸{% endif %}</span>
-                <span style="font-size:12px;">{% if lang == 'es' %}ES{% elif lang == 'en' %}EN{% elif lang == 'fr' %}FR{% elif lang == 'de' %}DE{% elif lang == 'pt' %}PT{% elif lang == 'zh' %}ZH{% else %}ES{% endif %}</span>
+                <span>{% if lang == 'es' %}ES{% elif lang == 'en' %}EN{% elif lang == 'fr' %}FR{% elif lang == 'de' %}DE{% elif lang == 'pt' %}PT{% elif lang == 'zh' %}ZH{% else %}ES{% endif %}</span>
                 <span class="lang-arrow">▾</span>
             </button>
             <div class="lang-menu">
-                <a href="{{ url_for('cambiar_idioma', lang='es', proximo='kanban', cliente_id=cliente.usuario) }}" {% if lang == 'es' %}class="activo"{% endif %}>🇪🇸 Español</a>
-                <a href="{{ url_for('cambiar_idioma', lang='en', proximo='kanban', cliente_id=cliente.usuario) }}" {% if lang == 'en' %}class="activo"{% endif %}>🇺🇸 English</a>
-                <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='kanban', cliente_id=cliente.usuario) }}" {% if lang == 'fr' %}class="activo"{% endif %}>🇫🇷 Français</a>
-                <a href="{{ url_for('cambiar_idioma', lang='de', proximo='kanban', cliente_id=cliente.usuario) }}" {% if lang == 'de' %}class="activo"{% endif %}>🇩🇪 Deutsch</a>
-                <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='kanban', cliente_id=cliente.usuario) }}" {% if lang == 'pt' %}class="activo"{% endif %}>🇵🇹 Português</a>
-                <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='kanban', cliente_id=cliente.usuario) }}" {% if lang == 'zh' %}class="activo"{% endif %}>🇨🇳 中文</a>
+                <a href="{{ url_for('cambiar_idioma', lang='es', proximo='kanban', cliente_id=cliente.id) }}" {% if lang == 'es' %}class="activo"{% endif %}>🇪🇸 Español</a>
+                <a href="{{ url_for('cambiar_idioma', lang='en', proximo='kanban', cliente_id=cliente.id) }}" {% if lang == 'en' %}class="activo"{% endif %}>🇺🇸 English</a>
+                <a href="{{ url_for('cambiar_idioma', lang='fr', proximo='kanban', cliente_id=cliente.id) }}" {% if lang == 'fr' %}class="activo"{% endif %}>🇫🇷 Français</a>
+                <a href="{{ url_for('cambiar_idioma', lang='de', proximo='kanban', cliente_id=cliente.id) }}" {% if lang == 'de' %}class="activo"{% endif %}>🇩🇪 Deutsch</a>
+                <a href="{{ url_for('cambiar_idioma', lang='pt', proximo='kanban', cliente_id=cliente.id) }}" {% if lang == 'pt' %}class="activo"{% endif %}>🇵🇹 Português</a>
+                <a href="{{ url_for('cambiar_idioma', lang='zh', proximo='kanban', cliente_id=cliente.id) }}" {% if lang == 'zh' %}class="activo"{% endif %}>🇨🇳 中文</a>
             </div>
         </div>
-        <a href="{{ url_for('logout', cliente_id=cliente.usuario) }}" class="btn-logout">{{ t.cerrar }}</a></div>
+        <a href="{{ url_for('logout', cliente_id=cliente.id) }}" class="btn-logout">{{ t.cerrar }}</a>
+    </div>
 </div>
+
+<div class="ix-wrap">
 
 {% if not es_dueno %}
 <div class="asesor-banner">
@@ -433,32 +472,32 @@
         <h2>📋 {{ t.titulo_header }} <span>{{ cliente.nombre }}</span></h2>
     </div>
     <div class="header-buttons">
-        <a href="{{ url_for('historial', cliente_id=cliente.usuario) }}" class="btn-nav" style="background:#2c3e50;">{{ t.btn_dashboard }}</a>
-        <a href="{{ url_for('inventario', cliente_id=cliente.usuario) }}" class="btn-nav" style="background:var(--color);">{{ t.btn_inventario }}</a>
+        <a href="{{ url_for('historial', cliente_id=cliente.id) }}" class="btn-nav">{{ t.btn_dashboard }}</a>
+        <a href="{{ url_for('inventario', cliente_id=cliente.id) }}" class="btn-nav principal">{{ t.btn_inventario }}</a>
         {% if puede_ver_todo %}
-        <a href="{{ url_for('stats', cliente_id=cliente.usuario) }}" class="btn-nav" style="background:#3498db;">{{ t.btn_estadisticas }}</a>
+        <a href="{{ url_for('stats', cliente_id=cliente.id) }}" class="btn-nav">{{ t.btn_estadisticas }}</a>
         {% endif %}
     </div>
 </div>
 
 <div class="stats-row">
-    <div class="stat-pill" style="--etapa-color:#95a5a6;">
+    <div class="stat-pill" style="--etapa-color:#9AA1B2;">
         <div class="num">{{ etapas.nuevo | length }}</div>
         <div class="lbl">{{ t.col_nuevo }}</div>
     </div>
-    <div class="stat-pill" style="--etapa-color:#3498db;">
+    <div class="stat-pill" style="--etapa-color:#2B5C9A;">
         <div class="num">{{ etapas.contactado | length }}</div>
         <div class="lbl">{{ t.col_contactado }}</div>
     </div>
-    <div class="stat-pill" style="--etapa-color:#f39c12;">
+    <div class="stat-pill" style="--etapa-color:#C9A24B;">
         <div class="num">{{ etapas.visita | length }}</div>
         <div class="lbl">{{ t.col_visita }}</div>
     </div>
-    <div class="stat-pill" style="--etapa-color:#8e44ad;">
+    <div class="stat-pill" style="--etapa-color:#1D3A66;">
         <div class="num">{{ etapas.propuesta | length }}</div>
         <div class="lbl">{{ t.col_propuesta }}</div>
     </div>
-    <div class="stat-pill" style="--etapa-color:#27ae60;">
+    <div class="stat-pill" style="--etapa-color:#2F7D5B;">
         <div class="num">{{ etapas.cerrado | length }}</div>
         <div class="lbl">{{ t.col_cerrado }}</div>
     </div>
@@ -466,11 +505,11 @@
 
 <div class="kanban-board" id="kanbanBoard">
     {% set columnas = [
-        ('nuevo',      t.col_nuevo,      '#95a5a6'),
-        ('contactado', t.col_contactado, '#3498db'),
-        ('visita',     t.col_visita,     '#f39c12'),
-        ('propuesta',  t.col_propuesta,  '#8e44ad'),
-        ('cerrado',    t.col_cerrado,    '#27ae60'),
+        ('nuevo',      t.col_nuevo,      '#9AA1B2'),
+        ('contactado', t.col_contactado, '#2B5C9A'),
+        ('visita',     t.col_visita,     '#C9A24B'),
+        ('propuesta',  t.col_propuesta,  '#1D3A66'),
+        ('cerrado',    t.col_cerrado,    '#2F7D5B'),
     ] %}
     {% for etapa_key, etapa_nombre, etapa_color in columnas %}
     <div class="kanban-col" data-etapa="{{ etapa_key }}" style="--col-color:{{ etapa_color }};"
@@ -505,9 +544,7 @@
                 <span class="score-label {{ score_clase }}">{{ score }}</span>
             </div>
             {% if lead.notas %}
-            <div style="font-size:10px;color:#999;background:#f8f9fa;padding:4px 6px;border-radius:4px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                📝 {{ lead.notas }}
-            </div>
+            <div class="card-nota">📝 {{ lead.notas }}</div>
             {% endif %}
             <select class="etapa-select" onchange="cambiarEtapa({{ lead.id }}, this.value)">
                 <option value="nuevo"      {% if lead.etapa == 'nuevo' %}selected{% endif %}>{{ t.opt_nuevo }}</option>
@@ -517,21 +554,23 @@
                 <option value="cerrado"    {% if lead.etapa == 'cerrado' %}selected{% endif %}>{{ t.opt_cerrado }}</option>
             </select>
             <div class="card-footer">
-                <a href="https://wa.me/{{ lead.telefono }}" target="_blank" class="card-tel">📱 {{ lead.telefono }}</a>
+                <a href="https://wa.me/{{ lead.telefono }}" target="_blank" rel="noopener noreferrer" class="card-tel">📱 {{ lead.telefono }}</a>
                 <div class="card-actions">
-                    <button class="btn-card btn-visita" title="{{ t.visita_boton_titulo }}" onclick="abrirModalVisita({{ lead.id }}, '{{ lead.nombre }}')">📅</button>
+                    <button class="btn-card btn-visita" title="{{ t.visita_boton_titulo }}" onclick='abrirModalVisita({{ lead.id }}, {{ lead.nombre|tojson }})'>📅</button>
                     <button class="btn-card btn-portal" id="btnPortal_{{ lead.id }}" title="{{ t.portal_boton_titulo }}" onclick="copiarLinkPortal({{ lead.id }})">🔗</button>
-                    <button class="btn-card btn-msg" onclick="verRespuesta({{ lead.id }}, '{{ lead.nombre }}', '{{ lead.telefono }}')">💬</button>
-                    <button class="btn-card btn-wa" onclick="abrirWhatsApp('{{ lead.telefono }}', {{ lead.id }})">📱</button>
+                    <button class="btn-card btn-msg" onclick='verRespuesta({{ lead.id }}, {{ lead.nombre|tojson }}, {{ lead.telefono|tojson }})'>💬</button>
+                    <button class="btn-card btn-wa" onclick='abrirWhatsApp({{ lead.telefono|tojson }}, {{ lead.id }})'>📱</button>
                 </div>
             </div>
         </div>
         {% else %}
-        <div style="text-align:center;padding:30px 10px;color:#ccc;font-size:12px;">{{ t.sin_leads }}</div>
+        <div class="col-vacia">{{ t.sin_leads }}</div>
         {% endfor %}
     </div>
     {% endfor %}
 </div>
+
+</div><!-- /ix-wrap -->
 
 <div id="modalRespuesta" class="modal-respuesta">
     <div class="modal-respuesta-content">
@@ -580,21 +619,31 @@
 </div>
 
 <script>
-const clienteId = "{{ cliente.usuario }}";
-const CSRF_TOKEN = "{{ csrf_token() }}";
-const T_COPIAR = "{{ t.copiar }}";
-const T_COPIADO = "{{ t.copiado }}";
-const T_ANALIZANDO = "{{ t.analizando }}";
-const T_RECOMENDADO = "{{ t.recomendado }}";
-const T_ERROR = "{{ t.error_resp }}";
-const T_WA = "{{ t.whatsapp }}";
-const T_VISITA_SIN_PROPIEDAD = "{{ t.visita_sin_propiedad }}";
-const T_VISITA_FECHA_REQUERIDA = "{{ t.visita_fecha_requerida }}";
-const T_VISITA_ERROR_GUARDAR = "{{ t.visita_error_guardar }}";
-const T_VISITA_ERROR_CONEXION = "{{ t.visita_error_conexion }}";
-const T_PORTAL_ERROR = "{{ t.portal_error }}";
+const clienteId = {{ cliente.id|tojson }};
+const CSRF_TOKEN = {{ csrf_token()|tojson }};
+const T_COPIAR = {{ t.copiar|tojson }};
+const T_COPIADO = {{ t.copiado|tojson }};
+const T_ANALIZANDO = {{ t.analizando|tojson }};
+const T_RECOMENDADO = {{ t.recomendado|tojson }};
+const T_ERROR = {{ t.error_resp|tojson }};
+const T_WA = {{ t.whatsapp|tojson }};
+const T_VISITA_SIN_PROPIEDAD = {{ t.visita_sin_propiedad|tojson }};
+const T_VISITA_FECHA_REQUERIDA = {{ t.visita_fecha_requerida|tojson }};
+const T_VISITA_ERROR_GUARDAR = {{ t.visita_error_guardar|tojson }};
+const T_VISITA_ERROR_CONEXION = {{ t.visita_error_conexion|tojson }};
+const T_PORTAL_ERROR = {{ t.portal_error|tojson }};
 let draggedLeadId = null;
 let propiedadesCache = null;
+
+// Escapa texto antes de meterlo en el HTML (evita que datos de prospectos
+// o mensajes generados ejecuten código en el navegador).
+function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c];
+    });
+}
+// WhatsApp solo acepta dígitos en el número.
+function soloDigitos(t) { return String(t == null ? '' : t).replace(/\D/g, ''); }
 
 function toggleLang() { document.getElementById('langSelector').classList.toggle('abierto'); }
 document.addEventListener('click', function(e) {
@@ -624,30 +673,30 @@ document.addEventListener('dragend', function() {
     document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
 });
 document.addEventListener('dragleave', function(e) {
-    if (e.target.classList.contains('kanban-col')) e.target.classList.remove('drag-over');
+    if (e.target.classList && e.target.classList.contains('kanban-col')) e.target.classList.remove('drag-over');
 });
 
-function cambiarEtapa(leadId, nuevaEtapa) {
-    fetch(`/leads/${clienteId}/etapa/${leadId}`, {
+// El servidor exige el token CSRF en el cambio de etapa.
+function enviarEtapa(leadId, nuevaEtapa) {
+    return fetch(`/leads/${clienteId}/etapa/${leadId}`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: `etapa=${encodeURIComponent(nuevaEtapa)}`
-    }).then(r => r.json()).then(data => {
+        headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': CSRF_TOKEN},
+        body: `etapa=${encodeURIComponent(nuevaEtapa)}&csrf_token=${encodeURIComponent(CSRF_TOKEN)}`
+    }).then(r => r.json());
+}
+function cambiarEtapa(leadId, nuevaEtapa) {
+    enviarEtapa(leadId, nuevaEtapa).then(data => {
         if (data.ok) setTimeout(() => location.reload(), 300);
     }).catch(() => location.reload());
 }
 function cambiarEtapaDirecto(leadId, nuevaEtapa) {
-    fetch(`/leads/${clienteId}/etapa/${leadId}`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: `etapa=${encodeURIComponent(nuevaEtapa)}`
-    }).then(r => r.json()).then(data => { if (data.ok) location.reload(); });
+    enviarEtapa(leadId, nuevaEtapa).then(data => { if (data.ok) location.reload(); }).catch(() => {});
 }
 
 function verRespuesta(leadId, nombre, telefono) {
     document.getElementById('nombreRespuesta').textContent = nombre;
     document.getElementById('opcionesContainer').innerHTML =
-        `<div style="text-align:center;padding:30px;color:#999;">⏳ ${T_ANALIZANDO}</div>`;
+        `<div style="text-align:center;padding:30px;color:#999;">⏳ ${esc(T_ANALIZANDO)}</div>`;
     document.getElementById('modalRespuesta').style.display = 'block';
 
     fetch(`/leads/${clienteId}/respuesta/${leadId}`)
@@ -656,24 +705,24 @@ function verRespuesta(leadId, nombre, telefono) {
             const respuestas = data.respuestas || [];
             if (!respuestas.length) {
                 document.getElementById('opcionesContainer').innerHTML =
-                    `<p style="color:#e74c3c;text-align:center;">${T_ERROR}</p>`;
+                    `<p style="color:#e74c3c;text-align:center;">${esc(T_ERROR)}</p>`;
                 return;
             }
             document.getElementById('opcionesContainer').innerHTML = respuestas.map((op, i) => `
                 <div class="opcion-card">
                     <div class="opcion-titulo">
-                        ${op.titulo}
-                        ${i === 0 ? `<span class="recomendado-tag">${T_RECOMENDADO}</span>` : ''}
+                        ${esc(op.titulo)}
+                        ${i === 0 ? `<span class="recomendado-tag">${esc(T_RECOMENDADO)}</span>` : ''}
                     </div>
-                    <div class="opcion-msg" id="msg_k_${leadId}_${i}">${op.msg}</div>
+                    <div class="opcion-msg" id="msg_k_${leadId}_${i}">${esc(op.msg)}</div>
                     <div class="opcion-btns">
                         <button class="btn-copiar-op" id="btnCopy_k_${leadId}_${i}"
                             onclick="copiarOpcion('msg_k_${leadId}_${i}', 'btnCopy_k_${leadId}_${i}')">
-                            📋 ${T_COPIAR}
+                            📋 ${esc(T_COPIAR)}
                         </button>
-                        <button class="btn-wa-op"
-                            onclick="waOpcion('msg_k_${leadId}_${i}', '${telefono}')">
-                            📱 ${T_WA}
+                        <button class="btn-wa-op" data-msg="msg_k_${leadId}_${i}" data-tel="${esc(soloDigitos(telefono))}"
+                            onclick="waOpcion(this.dataset.msg, this.dataset.tel)">
+                            📱 ${esc(T_WA)}
                         </button>
                     </div>
                 </div>
@@ -681,7 +730,7 @@ function verRespuesta(leadId, nombre, telefono) {
         })
         .catch(() => {
             document.getElementById('opcionesContainer').innerHTML =
-                `<p style="color:#e74c3c;text-align:center;">${T_ERROR}</p>`;
+                `<p style="color:#e74c3c;text-align:center;">${esc(T_ERROR)}</p>`;
         });
 }
 
@@ -690,7 +739,7 @@ function abrirWhatsApp(telefono, leadId) {
         .then(r => r.json())
         .then(data => {
             const msg = (data.respuestas || [])[0]?.msg || '';
-            if (msg) window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(msg)}`, '_blank');
+            if (msg) window.open(`https://wa.me/${soloDigitos(telefono)}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
         });
 }
 
@@ -708,7 +757,7 @@ function copiarOpcion(msgId, btnId) {
 
 function waOpcion(msgId, telefono) {
     const msg = document.getElementById(msgId)?.textContent || '';
-    if (msg) window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(msg)}`, '_blank');
+    if (msg) window.open(`https://wa.me/${soloDigitos(telefono)}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
 }
 
 function cerrarModal() { document.getElementById('modalRespuesta').style.display = 'none'; }
@@ -742,8 +791,8 @@ function cargarPropiedadesSelect() {
 }
 function renderPropiedadesSelect(props) {
     const sel = document.getElementById('visitaPropiedad');
-    sel.innerHTML = `<option value="">${T_VISITA_SIN_PROPIEDAD}</option>` +
-        props.map(p => `<option value="${p.id}">${p.titulo}</option>`).join('');
+    sel.innerHTML = `<option value="">${esc(T_VISITA_SIN_PROPIEDAD)}</option>` +
+        props.map(p => `<option value="${esc(p.id)}">${esc(p.titulo)}</option>`).join('');
 }
 function guardarVisita(event) {
     event.preventDefault();
